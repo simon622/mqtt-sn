@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.client.test;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
@@ -66,7 +67,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testClientConnection() throws IOException, MqttsnException {
+    public void testClientConnection() throws IOException, MqttsnException, MqttsnClientConnectException {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
@@ -75,7 +76,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testClientDoubleConnection() throws IOException, MqttsnException {
+    public void testClientDoubleConnection() throws IOException, MqttsnException, MqttsnClientConnectException {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
@@ -86,7 +87,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testClientDisconnectedAfterClose() throws IOException, MqttsnException {
+    public void testClientDisconnectedAfterClose() throws IOException, MqttsnException, MqttsnClientConnectException {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
@@ -97,7 +98,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testClientSleep() throws IOException, MqttsnException {
+    public void testClientSleep() throws IOException, MqttsnException, MqttsnClientConnectException {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
@@ -108,7 +109,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testClientWake() throws IOException, MqttsnException {
+    public void testClientWake() throws IOException, MqttsnException, MqttsnClientConnectException {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
@@ -121,7 +122,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testClientSleepConnect() throws IOException, MqttsnException {
+    public void testClientSleepConnect() throws IOException, MqttsnException, MqttsnClientConnectException {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
@@ -134,7 +135,7 @@ public class ClientConnectionTest {
     }
 
     @Test
-    public void testMultipleClientConnections() throws Exception {
+    public void testMultipleClientConnections() throws Exception, MqttsnClientConnectException {
 
         final int concurrent = 5;
         final CountDownLatch latch = new CountDownLatch(concurrent);

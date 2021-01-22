@@ -44,30 +44,26 @@ public class MqttsnGatewayAdvertiseService extends AbstractMqttsnBackoffThreadSe
     }
 
     @Override
-    protected boolean doWork() {
+    protected long doWork() {
+        int timeout = 0;
         try {
-
-            int timeout = ((MqttsnGatewayOptions)registry.getOptions()).getGatewayAdvertiseTime();
+            timeout = ((MqttsnGatewayOptions)registry.getOptions()).getGatewayAdvertiseTime();
             int gatewayId = ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId();
-            if(lastGatewayBroadcastTime <
-                    (System.currentTimeMillis() - (timeout * 1000))){
 
-                logger.log(Level.INFO, String.format("advertising gateway id [%s], next sending time in [%s] seconds",
-                        gatewayId, timeout));
+            logger.log(Level.INFO, String.format("advertising gateway id [%s], next sending time in [%s] seconds",
+                    gatewayId, timeout));
 
-                IMqttsnMessage msg = registry.getMessageFactory().createAdvertise(
-                        ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId(),
-                        timeout);
-                registry.getTransport().broadcast(msg);
-                lastGatewayBroadcastTime = System.currentTimeMillis();
+            IMqttsnMessage msg = registry.getMessageFactory().createAdvertise(
+                    ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId(),
+                    timeout);
+            registry.getTransport().broadcast(msg);
+            lastGatewayBroadcastTime = System.currentTimeMillis();
 
-            }
-
-            return true;
         } catch(Exception e){
             logger.log(Level.WARNING, String.format("error sending advertising message"), e);
-            return false;
         }
+
+        return timeout * 1000;
     }
 
     @Override

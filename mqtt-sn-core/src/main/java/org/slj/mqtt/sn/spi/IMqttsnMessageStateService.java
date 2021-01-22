@@ -128,10 +128,25 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
     void scheduleFlush(IMqttsnContext context) throws MqttsnException ;
 
     /**
+     * UnMark a context active to have its outbound queue processed
+     * @param context - The context whose queue should be processed
+     * @throws MqttsnException - an error has occurred
+     */
+    void unscheduleFlush(IMqttsnContext context) throws MqttsnException ;
+
+    /**
      * Tracks the point at which the last message was SENT to the context
      * @param context - The context to which the message was sent
-     * @return Date representing the point at which the last message was SENT to the context
+     * @return Long representing the point at which the last message was SENT to the context
      * @throws MqttsnException
      */
-    Date getMessageLastSentToContext(IMqttsnContext context) throws MqttsnException ;
+    Long getMessageLastSentToContext(IMqttsnContext context) throws MqttsnException ;
+
+    /**
+     * Tracks the point at which a message considered ACTIVE was last SENT or RECEIVIED from the context
+     * @param context - The context to which the message was sent
+     * @return Tracks the point at which a message considered ACTIVE was last SENT or RECEIVIED from the context
+     * @throws MqttsnException
+     */
+    Long getContextLastActive(IMqttsnContext context) throws MqttsnException ;
 }

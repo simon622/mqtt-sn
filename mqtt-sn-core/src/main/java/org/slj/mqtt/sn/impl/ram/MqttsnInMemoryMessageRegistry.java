@@ -67,9 +67,9 @@ public class MqttsnInMemoryMessageRegistry<T extends IMqttsnRuntimeRegistry>
 
     @Override
     public void tidy() throws MqttsnException {
-        Iterator<UUID> itr = messageLookup.keySet().iterator();
         Date d = new Date();
         synchronized (messageLookup){
+            Iterator<UUID> itr = messageLookup.keySet().iterator();
             while(itr.hasNext()){
                 UUID id = itr.next();
                 MessageImpl m = messageLookup.get(id);

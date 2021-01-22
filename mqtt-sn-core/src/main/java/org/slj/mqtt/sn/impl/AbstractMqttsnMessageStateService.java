@@ -1,6 +1,7 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
@@ -12,10 +13,12 @@ import java.util.logging.Level;
 public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntimeRegistry>
         extends AbstractMqttsnBackoffThreadService<T> implements IMqttsnMessageStateService<T> {
 
+    static final int MAX_BACKOFF_INCR = 10;
     protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.USIGNED_MAX_16 + 1);
     protected boolean clientMode;
 
-    protected Map<IMqttsnContext, Date> lastMessageSent;
+    protected Map<IMqttsnContext, Long> lastActiveMessage;
+    protected Map<IMqttsnContext, Long> lastMessageSent;
     protected Map<LastIdContext, Integer> lastUsedMsgIds;
     protected Set<FlushQueueOperation> flushOperations;
 
@@ -29,51 +32,71 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         flushOperations = Collections.synchronizedSet(new HashSet());
         lastUsedMsgIds = Collections.synchronizedMap(new HashMap());
         lastMessageSent = Collections.synchronizedMap(new HashMap());
+        lastActiveMessage = Collections.synchronizedMap(new HashMap());
     }
 
     @Override
-    protected boolean doWork() {
+    protected long doWork() {
+
+        long nextWork = 10000;
+
+        //-- monitor active context timeouts
+        int activeMessageTimeout = registry.getOptions().getActiveContextTimeout();
+        if(activeMessageTimeout > 0){
+            synchronized (lastActiveMessage){
+                Iterator<IMqttsnContext> itr = lastActiveMessage.keySet().iterator();
+                while(itr.hasNext()){
+                    IMqttsnContext context = itr.next();
+                    Long time = lastActiveMessage.get(context);
+                    if((time + activeMessageTimeout) < System.currentTimeMillis()){
+                        //-- context is timedout
+                        registry.getRuntime().handleActiveTimeout(context);
+                        itr.remove();
+                    }
+                }
+            }
+        }
+
         //-- only use the flush operations when in gateway mode as the client uses its own thread for this
-        Iterator<FlushQueueOperation> flushItr = flushOperations.iterator();
         synchronized (flushOperations) {
+            Iterator<FlushQueueOperation> flushItr = flushOperations.iterator();
             while (flushItr.hasNext()) {
+
                 FlushQueueOperation operation = flushItr.next();
-                long delta = (long) Math.pow(1.7, Math.min(operation.count, 8)) * 25;
-                long processAfter = operation.timestamp + Math.max(delta, getRegistry().getOptions().getMinFlushTime());
-                boolean process = processAfter <= System.currentTimeMillis();
-                if(!process){
-                    logger.log(Level.FINE, String.format("back off [%s] for [%s] or [%s] -> missed by [%s]",
-                            operation.count, delta, getRegistry().getOptions().getMinFlushTime(), processAfter - System.currentTimeMillis()));
-                    continue;
+                long nextOperationDueAt = operation.timestamp + getRegistry().getOptions().getMinFlushTime();
+                long nextOperationTimeDelta = nextOperationDueAt - System.currentTimeMillis();
+
+                if(nextOperationTimeDelta < 0){
+                    try {
+
+                        IMqttsnMessageQueueProcessor.RESULT result
+                                = registry.getQueueProcessor().process(operation.context);
+                        operation.timestamp = System.currentTimeMillis();
+
+                        logger.log(Level.FINE, String.format("executed processor with time delta [%s], result was [%s]..", nextOperationTimeDelta < -10000 ? "First Run" : nextOperationTimeDelta, result));
+
+                        switch(result){
+                            case REMOVE_PROCESS:
+                                logger.log(Level.FINE, String.format("removing context from flush", operation.context));
+                                flushItr.remove();
+                                break;
+                            case REPROCESS:
+                                //next attempt should be immediate - WARNING recurse point
+                                logger.log(Level.FINE, String.format("immediate reprocess requested [%s]", operation.context));
+                                operation.resetCount();
+                                doWork();
+                                break;
+                            case BACKOFF_PROCESS:
+                                long backoff = (long) Math.pow(2, Math.min(++operation.count, MAX_BACKOFF_INCR)) * 500;
+                                nextWork = backoff;
+                                logger.log(Level.FINE, String.format("backoff reprocess requested, backoff count is [%s], next work [%s]", operation.count, nextWork));
+                                break;
+                        }
+                    } catch(Exception e){
+                        logger.log(Level.SEVERE, "error flushing context on state thread;", e);
+                    }
                 }
 
-                try {
-                    IMqttsnMessageQueueProcessor.RESULT result
-                            = registry.getQueueProcessor().process(operation.context);
-
-                    switch(result){
-                        case REMOVE_PROCESS:
-                            logger.log(Level.INFO, String.format("removing context from flush", operation.context));
-                            flushItr.remove();
-                            break;
-                        case REPROCESS:
-                            //knock the time on for another attempt
-                            operation.count = 0;
-                            break;
-                        case BACKOFF_PROCESS:
-                            //knock the time on for another attempt
-                            operation.count++;
-                            operation.timestamp = System.currentTimeMillis();
-                            break;
-                    }
-
-                    if(logger.isLoggable(Level.FINE)){
-                        logger.log(Level.FINE,
-                                String.format("result of process for [%s] was [%s], backoff count was [%s]", operation.context, result, operation.count));
-                    }
-                } catch(Exception e){
-                    logger.log(Level.SEVERE, "error flushing context on state thread;", e);
-                }
             }
         }
         try {
@@ -82,7 +105,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             logger.log(Level.SEVERE, "error tidying message registry on state thread;", e);
         }
 
-        return true;
+        return nextWork;
     }
 
     protected boolean allowedToSend(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
@@ -130,8 +153,14 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 MqttsnWaitToken token = blockingMessage.get().getToken();
                 if(token != null){
                     waitForCompletion(context, token);
-                    //-- recurse point
-                    return sendMessageInternal(context, message, queuedPublishMessage);
+                    if(!token.isError() && token.isComplete()){
+                        //-- recurse point
+                        return sendMessageInternal(context, message, queuedPublishMessage);
+                    }
+                    else {
+                        logger.log(Level.WARNING, String.format("unable to send, partial send in progress with token [%s]", token));
+                        throw new MqttsnExpectationFailedException("unable to send message, partial send in progress");
+                    }
                 }
             } else {
                 throw new MqttsnExpectationFailedException("max number of inflight messages reached");
@@ -153,13 +182,18 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             }
 
             registry.getTransport().writeToTransport(context.getNetworkContext(), message);
-            lastMessageSent.put(context, new Date());
+            long time = System.currentTimeMillis();
+            if(registry.getCodec().isActiveMessage(message)){
+                lastActiveMessage.put(context, time);
+            }
+            lastMessageSent.put(context, time);
 
             //-- the only publish that does not require an ack is QoS so send to app as delivered
-            if(!requiresResponse && message instanceof MqttsnPublish){
+            if(!requiresResponse && registry.getCodec().isPublish(message)){
+                PublishData data = registry.getCodec().getData(message);
                 CommitOperation op = CommitOperation.outbound(context, queuedPublishMessage.getMessageId(),
                         queuedPublishMessage.getTopicPath(), queuedPublishMessage.getGrantedQoS(),
-                        ((MqttsnPublish) message).getData());
+                        data.getData());
                 confirmPublish(op);
             }
 
@@ -221,13 +255,16 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     public IMqttsnMessage notifyMessageReceived(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
+        if(registry.getCodec().isActiveMessage(message)){
+            lastActiveMessage.put(context, System.currentTimeMillis());
+        }
         Integer msgId = message.needsMsgId() ? message.getMsgId() : WEAK_ATTACH_ID;
         boolean matchedMessage = inflightExists(context, msgId);
         boolean terminalMessage = registry.getMessageHandler().isTerminalMessage(message);
         if (matchedMessage) {
             if (terminalMessage) {
                 InflightMessage inflight = removeInflight(context, msgId);
-                if (!registry.getMessageHandler().validResponse(inflight.getMessage(), message.getClass())) {
+                if (!registry.getMessageHandler().validResponse(inflight.getMessage(), message)) {
                     logger.log(Level.WARNING,
                             String.format("invalid response message [%s] for [%s] -> [%s]",
                                     message, inflight.getMessage(), context));
@@ -257,26 +294,32 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                         if (inflight instanceof RequeueableInflightMessage) {
                             logger.log(Level.INFO,
                                     String.format("message was re-queueable offer to queue [%s]", context));
-                            registry.getMessageQueue().offer(context, ((RequeueableInflightMessage) inflight).getQueuedPublishMessage());
+                            try {
+                                registry.getMessageQueue().offer(context, ((RequeueableInflightMessage) inflight).getQueuedPublishMessage());
+                            } catch(MqttsnQueueAcceptException e){
+                                throw new MqttsnException(e);
+                            }
                         }
 
                     } else {
 
                         //inbound qos 2 commit
-                        if (message instanceof MqttsnPubrel) {
+                        if (registry.getCodec().isPubRel(message)) {
+                            PublishData data = registry.getCodec().getData(confirmedMessage);
                             CommitOperation op = CommitOperation.inbound(context,
-                                    getTopicPathFromPublish(context, (MqttsnPublish) confirmedMessage),
-                                    ((MqttsnPublish) confirmedMessage).getQoS(),
-                                    ((MqttsnPublish) confirmedMessage).getData());
+                                    confirmedMessage instanceof MqttsnPublish ? getTopicPathFromPublish(context, (MqttsnPublish) confirmedMessage) : null,
+                                    data.getQos(),
+                                    data.getData());
                             confirmPublish(op);
                         }
 
                         //outbound qos 1
-                        if (message instanceof MqttsnPuback) {
+                        if (registry.getCodec().isPuback(message)) {
                             RequeueableInflightMessage rim = (RequeueableInflightMessage) inflight;
+                            PublishData data = registry.getCodec().getData(confirmedMessage);
                             CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(),
                                     rim.getQueuedPublishMessage().getTopicPath(), rim.getQueuedPublishMessage().getGrantedQoS(),
-                                    ((MqttsnPublish) confirmedMessage).getData());
+                                    data.getData());
                             confirmPublish(op);
                         }
                     }
@@ -288,11 +331,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
                 //none terminal matched message.. this is fine (PUBREC or PUBREL)
                 //outbound qos 2 commit point
-                if(message instanceof MqttsnPubrec){
+                if(registry.getCodec().isPubRec(message)){
                     RequeueableInflightMessage rim = (RequeueableInflightMessage) inflight;
+                    PublishData data = registry.getCodec().getData(inflight.getMessage());
                     CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(),
                             rim.getQueuedPublishMessage().getTopicPath(), rim.getQueuedPublishMessage().getGrantedQoS(),
-                            ((MqttsnPublish) inflight.getMessage()).getData());
+                            data.getData());
                     confirmPublish(op);
                 }
 
@@ -303,9 +347,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
             //-- received NEW message that was not associated with an inflight message
             //-- so we need to pin it into the inflight system (if it needs confirming).
-            if (message instanceof MqttsnPublish) {
-                MqttsnPublish pub = (MqttsnPublish) message;
-                if (((MqttsnPublish) message).getQoS() == 2) {
+            if (registry.getCodec().isPublish(message)) {
+                PublishData data = registry.getCodec().getData(message);
+                if (data.getQos() == 2) {
 //                    int count = countInflight(context, InflightMessage.DIRECTION.RECEIVING);
 //                    if(count >= registry.getOptions().getMaxMessagesInflight()){
 //                        logger.log(Level.WARNING, String.format("have [%s] existing inbound message(s) inflight & new publish QoS2, replacing inflights!", count));
@@ -317,9 +361,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     //-- Qos 0 & 1 are inbound are confirmed on receipt of message
 
                     CommitOperation op = CommitOperation.inbound(context,
-                            getTopicPathFromPublish(context, pub),
-                            ((MqttsnPublish) message).getQoS(),
-                            ((MqttsnPublish) message).getData());
+                            message instanceof MqttsnPublish ? getTopicPathFromPublish(context, (MqttsnPublish) message) : null,
+                            data.getQos(),
+                            data.getData());
                     confirmPublish(op);
                 }
             }
@@ -409,11 +453,11 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     protected void clearInflightInternal(IMqttsnContext context, long evictionTime) throws MqttsnException {
-        logger.log(evictionTime == 0 ? Level.INFO : Level.FINE, String.format("clearing all inflight messages for context [%s], forced = [%s]", context, evictionTime == 0));
+        logger.log(Level.FINE, String.format("clearing all inflight messages for context [%s], forced = [%s]", context, evictionTime == 0));
         Map<Integer, InflightMessage> messages = getInflightMessages(context);
         if(messages != null && !messages.isEmpty()){
-            Iterator<Integer> messageItr = messages.keySet().iterator();
             synchronized (messages){
+                Iterator<Integer> messageItr = messages.keySet().iterator();
                 while(messageItr.hasNext()){
                     Integer i = messageItr.next();
                     InflightMessage f = messages.get(i);
@@ -448,7 +492,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     requeueableInflightMessage.getQueuedPublishMessage() != null) {
                 logger.log(Level.INFO, String.format("re-queuing publish message [%s] for client [%s]", context,
                         inflight.getMessage()));
-                registry.getMessageQueue().offer(context, requeueableInflightMessage.getQueuedPublishMessage());
+                QueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
+                queuedPublishMessage.setToken(null);
+                try {
+                    registry.getMessageQueue().offer(context, queuedPublishMessage);
+                } catch(MqttsnQueueAcceptException e){
+                    throw new MqttsnException(e);
+                }
             }
         }
     }
@@ -467,25 +517,31 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
+    public void unscheduleFlush(IMqttsnContext context) throws MqttsnException {
+        flushOperations.remove(new FlushQueueOperation(context, System.currentTimeMillis()));
+    }
+
+    @Override
     public void scheduleFlush(IMqttsnContext context) throws MqttsnException {
-        if(flushOperations.add(new FlushQueueOperation(context, System.currentTimeMillis()))){
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("added flush for [%s]", context));
-            }
+        if(flushOperations.add(new FlushQueueOperation(context, 0))){
+            expedite();
         } else {
             //TODO this is nasty - we need a fast lookup now weve introduced expediting processor
-            Iterator<FlushQueueOperation> itr = flushOperations.iterator();
-            while(itr.hasNext()){
-                FlushQueueOperation op = itr.next();
-                if(op.context.equals(context)){
-                    op.resetCount();
-                    if(logger.isLoggable(Level.INFO)){
-                        logger.log(Level.INFO, String.format("reset flush backoff for [%s]", context));
+            synchronized (flushOperations){
+                Iterator<FlushQueueOperation> itr = flushOperations.iterator();
+                while(itr.hasNext()){
+                    FlushQueueOperation op = itr.next();
+                    if(op.context.equals(context)){
+                        op.resetCount();
+                        expedite();
+                        break;
                     }
                 }
             }
         }
-        expedite();
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("flush called for [%s]", context));
+        }
     }
 
     @Override
@@ -494,8 +550,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
-    public Date getMessageLastSentToContext(IMqttsnContext context) {
+    public Long getMessageLastSentToContext(IMqttsnContext context) {
         return lastMessageSent.get(context);
+    }
+
+    @Override
+    public Long getContextLastActive(IMqttsnContext context) throws MqttsnException {
+        return lastActiveMessage.get(context);
     }
 
     protected String getTopicPathFromPublish(IMqttsnContext context, MqttsnPublish publish) throws MqttsnException {
@@ -554,6 +615,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         }
 
         public void resetCount(){
+            timestamp = 0;
             count = 0;
         }
 

@@ -25,8 +25,10 @@
 package org.slj.mqtt.sn.wire.version1_2;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.AbstractMqttsnCodec;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
@@ -34,6 +36,38 @@ import org.slj.mqtt.sn.wire.version1_2.payload.*;
 public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
     protected IMqttsnMessageFactory messageFactory;
+
+    @Override
+    public PublishData getData(IMqttsnMessage message) {
+        MqttsnPublish publish = (MqttsnPublish) message ;
+        return new PublishData(publish.getQoS(), publish.getData());
+    }
+
+    @Override
+    public boolean isPublish(IMqttsnMessage message) {
+        return message instanceof MqttsnPublish;
+    }
+
+    @Override
+    public boolean isPuback(IMqttsnMessage message) {
+        return message instanceof MqttsnPuback;
+    }
+
+    @Override
+    public boolean isPubRel(IMqttsnMessage message) {
+        return message instanceof MqttsnPubrel;
+    }
+
+    @Override
+    public boolean isPubRec(IMqttsnMessage message) {
+        return message instanceof MqttsnPubrec;
+    }
+
+    @Override
+    public boolean isActiveMessage(IMqttsnMessage message) {
+        return ! (message instanceof MqttsnPingreq ||
+                message instanceof MqttsnDisconnect || message instanceof MqttsnPingresp);
+    }
 
     @Override
     public int readMessageSize(byte[] data) throws MqttsnCodecException {

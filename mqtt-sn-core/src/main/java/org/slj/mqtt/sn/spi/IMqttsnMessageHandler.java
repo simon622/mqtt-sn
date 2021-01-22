@@ -49,7 +49,10 @@ public interface IMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry> extends
     void receiveMessage(IMqttsnContext context, IMqttsnMessage message)
             throws MqttsnException;
 
-    boolean validResponse(IMqttsnMessage request, Class<? extends IMqttsnMessage> responseClz);
+    boolean canHandle(IMqttsnContext context, IMqttsnMessage message)
+            throws MqttsnException;
+
+    boolean validResponse(IMqttsnMessage request, IMqttsnMessage response);
 
     boolean requiresResponse(IMqttsnMessage message);
 

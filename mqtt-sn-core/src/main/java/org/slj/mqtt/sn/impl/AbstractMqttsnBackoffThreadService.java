@@ -33,8 +33,6 @@ import java.util.logging.Level;
 public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntimeRegistry>
         extends MqttsnService<T> implements Runnable {
 
-    static final int DEFAULT_BACKOFF_FACTOR = 500;
-    static final int MAX_BACKOFF_INCR = 10;
     private Thread t;
     private Object monitor = new Object();
 
@@ -81,18 +79,15 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
         logger.log(Level.INFO, String.format("starting thread [%s] processing", Thread.currentThread().getName()));
         while(running &&
                 !Thread.currentThread().isInterrupted()){
-            if(doWork()){
-                //when the execute returns true, reset the backoff
-                count = 0;
-            }
-            long backoff = (long) Math.pow(2, Math.min(count++, MAX_BACKOFF_INCR)) * getBackoffFactor();
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE,
-                        String.format("processing [%s] on count [%s] waiting for [%s]", Thread.currentThread().getName(), count, backoff));
-            }
+            long maxBackoff = doWork();
+            long waitStart = System.currentTimeMillis();
             synchronized (monitor){
                 try {
-                    monitor.wait(backoff);
+                    monitor.wait(maxBackoff);
+                    if(logger.isLoggable(Level.FINE)){
+                        logger.log(Level.FINE,
+                                String.format("worker [%s] waited for [%s] in the end", Thread.currentThread().getName(), System.currentTimeMillis() - waitStart));
+                    }
                 } catch(InterruptedException e){
                     Thread.currentThread().interrupt();
                 }
@@ -101,15 +96,11 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
         logger.log(Level.INFO, String.format("stopped %s thread", Thread.currentThread().getName()));
     }
 
-    protected int getBackoffFactor(){
-        return DEFAULT_BACKOFF_FACTOR;
-    }
-
     /**
      * Complete your tasks in this method.
      * WARNING, throwing an unchecked exception from this method will cause the service to shutdown
      */
-    protected abstract boolean doWork();
+    protected abstract long doWork();
 
     /**
      * The name of the deamon will be used in instrumentation and logging

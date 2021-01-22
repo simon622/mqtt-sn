@@ -46,9 +46,9 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
 
     @Override
     public List<IMqttsnContext> matches(String topicPath) throws MqttsnException {
-        Iterator<IMqttsnContext> clientItr = subscriptionsLookups.keySet().iterator();
         List<IMqttsnContext> matchingClients = new ArrayList<>();
         synchronized (subscriptionsLookups){
+            Iterator<IMqttsnContext> clientItr = subscriptionsLookups.keySet().iterator();
             while(clientItr.hasNext()){
                 IMqttsnContext client = clientItr.next();
                 Set<Subscription> paths = subscriptionsLookups.get(client);

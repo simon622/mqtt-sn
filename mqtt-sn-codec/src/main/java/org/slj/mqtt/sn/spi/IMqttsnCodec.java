@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
+import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 
 /**
@@ -36,6 +37,39 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
  * @author Simon Johnson <simon622 AT gmail DOT com>
  */
 public interface IMqttsnCodec {
+
+    /**
+     * @return - Does the message represent a PUBLISH
+     */
+    PublishData getData(IMqttsnMessage message);
+
+    /**
+     * @return - Does the message represent a PUBLISH
+     */
+    boolean isPublish(IMqttsnMessage message);
+
+    /**
+     * @return - Does the message represent a PUBACK
+     */
+    boolean isPuback(IMqttsnMessage message);
+
+    /**
+     * @return - Does the message represent a PUBREL
+     */
+    boolean isPubRel(IMqttsnMessage message);
+
+    /**
+     * @return - Does the message represent a PUBREC
+     */
+    boolean isPubRec(IMqttsnMessage message);
+
+    /**
+     * Is the message considered an ACTIVE message, that is a message actively sent by an application
+     * (anything other than a PINGREQ, PINGRESP, DISCONNECT)
+     * @param message - the message to consider
+     * @return Is the message considered an ACTIVE message
+     */
+    boolean isActiveMessage(IMqttsnMessage message);
 
     /**
      * To help with debugging, this method will return a binary or hex

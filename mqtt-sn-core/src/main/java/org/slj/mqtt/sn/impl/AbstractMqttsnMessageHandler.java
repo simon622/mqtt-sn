@@ -60,12 +60,17 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     }
 
     @Override
-    public boolean validResponse(IMqttsnMessage message, Class<? extends IMqttsnMessage> cls) {
-        Class<? extends IMqttsnMessage>[] clz = getResponseClasses(message);
-        return MqttsnUtils.contains(clz, cls);
+    public boolean canHandle(IMqttsnContext context, IMqttsnMessage message){
+        return true;
     }
 
-    protected Class<? extends IMqttsnMessage>[] getResponseClasses(IMqttsnMessage message) {
+    @Override
+    public boolean validResponse(IMqttsnMessage request, IMqttsnMessage response) {
+        Class<? extends IMqttsnMessage>[] clz = getResponseClasses(request);
+        return MqttsnUtils.contains(clz, response.getClass());
+    }
+
+    private Class<? extends IMqttsnMessage>[] getResponseClasses(IMqttsnMessage message) {
 
         if(!requiresResponse(message)){
             return new Class[0];
@@ -185,6 +190,12 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
         try {
 
+            if(!canHandle(context, message)){
+                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s] dropping message it could not handle [%s]",
+                        context, message.getMessageName()));
+                return;
+            }
+
             int msgType = message.getMessageType();
 
             if(message.isErrorMessage()){
@@ -194,14 +205,14 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
             beforeHandle(context, message);
 
-            IMqttsnMessage originatingMessage = null;
-
             if(logger.isLoggable(Level.FINE)){
                 logger.log(Level.FINE, String.format("mqtt-sn handler [%s] handling inbound message [%s]",
                         context, message));
             }
 
             boolean errord = false;
+            IMqttsnMessage originatingMessage = null;
+
             if(registry.getMessageStateService() != null){
                 try {
                     originatingMessage =
@@ -213,121 +224,12 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                 }
             }
 
-            IMqttsnMessage response = null;
-            switch (msgType) {
-                case MqttsnConstants.CONNECT:
-                    response = handleConnect(context, message);
-                    break;
-                case MqttsnConstants.CONNACK:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handleConnack(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.PUBLISH:
-                    if(errord){
-                        response = getRegistry().getMessageFactory().createPuback(0,
-                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
-                    } else {
-                        response = handlePublish(context, message);
-                    }
-                    break;
-                case MqttsnConstants.PUBREC:
-                    response = handlePubrec(context, message);
-                    break;
-                case MqttsnConstants.PUBREL:
-                    response = handlePubrel(context, message);
-                    break;
-                case MqttsnConstants.PUBACK:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handlePuback(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.PUBCOMP:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handlePubcomp(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.SUBSCRIBE:
-                    if(errord){
-                        response = getRegistry().getMessageFactory().createSuback(0, 0,
-                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
-                    } else {
-                        response = handleSubscribe(context, message);
-                    }
-                    break;
-                case MqttsnConstants.UNSUBSCRIBE:
-                    response = handleUnsubscribe(context, message);
-                    break;
-                case MqttsnConstants.UNSUBACK:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handleUnsuback(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.SUBACK:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handleSuback(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.REGISTER:
-                    if(errord){
-                        response = getRegistry().getMessageFactory().createRegack(0,
-                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
-                    } else {
-                        response = handleRegister(context, message);
-                    }
-                    break;
-                case MqttsnConstants.REGACK:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handleRegack(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.PINGREQ:
-                    response = handlePingreq(context, message);
-                    break;
-                case MqttsnConstants.PINGRESP:
-                    validateOriginatingMessage(context, originatingMessage, message);
-                    handlePingresp(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.DISCONNECT:
-                    response = handleDisconnect(context, originatingMessage, message);
-                    break;
-                case MqttsnConstants.ADVERTISE:
-                    handleAdvertise(context, message);
-                    break;
-                case MqttsnConstants.ENCAPSMSG:
-                    handleEncapsmsg(context, message);
-                    break;
-                case MqttsnConstants.GWINFO:
-                    handleGwinfo(context, message);
-                    break;
-                case MqttsnConstants.SEARCHGW:
-                    response = handleSearchGw(context, message);
-                    break;
-                case MqttsnConstants.WILLMSGREQ:
-                    response = handleWillmsgreq(context, message);
-                    break;
-                case MqttsnConstants.WILLMSG:
-                    handleWillmsg(context, message);
-                    break;
-                case MqttsnConstants.WILLMSGUPD:
-                    response = handleWillmsgupd(context, message);
-                    break;
-                case MqttsnConstants.WILLMSGRESP:
-                    handleWillmsgresp(context, message);
-                    break;
-                case MqttsnConstants.WILLTOPICREQ:
-                    response = handleWilltopicreq(context, message);
-                    break;
-                case MqttsnConstants.WILLTOPIC:
-                    handleWilltopic(context, message);
-                    break;
-                case MqttsnConstants.WILLTOPICUPD:
-                    response = handleWilltopicupd(context, message);
-                    break;
-                case MqttsnConstants.WILLTOPICRESP:
-                    handleWilltopicresp(context, message);
-                    break;
-                default:
-                    throw new MqttsnException("unable to handle unknown message type " + msgType);
-            }
+            IMqttsnMessage response = handle(context, originatingMessage, message, errord);
+
             //-- if the state service threw a wobbler but for some reason this didnt lead to an error message
             //-- we should just disconnect the device
             if(errord && !response.isErrorMessage()){
-                logger.log(Level.WARNING, String.format("mqtt-sn state service errord, message handler did not produce an error, so overrule and disoconnect [%s] -> [%s]",
+                logger.log(Level.WARNING, String.format("mqtt-sn state service errord, message handler did not produce an error, so overrule and disconnect [%s] -> [%s]",
                         context, message));
                 response = registry.getMessageFactory().createDisconnect();
             }
@@ -350,13 +252,142 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             logger.log(Level.SEVERE, "error encountered during receive, disconnect", e);
             handleResponse(context,
                     registry.getMessageFactory().createDisconnect());
-            if(!registry.getRuntime().handleLocalDisconnectError(context, e)) {
+            if(!registry.getRuntime().handleLocalDisconnect(context, e)) {
                 throw e;
             }
         }
     }
 
-    protected abstract void beforeHandle(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException;
+    protected void beforeHandle(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+
+    }
+
+    protected IMqttsnMessage handle(IMqttsnContext context, IMqttsnMessage originatingMessage, IMqttsnMessage message, boolean errord)
+            throws MqttsnException {
+
+        IMqttsnMessage response = null;
+        int msgType = message.getMessageType();
+
+        switch (msgType) {
+            case MqttsnConstants.CONNECT:
+                response = handleConnect(context, message);
+                if(!errord && !response.isErrorMessage()){
+                    registry.getRuntime().handleConnected(context);
+                }
+                break;
+            case MqttsnConstants.CONNACK:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handleConnack(context, originatingMessage, message);
+                if(!errord && !message.isErrorMessage()){
+                    registry.getRuntime().handleConnected(context);
+                }
+                break;
+            case MqttsnConstants.PUBLISH:
+                if(errord){
+                    response = getRegistry().getMessageFactory().createPuback(0,
+                            MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
+                } else {
+                    response = handlePublish(context, message);
+                }
+                break;
+            case MqttsnConstants.PUBREC:
+                response = handlePubrec(context, message);
+                break;
+            case MqttsnConstants.PUBREL:
+                response = handlePubrel(context, message);
+                break;
+            case MqttsnConstants.PUBACK:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handlePuback(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.PUBCOMP:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handlePubcomp(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.SUBSCRIBE:
+                if(errord){
+                    response = getRegistry().getMessageFactory().createSuback(0, 0,
+                            MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
+                } else {
+                    response = handleSubscribe(context, message);
+                }
+                break;
+            case MqttsnConstants.UNSUBSCRIBE:
+                response = handleUnsubscribe(context, message);
+                break;
+            case MqttsnConstants.UNSUBACK:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handleUnsuback(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.SUBACK:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handleSuback(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.REGISTER:
+                if(errord){
+                    response = getRegistry().getMessageFactory().createRegack(0,
+                            MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
+                } else {
+                    response = handleRegister(context, message);
+                }
+                break;
+            case MqttsnConstants.REGACK:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handleRegack(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.PINGREQ:
+                response = handlePingreq(context, message);
+                break;
+            case MqttsnConstants.PINGRESP:
+                validateOriginatingMessage(context, originatingMessage, message);
+                handlePingresp(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.DISCONNECT:
+                response = handleDisconnect(context, originatingMessage, message);
+                break;
+            case MqttsnConstants.ADVERTISE:
+                handleAdvertise(context, message);
+                break;
+            case MqttsnConstants.ENCAPSMSG:
+                handleEncapsmsg(context, message);
+                break;
+            case MqttsnConstants.GWINFO:
+                handleGwinfo(context, message);
+                break;
+            case MqttsnConstants.SEARCHGW:
+                response = handleSearchGw(context, message);
+                break;
+            case MqttsnConstants.WILLMSGREQ:
+                response = handleWillmsgreq(context, message);
+                break;
+            case MqttsnConstants.WILLMSG:
+                handleWillmsg(context, message);
+                break;
+            case MqttsnConstants.WILLMSGUPD:
+                response = handleWillmsgupd(context, message);
+                break;
+            case MqttsnConstants.WILLMSGRESP:
+                handleWillmsgresp(context, message);
+                break;
+            case MqttsnConstants.WILLTOPICREQ:
+                response = handleWilltopicreq(context, message);
+                break;
+            case MqttsnConstants.WILLTOPIC:
+                handleWilltopic(context, message);
+                break;
+            case MqttsnConstants.WILLTOPICUPD:
+                response = handleWilltopicupd(context, message);
+                break;
+            case MqttsnConstants.WILLTOPICRESP:
+                handleWilltopicresp(context, message);
+                break;
+            default:
+                throw new MqttsnException("unable to handle unknown message type " + msgType);
+        }
+
+        return response;
+    }
+
 
     protected void afterHandle(IMqttsnContext context, IMqttsnMessage message, IMqttsnMessage response) throws MqttsnException {
 

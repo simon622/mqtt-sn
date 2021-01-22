@@ -41,6 +41,10 @@ public class MqttsnUtils {
 
     private static Logger logger = Logger.getLogger(MqttsnUtils.class.getName());
 
+    public static double percentOf(double val, double of){
+        return val / of * 100;
+    }
+
     public static byte[] arrayOf(int size, byte fill){
         byte[] a = new byte[size];
         Arrays.fill(a, fill);

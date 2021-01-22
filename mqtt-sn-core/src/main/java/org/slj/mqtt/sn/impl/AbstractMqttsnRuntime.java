@@ -48,6 +48,8 @@ public abstract class AbstractMqttsnRuntime {
             = Collections.synchronizedList(new ArrayList<>());
     protected List<IMqttsnPublishSentListener> sentListeners
             = Collections.synchronizedList(new ArrayList<>());
+    protected List<IMqttsnConnectionStateListener> connectionListeners
+            = Collections.synchronizedList(new ArrayList<>());
 
     protected List<IMqttsnService> activeServices
             = Collections.synchronizedList(new ArrayList<>());
@@ -204,28 +206,40 @@ public abstract class AbstractMqttsnRuntime {
         startupLatch.await(60, TimeUnit.SECONDS);
     }
 
-    protected void setupEnvironment(){
+    public static void setupEnvironment(){
         System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
     }
 
     protected final void messageReceived(IMqttsnContext context, String topicName, int QoS, byte[] payload){
-        logger.log(Level.FINE, String.format("publish received by application [%s]", topicName));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("publish received by application [%s], notifying [%s] listeners", topicName, receivedListeners.size()));
+        }
         receivedListeners.stream().forEach(p -> p.receive(context, topicName, QoS, payload));
     }
 
     protected final void messageSent(IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] payload){
-        logger.log(Level.FINE, String.format("sent confirmed by application [%s]", topicName));
+        if(logger.isLoggable(Level.FINE)) {
+            logger.log(Level.FINE, String.format("sent confirmed by application [%s], notifying [%s] listeners", topicName, sentListeners.size()));
+        }
         sentListeners.stream().forEach(p -> p.sent(context, messageId, topicName, QoS, payload));
     }
 
     public void registerReceivedListener(IMqttsnPublishReceivedListener listener) {
-        if(listener != null && !receivedListeners.contains(listener))
+        if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
+        if(!receivedListeners.contains(listener))
             receivedListeners.add(listener);
     }
 
     public void registerSentListener(IMqttsnPublishSentListener listener) {
-        if(listener != null && !sentListeners.contains(listener))
+        if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
+        if(!sentListeners.contains(listener))
             sentListeners.add(listener);
+    }
+
+    public void registerConnectionListener(IMqttsnConnectionStateListener listener) {
+        if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
+        if(!connectionListeners.contains(listener))
+            connectionListeners.add(listener);
     }
 
     /**
@@ -233,7 +247,11 @@ public abstract class AbstractMqttsnRuntime {
      * @param context - The context who sent the DISCONNECT
      * @return should the local runtime send a DISCONNECT in reponse
      */
-    public abstract boolean handleRemoteDisconnect(IMqttsnContext context);
+    public boolean handleRemoteDisconnect(IMqttsnContext context){
+        logger.log(Level.INFO, String.format("notified of remote disconnect [%s]", context));
+        connectionListeners.stream().forEach(p -> p.notifyRemoteDisconnect(context));
+        return true;
+    }
 
     /**
      * When the runtime reaches a condition from which it cannot recover for the context,
@@ -244,7 +262,41 @@ public abstract class AbstractMqttsnRuntime {
      * @return was the exception handled, if so, the trace is not thrown up to the transport layer,
      * if not, the exception is reported into the transport layer
      */
-    public abstract boolean handleLocalDisconnectError(IMqttsnContext context, Throwable t);
+    public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
+        logger.log(Level.INFO, String.format("notified of local disconnect [%s]", context, t));
+        connectionListeners.stream().forEach(p -> p.notifyLocalDisconnect(context, t));
+        return true;
+    }
+
+    /**
+     * Reported by the transport layer when its (stateful) connection is lost. Invariably
+     * this will be Socket connections over TCP IP
+     * @param context - The context whose state encountered the problem thag caused the DISCONNECT
+     * @param t - the exception that was encountered
+     * @return was the exception handled
+     */
+    public void handleConnectionLost(IMqttsnContext context, Throwable t){
+        logger.log(Level.INFO, String.format("notified of connection lost [%s]", context, t));
+        connectionListeners.stream().forEach(p -> p.notifyConnectionLost(context, t));
+    }
+
+    /**
+     * Reported the when a CONNECTION is successfully established
+     * @param context
+     */
+    public void handleConnected(IMqttsnContext context){
+        logger.log(Level.INFO, String.format("notified of new connection [%s]", context));
+        connectionListeners.stream().forEach(p -> p.notifyConnected(context));
+    }
+
+    /**
+     * Reported the when a CONNECTION is successfully established
+     * @param context
+     */
+    public void handleActiveTimeout(IMqttsnContext context){
+        logger.log(Level.INFO, String.format("notified of active timeout [%s]", context));
+        connectionListeners.stream().forEach(p -> p.notifyActiveTimeout(context));
+    }
 
     /**
      * Submit work for the main worker thread group, this could be

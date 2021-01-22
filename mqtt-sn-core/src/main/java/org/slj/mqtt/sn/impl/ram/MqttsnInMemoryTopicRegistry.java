@@ -76,9 +76,9 @@ public class MqttsnInMemoryTopicRegistry<T extends IMqttsnRuntimeRegistry>
     protected boolean addOrUpdateRegistration(IMqttsnContext context, String topicPath, int alias) throws MqttsnException {
 
         Set<ConfirmableTopicRegistration> set = getAll(context);
-        Iterator<ConfirmableTopicRegistration> itr  = set.iterator();
         boolean updated = false;
         synchronized (set){
+            Iterator<ConfirmableTopicRegistration> itr  = set.iterator();
             if(itr.hasNext()){
                 ConfirmableTopicRegistration reg = itr.next();
                 if(reg.topicPath.equals(topicPath)){

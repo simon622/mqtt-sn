@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -42,6 +43,12 @@ import java.util.logging.Level;
  */
 public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         extends MqttsnService<U> implements IMqttsnTransport {
+
+    public void connectionLost(INetworkContext context, Throwable t){
+        if(registry != null && context != null){
+            registry.getRuntime().handleConnectionLost(context.getMqttsnContext(), t);
+        }
+    }
 
     @Override
     public void receiveFromTransport(INetworkContext context, ByteBuffer buffer) {
@@ -60,16 +67,24 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             }
             byte[] data = drain(buffer);
 
+
             if(data.length > registry.getOptions().getMaxProtocolMessageSize()){
                 logger.log(Level.SEVERE, String.format("receiving [%s] bytes - max allowed message size [%s] - error",
                         data.length, registry.getOptions().getMaxProtocolMessageSize()));
                 throw new MqttsnRuntimeException("received message was larger than allowed max");
             }
 
+            if(registry.getOptions().isWireLoggingEnabled()){
+                logger.log(Level.INFO, String.format("receiving [%s] ",
+                        MqttsnWireUtils.toBinary(data)));
+            }
+
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
 
-            logger.log(Level.INFO, String.format("receiving [%s] bytes (%s) from [%s] on thread [%s]",
-                    data.length, message.getMessageName(), networkContext, Thread.currentThread().getName()));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("receiving [%s] bytes (%s) from [%s] on thread [%s]",
+                        data.length, message.getMessageName(), networkContext, Thread.currentThread().getName()));
+            }
 
             boolean authd = true;
             //-- if we detect an inbound id packet, we should authorise the context every time (even if the impl just reuses existing auth)
@@ -112,8 +127,15 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                 throw new MqttsnRuntimeException("cannot send messages larger than allowed max");
             }
 
-            logger.log(Level.INFO, String.format("writing [%s] bytes (%s) to [%s] on thread [%s]",
-                    data.length, message.getMessageName(), context, Thread.currentThread().getName()));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("writing [%s] bytes (%s) to [%s] on thread [%s]",
+                        data.length, message.getMessageName(), context, Thread.currentThread().getName()));
+            }
+
+            if(registry.getOptions().isWireLoggingEnabled()){
+                logger.log(Level.INFO, String.format("writing [%s] ",
+                        MqttsnWireUtils.toBinary(data)));
+            }
 
             writeToTransport(context, ByteBuffer.wrap(data, 0 , data.length));
             if(notifyListeners) notifyTrafficSent(context, data, message);

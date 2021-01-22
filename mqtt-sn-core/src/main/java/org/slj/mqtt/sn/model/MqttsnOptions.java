@@ -44,6 +44,16 @@ import java.util.Map;
 public class MqttsnOptions {
 
     /**
+     * By default, contexts active message timeout will not be monitored
+     */
+    public static final int DEFAULT_ACTIVE_CONTEXT_TIMEOUT = 0;
+
+    /**
+     * By default, discover is NOT enabled on either the client or the gateway.
+     */
+    public static final boolean DEFAULT_WIRE_LOGGING_ENABLED = false;
+
+    /**
      * By default, discover is NOT enabled on either the client or the gateway.
      */
     public static final boolean DEFAULT_DISCOVERY_ENABLED = false;
@@ -170,9 +180,40 @@ public class MqttsnOptions {
     private boolean instrumentationEnabled = DEFAULT_INSTRUMENTATION_ENABLED;
     private int instrumentationInterval = DEFAULT_INSTRUMENTATION_INTERVAL;
     private int maxProtocolMessageSize = DEFAULT_MAX_PROTOCOL_SIZE;
+    private boolean wireLoggingEnabled = DEFAULT_WIRE_LOGGING_ENABLED;
+    private int activeContextTimeout = DEFAULT_ACTIVE_CONTEXT_TIMEOUT;
 
     private Map<String, Integer> predefinedTopics;
     private Map<String, NetworkAddress> networkAddressEntries;
+
+    /**
+     * When > 0, active context monitoring will notify the application when the context has not generated
+     * any active messages (PUBLISH, CONNECT, SUBSCRIBE, UNSUBSCRIBE)
+     *
+     * @param activeContextTimeout - the time alllowed between last message SENT or RECEIVED from context before
+     *                             notification to the connection listener
+     *
+     * @see {@link MqttsnOptions#DEFAULT_ACTIVE_CONTEXT_TIMEOUT}
+     * @return this configuration
+     */
+    public MqttsnOptions withActiveContextTimeout(int activeContextTimeout){
+        this.activeContextTimeout = activeContextTimeout;
+        return this;
+    }
+
+    /**
+     * When enabled, output binary representation of all bytes sent and received
+     * from transport
+     *
+     * @param wireLoggingEnabled - output binary representation of all bytes sent and received from transport
+     *
+     * @see {@link MqttsnOptions#DEFAULT_WIRE_LOGGING_ENABLED}
+     * @return this configuration
+     */
+    public MqttsnOptions withWireLoggingEnabled(boolean wireLoggingEnabled){
+        this.wireLoggingEnabled = wireLoggingEnabled;
+        return this;
+    }
 
     /**
      * Should the transport layer hand off messages it receives to a processing thread pool so the protocol loop does
@@ -626,5 +667,13 @@ public class MqttsnOptions {
 
     public int getMaxProtocolMessageSize() {
         return maxProtocolMessageSize;
+    }
+
+    public boolean isWireLoggingEnabled() {
+        return wireLoggingEnabled;
+    }
+
+    public int getActiveContextTimeout() {
+        return activeContextTimeout;
     }
 }

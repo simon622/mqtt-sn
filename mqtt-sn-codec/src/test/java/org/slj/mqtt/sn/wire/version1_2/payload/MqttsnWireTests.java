@@ -152,7 +152,7 @@ public class MqttsnWireTests {
     @Test
     public void testMqttsnPublishShortTopic() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createPublishShortTopic(_qos, true, false, "ab", payload(4));
+        IMqttsnMessage message = factory.createPublish(_qos, true, false, "ab", payload(4));
         testWireMessage(message);
     }
 

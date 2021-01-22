@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.QueuedPublishMessage;
 
@@ -63,7 +64,7 @@ public interface IMqttsnMessageQueue<T extends IMqttsnRuntimeRegistry> extends I
      * @return - token if the message was added
      * @throws MqttsnException - an error occurred, most likely the queue was full
      */
-    MqttsnWaitToken offer(IMqttsnContext context, QueuedPublishMessage message) throws MqttsnException;
+    MqttsnWaitToken offer(IMqttsnContext context, QueuedPublishMessage message) throws MqttsnException, MqttsnQueueAcceptException;
 
     /**
      * Pop a message from the head of the queue. This removes and returns the message at the Head.

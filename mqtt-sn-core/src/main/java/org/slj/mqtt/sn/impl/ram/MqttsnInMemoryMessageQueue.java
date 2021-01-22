@@ -25,9 +25,11 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.QueuedPublishMessage;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -53,19 +55,27 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
     }
 
     @Override
-    public MqttsnWaitToken offer(IMqttsnContext context, QueuedPublishMessage message) throws MqttsnException {
+    public MqttsnWaitToken offer(IMqttsnContext context, QueuedPublishMessage message)
+            throws MqttsnException, MqttsnQueueAcceptException {
         Queue<QueuedPublishMessage> queue = getQueue(context);
         if(size(context) >= getMaxQueueSize()){
             logger.log(Level.WARNING, String.format("max queue size reached for client [%s] >= [%s]", context, queue.size()));
-            throw new MqttsnExpectationFailedException("max queue size reached for client");
+            throw new MqttsnQueueAcceptException("max queue size reached for client");
         }
         boolean b;
         synchronized (queue){
             b = queue.offer(message);
         }
-        logger.log(Level.INFO, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, context, queue.size()));
+
+        int size = size(context);
+
+        logger.log(MqttsnUtils.percentOf(size, getMaxQueueSize()) > 80 ? Level.WARNING : Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, context, queue.size()));
         MqttsnWaitToken token = MqttsnWaitToken.from(message);
         message.setToken(token);
+
+        if(registry.getMessageStateService() != null)
+            registry.getMessageStateService().scheduleFlush(context);
+
         return token;
     }
 

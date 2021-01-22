@@ -24,7 +24,9 @@
 
 package org.slj.mqtt.sn.client.spi;
 
+import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
@@ -38,14 +40,20 @@ import java.util.Optional;
 public interface IMqttsnClient extends Closeable {
 
     /**
+     * Is the client in the CONNECTED state
+     */
+    boolean isConnected();
+
+    /**
      * A blocking call to issue a CONNECT packet. On return your client will be considered in ACTIVE mode unless an exception
      * is thrown.
      *
      * @param keepAlive - Time in seconds to keep the session alive before the gateway times you out
      * @param cleanSession - Whether tidy up any existing session state on the gateway; including message queues, subscriptions and registrations
-     * @throws MqttsnException - There was an error processing the CONNECT command
+     * @throws MqttsnException - There was an internal error
+     * @throws MqttsnClientConnectException - The connect handshake could not be completed
      */
-    void connect(int keepAlive, boolean cleanSession) throws MqttsnException;
+    void connect(int keepAlive, boolean cleanSession) throws MqttsnException, MqttsnClientConnectException;
 
     /**
      * Add a new message onto the queue to send to the gateway at some point in the future.
@@ -57,9 +65,11 @@ public interface IMqttsnClient extends Closeable {
      * @param QoS - Quality of Service of the method, one of -1, 0 , 1, 2
      * @param data - The data you wish to send
      * @return token - a sending token that you can use to block on until the message has been sent
-     * @throws MqttsnException
+     * @throws MqttsnException - There was an internal error
+     * @throws MqttsnQueueAcceptException - The queue could not accept the message, most likely full
      */
-    MqttsnWaitToken publish(String topicName, int QoS, byte[] data) throws MqttsnException;
+    MqttsnWaitToken publish(String topicName, int QoS, byte[] data) throws MqttsnException, MqttsnQueueAcceptException;
+
 
     /**
      * @see {@link IMqttsnMessageStateService#waitForCompletion}
@@ -99,7 +109,7 @@ public interface IMqttsnClient extends Closeable {
      * @param connectOnFinish - when the DURATION period has elapsed, should the device transition into the ACTIVE mode by issuing a soft CONNECT or alternatively, DISCONNECT
      * @throws MqttsnException -  An error occurred
      */
-    void supervisedSleepWithWake(int duration, int wakeAfterIntervalSeconds, int maxWaitTimeMillis, boolean connectOnFinish)  throws MqttsnException;
+    void supervisedSleepWithWake(int duration, int wakeAfterIntervalSeconds, int maxWaitTimeMillis, boolean connectOnFinish) throws MqttsnException, MqttsnClientConnectException;
 
     /**
      * Put the device into the SLEEP mode for the duration in seconds. NOTE: this is a non-supervized sleep, which means the application

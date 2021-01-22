@@ -24,10 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.model.QueuedPublishMessage;
-import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.spi.*;
 
 import java.util.logging.Level;
@@ -77,53 +74,74 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
             }
 
             QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
-            String topicPath = queuedMessage.getTopicPath();
             if(queuedMessage != null){
-                TopicInfo info = registry.getTopicRegistry().lookup(context, topicPath);
-                if(info == null){
-                    logger.log(Level.INFO, String.format("need to register for delivery to [%s] on topic [%s]", context, topicPath));
-                    if(!clientMode){
-                        //-- only the server hands out alias's
-                        info = registry.getTopicRegistry().register(context, topicPath);
-                    }
-                    IMqttsnMessage register = registry.getMessageFactory().createRegister(info != null ? info.getTopicId() : 0, topicPath);
-                    try {
-                        MqttsnWaitToken token = registry.getMessageStateService().sendMessage(context, register);
-                        if(clientMode){
-                            if(token != null){
-                                registry.getMessageStateService().waitForCompletion(context, token);
-                            }
-                        }
-                    } catch(MqttsnExpectationFailedException e){
-                        logger.log(Level.WARNING, String.format("unable to send message, try again later"), e);
-                    }
-                    //-- with a register we should come back when the registration is complete and attempt delivery
-                    return RESULT.BACKOFF_PROCESS;
-                } else {
-                    //-- only deque when we have confirmed we can deliver
-                    queuedMessage = registry.getMessageQueue().pop(context);
-                    if (queuedMessage != null) {
-                        queuedMessage.incrementRetry();
-                        //-- let the reaper check on delivery
-                        try {
-                            MqttsnWaitToken token = registry.getMessageStateService().sendMessage(context, info, queuedMessage);
-                            if (clientMode) {
-                                if(token != null){
-                                    registry.getMessageStateService().waitForCompletion(context, token);
-                                }
-                            }
-
-                        } catch (MqttsnException e) {
-                            logger.log(Level.WARNING, String.format("unable to send message, requeue and backoff"), e);
-                            registry.getMessageQueue().offer(context, queuedMessage);
-                        }
-                    }
-
-                    return RESULT.REPROCESS;
-                }
+                return processNextMessage(context);
             } else {
                 return clientMode ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
             }
+        }
+    }
+
+    /**
+     * Uses the next message and establshes a register if no support topic alias's exist
+     */
+    protected RESULT processNextMessage(IMqttsnContext context) throws MqttsnException {
+
+        QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
+        String topicPath = queuedMessage.getTopicPath();
+        TopicInfo info = registry.getTopicRegistry().lookup(context, topicPath);
+        if(info == null){
+            logger.log(Level.INFO, String.format("need to register for delivery to [%s] on topic [%s]", context, topicPath));
+            if(!clientMode){
+                //-- only the server hands out alias's
+                info = registry.getTopicRegistry().register(context, topicPath);
+            }
+            IMqttsnMessage register = registry.getMessageFactory().createRegister(info != null ? info.getTopicId() : 0, topicPath);
+            try {
+                MqttsnWaitToken token = registry.getMessageStateService().sendMessage(context, register);
+                if(clientMode){
+                    if(token != null){
+                        registry.getMessageStateService().waitForCompletion(context, token);
+                    }
+                }
+            } catch(MqttsnExpectationFailedException e){
+                logger.log(Level.WARNING, String.format("unable to send message, try again later"), e);
+            }
+            //-- with a register we should come back when the registration is complete and attempt delivery
+            return RESULT.REPROCESS;
+        } else {
+            //-- only deque when we have confirmed we can deliver
+            return dequeAndPublishNextMessage(context, info);
+        }
+    }
+
+    protected RESULT dequeAndPublishNextMessage(IMqttsnContext context, TopicInfo info) throws MqttsnException {
+        QueuedPublishMessage queuedMessage = registry.getMessageQueue().pop(context);
+        if (queuedMessage != null) {
+            queuedMessage.incrementRetry();
+            //-- let the reaper check on delivery
+            try {
+                MqttsnWaitToken token = registry.getMessageStateService().sendMessage(context, info, queuedMessage);
+                if (clientMode) {
+                    if(token != null){
+                        registry.getMessageStateService().waitForCompletion(context, token);
+                    }
+                }
+
+                return registry.getMessageQueue().size(context) > 0 ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
+            } catch (MqttsnException e) {
+                logger.log(Level.WARNING, String.format("unable to send message, requeue and backoff"), e);
+                try {
+                    registry.getMessageQueue().offer(context, queuedMessage);
+                } catch(MqttsnQueueAcceptException ex){
+                    throw new MqttsnException(ex);
+                }
+                //-- error so back off a little
+                return RESULT.BACKOFF_PROCESS;
+            }
+        } else {
+            //-- no more messages
+            return RESULT.REMOVE_PROCESS;
         }
     }
 }

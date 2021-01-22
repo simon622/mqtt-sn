@@ -25,13 +25,14 @@
 package org.slj.mqtt.sn.wire.version1_2;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.codec.AbstractMqttsnMessageFactory;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
-public class Mqttsn_v1_2_MessageFactory implements IMqttsnMessageFactory {
+public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory implements IMqttsnMessageFactory {
 
     //singleton
     private static Mqttsn_v1_2_MessageFactory instance;
@@ -220,7 +221,7 @@ public class Mqttsn_v1_2_MessageFactory implements IMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createPublishShortTopic(int QoS, boolean DUP, boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException {
+    public IMqttsnMessage createPublish(int QoS, boolean DUP, boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException {
 
         int length = topicPath.getBytes(MqttsnConstants.CHARSET).length;
         if (length > 2)

@@ -39,9 +39,9 @@ public class MqttsnTcpOptions {
     public static int DEFAULT_CONNECT_TIMEOUT = 10000;
 
     /**
-     * Default socket timeout is 30000 milliseconds
+     * Default socket timeout is 0 (infinte)
      */
-    public static int DEFAULT_SO_TIMEOUT = 30000;
+    public static int DEFAULT_SO_TIMEOUT = 0;
 
     /**
      * By default TCP keep alive is enabled

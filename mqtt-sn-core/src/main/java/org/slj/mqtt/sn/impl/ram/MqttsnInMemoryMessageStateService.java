@@ -49,9 +49,10 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    protected boolean doWork() {
-        Iterator<IMqttsnContext> itr = inflightMessages.keySet().iterator();
+    protected long doWork() {
+        long nextWork = super.doWork();
         synchronized (inflightMessages) {
+            Iterator<IMqttsnContext> itr = inflightMessages.keySet().iterator();
             while (itr.hasNext()) {
                 try {
                     IMqttsnContext context = itr.next();
@@ -61,7 +62,7 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
                 }
             }
         }
-        return super.doWork();
+        return nextWork;
     }
 
     @Override

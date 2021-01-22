@@ -47,4 +47,6 @@ public interface IMqttsnTransport {
 
     void broadcast(IMqttsnMessage message) throws MqttsnException ;
 
+    void connectionLost(INetworkContext context, Throwable t);
+
 }

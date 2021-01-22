@@ -70,7 +70,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     }
 
     @Override
-    protected boolean doWork() {
+    protected long doWork() {
         try {
             if(options.getManagedConnections()){
                 logger.log(Level.FINE, "checking status of managed connection..");
@@ -78,11 +78,9 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                     if(!connection.isConnected()){
                         logger.log(Level.WARNING, "detected invalid connection to broker, dropping stale connection.");
                         close(connection);
-                        return true;
                     }
                 } else {
                     initConnection();
-                    return true;
                 }
             } else {
                 if(options.getConnectOnStartup() && connection == null){
@@ -92,7 +90,8 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
         } catch(Exception e){
             logger.log(Level.SEVERE, "error occurred monitoring connections;", e);
         }
-        return false;
+
+        return 10000;
     }
 
     @Override

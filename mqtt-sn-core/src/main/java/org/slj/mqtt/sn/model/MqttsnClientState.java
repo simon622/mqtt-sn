@@ -25,5 +25,5 @@
 package org.slj.mqtt.sn.model;
 
 public enum MqttsnClientState {
-    PENDING, CONNECTED, DISCONNECTED, AWAKE, ASLEEP
+    PENDING, CONNECTED, DISCONNECTED, AWAKE, ASLEEP, ERROR
 }

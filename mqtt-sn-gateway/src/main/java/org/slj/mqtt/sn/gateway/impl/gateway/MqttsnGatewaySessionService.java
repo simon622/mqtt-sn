@@ -49,16 +49,16 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    protected boolean doWork() {
-        Iterator<IMqttsnContext> itr = sessionLookup.keySet().iterator();
+    protected long doWork() {
         synchronized (sessionLookup){
+            Iterator<IMqttsnContext> itr = sessionLookup.keySet().iterator();
             while(itr.hasNext()){
                 IMqttsnContext context = itr.next();
                 IMqttsnSessionState state = sessionLookup.get(context);
                 deamon_validateKeepAlive(state);
             }
         }
-        return true;
+        return 10000;
     }
 
     protected void deamon_validateKeepAlive(IMqttsnSessionState state){
@@ -319,8 +319,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         for (IMqttsnContext client : recipients){
             int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
             int q = Math.min(grantedQos,QoS);
-            registry.getMessageQueue().offer(client, new QueuedPublishMessage(
+            try {
+                registry.getMessageQueue().offer(client, new QueuedPublishMessage(
                     messageId, topicPath, q));
+            } catch(MqttsnQueueAcceptException e){
+                throw new MqttsnException(e);
+            }
         }
     }
 

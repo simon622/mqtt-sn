@@ -55,7 +55,7 @@ public class MqttsnTcpTransport
     protected boolean clientMode = false;
 
     static AtomicInteger connectionCount = new AtomicInteger(0);
-
+    private final Object monitor = new Object();
     protected Handler clientHandler;
     protected Server server;
 
@@ -68,8 +68,7 @@ public class MqttsnTcpTransport
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         try {
             super.start(runtime);
-            if(options.isSecure()){
-            }
+            running = false;
             if(clientMode){
                 logger.log(Level.INFO, String.format("running in client mode, establishing tcp connection..."));
                 connectClient();
@@ -77,7 +76,12 @@ public class MqttsnTcpTransport
                 logger.log(Level.INFO, String.format("running in server mode, establishing tcp acceptors..."));
                 startServer();
             }
+            running = true;
+            synchronized (monitor){
+                monitor.notifyAll();
+            }
         } catch(Exception e){
+            running = false;
             throw new MqttsnException(e);
         }
     }
@@ -88,13 +92,21 @@ public class MqttsnTcpTransport
         try {
             if(clientMode){
                 logger.log(Level.INFO, String.format("closing in client mode, closing tcp connection(s)..."));
-                if(clientHandler != null){
-                    clientHandler.close();
+                try {
+                    if(clientHandler != null){
+                        clientHandler.close();
+                    }
+                } finally {
+                    clientHandler = null;
                 }
             } else {
                 logger.log(Level.INFO, String.format("closing in server mode, closing tcp connection(s)..."));
-                if(server != null){
-                    server.close();
+                try {
+                    if(server != null){
+                        server.close();
+                    }
+                } finally {
+                    server = null;
                 }
             }
         } catch(Exception e){
@@ -106,11 +118,24 @@ public class MqttsnTcpTransport
     protected void writeToTransport(INetworkContext context, ByteBuffer data) throws MqttsnException {
         try {
             if(clientMode){
-                clientHandler.write(drain(data));
+                if(clientHandler == null){
+                    //-- in edge cases, we may get called by other services when still connecting..
+                    //-- so defend against that
+                    synchronized (monitor){
+                        logger.log(Level.WARNING, "waiting for TCP stack to come up...");
+                        monitor.wait(options.getConnectTimeout() + 1000);
+                    }
+                }
+                if(clientHandler != null){
+                    clientHandler.write(drain(data));
+                }
+
             } else {
-                server.write(context, drain(data));
+                if(server != null){
+                    server.write(context, drain(data));
+                }
             }
-        } catch(IOException e){
+        } catch(IOException | InterruptedException e){
             throw new MqttsnException("error writing to connection;", e);
         }
     }
@@ -167,7 +192,7 @@ public class MqttsnTcpTransport
 
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
             try(InputStream trustStoreData = new FileInputStream(f)) {
-                char[] password = options.getKeyStorePassword().toCharArray();
+                char[] password = options.getTrustStorePassword().toCharArray();
                 trustStore.load(trustStoreData, password);
                 Enumeration<String> aliases = keyStore.aliases();
                 while(aliases.hasMoreElements()){
@@ -200,61 +225,65 @@ public class MqttsnTcpTransport
 
             //-- create and bind local socket
             if(clientHandler == null){
-                Socket clientSocket;
-                if(options.isSecure()){
-                    clientSocket = initSSLContext().getSocketFactory().createSocket();
-                    SSLSocket ssl = (SSLSocket) clientSocket;
-                    if(options.getSslProtocols() != null) {
-                        logger.log(Level.INFO, String.format("starting client-ssl with protocols [%s]",
-                                Arrays.toString(options.getSslProtocols())));
-                        ssl.setEnabledProtocols(options.getSslProtocols());
+                synchronized (this){
+                    if(clientHandler == null){
+                        Socket clientSocket;
+                        if(options.isSecure()){
+                            clientSocket = initSSLContext().getSocketFactory().createSocket();
+                            SSLSocket ssl = (SSLSocket) clientSocket;
+                            if(options.getSslProtocols() != null) {
+                                logger.log(Level.INFO, String.format("starting client-ssl with protocols [%s]",
+                                        Arrays.toString(options.getSslProtocols())));
+                                ssl.setEnabledProtocols(options.getSslProtocols());
+                            }
+                            if(options.getCipherSuites() != null){
+                                logger.log(Level.INFO, String.format("starting client-ssl with cipher suites [%s]",
+                                        Arrays.toString(options.getCipherSuites())));
+                                ssl.setEnabledCipherSuites(options.getCipherSuites());
+                            }
+
+                            logger.log(Level.INFO, String.format("client-ssl enabled protocols [%s]",
+                                    Arrays.toString(ssl.getEnabledProtocols())));
+                            logger.log(Level.INFO, String.format("client-ssl enabled cipher suites [%s]",
+                                    Arrays.toString(ssl.getEnabledCipherSuites())));
+
+                        } else {
+                            clientSocket = options.getClientSocketFactory().createSocket();
+                        }
+
+                        //bind to the LOCAL address if specified, else bind to the OS default
+                        InetSocketAddress localAddress = null;
+                        if(options.getHost() != null){
+                            localAddress = new InetSocketAddress(options.getHost(), options.getPort());
+                        }
+
+                        clientSocket.bind(localAddress);
+                        clientSocket.setSoTimeout(options.getSoTimeout());
+                        clientSocket.setKeepAlive(options.isTcpKeepAliveEnabled());
+
+                        //-- if bound locally, connect to the remote if specified (running as a client)
+                        if(clientSocket.isBound()){
+                            InetSocketAddress r =
+                                    new InetSocketAddress(remoteContext.getNetworkAddress().getHostAddress(),
+                                            remoteContext.getNetworkAddress().getPort());
+                            logger.log(Level.INFO, String.format("connecting client socket to [%s] -> [%s]",
+                                    remoteContext.getNetworkAddress().getHostAddress(), remoteContext.getNetworkAddress().getPort()));
+                            clientSocket.connect(r, options.getConnectTimeout());
+                        }
+
+                        //-- need to be connected before handshake
+                        if(clientSocket instanceof SSLSocket &&
+                                options.isSecure()){
+                            ((SSLSocket) clientSocket).startHandshake();
+                        }
+
+                        if(clientSocket.isBound() && clientSocket.isConnected()){
+                            clientHandler = new Handler(remoteContext, clientSocket, null);
+                            clientHandler.start();
+                        } else {
+                            logger.log(Level.SEVERE, "could not bind and connect socket to host, finished.");
+                        }
                     }
-                    if(options.getCipherSuites() != null){
-                        logger.log(Level.INFO, String.format("starting client-ssl with cipher suites [%s]",
-                                Arrays.toString(options.getCipherSuites())));
-                        ssl.setEnabledCipherSuites(options.getCipherSuites());
-                    }
-
-                    logger.log(Level.INFO, String.format("client-ssl enabled protocols [%s]",
-                            Arrays.toString(ssl.getEnabledProtocols())));
-                    logger.log(Level.INFO, String.format("client-ssl enabled cipher suites [%s]",
-                            Arrays.toString(ssl.getEnabledCipherSuites())));
-
-                } else {
-                    clientSocket = options.getClientSocketFactory().createSocket();
-                }
-
-                //bind to the LOCAL address if specified, else bind to the OS default
-                InetSocketAddress localAddress = null;
-                if(options.getHost() != null){
-                    localAddress = new InetSocketAddress(options.getHost(), options.getPort());
-                }
-
-                clientSocket.bind(localAddress);
-                clientSocket.setSoTimeout(options.getSoTimeout());
-                clientSocket.setKeepAlive(options.isTcpKeepAliveEnabled());
-
-                //-- if bound locally, connect to the remote if specified (running as a client)
-                if(clientSocket.isBound()){
-                    InetSocketAddress r =
-                            new InetSocketAddress(remoteContext.getNetworkAddress().getHostAddress(),
-                                    remoteContext.getNetworkAddress().getPort());
-                    logger.log(Level.INFO, String.format("connecting client to [%s] -> [%s]",
-                            remoteContext.getNetworkAddress().getHostAddress(), remoteContext.getNetworkAddress().getPort()));
-                    clientSocket.connect(r, options.getConnectTimeout());
-                }
-
-                //-- need to be connected before handshake
-                if(clientSocket instanceof SSLSocket &&
-                        options.isSecure()){
-                    ((SSLSocket) clientSocket).startHandshake();
-                }
-
-                if(clientSocket.isBound() && clientSocket.isConnected()){
-                    clientHandler = new Handler(remoteContext, clientSocket, null);
-                    clientHandler.start();
-                } else {
-                    logger.log(Level.SEVERE, "could not bind and connect socket to host, finished.");
                 }
             }
         } catch(Exception e){
@@ -265,30 +294,34 @@ public class MqttsnTcpTransport
     protected void startServer()
             throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException,
             CertificateException, UnrecoverableKeyException {
-        if(server == null && running){
-            ServerSocket socket = null;
-            if(options.isSecure()){
-                logger.log(Level.INFO, String.format("running in secure mode, tcp with TLS..."));
-                socket = initSSLContext().getServerSocketFactory().createServerSocket(options.getSecurePort());
+        if(server == null){
+            synchronized (this) {
+                if (server == null) {
+                    ServerSocket socket = null;
+                    if(options.isSecure()){
+                        logger.log(Level.INFO, String.format("running in secure mode, tcp with TLS..."));
+                        socket = initSSLContext().getServerSocketFactory().createServerSocket(options.getSecurePort());
 
-                SSLServerSocket ssl = (SSLServerSocket) socket;
-                if(options.getSslProtocols() != null) {
-                    logger.log(Level.INFO, String.format("starting server-ssl with protocols [%s]", Arrays.toString(options.getSslProtocols())));
-                    ssl.setEnabledProtocols(options.getSslProtocols());
+                        SSLServerSocket ssl = (SSLServerSocket) socket;
+                        if(options.getSslProtocols() != null) {
+                            logger.log(Level.INFO, String.format("starting server-ssl with protocols [%s]", Arrays.toString(options.getSslProtocols())));
+                            ssl.setEnabledProtocols(options.getSslProtocols());
+                        }
+                        if(options.getCipherSuites() != null){
+                            logger.log(Level.INFO, String.format("starting server-ssl with cipher suites [%s]", Arrays.toString(options.getCipherSuites())));
+                            ssl.setEnabledCipherSuites(options.getCipherSuites());
+                        }
+
+                        logger.log(Level.INFO, String.format("server-ssl enabled protocols [%s]", Arrays.toString(ssl.getEnabledProtocols())));
+                        logger.log(Level.INFO, String.format("server-ssl enabled cipher suites [%s]", Arrays.toString(ssl.getEnabledCipherSuites())));
+
+                    } else {
+                        socket = options.getServerSocketFactory().createServerSocket(options.getPort());
+                    }
+                    server = new Server(socket);
+                    server.start();
                 }
-                if(options.getCipherSuites() != null){
-                    logger.log(Level.INFO, String.format("starting server-ssl with cipher suites [%s]", Arrays.toString(options.getCipherSuites())));
-                    ssl.setEnabledCipherSuites(options.getCipherSuites());
-                }
-
-                logger.log(Level.INFO, String.format("server-ssl enabled protocols [%s]", Arrays.toString(ssl.getEnabledProtocols())));
-                logger.log(Level.INFO, String.format("server-ssl enabled cipher suites [%s]", Arrays.toString(ssl.getEnabledCipherSuites())));
-
-            } else {
-                socket = options.getServerSocketFactory().createServerSocket(options.getPort());
             }
-            server = new Server(socket);
-            server.start();
         }
     }
 
@@ -386,10 +419,27 @@ public class MqttsnTcpTransport
         }
 
         public void write(byte[] data) throws IOException {
-            if(descriptor.isOpen()){
-                logger.log(Level.INFO, String.format("writing [%s] bytes to output stream", data.length));
-                descriptor.os.write(data);
-                descriptor.os.flush();
+            //-- TODO this needs buffering in
+            try {
+                if(descriptor.isOpen()){
+                    if(logger.isLoggable(Level.FINE)){
+                        logger.log(Level.FINE, String.format("writing [%s] bytes to output stream", data.length));
+                    }
+                    descriptor.os.write(data);
+                    descriptor.os.flush();
+                }
+            } catch(SocketException e){
+                try {
+                    if(descriptor != null) {
+                        connectionLost(descriptor.context, e);
+                    }
+                } finally {
+                    try {
+                        descriptor.close();
+                    } catch (IOException ex) {
+                        logger.log(Level.WARNING, "error closing socket descriptor;", e);
+                    }
+                }
             }
         }
 
@@ -409,10 +459,13 @@ public class MqttsnTcpTransport
                                 messageLength = registry.getCodec().readMessageSize(baos.toByteArray());
                                 messageLengthRemaining = messageLength;
                             }
+
                             messageLengthRemaining -= count;
 
                             if (messageLengthRemaining == 0 && baos.size() == messageLength) {
-                                logger.log(Level.INFO, String.format("received [%s] bytes from socket for [%s], reset buffer", messageLength, descriptor));
+                                if(logger.isLoggable(Level.FINE)){
+                                    logger.log(Level.FINE, String.format("received [%s] bytes from socket for [%s], reset buffer", messageLength, descriptor));
+                                }
                                 receiveFromTransport(descriptor.context, wrap(baos.toByteArray()));
                                 messageLength = 0;
                                 messageLengthRemaining = 0;
@@ -422,14 +475,23 @@ public class MqttsnTcpTransport
                     }
 
                     if(count == 0 || count == -1) {
-                        logger.log(Level.INFO, String.format("received [%s] bytes from socket handler (end of stream), ", count, descriptor));
-                        break;
+                        logger.log(Level.INFO, String.format("received [%s] bytes from socket handler (end of stream - EOF), ", count, descriptor));
+                        //throw here will cascade the error up to the runtime
+                        throw new SocketException("EOF received");
                     }
                 }
             }
-            catch(SocketException e){
+            catch(SSLProtocolException | SocketException e){
                 //-- socket close from underneath during reading
                 logger.log(Level.FINE, String.format("socket error [%s]", descriptor), e);
+                if(descriptor != null){
+                    if(!descriptor.closed){
+                        //it may have been that we asked for a stop and there was an issue closing the socket
+                        //in which cast we didnt LOSE the connection.. only report lost if the
+                        //service was meant to be running
+                        connectionLost(descriptor.context, e);
+                    }
+                }
             }
             catch(IOException e){
                 throw new RuntimeException("error accepting data from client stream;",e);

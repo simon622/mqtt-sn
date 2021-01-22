@@ -242,7 +242,7 @@ public interface IMqttsnMessageFactory {
      * @param topicPath: the SHORT topic path - version 1.2 does not support full topicNames in the publish
      * @param payload:   the published data
      */
-    IMqttsnMessage createPublishShortTopic(int QoS, boolean DUP, boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException;
+    IMqttsnMessage createPublish(int QoS, boolean DUP, boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException;
 
     /**
      * The PUBACK message is sent by a gateway or a client as an acknowledgment to the receipt and processing

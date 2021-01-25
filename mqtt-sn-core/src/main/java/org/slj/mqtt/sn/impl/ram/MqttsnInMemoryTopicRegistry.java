@@ -39,9 +39,9 @@ public class MqttsnInMemoryTopicRegistry<T extends IMqttsnRuntimeRegistry>
     protected Map<IMqttsnContext, Set<ConfirmableTopicRegistration>> topicLookups;
 
     @Override
-    public void start(T runtime) throws MqttsnException {
-        super.start(runtime);
+    public synchronized void start(T runtime) throws MqttsnException {
         topicLookups = Collections.synchronizedMap(new HashMap<>());
+        super.start(runtime);
     }
 
     protected Set<ConfirmableTopicRegistration> getAll(IMqttsnContext context){

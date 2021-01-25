@@ -43,9 +43,9 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public void start(T runtime) throws MqttsnException {
-        super.start(runtime);
+    public synchronized void start(T runtime) throws MqttsnException {
         inflightMessages = Collections.synchronizedMap(new HashMap());
+        super.start(runtime);
     }
 
     @Override

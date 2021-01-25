@@ -58,7 +58,7 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
         super(udpOptions);
     }
 
-    protected void bind() throws SocketException {
+    protected synchronized void bind() throws SocketException {
 
         int bufferSize = options.getReceiveBuffer();
         socket = options.getPort() > 0 ? new DatagramSocket(options.getPort()) : new DatagramSocket();

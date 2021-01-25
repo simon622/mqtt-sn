@@ -34,7 +34,7 @@ public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRe
                 impl = null;
             }
         }
-        if(impl == null) throw new MqttsnExpectationFailedException("unable to read message by id, message has expired");
+        if(impl == null) throw new MqttsnExpectationFailedException("unable to read message by id, message not found in registry");
         if(impl.isRemoveAfterRead()){
             remove(messageId);
         }

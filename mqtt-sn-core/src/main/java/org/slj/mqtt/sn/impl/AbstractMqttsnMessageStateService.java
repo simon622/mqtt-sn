@@ -27,12 +27,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
-    public void start(T runtime) throws MqttsnException {
-        super.start(runtime);
+    public synchronized void start(T runtime) throws MqttsnException {
         flushOperations = Collections.synchronizedSet(new HashSet());
         lastUsedMsgIds = Collections.synchronizedMap(new HashMap());
         lastMessageSent = Collections.synchronizedMap(new HashMap());
         lastActiveMessage = Collections.synchronizedMap(new HashMap());
+        super.start(runtime);
     }
 
     @Override

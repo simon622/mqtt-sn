@@ -39,9 +39,9 @@ public class MqttsnInMemoryMessageRegistry<T extends IMqttsnRuntimeRegistry>
     protected Map<UUID, MessageImpl> messageLookup;
 
     @Override
-    public void start(T runtime) throws MqttsnException {
-        super.start(runtime);
+    public synchronized void start(T runtime) throws MqttsnException {
         messageLookup = Collections.synchronizedMap(new HashMap<>());
+        super.start(runtime);
     }
 
     @Override

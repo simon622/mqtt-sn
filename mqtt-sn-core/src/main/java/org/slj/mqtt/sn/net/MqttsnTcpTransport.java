@@ -65,7 +65,7 @@ public class MqttsnTcpTransport
     }
 
     @Override
-    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         try {
             super.start(runtime);
             running = false;
@@ -87,7 +87,7 @@ public class MqttsnTcpTransport
     }
 
     @Override
-    public void stop() throws MqttsnException {
+    public synchronized void stop() throws MqttsnException {
         super.stop();
         try {
             if(clientMode){

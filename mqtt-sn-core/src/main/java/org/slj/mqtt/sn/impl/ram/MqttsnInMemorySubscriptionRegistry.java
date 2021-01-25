@@ -39,9 +39,9 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     protected Map<IMqttsnContext, Set<Subscription>> subscriptionsLookups;
 
     @Override
-    public void start(T runtime) throws MqttsnException {
-        super.start(runtime);
+    public synchronized void start(T runtime) throws MqttsnException {
         subscriptionsLookups = Collections.synchronizedMap(new HashMap());
+        super.start(runtime);
     }
 
     @Override

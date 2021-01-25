@@ -41,7 +41,7 @@ public abstract class AbstractMqttsnUdpTransport<U extends IMqttsnRuntimeRegistr
     }
 
     @Override
-    public void start(U runtime) throws MqttsnException {
+    public synchronized void start(U runtime) throws MqttsnException {
         try {
             super.start(runtime);
             bind();

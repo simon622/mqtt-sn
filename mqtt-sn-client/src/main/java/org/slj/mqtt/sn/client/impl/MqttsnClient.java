@@ -85,8 +85,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * events.
      *
      * @param managedConnection - You can choose to use managed connections which will actively monitor your connection with the remote gateway,
-     *                          handling any unsolicited remote DISCONNECTs by RECONNECTING your session as well as ensuring the gateway keepAlive
-     *                          is maintained (by issuing PINGs in periods of inactivity).
+     *                         and issue PINGS where neccessary to keep your session alive
      */
     public MqttsnClient(boolean managedConnection){
         this(managedConnection, true);
@@ -97,8 +96,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * events.
      *
      * @param managedConnection - You can choose to use managed connections which will actively monitor your connection with the remote gateway,
-     *                          handling any unsolicited remote DISCONNECTs by RECONNECTING your session as well as ensuring the gateway keepAlive
-     *                          is maintained (by issuing PINGs in periods of inactivity).
+     *      *                         and issue PINGS where neccessary to keep your session alive
      *
      * @param autoReconnect - When operating in managedConnection mode, should we attempt to silently reconnect if we detected a dropped
      *                      connection

@@ -40,9 +40,9 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
     protected Map<IMqttsnContext, Queue<QueuedPublishMessage>> queues;
 
     @Override
-    public void start(T runtime) throws MqttsnException {
-        super.start(runtime);
+    public synchronized void start(T runtime) throws MqttsnException {
         queues = Collections.synchronizedMap(new HashMap<>());
+        super.start(runtime);
     }
 
     @Override

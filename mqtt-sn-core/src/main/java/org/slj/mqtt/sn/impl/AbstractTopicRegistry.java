@@ -86,8 +86,8 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
     @Override
     public String lookupRegistered(IMqttsnContext context, int topicAlias) throws MqttsnException {
         Map<String, Integer> map = getRegistrationsInternal(context, false);
-        Iterator<String> itr = map.keySet().iterator();
         synchronized (context){
+            Iterator<String> itr = map.keySet().iterator();
             while(itr.hasNext()){
                 String topicPath = itr.next();
                 Integer i = map.get(topicPath);
@@ -106,15 +106,15 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
 
     @Override
     public Integer lookupPredefined(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Map<String, Integer> predefinedMap = getPredefinedTopics(context);
+        Map<String, Integer> predefinedMap = getPredefinedTopicsForString(context);
         return predefinedMap.get(rationalizeTopic(context, topicPath));
     }
 
     @Override
     public String lookupPredefined(IMqttsnContext context, int topicAlias) throws MqttsnException {
-        Map<String, Integer> predefinedMap = getPredefinedTopics(context);
-        Iterator<String> itr = predefinedMap.keySet().iterator();
+        Map<String, Integer> predefinedMap = getPredefinedTopicsForInteger(context);
         synchronized (predefinedMap){
+            Iterator<String> itr = predefinedMap.keySet().iterator();
             while(itr.hasNext()){
                 String topicPath = itr.next();
                 Integer i = predefinedMap.get(topicPath);
@@ -192,5 +192,7 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
 
     protected abstract Map<String, Integer> getRegistrationsInternal(IMqttsnContext context, boolean confirmedOnly) throws MqttsnException;
 
-    protected abstract Map<String, Integer> getPredefinedTopics(IMqttsnContext context) throws MqttsnException;
+    protected abstract Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnContext context) throws MqttsnException;
+
+    protected abstract Map<String, Integer> getPredefinedTopicsForString(IMqttsnContext context) throws MqttsnException;
 }

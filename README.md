@@ -6,7 +6,7 @@ View the intial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/uploads
 
 ### MQTT-SN Evolved
 As of late 2020, the MQTT technical committee at OASIS (via a sub-committee led by **Ian Craggs** ([Ian's Blog](https://modelbasedtesting.co.uk))) are working on standardisation and changes to bring MQTT-SN more in line with MQTT version 5. 
-This is an ongoing piece of work which we hope to formalise and conclude in 2021.
+This is an ongoing piece of work which we hope to formalise and conclude in 2022.
 
 ### Project Goals
 Notable open-source works already exists for various MQTT and MQTT-SN components, the main ones of note are listed below; many fall under the eclipse PAHO project. The work by **Ian Craggs** et al on the MQTT-SN Java gateway set out the wire transport implementation and a transparent gateway. That is a gateway which connects a client to a broker side socket and mediates the access. The goal of this project and its work are that it should provide an open-source **aggregating gateway** implementation to prove out **version 2** of the specification.

@@ -68,10 +68,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     private volatile boolean cleanSession;
 
     private volatile int errorRetryCounter = 0;
-
     private Thread managedConnectionThread = null;
-    private boolean managedConnection = false;
-    private volatile boolean autoReconnect = false;
+
+    private final boolean managedConnection;
+    private final boolean autoReconnect;
 
     /**
      * Construct a new client instance whose connection is NOT automatically managed. It will be up to the application
@@ -450,12 +450,9 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                                 MqttsnClientState.CONNECTED, MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)) {
                             logger.log(Level.INFO, String.format("disconnecting client; deepClean ? [%s], sending remote disconnect ? [%s]", deepClean, sendRemoteDisconnect));
                             clearState(state.getContext(), deepClean);
-
                             if(sendRemoteDisconnect){
                                 IMqttsnMessage message = registry.getMessageFactory().createDisconnect();
                                 MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
-//                                Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(state.getContext(), token);
-//                                stateChangeResponseCheck(state, token, response, MqttsnClientState.DISCONNECTED);
                             }
                         }
                     } finally {
@@ -663,7 +660,6 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         if(deepClear){
             registry.getSubscriptionRegistry().clear(context);
             registry.getTopicRegistry().clear(context, true);
-//            registry.getMessageQueue().clear(context);
         }
     }
 
@@ -683,29 +679,21 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         @Override
         public void notifyConnected(IMqttsnContext context) {
-
         }
 
         @Override
         public void notifyRemoteDisconnect(IMqttsnContext context) {
-//            boolean shouldRecover = MqttsnUtils.in(state.getClientState(),
-//                    MqttsnClientState.CONNECTED, MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE);
-//            resetConnection(context, null, shouldRecover);
             try {
                 disconnect(false, false);
-            } catch(Exception e){
-
-            }
+            } catch(Exception e){}
         }
 
         @Override
         public void notifyActiveTimeout(IMqttsnContext context) {
-
         }
 
         @Override
         public void notifyLocalDisconnect(IMqttsnContext context, Throwable t) {
-
         }
 
         @Override

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+export MQTTSN_HOME=/home/ubuntu/mqtt-sn-gateway-udp
+
+# Get system RAM in KB
+totalMemKB=$(awk '/MemTotal:/ { print $2 }' /proc/meminfo)
+
+# Set default memFlags just in case...
+memFlags="-Xmx128M -Xms64M"
+
+# t3.nano (512MB RAM)
+if ((${totalMemKB}<=512000)); then
+    memFlags="-Xmx128M -Xms64M"
+# t3.micro (1GB RAM)
+elif ((512001<=${totalMemKB} && ${totalMemKB}<=1024000)); then
+    memFlags="-Xmx512M -Xms128M"
+# t3.small (2GB RAM)
+elif ((1024001<=${totalMemKB} && ${totalMemKB}<=2048000)); then
+    memFlags="-Xmx1G -Xms256M"
+# t3.medium (4GB RAM)
+elif ((2048001<=${totalMemKB} && ${totalMemKB}<=4096000)); then
+    memFlags="-Xmx2G -Xms256M"
+# t3.large and above (8GB+ RAM)
+elif ((${totalMemKB}>=4096001)); then
+    memFlags="-Xmx2G -Xms256M"
+fi
+
+echo "System RAM KB: ${totalMemKB}"
+echo "Setting memFlags: ${memFlags}"
+
+cd $MQTTSN_HOME
+
+/usr/bin/java ${memFlags} -jar /home/ubuntu/mqtt-sn-gateway-udp/mqtt-sn-gateway-1.0.0.jar 2442 ${thing_id} ${mqtt_broker} 1883 ${thing_user} ${thing_password} >> /home/ubuntu/mqtt-sn-gateway-udp/logs/mqtt-sn-gateway-udp.log 2>&1

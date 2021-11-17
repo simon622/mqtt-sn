@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: openjdk8
+  build:
+    commands:
+      - echo Build started on `date`
+      - mvn -f mqtt-sn-codec clean install
+      - mvn -f mqtt-sn-core clean install
+      - mvn -f mqtt-sn-gateway clean install
+
+      - mvn -f mqtt-sn-gateway-artefact clean package
+
+artifacts:
+  files:
+    - mqtt-sn-gateway-artefact/target/mqtt-sn-gateway-1.0.0.jar
+    - ec2-scripts/*
+    - appspec.yml
+  discard-paths: yes

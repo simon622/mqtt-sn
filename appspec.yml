@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/mqtt-sn-gateway-udp
+hooks:
+  ApplicationStop:
+    - location: stop.sh
+      timeout: 30
+      runas: root
+  AfterInstall:
+    - location: create_run_script.sh
+      timeout: 30
+      runas: ubuntu
+  ApplicationStart:
+    - location: start.sh
+      timeout: 30
+      runas: root

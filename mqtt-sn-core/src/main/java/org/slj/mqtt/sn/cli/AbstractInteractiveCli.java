@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractInteractiveCli {
 
+    static final int MAX_ALLOWED_CLIENTID_LENGTH = 255;
     static final String HOSTNAME = "hostName";
     static final String CLIENTID = "clientId";
     static final String PORT = "port";
@@ -96,7 +97,8 @@ public abstract class AbstractInteractiveCli {
                 receiveCount.incrementAndGet();
                 receivedPublishBytesCount.addAndGet(data.length);
                 output.println();
-                message(String.format(cli_blue() + "[<<<] PUBLISH [%s] bytes on [%s] from [%s] -> [%s]", data.length, topic, context.getId(), new String(data)));
+                message(cli_blue(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] -> [%s]",
+                        data.length, topic, context.getId(), new String(data))));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -105,7 +107,8 @@ public abstract class AbstractInteractiveCli {
             try {
                 sentCount.incrementAndGet();
                 publishedBytesCount.addAndGet(data.length);
-                message(String.format(cli_blue() + "[>>>] PUBLISH [%s] bytes on [%s] to [%s] -> [%s]", data.length, topicName, context.getId(), new String(data)));
+                message(cli_blue(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] -> [%s]",
+                        data.length, topicName, context.getId(), new String(data))));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -114,7 +117,8 @@ public abstract class AbstractInteractiveCli {
         runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] data, int retryCount) -> {
             try {
                 sentCount.incrementAndGet();
-                message(String.format(cli_blue() + "[XXX] PUBLISH failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] -> [%s]", retryCount, data.length, topicName, QoS, new String(data)));
+                message(cli_red(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] -> [%s]",
+                        retryCount, data.length, topicName, QoS, new String(data))));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -138,18 +142,17 @@ public abstract class AbstractInteractiveCli {
 
     public void welcome(){
         output.println("===============================================");
-        output.println("Welcome to " + getCLIName());
+        output.println(String.format("Welcome to %s", getCLIName()));
         output.println("===============================================");
     }
 
     public void exit(){
         output.println("===============================================");
-        output.println("Goodbye from " + getCLIName());
+        output.println(String.format("Goodbye from %s", getCLIName()));
         output.println("===============================================");
     }
 
     protected void configure() throws IOException {
-
         do{
             hostName = captureMandatoryString(input, output, "Please enter a valid host name or ip address");
         } while(!validHost());
@@ -157,7 +160,7 @@ public abstract class AbstractInteractiveCli {
         port = captureMandatoryInt(input, output, "Please enter a port", null);
         do{
             clientId = captureMandatoryString(input, output,  "Please enter a valid clientId");
-        } while(!validClientId());
+        } while(!validClientId(MAX_ALLOWED_CLIENTID_LENGTH));
     }
 
     public void configureWithHistory() throws IOException {
@@ -211,39 +214,63 @@ public abstract class AbstractInteractiveCli {
         }
         saveConfigHistory(properties);
         properties.store(new FileOutputStream(f), "Generated at " + new Date());
-        message("History file written to " + f.getAbsolutePath());
+        message(String.format("History file written to %s", f.getAbsolutePath()));
     }
 
-    public void message(String message) throws IOException {
+    public void message(String message) {
+        StringBuilder sb = new StringBuilder("\t>> ");
+        sb.append(message);
         synchronized (output){
-            output.println(cli_reset() + "\t>> " + message);
+            output.println(cli_reset(sb.toString()));
+        }
+    }
+
+    public void tabmessage(String message) {
+        StringBuilder sb = new StringBuilder("\t\t>> ");
+        sb.append(message);
+        synchronized (output){
+            output.println(cli_reset(sb.toString()));
         }
     }
 
     public void error(String message, Throwable t) throws IOException {
+        StringBuilder sb = new StringBuilder("\t>> ERROR ");
+        sb.append(message);
         synchronized (output){
-            output.println(cli_red() + "\t>> ERROR " + message);
+            output.println(cli_red(sb.toString()));
             if(t != null){
-                output.println(cli_red() + "\t>> REASON " + t.getMessage());
+                output.println(cli_red(String.format("\t>> REASON %s", t.getMessage())));
                 t.printStackTrace();
             }
         }
     }
 
-    protected String cli_reset(){
-        return colors ? "\u001B[0m" : "";
+    protected String cli_reset(String value){
+        StringBuilder sb = new StringBuilder();
+        sb.append(colors ? "\u001B[0m" : "");
+        sb.append(value);
+        return sb.toString();
     }
 
-    protected String cli_red(){
-        return colors ? "\u001B[31m" : "";
+    protected String cli_red(String value){
+        StringBuilder sb = new StringBuilder();
+        sb.append(colors ? "\u001B[31m" : "");
+        sb.append(value);
+        return sb.toString();
     }
 
-    protected String cli_green(){
-        return colors ? "\u001B[32m" : "";
+    protected String cli_green(String value){
+        StringBuilder sb = new StringBuilder();
+        sb.append(colors ? "\u001B[32m" : "");
+        sb.append(value);
+        return sb.toString();
     }
 
-    protected String cli_blue(){
-        return colors ? "\u001B[34m" : "";
+    protected String cli_blue(String value){
+        StringBuilder sb = new StringBuilder();
+        sb.append(colors ? "\u001B[34m" : "");
+        sb.append(value);
+        return sb.toString();
     }
 
     public void command() throws Exception {
@@ -266,10 +293,11 @@ public abstract class AbstractInteractiveCli {
         return !p.matcher(hostName).find();
     }
 
-    protected boolean validClientId(){
+    protected boolean validClientId(int maxLength){
         if(clientId == null) return false;
         if(clientId.trim().length() == 0) return false;
-        Pattern p = Pattern.compile("[a-zA-Z0-9\\-]{1,1024}");
+        if(clientId.trim().length() > maxLength) return false;
+        Pattern p = Pattern.compile("[a-zA-Z0-9\\-]{1,65528}");
         return p.matcher(clientId).find();
     }
 
@@ -307,7 +335,7 @@ public abstract class AbstractInteractiveCli {
     protected String captureMandatoryString(Scanner input, PrintStream output, String question){
         String value = null;
         while(value == null){
-            output.print(cli_reset() + question + " : ");
+            output.print(cli_reset(String.format("%s : ", question)));
             value = input.nextLine();
             value = value.trim();
             if(value.length() == 0) {
@@ -320,7 +348,7 @@ public abstract class AbstractInteractiveCli {
     protected int captureMandatoryInt(Scanner input, PrintStream output, String question, int[] allowedValues){
         String value = null;
         while(value == null){
-            output.print(cli_reset() + question + " : ");
+            output.print(cli_reset(String.format("%s : ", question)));
             value = input.nextLine();
             value = value.trim();
             try {
@@ -343,14 +371,14 @@ public abstract class AbstractInteractiveCli {
     protected boolean captureMandatoryBoolean(Scanner input, PrintStream output, String question){
         String value = null;
         while(value == null){
-            output.print(cli_reset() + question + " : ");
+            output.print(cli_reset(String.format("%s : ", question)));
             value = input.nextLine();
             value = value.trim();
-            if(value.toLowerCase().equals("y")) return true;
-            if(value.toLowerCase().equals("n")) return false;
-            if(value.toLowerCase().equals("yes")) return true;
-            if(value.toLowerCase().equals("no")) return false;
-            if(value.toLowerCase().equals("true") || value.toLowerCase().equals("false")){
+            if(value.equalsIgnoreCase("y")) return true;
+            if(value.equalsIgnoreCase("n")) return false;
+            if(value.equalsIgnoreCase("yes")) return true;
+            if(value.equalsIgnoreCase("no")) return false;
+            if(value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")){
                 return Boolean.parseBoolean(value);
             }
             value = null;

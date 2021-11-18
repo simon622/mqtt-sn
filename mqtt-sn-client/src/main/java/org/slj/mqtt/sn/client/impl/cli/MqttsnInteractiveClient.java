@@ -122,7 +122,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                             }
                             sb.append(a);
                         }
-
                         output.println("\t" + c.name());
                         output.println("\t\t" + c.getDescription());
                     }
@@ -215,6 +214,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         for (int i = 0; i < count; i++){
             publish(topicPath, "message " + i, qos);
             try {
+                //the queue ordering is done using a natural order on
+                //timestamp so ensure we are always 1 ms between
                 Thread.sleep(1);
             } catch(Exception e){}
         }
@@ -293,7 +294,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null && client.isAsleep()){
             client.wake(60000);
-            message(String.format("DONE - client received all messages and is back sleeping"));
+            message("DONE - client received all messages and is back sleeping");
         } else {
             message("Client must first be asleep before issuing this command");
         }
@@ -341,30 +342,30 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void status()
             throws IOException, MqttsnException {
         MqttsnClient client = (MqttsnClient) getRuntime();
-
-        message("Client Id: " + clientId);
+        message(String.format("Client Id: ", clientId));
         if(client != null){
             if(runtime != null) {
-                message( "Receive Publish Count: " + receiveCount + " ("+receivedPublishBytesCount+" bytes)");
-                message( "Sent Publish Count: " + sentCount + " ("+publishedBytesCount+" bytes)");
+                message(String.format("Receive Publish Count: %s (%s bytes)", receiveCount, receivedPublishBytesCount));
+                message(String.format("Sent Publish Count: %s (%s bytes)",sentCount, publishedBytesCount));
                 if(client.getSessionState() != null){
-                    message( "Client Started: " + client.getSessionState().getSessionStarted());
-                    message( "Client Session State: " + getConnectionString(client.getSessionState().getClientState()));
-                    message( "Keep Alive: " + client.getSessionState().getKeepAlive());
-                    message( "Ping Interval: " + client.getPingDelta() + " seconds");
+                    message(String.format("Client Started: %s", client.getSessionState().getSessionStarted()));
+                    message(String.format("Client Session State: %s", getConnectionString(client.getSessionState().getClientState())));
+                    message(String.format("Keep Alive: %s", client.getSessionState().getKeepAlive()));
+                    message(String.format("Ping Interval: %s Seconds", client.getPingDelta()));
 
                     Long lastSent = getRuntimeRegistry().getMessageStateService().getMessageLastSentToContext(client.getSessionState().getContext());
                     if(lastSent != null){
-                        message( "Last Message Sent: " + new Date(lastSent));
+                        message(String.format("Last Message Sent: %s", new Date(lastSent)));
                     }
 
                     Long lastReceived = getRuntimeRegistry().getMessageStateService().getMessageLastReceivedFromContext(client.getSessionState().getContext());
                     if(lastReceived != null){
-                        message( "Last Message Received: " + new Date(lastReceived));
+                        message(String.format("Last Message Received: %s", new Date(lastReceived)));
                     }
 
                     if (getRuntimeRegistry().getMessageQueue() != null) {
-                        message( "Publish Queue Size: " + getRuntimeRegistry().getMessageQueue().size(client.getSessionState().getContext()));
+                        message(String.format("Publish Queue Size: %s",
+                                getRuntimeRegistry().getMessageQueue().size(client.getSessionState().getContext())));
                     }
                 }
                 if (getOptions() != null) {
@@ -374,7 +375,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         Iterator<String> itr = pTopics.keySet().iterator();
                         while(itr.hasNext()){
                             String topic = itr.next();
-                            message( "\t" + topic + " = " + pTopics.get(topic));
+                            tabmessage(String.format("%s = %s", topic, pTopics.get(topic)));
                         }
                     }
                 }
@@ -386,23 +387,25 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     synchronized (subs) {
                         while (itr.hasNext()) {
                             Subscription s = itr.next();
-                            message("\t" + s.getTopicPath() + " -> " + s.getQoS());
+                            tabmessage(String.format("%s -> %s",s.getTopicPath(), s.getQoS()));
                         }
                     }
 
                     if(getRuntimeRegistry().getTopicRegistry() instanceof MqttsnInMemoryTopicRegistry){
-                        Set<MqttsnInMemoryTopicRegistry.ConfirmableTopicRegistration> s = ((MqttsnInMemoryTopicRegistry)getRuntimeRegistry().getTopicRegistry() ).getAll(client.getSessionState().getContext());
+                        Set<MqttsnInMemoryTopicRegistry.ConfirmableTopicRegistration> s =
+                                ((MqttsnInMemoryTopicRegistry)getRuntimeRegistry().getTopicRegistry() ).getAll(client.getSessionState().getContext());
                         if(s != null){
-                            message( "Registered Topic Count: " + s.size());
+                            message(String.format("Registered Topic Count: %s", s.size()));
                             for(MqttsnInMemoryTopicRegistry.ConfirmableTopicRegistration t : s){
-                                message( "\t" + t.getTopicPath() + " = " + t.getAliasId() + " ? " + t.isConfirmed());
+                                tabmessage(String.format("%s = %s ? %s", t.getTopicPath(), t.getAliasId(), t.isConfirmed()));
                             }
                         }
                     }
                 }
 
                 if (getRuntimeRegistry().getQueueProcessor() != null) {
-                    message( "Queue Processor: " + (getRuntimeRegistry().getQueueProcessor().running() ? "Running" : "Stopped"));
+                    message(String.format("Queue Processor: %s", (getRuntimeRegistry().getQueueProcessor().running() ?
+                            cli_green("Running") : cli_red("Stopped"))));
                 }
             }
         } else {
@@ -441,7 +444,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 withNetworkAddressEntry("remote-gateway",
                         NetworkAddress.from(port, hostName)).
                 withContextId(clientId).
-                withMaxMessagesInQueue(100000).
+                withMaxMessagesInQueue(1000).
                 withMinFlushTime(0).
                 withMaxProtocolMessageSize(4096).
                 withSleepClearsRegistrations(false);
@@ -473,19 +476,18 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     }
 
     protected String getConnectionString(MqttsnClientState state){
-        if(state == null) return "NOINIT";
+        if(state == null) return "N/a";
         switch (state){
             case AWAKE:
-                return cli_green() + state;
             case CONNECTED:
-                return cli_green() + state;
+                return cli_green(state.toString());
             case ASLEEP:
-                return cli_blue() + state;
+                return cli_blue(state.toString());
             case DISCONNECTED:
-                return cli_red() + state;
+                return cli_red(state.toString());
             case PENDING:
             default:
-                return cli_reset() + state;
+                return cli_reset(state.toString());
         }
     }
 }

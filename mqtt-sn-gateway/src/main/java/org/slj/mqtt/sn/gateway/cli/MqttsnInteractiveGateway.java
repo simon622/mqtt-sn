@@ -185,13 +185,13 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             IMqttsnSessionState state = gatewayRuntimeRegistry.
                     getGatewaySessionService().getSessionState(c, false);
 
-            message("Client session: " + clientId);
-            message("Session started: " + format(state.getSessionStarted()));
-            message("Last seen: " + format(state.getLastSeen()));
-            message("Keep alive (seconds): " + state.getKeepAlive());
-            message("Session length (seconds): " + ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000));
-            message("State: " + getColorForState(state.getClientState()) + state.getClientState().name());
-            message("Queue size: " + gatewayRuntimeRegistry.getMessageQueue().size(c));
+            message(String.format("Client session: %s", clientId));
+            message(String.format("Session started: %s", format(state.getSessionStarted())));
+            message(String.format("Last seen:  %s", format(state.getLastSeen())));
+            message(String.format("Keep alive (seconds):  %s", state.getKeepAlive()));
+            message(String.format("Session length (seconds):  %s", ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000)));
+            message(String.format("State:  %s", getColorForState(state.getClientState()) + state.getClientState().name()));
+            message(String.format("Queue size:  %s", gatewayRuntimeRegistry.getMessageQueue().size(c)));
 
             Set<Subscription> subs = gatewayRuntimeRegistry.getSubscriptionRegistry().readSubscriptions(c);
             Iterator<Subscription> itr = subs.iterator();
@@ -199,15 +199,15 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             synchronized (subs){
                 while(itr.hasNext()){
                     Subscription s = itr.next();
-                    message("\t" + s.getTopicPath() + " -> " + s.getQoS());
+                    tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getQoS()));
                 }
             }
 
             INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
-            message("Network Address(s): " + networkContext.getNetworkAddress());
+            message(String.format("Network Address(s): %s", networkContext.getNetworkAddress()));
 
         } else {
-            message("No session found: " + clientId);
+            message(String.format("No session found: %s", clientId));
         }
     }
 
@@ -223,29 +223,29 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             int advertiseTime = opts.getGatewayAdvertiseTime();
 
             //-- general stuff
-            message("Gateway Id: " + opts.getGatewayId());
-            message("Advertise Interval: " + advertiseTime);
+            message(String.format("Gateway Id: %s", opts.getGatewayId()));
+            message(String.format("Advertise Interval: %s", advertiseTime));
 
             if(gatewayRuntimeRegistry.getTransport() instanceof AbstractMqttsnUdpTransport){
                 MqttsnUdpOptions udpOptions = ((AbstractMqttsnUdpTransport)gatewayRuntimeRegistry.getTransport()).getUdpOptions();
-                message("Host: " + udpOptions.getHost());
-                message("Datagram port: " + udpOptions.getPort());
-                message("Secure port: " + udpOptions.getSecurePort());
-                message("Broadcast port: " + udpOptions.getBroadcastPort());
-                message("MTU: " + udpOptions.getMtu());
+                message(String.format("Host: %s", udpOptions.getHost()));
+                message(String.format("Datagram port: %s", udpOptions.getPort()));
+                message(String.format("Secure port: %s", udpOptions.getSecurePort()));
+                message(String.format("Broadcast port: %s", udpOptions.getBroadcastPort()));
+                message(String.format("MTU: %s", udpOptions.getMtu()));
             }
 
-            message("Max message size: " + getOptions().getMaxProtocolMessageSize());
-            message("Max connected clients: " + maxClients);
+            message(String.format("Max message size: %s", getOptions().getMaxProtocolMessageSize()));
+            message(String.format("Max connected clients: %s", maxClients));
 
             if (getOptions() != null) {
                 Map<String, Integer> pTopics = getOptions().getPredefinedTopics();
                 if(pTopics != null){
-                    message( "Predefined topic count: " + pTopics.size());
+                    message(String.format("Predefined topic count: %s", pTopics.size()));
                     Iterator<String> itr = pTopics.keySet().iterator();
                     while(itr.hasNext()){
                         String topic = itr.next();
-                        message( "\t" + topic + " = " + pTopics.get(topic));
+                        tabmessage(String.format("%s = %s", topic, pTopics.get(topic)));
                     }
                 }
             }
@@ -262,13 +262,11 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 queuedMessages += gatewayRuntimeRegistry.getMessageQueue().size(c);
             }
 
-            message("Currently connected clients: " + allState.size());
-            message("Current buffered messages: " + queuedMessages);
+            message(String.format("Currently connected clients: %s", allState.size()));
+            message(String.format("Current buffered messages: %s", queuedMessages));
 
             //-- broker stuff
-//            message("Broker hostname: " + hostName);
-//            message("Broker port: " + port);
-            message("Broker TCP/IP Connection State: " + (connected ? cli_green() + "ESTABLISHED" : cli_red() + "UNESTABLISHED"));
+            message(String.format("Broker TCP/IP Connection State: %s", (connected ? cli_green("ESTABLISHED") : cli_red("UNESTABLISHED"))));
 
         } else {
             message( "Gateway status: awaiting connection..");
@@ -336,13 +334,13 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     public String getColorForState(MqttsnClientState state){
-        if(state == null) return cli_reset();
+        if(state == null) return cli_reset("N/a");
         switch(state){
             case AWAKE:
-            case CONNECTED: return cli_green();
-            case ASLEEP: return cli_blue();
-            case PENDING: return cli_reset();
-            default: return cli_red();
+            case CONNECTED: return cli_green(state.toString());
+            case ASLEEP: return cli_blue(state.toString());
+            case PENDING: return cli_reset(state.toString());
+            default: return cli_red(state.toString());
         }
     }
 }

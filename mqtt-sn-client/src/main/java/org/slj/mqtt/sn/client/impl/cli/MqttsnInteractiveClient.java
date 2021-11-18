@@ -71,6 +71,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         HELP("List this message", new String[0]),
         QUIT("Quit the application", new String[0]),
         EXIT("Quit the application", new String[0], true),
+        QUICKCONNECT("Quick connect configuration", new String[0], true),
         BYE("Quit the application", new String[0], true);
 
         private String description;
@@ -125,6 +126,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         output.println("\t" + c.name());
                         output.println("\t\t" + c.getDescription());
                     }
+                    break;
+                case QUICKCONNECT:
+                    quickConnect();
                     break;
                 case CONNECT:
                     connect(
@@ -201,6 +205,22 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 resetMetrics();
                 client.connect(keepAlive, cleanSession);
                 message("DONE - connect issued successfully, client is connected");
+            } catch(MqttsnClientConnectException e){
+                error("Client Reporting Connection Error", e);
+            }
+        } else {
+            message("Client is already connected");
+        }
+    }
+
+    protected void quickConnect()
+            throws IOException, MqttsnException {
+        MqttsnClient client = (MqttsnClient) getRuntime();
+        if(client != null && !client.isConnected()){
+            try {
+                resetMetrics();
+                client.connect(240, true);
+                message("DONE - quick connect issued successfully, client is connected with clean session and keepAlive 240");
             } catch(MqttsnClientConnectException e){
                 error("Client Reporting Connection Error", e);
             }
@@ -342,7 +362,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void status()
             throws IOException, MqttsnException {
         MqttsnClient client = (MqttsnClient) getRuntime();
-        message(String.format("Client Id: ", clientId));
+        message(String.format("Client Id: %s", clientId));
         if(client != null){
             if(runtime != null) {
                 if(client.getSessionState() != null){

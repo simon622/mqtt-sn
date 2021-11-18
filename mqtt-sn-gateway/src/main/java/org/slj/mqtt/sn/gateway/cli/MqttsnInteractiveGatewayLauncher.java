@@ -29,21 +29,20 @@ import java.util.Scanner;
 import java.util.logging.LogManager;
 
 public class MqttsnInteractiveGatewayLauncher {
+    static final String DEBUG = "debug";
     public static void launch(MqttsnInteractiveGateway interactiveGateway) throws Exception {
-        if(!Boolean.getBoolean("debug")) LogManager.getLogManager().reset();
-        Scanner input = new Scanner(System.in);
-        PrintStream output = System.out;
-        try {
+        if(!Boolean.getBoolean(DEBUG)) LogManager.getLogManager().reset();
+        try (Scanner input = new Scanner(System.in)) {
+            PrintStream output = System.out;
             interactiveGateway.init(input, output);
             interactiveGateway.welcome();
             interactiveGateway.configureWithHistory();
             interactiveGateway.start();
             interactiveGateway.command();
             interactiveGateway.exit();
-        } catch(Exception e){
+        } catch (Exception e) {
             System.err.println("A fatal error was encountered: " + e.getMessage());
         } finally {
-            input.close();
             interactiveGateway.stop();
         }
     }

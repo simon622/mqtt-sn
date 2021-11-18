@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -12,7 +12,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -33,7 +33,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
  * into 3rd party systems.
  *
  * @author Simon Johnson <simon622 AT gmail DOT com>
- * @see mqttsn specification at http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf
+ * See mqttsn specification at http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf
  */
 public interface IMqttsnMessageFactory {
 
@@ -42,8 +42,8 @@ public interface IMqttsnMessageFactory {
      * The time interval until the next broadcast time is indicated in the Duration field of this message.
      * Its format is illustrated in Table 6 of the specification.
      *
-     * @Param gatewayId: the id of the gateway which sends this message.
-     * @Param: duration time interval until the next ADVERTISE is broadcasted by this gateway.
+     * @Param gatewayId the id of the gateway which sends this message.
+     * @Param duration time interval until the next ADVERTISE is broadcasted by this gateway.
      */
     IMqttsnMessage createAdvertise(int gatewayId, int duration)
             throws MqttsnCodecException;

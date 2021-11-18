@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -12,7 +12,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -32,7 +32,7 @@ public interface MqttsnCodecs {
     /**
      * Version 1.2 support of the MQTT-SN specification
      *
-     * @see Mqttsn specification at http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf
+     * See Mqttsn specification at http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf
      */
     IMqttsnCodec MQTTSN_CODEC_VERSION_1_2 = new Mqttsn_v1_2_Codec();
 

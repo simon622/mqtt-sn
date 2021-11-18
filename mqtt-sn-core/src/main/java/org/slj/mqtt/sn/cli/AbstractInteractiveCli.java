@@ -70,6 +70,7 @@ public abstract class AbstractInteractiveCli {
     protected PrintStream output;
     protected Scanner input;
     protected volatile boolean closed = false;
+    private volatile boolean lastCursorAsync = false;
 
     public void init(Scanner input, PrintStream output){
         this.input = input;
@@ -96,9 +97,8 @@ public abstract class AbstractInteractiveCli {
             try {
                 receiveCount.incrementAndGet();
                 receivedPublishBytesCount.addAndGet(data.length);
-                output.println();
-                message(cli_blue(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] -> [%s]",
-                        data.length, topic, context.getId(), new String(data))));
+                asyncmessage(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] \"%s\"",
+                        data.length, topic, context.getId(), new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -107,8 +107,8 @@ public abstract class AbstractInteractiveCli {
             try {
                 sentCount.incrementAndGet();
                 publishedBytesCount.addAndGet(data.length);
-                message(cli_blue(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] -> [%s]",
-                        data.length, topicName, context.getId(), new String(data))));
+                asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
+                        data.length, topicName, context.getId(), new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -117,8 +117,8 @@ public abstract class AbstractInteractiveCli {
         runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] data, int retryCount) -> {
             try {
                 sentCount.incrementAndGet();
-                message(cli_red(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] -> [%s]",
-                        retryCount, data.length, topicName, QoS, new String(data))));
+                asyncmessage(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] \"%s\"",
+                        retryCount, data.length, topicName, QoS, new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -141,15 +141,19 @@ public abstract class AbstractInteractiveCli {
     }
 
     public void welcome(){
-        output.println("===============================================");
-        output.println(String.format("Welcome to %s", getCLIName()));
-        output.println("===============================================");
+        synchronized (output){
+            output.println("===============================================");
+            output.println(String.format("Welcome to %s", getCLIName()));
+            output.println("===============================================");
+        }
     }
 
     public void exit(){
-        output.println("===============================================");
-        output.println(String.format("Goodbye from %s", getCLIName()));
-        output.println("===============================================");
+        synchronized (output) {
+            output.println("===============================================");
+            output.println(String.format("Goodbye from %s", getCLIName()));
+            output.println("===============================================");
+        }
     }
 
     protected void configure() throws IOException {
@@ -217,11 +221,25 @@ public abstract class AbstractInteractiveCli {
         message(String.format("History file written to %s", f.getAbsolutePath()));
     }
 
+
+    public void asyncmessage(String message) {
+        StringBuilder sb = new StringBuilder("\t** ");
+        sb.append(message);
+        synchronized (output){
+            if(!lastCursorAsync){
+                output.println();
+                lastCursorAsync = true;
+            }
+            output.println(cli_purple(sb.toString()));
+        }
+    }
+
     public void message(String message) {
         StringBuilder sb = new StringBuilder("\t>> ");
         sb.append(message);
         synchronized (output){
             output.println(cli_reset(sb.toString()));
+            lastCursorAsync = false;
         }
     }
 
@@ -230,6 +248,7 @@ public abstract class AbstractInteractiveCli {
         sb.append(message);
         synchronized (output){
             output.println(cli_reset(sb.toString()));
+            lastCursorAsync = false;
         }
     }
 
@@ -242,6 +261,7 @@ public abstract class AbstractInteractiveCli {
                 output.println(cli_red(String.format("\t>> REASON %s", t.getMessage())));
                 t.printStackTrace();
             }
+            lastCursorAsync = false;
         }
     }
 
@@ -269,6 +289,13 @@ public abstract class AbstractInteractiveCli {
     protected String cli_blue(String value){
         StringBuilder sb = new StringBuilder();
         sb.append(colors ? "\u001B[34m" : "");
+        sb.append(value);
+        return sb.toString();
+    }
+
+    protected String cli_purple(String value){
+        StringBuilder sb = new StringBuilder();
+        sb.append(colors ? "\u001B[55m" : "");
         sb.append(value);
         return sb.toString();
     }

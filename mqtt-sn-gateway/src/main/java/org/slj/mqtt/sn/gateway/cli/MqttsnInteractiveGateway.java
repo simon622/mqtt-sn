@@ -190,7 +190,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message(String.format("Last seen:  %s", format(state.getLastSeen())));
             message(String.format("Keep alive (seconds):  %s", state.getKeepAlive()));
             message(String.format("Session length (seconds):  %s", ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000)));
-            message(String.format("State:  %s", getColorForState(state.getClientState()) + state.getClientState().name()));
+            message(String.format("State:  %s", getColorForState(state.getClientState())));
             message(String.format("Queue size:  %s", gatewayRuntimeRegistry.getMessageQueue().size(c)));
 
             Set<Subscription> subs = gatewayRuntimeRegistry.getSubscriptionRegistry().readSubscriptions(c);

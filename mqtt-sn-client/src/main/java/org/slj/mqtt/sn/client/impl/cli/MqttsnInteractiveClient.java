@@ -345,8 +345,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         message(String.format("Client Id: ", clientId));
         if(client != null){
             if(runtime != null) {
-                message(String.format("Receive Publish Count: %s (%s bytes)", receiveCount, receivedPublishBytesCount));
-                message(String.format("Sent Publish Count: %s (%s bytes)",sentCount, publishedBytesCount));
                 if(client.getSessionState() != null){
                     message(String.format("Client Started: %s", client.getSessionState().getSessionStarted()));
                     message(String.format("Client Session State: %s", getConnectionString(client.getSessionState().getClientState())));
@@ -355,12 +353,12 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
 
                     Long lastSent = getRuntimeRegistry().getMessageStateService().getMessageLastSentToContext(client.getSessionState().getContext());
                     if(lastSent != null){
-                        message(String.format("Last Message Sent: %s", new Date(lastSent)));
+                        message(String.format("Last Packet Sent: %s", new Date(lastSent)));
                     }
 
                     Long lastReceived = getRuntimeRegistry().getMessageStateService().getMessageLastReceivedFromContext(client.getSessionState().getContext());
                     if(lastReceived != null){
-                        message(String.format("Last Message Received: %s", new Date(lastReceived)));
+                        message(String.format("Last Packet Received: %s", new Date(lastReceived)));
                     }
 
                     if (getRuntimeRegistry().getMessageQueue() != null) {

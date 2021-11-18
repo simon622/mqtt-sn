@@ -23,8 +23,29 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-gateway](/mqtt-sn-gateway) | Java 1.8, Maven | Gateway | The core gateway runtime. The end goal is to provide all 3 variants of the gateway (Aggregating, Transparent & Forwarder) where possible. I have started with the aggregating gateway, since this is the most complex, and the most suitable for larger scale deployment.
 [mqtt-sn-gateway-paho-connector](/mqtt-sn-gateway-paho-connector) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
 
-### Quick start - Gateway
+### Quick start
+I have created simple interactive command lines for both client and gateway components to allow simple testing and use. The interactive client and gateway both use preconfigured default runtimes which
+can be used simple to evaluate the software. For more complex use, please refer to the source build and configuration.
 
+#### Client CLI
+The latest interactive client build can be obtained from the releases section. Download the mqtt-sn-client-<version>.jar and run locally using;
+
+```shell script
+java -jar <path-to>/mqtt-sn-client-<version>.jar
+```
+
+![Client CLI](/images/client-cli.png)
+
+#### Gateway CLI
+The latest interactive gateway build can be obtained from the releases section. Download the mqtt-sn-gateway-<version>.jar and run locally using;
+
+```shell script
+java -jar <path-to>/mqtt-sn-gateway-<version>.jar
+```
+![Gateway CLI](/images/gateway-cli.png)
+
+
+### From source
 Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
 
 ```shell script
@@ -41,42 +62,14 @@ from a command line using;
 ```shell script
 java -jar <path-to>/mqtt-sn-gateway-<version>.jar
 ```
-
 You can then follow the on screen instructions to get a gateway up and running.
 
-### Quick start - Client
+### Client
 
 Ensure you have the requisite projects mounted per the table above. You can then run the main method for in the Example.java located in the project. You can see the configuration options for details
 on how to customise your installation.
 
 Click into [mqtt-sn-client](/mqtt-sn-client) for more details on the client.
-
-### Configuration
-
-The default client/gateway behaviour can be customised using configuration options. Sensible defaults have been specified which allow it to all work out of the box.
-Many of the options below are applicable for both the client and gateway runtimes. 
-
-Options | Default Value | Type | Description
------------- | ------------- | ------------- | -------------
-contextId | NULL | String | This is used as either the clientId (when in a client runtime) or the gatewayId (when in a gateway runtime). **NB: This is a required field and must be set by the application.**
-maxWait | 10000 | int | Time in milliseconds to wait for a confirmation message where required. When calling a blocking method, this is the time the method will block until either the confirmation is received OR the timeout expires.
-maxTopicLength | 1024 | int | Maximum number of characters allowed in a topic including wildcard and separator characters.
-threadHandoffFromTransport | true | boolean | Should the transport layer delegate to and from the handler layer using a thread hand-off. **NB: Depends on your transport implementation as to whether you should block.**
-handoffThreadCount | 5 | int | How many threads are used to process messages received from the transport layer 
-discoveryEnabled | false | boolean | When discovery is enabled the client will listen for broadcast messages from local gateways and add them to its network registry as it finds them.
-maxTopicsInRegistry | 128 | int | Max number of topics which can reside in the CLIENT registry. This does NOT include predefined alias's.
-msgIdStartAt | 1 | int (max. 65535) | Starting number for message Ids sent from the client to the gateways (each gateway has a unique count).
-aliasStartAt | 1 | int (max. 65535) | Starting number for alias's used to store topic values (NB: only applicable to gateways).
-maxMessagesInflight | 1 | int (max. 65535) | In theory, a gateway and broker can have multiple messages inflight concurrently. The spec suggests only 1 confirmation message is inflight at any given time. (NB: do NOT change this).
-maxMessagesInQueue | 100 | int | Max number of messages allowed in a client's queue. When the max is reached any new messages will be discarded.
-requeueOnInflightTimeout | true | boolean | When a publish message fails to confirm, should it be re-queued for DUP sending at a later point.
-predefinedTopics | Config| Map | Where a client or gateway both know a topic alias in advance, any messages or subscriptions to the topic will be made using the predefined IDs. 
-networkAddressEntries | Config | Map | You can prespecify known locations for gateways and clients in the network address registry. NB. The runtime will dynamically update the registry with new clients / gateways as they are discovered. In the case of clients, they are unable to connect or message until at least 1 gateway is defined in config OR discovered.
-sleepClearsRegistrations  | true | boolean | When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the next AWAKE or ACTIVE states.
-minFlushTime  | 1000 | int | Time in milliseconds between a gateway device last receiving a message before it begins processing the client queue
-discoveryTime  | 3600 | int | The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
-pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
-maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
 
 ### Runtime Hooks
 
@@ -112,6 +105,32 @@ You can access all the data sent to and from the transport adapter by using traf
         }).
         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 ```
+### Configuration
+
+The default client/gateway behaviour can be customised using configuration options. Sensible defaults have been specified which allow it to all work out of the box.
+Many of the options below are applicable for both the client and gateway runtimes.
+
+Options | Default Value | Type | Description
+------------ | ------------- | ------------- | -------------
+contextId | NULL | String | This is used as either the clientId (when in a client runtime) or the gatewayId (when in a gateway runtime). **NB: This is a required field and must be set by the application.**
+maxWait | 10000 | int | Time in milliseconds to wait for a confirmation message where required. When calling a blocking method, this is the time the method will block until either the confirmation is received OR the timeout expires.
+maxTopicLength | 1024 | int | Maximum number of characters allowed in a topic including wildcard and separator characters.
+threadHandoffFromTransport | true | boolean | Should the transport layer delegate to and from the handler layer using a thread hand-off. **NB: Depends on your transport implementation as to whether you should block.**
+handoffThreadCount | 5 | int | How many threads are used to process messages received from the transport layer
+discoveryEnabled | false | boolean | When discovery is enabled the client will listen for broadcast messages from local gateways and add them to its network registry as it finds them.
+maxTopicsInRegistry | 128 | int | Max number of topics which can reside in the CLIENT registry. This does NOT include predefined alias's.
+msgIdStartAt | 1 | int (max. 65535) | Starting number for message Ids sent from the client to the gateways (each gateway has a unique count).
+aliasStartAt | 1 | int (max. 65535) | Starting number for alias's used to store topic values (NB: only applicable to gateways).
+maxMessagesInflight | 1 | int (max. 65535) | In theory, a gateway and broker can have multiple messages inflight concurrently. The spec suggests only 1 confirmation message is inflight at any given time. (NB: do NOT change this).
+maxMessagesInQueue | 100 | int | Max number of messages allowed in a client's queue. When the max is reached any new messages will be discarded.
+requeueOnInflightTimeout | true | boolean | When a publish message fails to confirm, should it be re-queued for DUP sending at a later point.
+predefinedTopics | Config| Map | Where a client or gateway both know a topic alias in advance, any messages or subscriptions to the topic will be made using the predefined IDs.
+networkAddressEntries | Config | Map | You can prespecify known locations for gateways and clients in the network address registry. NB. The runtime will dynamically update the registry with new clients / gateways as they are discovered. In the case of clients, they are unable to connect or message until at least 1 gateway is defined in config OR discovered.
+sleepClearsRegistrations  | true | boolean | When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the next AWAKE or ACTIVE states.
+minFlushTime  | 1000 | int | Time in milliseconds between a gateway device last receiving a message before it begins processing the client queue
+discoveryTime  | 3600 | int | The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
+pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
+maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
 
 ### Related people & projects
 Our goal on the [MQTT-SN technial committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments.

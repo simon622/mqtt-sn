@@ -34,12 +34,21 @@ public abstract class AbstractMqttsnMessageWithTopicData extends AbstractMqttsnM
     public String getTopicName() {
         if (topicType == MqttsnConstants.TOPIC_PREDEFINED)
             throw new IllegalStateException("unable to parse string data from predefined topic alias");
+        else if(topicType == MqttsnConstants.TOPIC_SHORT){
+            //-- handle single char short topic names
+            if(topicData.length == 2 && topicData[1] == 0x00)
+                return new String(new byte[]{topicData[0]}, MqttsnConstants.CHARSET);
+        }
         return new String(topicData, MqttsnConstants.CHARSET);
     }
 
     public void setTopicName(String topicName) {
         setTopicType(topicName != null && topicName.length() <= 2 ? MqttsnConstants.TOPIC_SHORT : MqttsnConstants.TOPIC_NORMAL);
-        topicData = topicName.getBytes(MqttsnConstants.CHARSET);
+        if(topicName.length() == 1){
+            topicData = new byte[]{topicName.getBytes(MqttsnConstants.CHARSET)[0], 0x00};
+        } else {
+            topicData = topicName.getBytes(MqttsnConstants.CHARSET);
+        }
     }
 
     public void setPredefinedTopicAlias(int topicAlias) {

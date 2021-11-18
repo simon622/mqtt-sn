@@ -210,8 +210,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         int topicId = info.getTopicId();
         if(type == MqttsnConstants.TOPIC_TYPE.SHORT && topicId == 0){
             String topicPath = info.getTopicPath();
+            int length = topicPath.length();
+            if(length == 0 || length > 2){
+                throw new MqttsnException("short topics should be 1 or 2 chars in the length");
+            }
             topicId = MqttsnWireUtils.read16bit((byte) topicPath.charAt(0),
-                    (byte) topicPath.charAt(1));
+                    length == 2 ? (byte) topicPath.charAt(1) : 0x00);
         }
 
         IMqttsnMessage publish = registry.getMessageFactory().createPublish(queuedPublishMessage.getGrantedQoS(),

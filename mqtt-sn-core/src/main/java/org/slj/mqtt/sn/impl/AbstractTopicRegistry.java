@@ -206,7 +206,12 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
                 if(topicData.length != 2){
                     throw new MqttsnExpectationFailedException("short topics must be exactly 2 bytes");
                 }
-                info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.SHORT, new String(topicData, MqttsnConstants.CHARSET));
+                else if(topicData[1] == 0x00){
+                    info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.SHORT,
+                            new String(new byte[]{topicData[0]}, MqttsnConstants.CHARSET));
+                } else {
+                    info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.SHORT, new String(topicData, MqttsnConstants.CHARSET));
+                }
                 break;
             case MqttsnConstants.TOPIC_NORMAL:
                 if(normalAsLong){ //-- in the case of a subscribe, the normal actually means the full topic name

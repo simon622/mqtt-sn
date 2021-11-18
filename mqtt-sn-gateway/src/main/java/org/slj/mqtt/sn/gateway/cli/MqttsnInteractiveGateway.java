@@ -299,7 +299,15 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     public void start() throws Exception {
         super.start();
-        getRuntime().start(getRuntimeRegistry(), false);
+        message(String.format("Attempting to connect to backend broker at %s:%s...", hostName, port));
+        try {
+            getRuntime().start(getRuntimeRegistry(), false);
+            message("Successfully connected to broker, TCP/IP connection active.");
+        } catch(Exception e){
+            message(cli_red("Unable to connect to broker"));
+            message("Please check the connection details supplied");
+            throw e;
+        }
     }
 
     @Override

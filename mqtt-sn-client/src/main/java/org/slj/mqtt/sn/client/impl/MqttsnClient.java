@@ -156,6 +156,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public boolean isConnected() {
         try {
             IMqttsnSessionState state = checkSession(false);
+            if(state == null) return false;
             return state.getClientState() == MqttsnClientState.CONNECTED;
         } catch(MqttsnException e){
             return false;
@@ -166,6 +167,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public boolean isAsleep() {
         try {
             IMqttsnSessionState state = checkSession(false);
+            if(state == null) return false;
             return state.getClientState() == MqttsnClientState.ASLEEP;
         } catch(MqttsnException e){
             return false;

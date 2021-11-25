@@ -58,7 +58,6 @@ public abstract class AbstractMqttsnRuntime {
             = Collections.synchronizedList(new ArrayList<>());
 
     private ThreadGroup threadGroup = new ThreadGroup("mqtt-sn");
-    private Thread instrumentationThread;
     protected ExecutorService executorService;
     protected CountDownLatch startupLatch;
     protected volatile boolean running = false;
@@ -93,9 +92,6 @@ public abstract class AbstractMqttsnRuntime {
             bindShutdownHook();
             logger.log(Level.INFO, "starting mqttsn-environment..");
             startupServices(registry);
-            if(registry.getOptions().isInstrumentationEnabled()){
-                initInstrumentation();
-            }
             startupLatch.countDown();
             logger.log(Level.INFO, String.format("mqttsn-environment started successfully in [%s]", System.currentTimeMillis() - startedAt));
             if(join){
@@ -136,38 +132,6 @@ public abstract class AbstractMqttsnRuntime {
             synchronized (monitor){
                 monitor.notifyAll();
             }
-        }
-    }
-
-    protected void initInstrumentation(){
-        if(instrumentationThread != null){
-            instrumentationThread = new Thread(getThreadGroup(), () -> {
-                try {
-                   logger.log(Level.INFO, "mqttsn-environment started instrumentation thread");
-                   while(running){
-                       synchronized (instrumentationThread){
-                           instrumentationThread.wait(registry.getOptions().getInstrumentationInterval());
-                           activeServices.stream().
-                                   filter(s -> s instanceof IMqttsnInstrumentationProvider).
-                                    map(s -> (IMqttsnInstrumentationProvider) s).forEach(s -> {
-                                        StringTable st = s.provideInstrumentation();
-                                        if(st != null){
-                                            logger.log(Level.INFO, StringTableWriters.writeStringTableAsASCII(st));
-                                        }
-                           });
-                       }
-                   }
-                }
-                catch(InterruptedException e){
-                    Thread.currentThread().interrupt();
-                }
-                catch(Exception e){
-                    logger.log(Level.SEVERE, "encountered error tracking instrumentation;", e);
-                }
-            }, "mqtt-sn-instrumentation");
-            instrumentationThread.setDaemon(true);
-            instrumentationThread.setPriority(Thread.MIN_PRIORITY);
-            instrumentationThread.start();
         }
     }
 

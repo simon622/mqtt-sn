@@ -170,16 +170,6 @@ public class MqttsnOptions {
     public static final int DEFAULT_PING_DIVISOR = 4;
 
     /**
-     * By default instrumentation is switched off
-     */
-    public static final boolean DEFAULT_INSTRUMENTATION_ENABLED = false;
-
-    /**
-     * The default instrumentation interval is 60000 (60 seconds)
-     */
-    public static final int DEFAULT_INSTRUMENTATION_INTERVAL = 60000;
-
-    /**
      * The default max protocol message size (including header and data) is 1024 bytes
      */
     public static final int DEFAULT_MAX_PROTOCOL_SIZE = 1024;
@@ -203,8 +193,6 @@ public class MqttsnOptions {
     private int searchGatewayRadius = DEFAULT_SEARCH_GATEWAY_RADIUS;
     private int discoveryTime = DEFAULT_DISCOVERY_TIME_SECONDS;
     private int pingDivisor = DEFAULT_PING_DIVISOR;
-    private boolean instrumentationEnabled = DEFAULT_INSTRUMENTATION_ENABLED;
-    private int instrumentationInterval = DEFAULT_INSTRUMENTATION_INTERVAL;
     private int maxProtocolMessageSize = DEFAULT_MAX_PROTOCOL_SIZE;
     private boolean wireLoggingEnabled = DEFAULT_WIRE_LOGGING_ENABLED;
     private int activeContextTimeout = DEFAULT_ACTIVE_CONTEXT_TIMEOUT;
@@ -214,7 +202,7 @@ public class MqttsnOptions {
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
     private int stateProcessorThreadCount = DEFAULT_STATE_PROCESSOR_THREAD_COUNT;
 
-    private Map<String, Integer> predefinedTopics = new HashMap();
+    private Map<String, Integer> predefinedTopics = new HashMap<>();
     private Map<String, NetworkAddress> networkAddressEntries;
 
     /**
@@ -470,14 +458,6 @@ public class MqttsnOptions {
         if(!MqttsnUtils.validUInt16(alias)){
             throw new MqttsnRuntimeException("invalid topic alias " + alias);
         }
-
-//        if(predefinedTopics == null){
-//            synchronized (this) {
-//                if (predefinedTopics == null) {
-//                    predefinedTopics = new HashMap();
-//                }
-//            }
-//        }
         predefinedTopics.put(topicPath, alias);
         return this;
     }
@@ -615,30 +595,6 @@ public class MqttsnOptions {
     }
 
     /**
-     * Should instrumentation be enabled. When enabled the runtime will call registered instrumentation
-     * providers on the {@link MqttsnOptions#getInstrumentationInterval} period and output the data
-     * to the standard logging.
-     *
-     * @param instrumentationEnabled - Should instrumentation be enabled
-     * @return this configuration
-     */
-    public MqttsnOptions withInstrumentationEnabled(boolean instrumentationEnabled){
-        this.instrumentationEnabled = instrumentationEnabled;
-        return this;
-    }
-
-    /**
-     * The interval between instrumentation sampling when it is enabled.
-     *
-     * @param instrumentationInterval The interval between instrumentation sampling when it is enabled.
-     * @return this configuration
-     */
-    public MqttsnOptions withInstrumentationInterval(int instrumentationInterval){
-        this.instrumentationInterval = instrumentationInterval;
-        return this;
-    }
-
-    /**
      * The max allowable size of protocol messages that will be sent or received by the system.
      * NOTE: this differs from transport level max sizes which will be deterimed and constrained by the
      * MTU of the transport
@@ -745,14 +701,6 @@ public class MqttsnOptions {
 
     public int getPingDivisor() {
         return pingDivisor;
-    }
-
-    public boolean isInstrumentationEnabled() {
-        return instrumentationEnabled;
-    }
-
-    public int getInstrumentationInterval() {
-        return instrumentationInterval;
     }
 
     public boolean isThreadHandoffFromTransport() {

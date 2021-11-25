@@ -149,12 +149,4 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
      * @throws MqttsnException
      */
     Long getMessageLastReceivedFromContext(IMqttsnContext context) throws MqttsnException ;
-
-    /**
-     * Tracks the point at which a message considered ACTIVE was last SENT or RECEIVIED from the context
-     * @param context - The context to which the message was sent
-     * @return Tracks the point at which a message considered ACTIVE was last SENT or RECEIVIED from the context
-     * @throws MqttsnException
-     */
-//    Long getContextLastActive(IMqttsnContext context) throws MqttsnException ;
 }

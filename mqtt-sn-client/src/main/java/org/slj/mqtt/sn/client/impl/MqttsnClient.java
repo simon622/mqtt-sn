@@ -67,8 +67,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     private volatile int keepAlive;
     private volatile boolean cleanSession;
 
-    private volatile int errorRetryCounter = 0;
+    private int errorRetryCounter = 0;
     private Thread managedConnectionThread = null;
+    private final Object sleepMonitor = new Object();
+    private final Object connectionMonitor = new Object();
 
     private final boolean managedConnection;
     private final boolean autoReconnect;
@@ -244,10 +246,9 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         IMqttsnSessionState state = checkSession(QoS >= 0);
         UUID messageId = registry.getMessageRegistry().add(data, getMessageExpiry());
-        MqttsnWaitToken token = registry.getMessageQueue().offer(state.getContext(),
+        return registry.getMessageQueue().offer(state.getContext(),
                 new QueuedPublishMessage(
                         messageId, topicName, QoS));
-        return token;
     }
 
     @Override
@@ -264,7 +265,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         IMqttsnSessionState state = checkSession(true);
 
         TopicInfo info = registry.getTopicRegistry().lookup(state.getContext(), topicName, true);
-        IMqttsnMessage message = null;
+        IMqttsnMessage message;
         if(info == null || info.getType() == MqttsnConstants.TOPIC_TYPE.SHORT ||
                 info.getType() == MqttsnConstants.TOPIC_TYPE.NORMAL){
             //-- the spec is ambiguous here; where a normalId has been obtained, it still requires use of
@@ -294,7 +295,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         IMqttsnSessionState state = checkSession(true);
 
         TopicInfo info = registry.getTopicRegistry().lookup(state.getContext(), topicName, true);
-        IMqttsnMessage message = null;
+        IMqttsnMessage message;
         if(info == null || info.getType() == MqttsnConstants.TOPIC_TYPE.SHORT ||
                 info.getType() == MqttsnConstants.TOPIC_TYPE.NORMAL){
             //-- the spec is ambiguous here; where a normalId has been obtained, it still requires use of
@@ -332,7 +333,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
            throw new MqttsnExpectationFailedException("sleep duration must be greater than the wake after period");
 
         long now = System.currentTimeMillis();
-        long sleepUntil = now + (duration * 1000);
+        long sleepUntil = now + (duration * 1000L);
         sleep(duration);
         while(sleepUntil > (now = System.currentTimeMillis())){
             long timeLeft = sleepUntil - now;
@@ -341,8 +342,11 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             try {
                 long wake = Math.min(wakeAfterIntervalSeconds, period);
                 if(wake > 0){
-                    logger.log(Level.INFO, String.format("waking after [%s] seconds", wake));
-                    Thread.sleep(wake * 1000);
+                    logger.log(Level.INFO, String.format("will wake after [%s] seconds", wake));
+                    synchronized (sleepMonitor){
+                        //TODO protect against spurious wake up here
+                        sleepMonitor.wait(wake * 1000);
+                    }
                     wake(maxWaitTimeMillis);
                 } else {
                     break;
@@ -485,8 +489,8 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 throw new IOException (e);
             } finally {
                 if(managedConnectionThread != null){
-                    synchronized (managedConnectionThread){
-                        managedConnectionThread.notifyAll();
+                    synchronized (connectionMonitor){
+                        connectionMonitor.notifyAll();
                     }
                 }
             }
@@ -547,11 +551,11 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             managedConnectionThread = new Thread(() -> {
                 while(running){
                     try {
-                        synchronized (managedConnectionThread){
-                            long delta = errorRetryCounter > 0 ? registry.getOptions().getMaxErrorRetryTime() : getPingDelta()  * 1000;
+                        synchronized (connectionMonitor){
+                            long delta = errorRetryCounter > 0 ? registry.getOptions().getMaxErrorRetryTime() : getPingDelta()  * 1000L;
                             logger.log(Level.FINE,
                                     String.format("managed connection monitor is running at time delta [%s], keepAlive [%s]...", delta, keepAlive));
-                            managedConnectionThread.wait(delta);
+                            connectionMonitor.wait(delta);
 
                             if(running){
                                 synchronized (this){ //-- we could receive a unsolicited disconnect during passive reconnection | ping..
@@ -595,7 +599,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                         }
                     }
                 }
-                logger.log(Level.INFO, String.format("managed-connection closing down"));
+                logger.log(Level.INFO, "managed-connection closing down");
             }, "mqtt-sn-managed-connection");
             managedConnectionThread.setPriority(Thread.MIN_PRIORITY);
             managedConnectionThread.setDaemon(true);
@@ -613,11 +617,11 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 callStartup(registry.getTransport());
                 if(managedConnectionThread != null){
                     try {
-                        synchronized (managedConnectionThread){
-                            managedConnectionThread.notify();
+                        synchronized (connectionMonitor){
+                            connectionMonitor.notify();
                         }
                     } catch(Exception e){
-                        logger.log(Level.WARNING, String.format("error encountered when trying to recover from unsolicited disconnect [%s]", context, e));
+                        logger.log(Level.WARNING, String.format("error encountered when trying to recover from unsolicited disconnect [%s]", context), e);
                     }
                 }
             }
@@ -633,14 +637,14 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         return state;
     }
 
-    private final void stopProcessing() throws MqttsnException {
+    private void stopProcessing() throws MqttsnException {
         //-- ensure we stop message queue sending when we are not connected
         registry.getMessageStateService().unscheduleFlush(state.getContext());
         callShutdown(registry.getMessageHandler());
         callShutdown(registry.getMessageStateService());
     }
 
-    private final void startProcessing(boolean processQueue) throws MqttsnException {
+    private void startProcessing(boolean processQueue) throws MqttsnException {
 
         callStartup(registry.getTransport());
         callStartup(registry.getMessageStateService());

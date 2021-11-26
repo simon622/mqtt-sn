@@ -236,7 +236,7 @@ public abstract class AbstractMqttsnRuntime {
      * if not, the exception is reported into the transport layer
      */
     public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
-        logger.log(Level.INFO, String.format("notified of local disconnect [%s]", context, t));
+        logger.log(Level.INFO, String.format("notified of local disconnect [%s]", context), t);
         connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
     }
@@ -246,10 +246,9 @@ public abstract class AbstractMqttsnRuntime {
      * this will be Socket connections over TCP IP
      * @param context - The context whose state encountered the problem thag caused the DISCONNECT
      * @param t - the exception that was encountered
-     * @return was the exception handled
      */
     public void handleConnectionLost(IMqttsnContext context, Throwable t){
-        logger.log(Level.INFO, String.format("notified of connection lost [%s]", context, t));
+        logger.log(Level.INFO, String.format("notified of connection lost [%s]", context), t);
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
 

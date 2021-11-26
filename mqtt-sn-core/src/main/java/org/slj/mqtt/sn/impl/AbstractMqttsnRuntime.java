@@ -57,7 +57,7 @@ public abstract class AbstractMqttsnRuntime {
     protected List<IMqttsnService> activeServices
             = Collections.synchronizedList(new ArrayList<>());
 
-    private ThreadGroup threadGroup = new ThreadGroup("mqtt-sn");
+    private volatile ThreadGroup threadGroup;
     protected ExecutorService executorService;
     protected CountDownLatch startupLatch;
     protected volatile boolean running = false;
@@ -70,18 +70,7 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void start(IMqttsnRuntimeRegistry reg, boolean join) throws MqttsnException {
         if(!running){
-            int threadCount = reg.getOptions().getHandoffThreadCount();
-            executorService =
-                    Executors.newFixedThreadPool(threadCount, new ThreadFactory() {
-                        int count = 0;
-                        @Override
-                        public Thread newThread(Runnable r) {
-                            Thread t = new Thread(threadGroup, r, "mqtt-sn-worker-thread-" + ++count);
-                            t.setPriority(Thread.MIN_PRIORITY + 1);
-                            t.setDaemon(true);
-                            return t;
-                        }
-                    });
+            executorService = createExecutorService(reg.getOptions());
             startedAt = System.currentTimeMillis();
             setupEnvironment(reg.getOptions());
             registry = reg;
@@ -184,21 +173,21 @@ public abstract class AbstractMqttsnRuntime {
         if(logger.isLoggable(Level.FINE)){
             logger.log(Level.FINE, String.format("publish received by application [%s], notifying [%s] listeners", topicName, receivedListeners.size()));
         }
-        receivedListeners.stream().forEach(p -> p.receive(context, topicName, QoS, payload));
+        receivedListeners.forEach(p -> p.receive(context, topicName, QoS, payload));
     }
 
     protected final void messageSent(IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] payload){
         if(logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, String.format("sent confirmed by application [%s], notifying [%s] listeners", topicName, sentListeners.size()));
         }
-        sentListeners.stream().forEach(p -> p.sent(context, messageId, topicName, QoS, payload));
+        sentListeners.forEach(p -> p.sent(context, messageId, topicName, QoS, payload));
     }
 
     protected final void messageSendFailure(IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] payload, int retryCount){
         if(logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, String.format("message failed sending [%s], notifying [%s] listeners", topicName, sendFailureListeners.size()));
         }
-        sendFailureListeners.stream().forEach(p -> p.sendFailure(context, messageId, topicName, QoS, payload, retryCount));
+        sendFailureListeners.forEach(p -> p.sendFailure(context, messageId, topicName, QoS, payload, retryCount));
     }
 
     public void registerReceivedListener(IMqttsnPublishReceivedListener listener) {
@@ -233,7 +222,7 @@ public abstract class AbstractMqttsnRuntime {
      */
     public boolean handleRemoteDisconnect(IMqttsnContext context){
         logger.log(Level.INFO, String.format("notified of remote disconnect [%s]", context));
-        connectionListeners.stream().forEach(p -> p.notifyRemoteDisconnect(context));
+        connectionListeners.forEach(p -> p.notifyRemoteDisconnect(context));
         return true;
     }
 
@@ -248,7 +237,7 @@ public abstract class AbstractMqttsnRuntime {
      */
     public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
         logger.log(Level.INFO, String.format("notified of local disconnect [%s]", context, t));
-        connectionListeners.stream().forEach(p -> p.notifyLocalDisconnect(context, t));
+        connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
     }
 
@@ -261,7 +250,7 @@ public abstract class AbstractMqttsnRuntime {
      */
     public void handleConnectionLost(IMqttsnContext context, Throwable t){
         logger.log(Level.INFO, String.format("notified of connection lost [%s]", context, t));
-        connectionListeners.stream().forEach(p -> p.notifyConnectionLost(context, t));
+        connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
 
     /**
@@ -270,7 +259,7 @@ public abstract class AbstractMqttsnRuntime {
      */
     public void handleConnected(IMqttsnContext context){
         logger.log(Level.INFO, String.format("notified of new connection [%s]", context));
-        connectionListeners.stream().forEach(p -> p.notifyConnected(context));
+        connectionListeners.forEach(p -> p.notifyConnected(context));
     }
 
     /**
@@ -279,7 +268,25 @@ public abstract class AbstractMqttsnRuntime {
      */
     public void handleActiveTimeout(IMqttsnContext context){
         logger.log(Level.INFO, String.format("notified of active timeout [%s]", context));
-        connectionListeners.stream().forEach(p -> p.notifyActiveTimeout(context));
+        connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
+    }
+
+    /**
+     * Hook method, create the intial async executor service which will be used for handoff from the
+     * transport layer into the application
+     */
+    protected ExecutorService createExecutorService(MqttsnOptions options){
+        int threadCount = options.getHandoffThreadCount();
+        return Executors.newFixedThreadPool(threadCount, new ThreadFactory() {
+            int count = 0;
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(getThreadGroup(), r, "mqtt-sn-worker-thread-" + ++count);
+                t.setPriority(Thread.MIN_PRIORITY + 1);
+                t.setDaemon(true);
+                return t;
+            }
+        });
     }
 
     /**
@@ -294,6 +301,12 @@ public abstract class AbstractMqttsnRuntime {
      * @return - The thread group for this runtime
      */
     public ThreadGroup getThreadGroup(){
+        if(threadGroup == null){
+            synchronized (this){
+                if(threadGroup == null)
+                    threadGroup = new ThreadGroup("mqtt-sn");
+            }
+        }
         return threadGroup;
     }
 

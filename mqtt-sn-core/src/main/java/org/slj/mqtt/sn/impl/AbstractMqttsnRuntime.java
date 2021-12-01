@@ -202,6 +202,21 @@ public abstract class AbstractMqttsnRuntime {
             sentListeners.add(listener);
     }
 
+    public boolean unregisterReceivedListener(IMqttsnPublishReceivedListener listener) {
+        if(listener == null) throw new IllegalArgumentException("cannot unregister <null> listener");
+        return receivedListeners.remove(listener);
+    }
+
+    public boolean unregisterSentListener(IMqttsnPublishSentListener listener) {
+        if(listener == null) throw new IllegalArgumentException("cannot unregister <null> listener");
+        return sentListeners.remove(listener);
+    }
+
+    public void clearSentReceiveListeners(){
+        sentListeners.clear();
+        receivedListeners.clear();
+    }
+
     public void registerConnectionListener(IMqttsnConnectionStateListener listener) {
         if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
         if(!connectionListeners.contains(listener))

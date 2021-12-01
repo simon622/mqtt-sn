@@ -54,6 +54,9 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     enum COMMANDS {
         NETWORK("View network registry", new String[0]),
+        TD("Output a thread dump", new String[0]),
+        QUIET("Switch off the sent and receive listeners", new String[0]),
+        LOUD("Switch on the sent and receive listeners", new String[0]),
         STATS("View statistics for runtime", new String[0]),
         RESET("Reset the stats", new String[0]),
         QUEUE("Queue a new message for clients", new String[]{"String* topicName, String* payload, int QoS"}),
@@ -134,6 +137,15 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 case STATUS:
                     status();
                     break;
+                case TD:
+                    threadDump();
+                    break;
+                case QUIET:
+                    disableOutput();
+                    break;
+                case LOUD:
+                    enableOutput();
+                    break;
                 case PREDEFINE:
                     predefine(
                             captureMandatoryString(input, output, "What is the topic you would like to predefine?"),
@@ -154,6 +166,14 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         } catch(Exception e){
             error( "An error occurred running your command.", e);
         }
+    }
+
+    @Override
+    protected void stats() {
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        super.stats();
+        message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishSentCount()));
+        message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishReceiveCount()));
     }
 
     protected void queue(String topicName, String payload, int QoS)
@@ -278,7 +298,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         return new MqttsnGatewayOptions().
                 withGatewayId(101).
                 withContextId(clientId).
-                withMaxMessagesInQueue(100).
+                withMaxMessagesInQueue(1000).
                 withMinFlushTime(400).
                 withSleepClearsRegistrations(false);
     }

@@ -36,6 +36,7 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 public abstract class AbstractMqttsnBrokerService
@@ -46,6 +47,9 @@ public abstract class AbstractMqttsnBrokerService
     public AbstractMqttsnBrokerService(MqttsnBrokerOptions options){
         this.options = options;
     }
+
+    protected AtomicInteger publishSentCount = new AtomicInteger();
+    protected AtomicInteger publishReceivedCount = new AtomicInteger();
 
     @Override
     public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
@@ -96,6 +100,9 @@ public abstract class AbstractMqttsnBrokerService
             throw new MqttsnBrokerException("underlying broker connection was not connected");
         }
         boolean success = connection.publish(context, topicPath, QoS, false, payload);
+        if(success){
+            publishSentCount.incrementAndGet();
+        }
         return new PublishResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR, success ? "publish success" : "publish refused by broker side");
     }
 
@@ -133,12 +140,27 @@ public abstract class AbstractMqttsnBrokerService
 
     @Override
     public void receive(String topicPath, byte[] payload, int QoS) throws MqttsnException {
+
+        publishReceivedCount.incrementAndGet();
         registry.getGatewaySessionService().receiveToSessions(topicPath, payload, QoS);
     }
 
     @Override
     public IMqttsnRuntimeRegistry getRuntimeRegistry() {
         return registry;
+    }
+
+    public int getPublishReceiveCount(){
+        return publishReceivedCount.get();
+    }
+
+    public int getPublishSentCount(){
+        return publishSentCount.get();
+    }
+
+    public void clearStats(){
+        publishReceivedCount.set(0);
+        publishSentCount.set(0);
     }
 
     protected abstract void close(IMqttsnBrokerConnection connection) throws MqttsnBrokerException;

@@ -57,6 +57,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     enum COMMANDS {
         LOOP("Create <count> messages in a loop", new String[]{"int count", "String* topicName", "String* data", "int QoS"}),
         STATS("View statistics for runtime", new String[0]),
+        TD("Output a thread dump", new String[0]),
+        QUIET("Switch off the sent and receive listeners", new String[0]),
+        LOUD("Switch on the sent and receive listeners", new String[0]),
         RESET("Reset the stats and the local queue", new String[0]),
         CONNECT("Connect to the gateway and establish a new session", new String[]{"boolean cleanSession", "int16 keepAlive"}),
         SUBSCRIBE("Subscribe to a topic", new String[]{"String* topicName", "int QoS"}),
@@ -71,7 +74,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         HELP("List this message", new String[0]),
         QUIT("Quit the application", new String[0]),
         EXIT("Quit the application", new String[0], true),
-        QUICKCONNECT("Quick connect configuration", new String[0], true),
+        QC("Quick connect configuration", new String[0], true),
         BYE("Quit the application", new String[0], true);
 
         private String description;
@@ -127,7 +130,10 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         output.println("\t\t" + c.getDescription());
                     }
                     break;
-                case QUICKCONNECT:
+                case TD:
+                    threadDump();
+                    break;
+                case QC:
                     quickConnect();
                     break;
                 case CONNECT:
@@ -173,6 +179,12 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     break;
                 case TEST:
                     test();
+                    break;
+                case QUIET:
+                    disableOutput();
+                    break;
+                case LOUD:
+                    enableOutput();
                     break;
                 case PREDEFINE:
                     predefine(
@@ -232,7 +244,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void loop(int count, String topicPath, int qos)
             throws IOException, MqttsnException {
         for (int i = 0; i < count; i++){
-            publish(topicPath, "message " + i, qos);
+            publish(topicPath, "message " + (i + 1), qos);
             try {
                 //the queue ordering is done using a natural order on
                 //timestamp so ensure we are always 1 ms between

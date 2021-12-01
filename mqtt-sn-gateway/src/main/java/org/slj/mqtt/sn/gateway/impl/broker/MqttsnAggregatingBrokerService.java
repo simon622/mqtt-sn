@@ -122,10 +122,10 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                                         connection.subscribe(null, path.toString(), 2);
                                     } catch (MqttsnBrokerException e) {
                                         e.printStackTrace();
+                                        logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
                                     }
                                 });
                             }
-
                         } catch (MqttsnException e) {
                             logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
                             throw new MqttsnBrokerException(e);

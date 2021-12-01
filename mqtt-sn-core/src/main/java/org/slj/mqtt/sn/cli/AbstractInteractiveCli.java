@@ -33,6 +33,7 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.ThreadDump;
 
 import java.io.*;
 import java.net.UnknownHostException;
@@ -69,6 +70,7 @@ public abstract class AbstractInteractiveCli {
 
     protected PrintStream output;
     protected Scanner input;
+    protected boolean enableOutput = true;
     protected volatile boolean closed = false;
     private volatile boolean lastCursorAsync = false;
 
@@ -92,12 +94,11 @@ public abstract class AbstractInteractiveCli {
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
 
-        message("Adding runtime listeners.. DONE");
         runtime.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data) -> {
             try {
                 receiveCount.incrementAndGet();
                 receivedPublishBytesCount.addAndGet(data.length);
-                asyncmessage(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] \"%s\"",
+                if(enableOutput) asyncmessage(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] \"%s\"",
                         data.length, topic, context.getId(), new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
@@ -107,12 +108,14 @@ public abstract class AbstractInteractiveCli {
             try {
                 sentCount.incrementAndGet();
                 publishedBytesCount.addAndGet(data.length);
-                asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
+                if(enableOutput) asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
                         data.length, topicName, context.getId(), new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
             }
         });
+        enableOutput();
+        message("Adding runtime listeners.. DONE");
 
         runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] data, int retryCount) -> {
             try {
@@ -138,6 +141,14 @@ public abstract class AbstractInteractiveCli {
         });
 
         message("Runtime successfully initialised.");
+    }
+
+    public void enableOutput(){
+        enableOutput = true;
+    }
+
+    public void disableOutput(){
+        enableOutput = false;
     }
 
     public void welcome(){
@@ -342,8 +353,7 @@ public abstract class AbstractInteractiveCli {
         message("Metrics & queue reset");
     }
 
-    protected void predefine(String topicName, int alias)
-            throws IOException {
+    protected void predefine(String topicName, int alias) {
         if(runtime != null && runtimeRegistry != null){
             getOptions().getPredefinedTopics().put(topicName, alias);
             message("DONE - predefined topic registered successfully");
@@ -352,11 +362,15 @@ public abstract class AbstractInteractiveCli {
         }
     }
 
-    protected void stats() throws IOException {
+    protected void stats() {
         message(String.format("Publish Sent Count: %s messages(s) - (%s bytes) ", sentCount.get(), publishedBytesCount.get()));
         message(String.format("Publish Receive Count: %s messages(s) - (%s bytes)", receiveCount.get(), receivedPublishBytesCount.get()));
         message(String.format("Network Bytes Sent: %s byte(s)", sentByteCount.get()));
         message(String.format("Network Bytes Received: %s byte(s)", receiveByteCount.get()));
+    }
+
+    protected void threadDump() {
+        output.println(ThreadDump.create());
     }
 
     protected String captureMandatoryString(Scanner input, PrintStream output, String question){

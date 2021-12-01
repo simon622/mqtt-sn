@@ -26,9 +26,12 @@ package org.slj.mqtt.sn.gateway.spi.broker;
 
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 public interface IMqttsnBrokerService {
+
+    IMqttsnRuntimeRegistry getRuntimeRegistry();
 
     boolean isConnected(IMqttsnContext context) throws MqttsnBrokerException;
 

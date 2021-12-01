@@ -22,22 +22,14 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.spi;
+package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnWillData;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnWillRegistry;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
-/**
- * Stores and Maintains will data associated with a given context
- */
-public interface IMqttsnWillRegistry<T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T> {
+public abstract class AbstractWillRegistry<T extends IMqttsnRuntimeRegistry>
+        extends MqttsnService<T> implements IMqttsnWillRegistry<T> {
 
-    void setWillMessage(IMqttsnContext context, MqttsnWillData willData);
-
-    MqttsnWillData getWillMessage(IMqttsnContext context);
-
-    boolean hasWillMessage(IMqttsnContext context);
-
-    void clear(IMqttsnContext context) throws MqttsnException;
 
 }

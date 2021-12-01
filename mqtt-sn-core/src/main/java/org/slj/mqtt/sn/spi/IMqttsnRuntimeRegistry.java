@@ -65,6 +65,8 @@ public interface IMqttsnRuntimeRegistry {
 
     IMqttsnMessageRegistry getMessageRegistry();
 
+    IMqttsnWillRegistry getWillRegistry();
+
     IMqttsnPermissionService getPermissionService();
 
     List<IMqttsnTrafficListener> getTrafficListeners();

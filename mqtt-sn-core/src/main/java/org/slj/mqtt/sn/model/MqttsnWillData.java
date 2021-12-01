@@ -30,7 +30,7 @@ import java.io.Serializable;
 
 public class MqttsnWillData implements Serializable {
 
-    static final long serialVersionUID = 428878123L;
+    private static final long serialVersionUID = 2284318994034723218L;
 
     private TopicPath topicPath;
     private byte data;

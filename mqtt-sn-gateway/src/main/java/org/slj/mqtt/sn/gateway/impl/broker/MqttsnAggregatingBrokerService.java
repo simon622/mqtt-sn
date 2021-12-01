@@ -29,7 +29,9 @@ import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.TopicPath;
 
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -108,10 +110,26 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                 if(connection == null){
                     connection = registry.getBrokerConnectionFactory().createConnection(options,
                             registry.getOptions().getContextId());
-                    //-- bootstrap to recieve events from the connections..
-                    //-- TODO - I dont like this pattern
                     if(connection instanceof AbstractMqttsnBrokerConnection){
                         ((AbstractMqttsnBrokerConnection)connection).setBrokerService(this);
+                        //-- ensure we subscribe the connection to any existing subscriptions
+                        try {
+                            Set<TopicPath> paths = getRuntimeRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
+                            if(paths!= null){
+                                logger.log(Level.INFO, String.format("new aggregated connection subscribing to [%s] existing topics..", paths.size()));
+                                paths.forEach(path -> {
+                                    try {
+                                        connection.subscribe(null, path.toString(), 2);
+                                    } catch (MqttsnBrokerException e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
+
+                        } catch (MqttsnException e) {
+                            logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
+                            throw new MqttsnBrokerException(e);
+                        }
                     }
                 }
             }

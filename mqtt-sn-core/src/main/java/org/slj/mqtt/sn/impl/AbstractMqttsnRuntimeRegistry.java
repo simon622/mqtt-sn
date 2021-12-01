@@ -63,7 +63,8 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnQueueProcessorStateService queueProcessorStateCheckService;
     protected IMqttsnMessageRegistry messageRegistry;
     protected IMqttsnPermissionService permissionService;
-    protected List<IMqttsnTrafficListener> trafficListeners;
+    protected IMqttsnWillRegistry willRegistry;
+    protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
     public AbstractMqttsnRuntimeRegistry(MqttsnOptions options){
         this.options = options;
@@ -171,7 +172,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     /**
      * The message registry is a normalised view of transiting messages, it context the raw payload of publish operations
-     * so light weight references to the payload can exist in multiple storage systems without duplication of data.
+     * so lightweight references to the payload can exist in multiple storage systems without duplication of data.
      * For example, when running in gateway mode, the same message my reside in queues for numerous devices which are
      * in different connection states. We should not store payloads N times in this case.
      *
@@ -317,6 +318,18 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return this;
     }
 
+    /**
+     * The will registry holds the last will and testament data for against a given context. This will be used
+     * by the runtime to intialise a session (in client mode) or to notify a topic (in gateway mode)
+     *
+     * @param willRegistry The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withWillRegistry(IMqttsnWillRegistry willRegistry){
+        this.willRegistry = willRegistry;
+        return this;
+    }
+
     @Override
     public MqttsnOptions getOptions() {
         return options;
@@ -389,6 +402,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     @Override
     public IMqttsnMessageRegistry getMessageRegistry(){
         return messageRegistry;
+    }
+
+    @Override
+    public IMqttsnWillRegistry getWillRegistry(){
+        return willRegistry;
     }
 
     @Override

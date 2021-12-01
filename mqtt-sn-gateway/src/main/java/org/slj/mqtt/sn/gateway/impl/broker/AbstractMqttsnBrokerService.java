@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
@@ -133,6 +134,11 @@ public abstract class AbstractMqttsnBrokerService
     @Override
     public void receive(String topicPath, byte[] payload, int QoS) throws MqttsnException {
         registry.getGatewaySessionService().receiveToSessions(topicPath, payload, QoS);
+    }
+
+    @Override
+    public IMqttsnRuntimeRegistry getRuntimeRegistry() {
+        return registry;
     }
 
     protected abstract void close(IMqttsnBrokerConnection connection) throws MqttsnBrokerException;

@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.Subscription;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.List;
 import java.util.Set;
@@ -85,4 +86,12 @@ public interface IMqttsnSubscriptionRegistry<T extends IMqttsnRuntimeRegistry> e
      * @throws MqttsnException
      */
     Set<Subscription> readSubscriptions(IMqttsnContext context) throws MqttsnException ;
+
+
+    /**
+     * A set of distinct subscriptions held by this registry
+     * @return a set of subscriptions to which the context is subscribed
+     * @throws MqttsnException
+     */
+    Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException;
 }

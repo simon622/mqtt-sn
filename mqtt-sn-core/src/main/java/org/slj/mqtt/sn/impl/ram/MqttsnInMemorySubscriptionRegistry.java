@@ -104,7 +104,23 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public void clearAll() throws MqttsnException {
+    public void clearAll() {
         subscriptionsLookups.clear();
+    }
+
+    @Override
+    public Set<TopicPath> readAllSubscribedTopicPaths() {
+        Set<TopicPath> topicPaths = new HashSet<>();
+        synchronized (subscriptionsLookups) {
+            Iterator<IMqttsnContext> clientItr = subscriptionsLookups.keySet().iterator();
+            while(clientItr.hasNext()) {
+                IMqttsnContext client = clientItr.next();
+                Set<Subscription> paths = subscriptionsLookups.get(client);
+                if(paths != null){
+                    paths.stream().map(Subscription::getTopicPath).forEach(topicPaths::add);
+                }
+            }
+        }
+        return topicPaths;
     }
 }

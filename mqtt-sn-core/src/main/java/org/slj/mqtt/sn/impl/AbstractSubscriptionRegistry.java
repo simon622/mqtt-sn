@@ -79,6 +79,8 @@ public abstract class AbstractSubscriptionRegistry <T extends IMqttsnRuntimeRegi
 
     public abstract Set<Subscription> readSubscriptions(IMqttsnContext context) throws MqttsnException ;
 
+    public abstract Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException ;
+
     protected abstract boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException ;
 
     protected abstract boolean removeSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException ;

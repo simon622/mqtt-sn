@@ -294,12 +294,12 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     @Override
-    protected MqttsnOptions createOptions() throws UnknownHostException {
+    protected MqttsnOptions createOptions() {
         return new MqttsnGatewayOptions().
                 withGatewayId(101).
                 withContextId(clientId).
                 withMaxMessagesInQueue(1000).
-                withMinFlushTime(400).
+                withMinFlushTime(200).
                 withSleepClearsRegistrations(false);
     }
 

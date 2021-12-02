@@ -308,7 +308,7 @@ public abstract class AbstractMqttsnRuntime {
      * transport operations or confirmations etc.
      */
     public Future<?> async(Runnable r){
-        return executorService.submit(r);
+        return running ? executorService.submit(r) : null;
     }
 
     /**

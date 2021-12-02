@@ -96,8 +96,12 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                         //-- with error packets and the like
                         context = registry.getContextFactory().createInitialNetworkContext(address);
                     }
-                    context.setReceivePort(socket.getLocalPort());
-                    receiveDatagramInternal(context, p);
+
+                    if(socketIn != null){
+                        context.setReceivePort(socketIn.getLocalPort());
+                        receiveDatagramInternal(context, p);
+                    }
+
                 } catch(Throwable e){
                     logger.log(Level.SEVERE, "encountered an error listening for traffic", e);
                 } finally {

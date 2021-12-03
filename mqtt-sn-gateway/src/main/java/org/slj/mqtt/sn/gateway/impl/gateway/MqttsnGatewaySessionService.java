@@ -67,7 +67,8 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             long time = System.currentTimeMillis();
             if(state != null && state.getKeepAlive() > 0){
                 long lastSeen = state.getLastSeen().getTime();
-                if(lastSeen + (state.getKeepAlive() * 1000) < time){
+                long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
+                if(expires < time){
                     logger.log(Level.WARNING, String.format("keep-alive deamon detected stale session for [%s], disconnecting", state.getContext()));
                     state.setClientState(MqttsnClientState.DISCONNECTED);
                 }

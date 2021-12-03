@@ -165,6 +165,11 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_MAX_PROTOCOL_SIZE = 1024;
 
+    /**
+     * The default T-WAIT for congestion (in seconds)
+     */
+    public static final int DEFAULT_CONGESTION_WAIT = 5;
+
     private String contextId;
     private int transportHandoffThreadCount = DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
@@ -190,6 +195,7 @@ public class MqttsnOptions {
     private String logPattern = DEFAULT_SIMPLE_LOG_PATTERN;
     private int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
     private int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
+    private int congestionWait = DEFAULT_CONGESTION_WAIT;
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
 
     private Map<String, Integer> predefinedTopics = new HashMap<>();
@@ -570,6 +576,18 @@ public class MqttsnOptions {
     }
 
     /**
+     * When a client received a congestion returnCode from the gateway, they should back from publish, registration & subscription
+     * operations for this time period
+     *
+     * @param congestionWait - The time (in seconds) clients should backoff when a congestion message is recieved
+     * @return this configuration
+     */
+    public MqttsnOptions withCongestionWait(int congestionWait){
+        this.congestionWait = congestionWait;
+        return this;
+    }
+
+    /**
      * Sets the locations of known clients or gateways on the network. When running as a client and discovery is not enabled,
      * it is mandatory that at least 1 gateway entry be supplied, which will be the gateway the client talks to. In gateway
      * mode, the registry is populated dynamically.
@@ -693,5 +711,9 @@ public class MqttsnOptions {
 
     public int getTransportHandoffThreadCount() {
         return transportHandoffThreadCount;
+    }
+
+    public int getCongestionWait() {
+        return congestionWait;
     }
 }

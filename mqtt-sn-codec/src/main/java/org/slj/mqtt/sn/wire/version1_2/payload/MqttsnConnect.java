@@ -25,8 +25,10 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
@@ -34,7 +36,7 @@ import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
  * NB: despite the spec only allowing 23 chars in the clientId field, this type has been designed safely to support
  * clientIds which take the message into an extended type (> 255).
  */
-public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implements IMqttsnIdentificationPacket {
+public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
 
     /* The Duration field is 2-octet long and specifies the duration of a time period in seconds.
     The maximum value that can be encoded is approximately 18 hours. */
@@ -134,5 +136,11 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
         sb.append(", cleanSession=").append(cleanSession);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateClientId(clientId);
+        MqttsnSpecificationValidator.validateKeepAlive(duration);
     }
 }

@@ -25,17 +25,19 @@
 package org.slj.mqtt.sn.wire.version1_2;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.AbstractMqttsnCodec;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
 public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
-    protected IMqttsnMessageFactory messageFactory;
+    protected volatile IMqttsnMessageFactory messageFactory;
 
     @Override
     public PublishData getData(IMqttsnMessage message) {
@@ -76,15 +78,13 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
     @Override
     public int readMessageSize(byte[] data) throws MqttsnCodecException {
-        if (data == null || data.length == 0)
-            throw new MqttsnCodecException("malformed mqtt-sn packet, need at least 1 byte for sizing");
+        MqttsnSpecificationValidator.validatePacketLength(data);
         return readMessageLength(data);
     }
 
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
 
-        if (data == null || data.length < 2)
-            throw new MqttsnCodecException("malformed mqtt-sn packet");
+        MqttsnSpecificationValidator.validatePacketLength(data);
 
         AbstractMqttsnMessage msg = null;
         int msgType = readMessageType(data);
@@ -206,6 +206,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
             default:
                 throw new MqttsnCodecException(String.format("unknown message type [%s]", msgType));
         }
+        msg.decode(data);
         return msg;
     }
 
@@ -247,5 +248,13 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
             }
         }
         return messageFactory;
+    }
+
+    @Override
+    public void validate(IMqttsnMessage message) throws MqttsnCodecException {
+        if(message instanceof IMqttsnMessageValidator){
+            IMqttsnMessageValidator v = (IMqttsnMessageValidator) message;
+            v.validate();
+        }
     }
 }

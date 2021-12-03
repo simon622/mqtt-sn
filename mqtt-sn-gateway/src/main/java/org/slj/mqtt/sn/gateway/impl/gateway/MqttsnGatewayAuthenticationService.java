@@ -26,15 +26,15 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnPermissionService;
+import org.slj.mqtt.sn.spi.IMqttsnAuthenticationService;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
 
-public class MqttsnGatewayPermissionService <U extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<U>  implements IMqttsnPermissionService  {
+public class MqttsnGatewayAuthenticationService<U extends IMqttsnRuntimeRegistry>
+        extends MqttsnService<U>  implements IMqttsnAuthenticationService {
 
     @Override
     public boolean allowConnect(IMqttsnContext context, String clientId) throws MqttsnException {
@@ -44,20 +44,5 @@ public class MqttsnGatewayPermissionService <U extends IMqttsnRuntimeRegistry>
                     || allowedClientId.contains(clientId);
         }
         return false;
-    }
-
-    @Override
-    public boolean allowedToSubscribe(IMqttsnContext context, String topicPath) throws MqttsnException {
-        return true;
-    }
-
-    @Override
-    public int allowedMaximumQoS(IMqttsnContext context, String topicPath) throws MqttsnException {
-        return 2;
-    }
-
-    @Override
-    public boolean allowedToPublish(IMqttsnContext context, String topicPath, int size, int QoS) throws MqttsnException {
-        return true;
     }
 }

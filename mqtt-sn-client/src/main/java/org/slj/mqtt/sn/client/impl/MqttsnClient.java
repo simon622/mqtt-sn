@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.client.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.examples.Example;
 import org.slj.mqtt.sn.client.spi.IMqttsnClient;
@@ -181,9 +182,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#connect(int, boolean)}
      */
     public void connect(int keepAlive, boolean cleanSession) throws MqttsnException, MqttsnClientConnectException{
-        if(!MqttsnUtils.validUInt16(keepAlive)){
-            throw new MqttsnExpectationFailedException("invalid keepAlive supplied");
-        }
+
         this.keepAlive = keepAlive;
         this.cleanSession = cleanSession;
         IMqttsnSessionState state = checkSession(false);
@@ -231,12 +230,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#publish(String, int, byte[])}
      */
     public MqttsnWaitToken publish(String topicName, int QoS, byte[] data) throws MqttsnException, MqttsnQueueAcceptException{
-        if(!MqttsnUtils.validQos(QoS)){
-            throw new MqttsnExpectationFailedException("invalid QoS supplied");
-        }
-        if(!MqttsnUtils.validTopicName(topicName)){
-            throw new MqttsnExpectationFailedException("invalid topicName supplied");
-        }
+
+        MqttsnSpecificationValidator.validateQoS(QoS);
+        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validatePublishData(data);
 
         if(QoS == -1){
             Integer alias = registry.getTopicRegistry().lookupPredefined(state.getContext(), topicName);
@@ -256,12 +253,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#subscribe(String, int)}
      */
     public void subscribe(String topicName, int QoS) throws MqttsnException{
-        if(!MqttsnUtils.validTopicName(topicName)){
-            throw new MqttsnExpectationFailedException("invalid topicName supplied");
-        }
-        if(!MqttsnUtils.validQos(QoS)){
-            throw new MqttsnExpectationFailedException("invalid QoS supplied");
-        }
+
+        MqttsnSpecificationValidator.validateQoS(QoS);
+        MqttsnSpecificationValidator.validateTopicPath(topicName);
+
         IMqttsnSessionState state = checkSession(true);
 
         TopicInfo info = registry.getTopicRegistry().lookup(state.getContext(), topicName, true);
@@ -289,9 +284,9 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#unsubscribe(String)}
      */
     public void unsubscribe(String topicName) throws MqttsnException{
-        if(!MqttsnUtils.validTopicName(topicName)){
-            throw new MqttsnExpectationFailedException("invalid topicName supplied");
-        }
+
+        MqttsnSpecificationValidator.validateTopicPath(topicName);
+
         IMqttsnSessionState state = checkSession(true);
 
         TopicInfo info = registry.getTopicRegistry().lookup(state.getContext(), topicName, true);
@@ -321,13 +316,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public void supervisedSleepWithWake(int duration, int wakeAfterIntervalSeconds, int maxWaitTimeMillis, boolean connectOnFinish)
             throws MqttsnException, MqttsnClientConnectException {
 
-        if(!MqttsnUtils.validUInt16(duration)){
-            throw new MqttsnExpectationFailedException("invalid duration supplied");
-        }
-
-        if(!MqttsnUtils.validUInt16(wakeAfterIntervalSeconds)){
-            throw new MqttsnExpectationFailedException("invalid wakeAfterInterval supplied");
-        }
+        MqttsnSpecificationValidator.validateDuration(duration);
 
         if(wakeAfterIntervalSeconds > duration)
            throw new MqttsnExpectationFailedException("sleep duration must be greater than the wake after period");
@@ -371,9 +360,9 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#sleep(int)}
      */
     public void sleep(int duration)  throws MqttsnException{
-        if(!MqttsnUtils.validUInt16(duration)){
-            throw new MqttsnExpectationFailedException("invalid duration supplied");
-        }
+
+        MqttsnSpecificationValidator.validateDuration(duration);
+
         logger.log(Level.INFO, String.format("sleeping for [%s] seconds", duration));
         IMqttsnSessionState state = checkSession(true);
         IMqttsnMessage message = registry.getMessageFactory().createDisconnect(duration);
@@ -400,6 +389,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#wake(int)}
      */
     public void wake(int waitTime)  throws MqttsnException{
+
         IMqttsnSessionState state = checkSession(false);
         IMqttsnMessage message = registry.getMessageFactory().createPingreq(registry.getOptions().getContextId());
         synchronized (this){

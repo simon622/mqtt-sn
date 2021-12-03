@@ -22,29 +22,25 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.MqttsnSpecificationValidator;
-import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.model.IMqttsnContext;
 
-public class MqttsnWillmsgupd extends AbstractMqttsnWillMessage implements IMqttsnMessageValidator {
+/**
+ * Optional - when installed it will be consulted to determine whether a remote context can perform certain
+ * operations;
+ *
+ * CONNECT with the given clientId
+ */
+public interface IMqttsnAuthenticationService {
 
-    @Override
-    public int getMessageType() {
-        return MqttsnConstants.WILLMSGUPD;
-    }
+    /**
+     * Is a client allowed to CONNECT successfully.
+     * @param context - the context who would like to CONNECT
+     * @param clientId - the client Id they provided in the CONNECT dialog
+     * @return true if the client is allowed to CONNECT (yielding CONNACK ok) or false if not allowed (yielding CONNACK error)
+     * @throws MqttsnException an error occurred
+     */
+    boolean allowConnect(IMqttsnContext context, String clientId) throws MqttsnException;
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnWillmsgupd{");
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @Override
-    public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validatePublishData(getMsgData());
-    }
 }

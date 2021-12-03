@@ -27,8 +27,6 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.utils.StringTable;
-import org.slj.mqtt.sn.utils.StringTableWriters;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,33 +34,32 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Condition;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public abstract class AbstractMqttsnRuntime {
 
-    protected Logger logger = Logger.getLogger(getClass().getName());
+    protected final Logger logger = Logger.getLogger(getClass().getName());
     protected IMqttsnRuntimeRegistry registry;
 
-    protected List<IMqttsnPublishReceivedListener> receivedListeners
+    protected final List<IMqttsnPublishReceivedListener> receivedListeners
             = new ArrayList<>();
-    protected List<IMqttsnPublishSentListener> sentListeners
+    protected final List<IMqttsnPublishSentListener> sentListeners
             = new ArrayList<>();
-    protected List<IMqttsnPublishFailureListener> sendFailureListeners
+    protected final List<IMqttsnPublishFailureListener> sendFailureListeners
             = new ArrayList<>();
-    protected List<IMqttsnConnectionStateListener> connectionListeners
+    protected final List<IMqttsnConnectionStateListener> connectionListeners
             = new ArrayList<>();
 
-    protected List<IMqttsnService> activeServices
+    protected final List<IMqttsnService> activeServices
             = Collections.synchronizedList(new ArrayList<>());
 
     private volatile ThreadGroup threadGroup;
-    protected ExecutorService executorService;
-    protected CountDownLatch startupLatch;
-    protected volatile boolean running = false;
-    protected long startedAt;
+    private ExecutorService executorService;
+    private CountDownLatch startupLatch;
+    private long startedAt;
     private final Object monitor = new Object();
+    protected volatile boolean running = false;
 
     public final void start(IMqttsnRuntimeRegistry reg) throws MqttsnException {
         start(reg, false);
@@ -290,12 +287,12 @@ public abstract class AbstractMqttsnRuntime {
      * transport layer into the application
      */
     protected ExecutorService createExecutorService(MqttsnOptions options){
-        int threadCount = options.getHandoffThreadCount();
+        int threadCount = options.getTransportHandoffThreadCount();
         return Executors.newFixedThreadPool(threadCount, new ThreadFactory() {
             int count = 0;
             @Override
             public Thread newThread(Runnable r) {
-                Thread t = new Thread(getThreadGroup(), r, "mqtt-sn-worker-thread-" + ++count);
+                Thread t = new Thread(getThreadGroup(), r, "mqtt-sn-transport-handoff-thread-" + ++count);
                 t.setPriority(Thread.MIN_PRIORITY + 1);
                 t.setDaemon(true);
                 return t;

@@ -59,7 +59,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     public synchronized void start(T runtime) throws MqttsnException {
         flushOperations = new HashMap();
         executorService = Executors.newScheduledThreadPool(
-                runtime.getOptions().getStateProcessorThreadCount());
+                runtime.getOptions().getQueueProcessorThreadCount());
 
         lastUsedMsgIds = Collections.synchronizedMap(new HashMap());
         lastMessageReceived = Collections.synchronizedMap(new HashMap());

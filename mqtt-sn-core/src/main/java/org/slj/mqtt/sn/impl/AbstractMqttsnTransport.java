@@ -56,12 +56,14 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
 
     @Override
     public void receiveFromTransport(INetworkContext context, ByteBuffer buffer) {
-        if(registry.getOptions().isThreadHandoffFromTransport()){
-            getRegistry().getRuntime().async(
-                    () -> receiveFromTransportInternal(context, buffer));
-        } else {
-            receiveFromTransportInternal(context, buffer);
-        }
+        getRegistry().getRuntime().async(
+                () -> receiveFromTransportInternal(context, buffer));
+    }
+
+    @Override
+    public void writeToTransport(INetworkContext context, IMqttsnMessage message) {
+        getRegistry().getRuntime().async(
+                () -> writeToTransportInternal(context, message, true));
     }
 
     protected void receiveFromTransportInternal(INetworkContext networkContext, ByteBuffer buffer) {
@@ -108,7 +110,6 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                 }
             }
 
-
             if(authd && registry.getNetworkRegistry().hasBoundSessionContext(networkContext)){
                 notifyTrafficReceived(networkContext, data, message);
                 registry.getMessageHandler().receiveMessage(registry.getNetworkRegistry().getSessionContext(networkContext), message);
@@ -118,16 +119,6 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             }
         } catch(Throwable t){
             logger.log(Level.SEVERE, "unhandled error;", t);
-        }
-    }
-
-    @Override
-    public void writeToTransport(INetworkContext context, IMqttsnMessage message) {
-        if(registry.getOptions().isThreadHandoffFromTransport()){
-            getRegistry().getRuntime().async(
-                    () -> writeToTransportInternal(context, message, true));
-        } else {
-            writeToTransportInternal(context, message, true);
         }
     }
 
@@ -161,14 +152,14 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
     private void notifyTrafficReceived(final INetworkContext context, byte[] data, IMqttsnMessage message) {
         List<IMqttsnTrafficListener> list = getRegistry().getTrafficListeners();
         if(list != null && !list.isEmpty()){
-            list.stream().forEach(l -> l.trafficReceived(context, data, message));
+            list.forEach(l -> l.trafficReceived(context, data, message));
         }
     }
 
     private void notifyTrafficSent(final INetworkContext context, byte[] data, IMqttsnMessage message) {
         List<IMqttsnTrafficListener> list = getRegistry().getTrafficListeners();
         if(list != null && !list.isEmpty()){
-            list.stream().forEach(l -> l.trafficSent(context, data, message));
+            list.forEach(l -> l.trafficSent(context, data, message));
         }
     }
 

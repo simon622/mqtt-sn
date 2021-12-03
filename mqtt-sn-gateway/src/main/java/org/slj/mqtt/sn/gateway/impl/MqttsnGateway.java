@@ -48,7 +48,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getQueueProcessorStateCheckService());
         callStartup(runtime.getQueueProcessor());
         callStartup(runtime.getContextFactory());
-        if (runtime.getPermissionService() != null) callStartup(runtime.getPermissionService());
+        if (runtime.getAuthenticationService() != null) callStartup(runtime.getAuthenticationService());
+        if (runtime.getAuthorizationService() != null) callStartup(runtime.getAuthorizationService());
 
         //-- start the network last
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
@@ -90,7 +91,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         //-- ensure we stop all the startable services
 
-        if (runtime.getPermissionService() != null) callShutdown(runtime.getPermissionService());
+        if (runtime.getAuthenticationService() != null) callShutdown(runtime.getAuthenticationService());
+        if (runtime.getAuthorizationService() != null) callShutdown(runtime.getAuthorizationService());
         callShutdown(runtime.getContextFactory());
         callShutdown(runtime.getMessageHandler());
         callShutdown(runtime.getMessageQueue());

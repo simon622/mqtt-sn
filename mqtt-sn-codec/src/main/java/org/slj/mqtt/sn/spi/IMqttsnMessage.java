@@ -24,6 +24,8 @@
 package org.slj.mqtt.sn.spi;
 
 
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
+
 import java.io.Serializable;
 
 /**

@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.model;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
@@ -69,30 +70,25 @@ public class MqttsnOptions {
     public static final int DEFAULT_ACTIVE_CONTEXT_TIMEOUT = 20000;
 
     /**
-     * By default, discover is NOT enabled on either the client or the gateway.
+     * Wire logging can be stopped entirely
      */
     public static final boolean DEFAULT_WIRE_LOGGING_ENABLED = false;
 
     /**
-     * By default, discover is NOT enabled on either the client or the gateway.
+     * By default, discovery is NOT enabled on either the client or the gateway.
      */
     public static final boolean DEFAULT_DISCOVERY_ENABLED = false;
 
     /**
-     * By default, thread hand off is enabled on the gateway, and disabled on the client
-     */
-    public static final boolean DEFAULT_THREAD_HANDOFF_ENABLED = true;
-
-    /**
      * When thread hand off is enabled, the default number of processing threads is 1
      */
-    public static final int DEFAULT_HANDOFF_THREAD_COUNT = 1;
+    public static final int DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT = 1;
 
     /**
      * Used to handle the outbound queue processing layer, when running as a gateway this should
      * scale with the number of expected connected clients
      */
-    public static final int DEFAULT_STATE_PROCESSOR_THREAD_COUNT = 2;
+    public static final int DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT = 2;
 
     /**
      * By default, 128 topics can reside in any 1 client registry
@@ -128,11 +124,6 @@ public class MqttsnOptions {
      * By default, the ASLEEP state will assume topic registrations will need to be reestablished
      */
     public static final boolean DEFAULT_SLEEP_CLEARS_REGISTRATIONS = true;
-
-    /**
-     * The maximum size of a supplied topic is 1024 characters
-     */
-    public static final int DEFAULT_MAX_TOPIC_LENGTH = 1024;
 
     /**
      * The maximum number of entries in a network registry is 1024
@@ -175,10 +166,11 @@ public class MqttsnOptions {
     public static final int DEFAULT_MAX_PROTOCOL_SIZE = 1024;
 
     private String contextId;
-    private boolean threadHandoffFromTransport = DEFAULT_THREAD_HANDOFF_ENABLED;
+    private int transportHandoffThreadCount = DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT;
+    private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
+
     private boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;
     private boolean sleepClearsRegistrations = DEFAULT_SLEEP_CLEARS_REGISTRATIONS;
-    private int handoffThreadCount = DEFAULT_HANDOFF_THREAD_COUNT;
     private int minFlushTime = DEFAULT_MIN_FLUSH_TIME;
     private int maxTopicsInRegistry = DEFAULT_MAX_TOPICS_IN_REGISTRY;
     private int msgIdStartAt = DEFAULT_MSG_ID_STARTS_AT;
@@ -186,7 +178,6 @@ public class MqttsnOptions {
     private int maxMessagesInflight = DEFAULT_MAX_MESSAGES_IN_FLIGHT;
     private int maxMessagesInQueue = DEFAULT_MAX_MESSAGE_IN_QUEUE;
     private boolean requeueOnInflightTimeout = DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT;
-    private int maxTopicLength = DEFAULT_MAX_TOPIC_LENGTH;
     private int maxNetworkAddressEntries = DEFAULT_MAX_NETWORK_ADDRESS_ENTRIES;
     private int maxWait = DEFAULT_MAX_WAIT;
     private int maxTimeInflight = DEFAULT_MAX_TIME_INFLIGHT;
@@ -200,23 +191,22 @@ public class MqttsnOptions {
     private int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
     private int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
-    private int stateProcessorThreadCount = DEFAULT_STATE_PROCESSOR_THREAD_COUNT;
 
     private Map<String, Integer> predefinedTopics = new HashMap<>();
-    private Map<String, NetworkAddress> networkAddressEntries;
+    private volatile Map<String, NetworkAddress> networkAddressEntries;
 
     /**
      * How many threads should be used to process connected context message queues
      * (should scale with the number of expected connected clients and the level
      * of concurrency)
      *
-     * @param stateProcessorThreadCount - Number of threads to use to service outbound queue processing
+     * @param queueProcessorThreadCount - Number of threads to use to service outbound queue processing
      *
-     * @see {@link MqttsnOptions#DEFAULT_STATE_PROCESSOR_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT}
      * @return this configuration
      */
-    public MqttsnOptions withStateProcessorThreadCount(int stateProcessorThreadCount){
-        this.stateProcessorThreadCount = stateProcessorThreadCount;
+    public MqttsnOptions withQueueProcessorThreadCount(int queueProcessorThreadCount){
+        this.queueProcessorThreadCount = queueProcessorThreadCount;
         return this;
     }
 
@@ -276,7 +266,7 @@ public class MqttsnOptions {
      * When > 0, active context monitoring will notify the application when the context has not generated
      * any active messages (PUBLISH, CONNECT, SUBSCRIBE, UNSUBSCRIBE)
      *
-     * @param activeContextTimeout - the time alllowed between last message SENT or RECEIVED from context before
+     * @param activeContextTimeout - the time allowed between last message SENT or RECEIVED from context before
      *                             notification to the connection listener
      *
      * @see {@link MqttsnOptions#DEFAULT_ACTIVE_CONTEXT_TIMEOUT}
@@ -302,33 +292,17 @@ public class MqttsnOptions {
     }
 
     /**
-     * Should the transport layer hand off messages it receives to a processing thread pool so the protocol loop does
-     * not become blocked by longing running operations. NB: it is advised that the transport loop is kept as quick as
-     * possible, changing this to false could result is long pauses for concurrent clients.
-     *
-     * @see {@link MqttsnOptions#DEFAULT_THREAD_HANDOFF_ENABLED}
-     *
-     * @param threadHandoffFromTransport - Should the transport layer hand off messages it receives to a processing thread pool so the protocol loop does
-     * not become blocked by longing running operations.
-     * @return this configuration
-     */
-    public MqttsnOptions withThreadHandoffFromTransport(boolean threadHandoffFromTransport){
-        this.threadHandoffFromTransport = threadHandoffFromTransport;
-        return this;
-    }
-
-    /**
      * When threadHandoffFromTransport is set to true, how many threads should be made available in the
      * managed pool to handle processing.
      *
-     * @see {@link MqttsnOptions#DEFAULT_HANDOFF_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT}
      *
-     * @param handoffThreadCount - When threadHandoffFromTransport is set to true, how many threads should be made available in the
+     * @param transportHandoffThreadCount - When threadHandoffFromTransport is set to true, how many threads should be made available in the
      * managed pool to handle processing
      * @return this configuration
      */
-    public MqttsnOptions withHandoffThreadCount(int handoffThreadCount){
-        this.handoffThreadCount = handoffThreadCount;
+    public MqttsnOptions withTransportHandoffThreadCount(int transportHandoffThreadCount){
+        this.transportHandoffThreadCount = transportHandoffThreadCount;
         return this;
     }
 
@@ -388,6 +362,9 @@ public class MqttsnOptions {
     /**
      * When a PUBLISH QoS 1,2 message has been in an unconfirmed state for a period of time,
      * should it be requeued for a second DUP sending attempt or discarded.
+     *
+     * NB - The spec says that messages should be resent on next CONNECT clean false, this setting
+     * allows the messages to be moved back to the queue immediately
      *
      * @see {@link MqttsnOptions#DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT}
      *
@@ -451,29 +428,14 @@ public class MqttsnOptions {
      * @return this configuration
      */
     public MqttsnOptions withPredefinedTopic(String topicPath, int alias){
-        if(!TopicPath.isValidTopic(topicPath, Math.max(maxTopicLength, MqttsnConstants.USIGNED_MAX_16))){
-            throw new MqttsnRuntimeException("invalid topic path " + topicPath);
-        }
 
-        if(!MqttsnUtils.validUInt16(alias)){
-            throw new MqttsnRuntimeException("invalid topic alias " + alias);
-        }
+        MqttsnSpecificationValidator.validateTopicPath(topicPath);
+        MqttsnSpecificationValidator.validateTopicAlias(alias);
+
         predefinedTopics.put(topicPath, alias);
         return this;
     }
 
-    /**
-     * The maximum length of a topic allowed, including all wildcard or separator characters.
-     *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_TOPIC_LENGTH}
-     *
-     * @param maxTopicLength - The maximum length of a topic allowed, including all wildcard or separator characters.
-     * @return this configuration
-     */
-    public MqttsnOptions withMaxTopicLength(int maxTopicLength){
-        this.maxTopicLength = maxTopicLength;
-        return this;
-    }
 
     /**
      * The number at which messageIds start, typically this should be 1.
@@ -647,10 +609,6 @@ public class MqttsnOptions {
         return enableDiscovery;
     }
 
-    public int getMaxTopicLength() {
-        return maxTopicLength;
-    }
-
     public String getContextId() {
         return contextId;
     }
@@ -679,10 +637,6 @@ public class MqttsnOptions {
         return maxWait;
     }
 
-    public int getHandoffThreadCount() {
-        return handoffThreadCount;
-    }
-
     public int getSearchGatewayRadius() {
         return searchGatewayRadius;
     }
@@ -701,10 +655,6 @@ public class MqttsnOptions {
 
     public int getPingDivisor() {
         return pingDivisor;
-    }
-
-    public boolean isThreadHandoffFromTransport() {
-        return threadHandoffFromTransport;
     }
 
     public boolean isRequeueOnInflightTimeout() {
@@ -739,7 +689,9 @@ public class MqttsnOptions {
         return reapReceivingMessages;
     }
 
-    public int getStateProcessorThreadCount() {
-        return stateProcessorThreadCount;
+    public int getQueueProcessorThreadCount() { return queueProcessorThreadCount; }
+
+    public int getTransportHandoffThreadCount() {
+        return transportHandoffThreadCount;
     }
 }

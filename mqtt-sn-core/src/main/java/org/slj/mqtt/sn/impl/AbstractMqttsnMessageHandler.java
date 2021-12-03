@@ -33,7 +33,6 @@ import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
-import java.util.List;
 import java.util.logging.Level;
 
 public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry>
@@ -531,9 +530,9 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
         TopicInfo info = registry.getTopicRegistry().normalize((byte) publish.getTopicType(), publish.getTopicData(), false);
         String topicPath = registry.getTopicRegistry().topicPath(context, info, true);
-        if(registry.getPermissionService() != null){
-            if(!registry.getPermissionService().allowedToPublish(context, topicPath, publish.getData().length, publish.getQoS())){
-                logger.log(Level.WARNING, String.format("permissions service rejected publish from [%s] to [%s]", context, topicPath));
+        if(registry.getAuthorizationService() != null){
+            if(!registry.getAuthorizationService().allowedToPublish(context, topicPath, publish.getData().length, publish.getQoS())){
+                logger.log(Level.WARNING, String.format("authorization service rejected publish from [%s] to [%s]", context, topicPath));
                 response = registry.getMessageFactory().createPuback(publish.readTopicDataAsInteger(),
                         MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION);
             }

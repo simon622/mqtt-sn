@@ -62,7 +62,8 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnMessageQueueProcessor queueProcessor;
     protected IMqttsnQueueProcessorStateService queueProcessorStateCheckService;
     protected IMqttsnMessageRegistry messageRegistry;
-    protected IMqttsnPermissionService permissionService;
+    protected IMqttsnAuthenticationService authenticationService;
+    protected IMqttsnAuthorizationService authorizationService;
     protected IMqttsnWillRegistry willRegistry;
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
@@ -306,15 +307,26 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * operations;
      *
      * CONNECT with the given clientId
-     * SUBSCRIBE to a given topicPath
-     * Granted Maximum Subscription Levels
-     * Eligibility to publish to a given path & size
      *
-     * @param permissionService The instance
+     * @param authenticationService The instance
      * @return This runtime registry
      */
-    public AbstractMqttsnRuntimeRegistry withPermissionService(IMqttsnPermissionService permissionService){
-        this.permissionService = permissionService;
+    public AbstractMqttsnRuntimeRegistry withAuthenticationService(IMqttsnAuthenticationService authenticationService){
+        this.authenticationService = authenticationService;
+        return this;
+    }
+
+    /**
+     * Optional - when installed it will be consulted to determine whether a remote context can perform certain
+     * operations;
+     *
+     * CONNECT with the given clientId
+     *
+     * @param authorizationService The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withAuthorizationService(IMqttsnAuthorizationService authorizationService){
+        this.authorizationService = authorizationService;
         return this;
     }
 
@@ -351,8 +363,13 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     @Override
-    public IMqttsnPermissionService getPermissionService() {
-        return permissionService;
+    public IMqttsnAuthenticationService getAuthenticationService() {
+        return authenticationService;
+    }
+
+    @Override
+    public IMqttsnAuthorizationService getAuthorizationService() {
+        return authorizationService;
     }
 
     public IMqttsnQueueProcessorStateService getQueueProcessorStateCheckService() {

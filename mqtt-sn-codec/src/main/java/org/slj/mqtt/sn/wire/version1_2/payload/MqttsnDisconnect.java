@@ -25,9 +25,11 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnDisconnect extends AbstractMqttsnMessage {
+public class MqttsnDisconnect extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     protected int duration;
 
@@ -69,5 +71,10 @@ public class MqttsnDisconnect extends AbstractMqttsnMessage {
         sb.append("duration=").append(duration);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateDuration(duration);
     }
 }

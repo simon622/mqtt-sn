@@ -54,6 +54,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     enum COMMANDS {
         NETWORK("View network registry", new String[0]),
+        SESSIONS("View sessions", new String[0]),
         TD("Output a thread dump", new String[0]),
         QUIET("Switch off the sent and receive listeners", new String[0]),
         LOUD("Switch on the sent and receive listeners", new String[0]),
@@ -125,6 +126,9 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 case SESSION:
                     session(captureMandatoryString(input, output, "Please supply the clientId whose session you would like to see"));
                     break;
+                case SESSIONS:
+                    sessions();
+                    break;
                 case NETWORK:
                     network();
                     break;
@@ -184,7 +188,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         gatewayRuntimeRegistry.getGatewaySessionService().receiveToSessions(topicName, payload.getBytes(StandardCharsets.UTF_8), QoS);
     }
 
-    protected void network() throws IOException, MqttsnException, NetworkRegistryException {
+    protected void network() throws NetworkRegistryException {
         message("Network registry: ");
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         Iterator<INetworkContext> itr = gatewayRuntimeRegistry.getNetworkRegistry().iterator();
@@ -194,8 +198,19 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         }
     }
 
+    protected void sessions() {
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        Iterator<IMqttsnContext> itr = gatewayRuntimeRegistry.getGatewaySessionService().iterator();
+        message("Sessions(s): ");
+        while(itr.hasNext()){
+            IMqttsnContext c = itr.next();
+            INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
+            tabmessage(String.format("%s -> %s", c.getId(), networkContext.getNetworkAddress()));
+        }
+    }
+
     protected void session(String clientId)
-            throws IOException, MqttsnException {
+            throws MqttsnException {
         MqttsnGatewayOptions opts = (MqttsnGatewayOptions) getOptions();
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         Optional<IMqttsnContext> context =
@@ -300,7 +315,9 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 withGatewayId(101).
                 withContextId(clientId).
                 withMaxMessagesInQueue(10000).
-                withMinFlushTime(200).
+                withMinFlushTime(150).
+                withTransportHandoffThreadCount(2).
+                withQueueProcessorThreadCount(4).
                 withSleepClearsRegistrations(false);
     }
 

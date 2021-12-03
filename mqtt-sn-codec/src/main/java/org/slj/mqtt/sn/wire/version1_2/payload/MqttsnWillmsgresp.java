@@ -25,8 +25,11 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnWillmsgresp extends AbstractMqttsnWillresp {
+public class MqttsnWillmsgresp extends AbstractMqttsnWillresp implements IMqttsnMessageValidator {
 
     @Override
     public int getMessageType() {
@@ -38,5 +41,10 @@ public class MqttsnWillmsgresp extends AbstractMqttsnWillresp {
         final StringBuilder sb = new StringBuilder("MqttsnWillmsgresp{");
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateReturnCode(returnCode);
     }
 }

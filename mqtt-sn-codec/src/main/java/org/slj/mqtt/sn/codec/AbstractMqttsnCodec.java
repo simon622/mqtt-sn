@@ -41,9 +41,7 @@ public abstract class AbstractMqttsnCodec implements IMqttsnCodec {
     @Override
     public IMqttsnMessage decode(byte[] data) throws MqttsnCodecException {
         IMqttsnMessage msg = createInstance(data);
-        if (!AbstractMqttsnMessage.class.isAssignableFrom(msg.getClass()))
-            throw new MqttsnCodecException("unsupported message formats in codec");
-        ((AbstractMqttsnMessage) msg).decode(data);
+        validate(msg);
         return msg;
     }
 

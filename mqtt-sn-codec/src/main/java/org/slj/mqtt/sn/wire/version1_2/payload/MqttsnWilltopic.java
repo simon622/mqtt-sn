@@ -25,10 +25,13 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
 import java.util.Arrays;
 
-public class MqttsnWilltopic extends AbstractMqttsnWillTopicMessage {
+public class MqttsnWilltopic extends AbstractMqttsnWillTopicMessage implements IMqttsnMessageValidator  {
 
     @Override
     public int getMessageType() {
@@ -41,5 +44,11 @@ public class MqttsnWilltopic extends AbstractMqttsnWillTopicMessage {
         sb.append("willTopicData=").append(Arrays.toString(willTopicData));
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateTopicPath(getWillTopicData());
+        MqttsnSpecificationValidator.validateQoS(QoS);
     }
 }

@@ -25,9 +25,11 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnGwInfo extends AbstractMqttsnMessage {
+public class MqttsnGwInfo extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     protected int gatewayId;
     protected String gatewayAddress;
@@ -85,5 +87,11 @@ public class MqttsnGwInfo extends AbstractMqttsnMessage {
         sb.append(", gatewayAddress='").append(gatewayAddress).append('\'');
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validate8Bit(gatewayId);
+        MqttsnSpecificationValidator.validateStringData(gatewayAddress, false);
     }
 }

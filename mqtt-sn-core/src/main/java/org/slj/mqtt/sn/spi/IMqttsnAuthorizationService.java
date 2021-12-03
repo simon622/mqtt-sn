@@ -30,21 +30,11 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
  * Optional - when installed it will be consulted to determine whether a remote context can perform certain
  * operations;
  *
- * CONNECT with the given clientId
  * SUBSCRIBE to a given topicPath
  * Granted Maximum Subscription Levels
  * Eligibility to publish to a given path & size
  */
-public interface IMqttsnPermissionService {
-
-    /**
-     * Is a client allowed to CONNECT successfully.
-     * @param context - the context who would like to CONNECT
-     * @param clientId - the client Id they provided in the CONNECT dialog
-     * @return true if the client is allowed to CONNECT (yielding CONNACK ok) or false if not allowed (yielding CONNACK error)
-     * @throws MqttsnException an error occurred
-     */
-    boolean allowConnect(IMqttsnContext context, String clientId) throws MqttsnException;
+public interface IMqttsnAuthorizationService {
 
     /**
      * Is a client allowed to SUBSCRIBE to a given topic path

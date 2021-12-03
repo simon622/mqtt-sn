@@ -101,6 +101,7 @@ public abstract class AbstractMqttsnBrokerService
         }
         boolean success = connection.publish(context, topicPath, QoS, false, payload);
         if(success){
+            //TODO - this needs to increment on queue process not queue
             publishSentCount.incrementAndGet();
         }
         return new PublishResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR, success ? "publish success" : "publish refused by broker side");
@@ -139,10 +140,15 @@ public abstract class AbstractMqttsnBrokerService
     }
 
     @Override
-    public void receive(String topicPath, byte[] payload, int QoS) throws MqttsnException {
-
-        publishReceivedCount.incrementAndGet();
-        registry.getGatewaySessionService().receiveToSessions(topicPath, payload, QoS);
+    public void receive(String topicPath, byte[] payload, int QoS) {
+        registry.getRuntime().async(() -> {
+            try {
+                publishReceivedCount.incrementAndGet();
+                registry.getGatewaySessionService().receiveToSessions(topicPath, payload, QoS);
+            } catch(Exception e){
+                logger.log(Level.SEVERE, "error receiving to sessions;", e);
+            }
+        });
     }
 
     @Override

@@ -25,9 +25,11 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnSearchGw extends AbstractMqttsnMessage {
+public class MqttsnSearchGw extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     protected int radius;
 
@@ -66,4 +68,10 @@ public class MqttsnSearchGw extends AbstractMqttsnMessage {
         sb.append('}');
         return sb.toString();
     }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validate8Bit(radius);
+    }
+
 }

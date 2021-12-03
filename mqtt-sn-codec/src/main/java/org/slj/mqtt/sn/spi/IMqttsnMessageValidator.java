@@ -22,34 +22,11 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-import java.util.Arrays;
+public interface IMqttsnMessageValidator {
 
-public class MqttsnSubscribe extends AbstractMqttsnSubscribeUnsubscribe implements IMqttsnMessageValidator {
-
-    @Override
-    public int getMessageType() {
-        return MqttsnConstants.SUBSCRIBE;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnSubscribe{");
-        sb.append("topicData=").append(Arrays.toString(topicData));
-        sb.append(", QoS=").append(QoS);
-        sb.append(", topicIdType=").append(topicType);
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @Override
-    public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateQoS(QoS);
-    }
+    void validate() throws MqttsnCodecException;
 }

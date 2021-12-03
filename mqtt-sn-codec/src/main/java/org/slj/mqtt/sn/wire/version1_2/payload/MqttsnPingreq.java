@@ -25,10 +25,12 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdentificationPacket {
+public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
 
     protected String clientId;
 
@@ -84,5 +86,10 @@ public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdent
         sb.append("clientId='").append(clientId).append('\'');
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
     }
 }

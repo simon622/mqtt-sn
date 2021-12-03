@@ -29,11 +29,26 @@ import java.nio.charset.StandardCharsets;
 
 public interface MqttsnConstants {
 
-    String ENCODING = "UTF-8";
-    Charset CHARSET = StandardCharsets.UTF_8;
+    //-- the restricted range
+    char MIN_HIGH_UTF = '\uD800';
+    char MAX_HIGH_UTF = '\uDBFF';
+
+    //-- the optionally restricted range
+    char MIN_CONTROL1_UTF = '\u0001';
+    char MAX_CONTROL1_UTF = '\u001F';
+
+    char MIN_CONTROL2_UTF = '\u007F';
+    char MAX_CONTROL2_UTF = '\u009F';
 
     int USIGNED_MAX_16 = 65535;
     int USIGNED_MAX_8 = 255;
+
+    int MAX_CLIENT_ID_LENGTH = 1024;
+    int MAX_TOPIC_LENGTH = 2048;
+    int MAX_PUBLISH_LENGTH = USIGNED_MAX_16 - 7;
+    int MAX_ENCAPSULATED_LENGTH = USIGNED_MAX_16 - 7;
+
+    Charset CHARSET = StandardCharsets.UTF_8;
 
     byte TOPIC_NORMAL = 0b00,
             TOPIC_PREDEFINED = 0b01,
@@ -56,6 +71,7 @@ public interface MqttsnConstants {
         public byte getFlag() {
             return flag;
         }
+
     }
 
     int RETURN_CODE_ACCEPTED = 0x00,

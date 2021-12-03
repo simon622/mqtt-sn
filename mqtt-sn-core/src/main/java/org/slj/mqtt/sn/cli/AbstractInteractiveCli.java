@@ -145,10 +145,12 @@ public abstract class AbstractInteractiveCli {
 
     public void enableOutput(){
         enableOutput = true;
+        message("console messaging output enabled");
     }
 
     public void disableOutput(){
         enableOutput = false;
+        message("console messaging output disabled");
     }
 
     public void welcome(){

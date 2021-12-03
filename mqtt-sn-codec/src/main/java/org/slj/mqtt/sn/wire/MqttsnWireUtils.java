@@ -31,27 +31,6 @@ public class MqttsnWireUtils {
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
-    public static void validate8Bit(int field) throws MqttsnCodecException {
-        if (field < 0 || field > MqttsnConstants.USIGNED_MAX_8) {
-            throw new MqttsnCodecException("invalid unsigned 8 bit number - " + field);
-        }
-    }
-
-    public static void validate16Bit(int field) throws MqttsnCodecException {
-        if (field < 0 || field > MqttsnConstants.USIGNED_MAX_16) {
-            throw new MqttsnCodecException("invalid unsigned 16 bit number - " + field);
-        }
-    }
-
-    public static void validateQoS(int QoS) throws MqttsnCodecException {
-        if (QoS != MqttsnConstants.QoSM1 &&
-                QoS != MqttsnConstants.QoS0 &&
-                QoS != MqttsnConstants.QoS1 &&
-                QoS != MqttsnConstants.QoS2) {
-            throw new MqttsnCodecException("invalid QoS number - " + QoS);
-        }
-    }
-
     public static int read8bit(byte b1) {
         return (b1 & 0xFF);
     }

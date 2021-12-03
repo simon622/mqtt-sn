@@ -109,4 +109,12 @@ public interface IMqttsnCodec {
      * for use with stream reading
      */
     int readMessageSize(byte[] arr) throws MqttsnCodecException;
+
+
+    /**
+     * Runs validation on the mqttsn message fields
+     * @param message
+     * @throws MqttsnCodecException
+     */
+    void validate(IMqttsnMessage message) throws MqttsnCodecException;
 }

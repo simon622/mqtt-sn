@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
@@ -127,9 +128,9 @@ public class MqttsnGatewayMessageHandler
     protected IMqttsnMessage handleConnect(IMqttsnContext context, IMqttsnMessage connect) throws MqttsnException, MqttsnCodecException {
 
         MqttsnConnect connectMessage = (MqttsnConnect) connect ;
-        if(registry.getPermissionService() != null){
-            if(!registry.getPermissionService().allowConnect(context, connectMessage.getClientId())){
-                logger.log(Level.WARNING, String.format("permission service rejected client [%s]", connectMessage.getClientId()));
+        if(registry.getAuthenticationService() != null){
+            if(!registry.getAuthenticationService().allowConnect(context, connectMessage.getClientId())){
+                logger.log(Level.WARNING, String.format("authentication service rejected client [%s]", connectMessage.getClientId()));
                 return registry.getMessageFactory().createConnack(MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
             }
         }
@@ -155,7 +156,8 @@ public class MqttsnGatewayMessageHandler
     protected IMqttsnMessage handleDisconnect(IMqttsnContext context, IMqttsnMessage initialDisconnect, IMqttsnMessage receivedDisconnect) throws MqttsnException, MqttsnCodecException, MqttsnInvalidSessionStateException {
 
         MqttsnDisconnect d = (MqttsnDisconnect) receivedDisconnect;
-        if(!MqttsnUtils.validUInt16(d.getDuration())){
+
+        if(!MqttsnSpecificationValidator.valid16Bit(d.getDuration())){
             logger.log(Level.WARNING, String.format("invalid sleep duration specified, reject client [%s]", d.getDuration()));
             return super.handleDisconnect(context, initialDisconnect, receivedDisconnect);
         } else {
@@ -262,7 +264,7 @@ public class MqttsnGatewayMessageHandler
 
         MqttsnRegister register = (MqttsnRegister) message;
 
-        if(!MqttsnUtils.validTopicName(register.getTopicName())){
+        if(!MqttsnSpecificationValidator.validTopicPath(register.getTopicName())){
             logger.log(Level.WARNING,
                     String.format("invalid topic [%s] received during register, reply with error code", register.getTopicName()));
             return registry.getMessageFactory().createRegack(0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);

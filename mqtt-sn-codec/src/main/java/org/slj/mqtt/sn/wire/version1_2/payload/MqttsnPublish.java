@@ -25,13 +25,15 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
 import java.util.Arrays;
 
-public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData {
+public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements IMqttsnMessageValidator {
 
     public boolean needsMsgId() {
         return true;
@@ -103,5 +105,11 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData {
         sb.append(", msgId=").append(msgId);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateQoS(QoS);
+        MqttsnSpecificationValidator.validatePublishData(data);
     }
 }

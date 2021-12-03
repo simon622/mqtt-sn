@@ -25,9 +25,11 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField {
+public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField implements IMqttsnMessageValidator {
 
     protected int topicId;
 
@@ -86,5 +88,12 @@ public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField {
         sb.append(", returnCode=").append(returnCode);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateTopicAlias(topicId);
+        MqttsnSpecificationValidator.validateReturnCode(returnCode);
+        MqttsnSpecificationValidator.validateQoS(getQoS());
     }
 }

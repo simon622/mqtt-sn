@@ -147,7 +147,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, info.getTopicId());
             } else {
                 topicPath = info.getTopicPath();
-                if(!TopicPath.isValidSubscription(topicPath, registry.getOptions().getMaxTopicLength())){
+                if(!TopicPath.isValidSubscription(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
                     return new SubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID,
                             "invalid topic format");
                 }
@@ -168,12 +168,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         "no topic found by specification");
 
             } else {
-                if(registry.getPermissionService() != null){
-                    if(!registry.getPermissionService().allowedToSubscribe(context, topicPath)){
+                if(registry.getAuthorizationService() != null){
+                    if(!registry.getAuthorizationService().allowedToSubscribe(context, topicPath)){
                         return new SubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION,
-                                "permission service denied subscription");
+                                "authorization service denied subscription");
                     }
-                    QoS = Math.min(registry.getPermissionService().allowedMaximumQoS(context, topicPath), QoS);
+                    QoS = Math.min(registry.getAuthorizationService().allowedMaximumQoS(context, topicPath), QoS);
                 }
 
                 if(registry.getSubscriptionRegistry().subscribe(state.getContext(), topicPath, QoS)){
@@ -201,7 +201,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, info.getTopicId());
             } else {
                 topicPath = info.getTopicPath();
-                if(!TopicPath.isValidSubscription(topicPath, registry.getOptions().getMaxTopicLength())){
+                if(!TopicPath.isValidSubscription(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
                     return new UnsubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID,
                             "invalid topic format");
                 }
@@ -233,7 +233,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     public RegisterResult register(IMqttsnSessionState state, String topicPath) throws MqttsnException {
 
-        if(!TopicPath.isValidSubscription(topicPath, registry.getOptions().getMaxTopicLength())){
+        if(!TopicPath.isValidSubscription(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
             return new RegisterResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, "invalid topic format");
         }
         synchronized (state.getContext()){

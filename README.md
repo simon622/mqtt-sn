@@ -114,9 +114,8 @@ Options | Default Value | Type | Description
 ------------ | ------------- | ------------- | -------------
 contextId | NULL | String | This is used as either the clientId (when in a client runtime) or the gatewayId (when in a gateway runtime). **NB: This is a required field and must be set by the application.**
 maxWait | 10000 | int | Time in milliseconds to wait for a confirmation message where required. When calling a blocking method, this is the time the method will block until either the confirmation is received OR the timeout expires.
-maxTopicLength | 1024 | int | Maximum number of characters allowed in a topic including wildcard and separator characters.
-threadHandoffFromTransport | true | boolean | Should the transport layer delegate to and from the handler layer using a thread hand-off. **NB: Depends on your transport implementation as to whether you should block.**
-handoffThreadCount | 5 | int | How many threads are used to process messages received from the transport layer
+transportHandoffThreadCount | 1 | int | How many threads are used to process messages received from the transport layer
+queueProcessorThreadCount | 2 | int | HHow many threads should be used to process connected context message queues (should scale with the number of expected connected clients and the level of concurrency)
 discoveryEnabled | false | boolean | When discovery is enabled the client will listen for broadcast messages from local gateways and add them to its network registry as it finds them.
 maxTopicsInRegistry | 128 | int | Max number of topics which can reside in the CLIENT registry. This does NOT include predefined alias's.
 msgIdStartAt | 1 | int (max. 65535) | Starting number for message Ids sent from the client to the gateways (each gateway has a unique count).

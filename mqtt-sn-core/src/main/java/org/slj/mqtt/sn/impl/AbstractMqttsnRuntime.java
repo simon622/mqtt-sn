@@ -166,11 +166,11 @@ public abstract class AbstractMqttsnRuntime {
         }
     }
 
-    protected final void messageReceived(IMqttsnContext context, String topicName, int QoS, byte[] payload){
+    protected final void messageReceived(IMqttsnContext context, String topicName, int QoS, byte[] payload, boolean retain){
         if(logger.isLoggable(Level.FINE)){
             logger.log(Level.FINE, String.format("publish received by application [%s], notifying [%s] listeners", topicName, receivedListeners.size()));
         }
-        receivedListeners.forEach(p -> p.receive(context, topicName, QoS, payload));
+        receivedListeners.forEach(p -> p.receive(context, topicName, QoS, payload, retain));
     }
 
     protected final void messageSent(IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] payload){

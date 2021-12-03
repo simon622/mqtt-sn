@@ -63,12 +63,12 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         callStartup(runtime.getTransport());
 
-        //-- notify the broker of confirmed messahe
+        //-- notify the broker of confirmed message
         registerReceivedListener(new IMqttsnPublishReceivedListener() {
             @Override
-            public void receive(IMqttsnContext context, String topicName, int QoS, byte[] data) {
+            public void receive(IMqttsnContext context, String topicName, int QoS, byte[] data, boolean retain) {
                 try {
-                    ((IMqttsnGatewayRuntimeRegistry) registry).getBrokerService().publish(context, topicName, QoS, data);
+                    ((IMqttsnGatewayRuntimeRegistry) registry).getBrokerService().publish(context, topicName, QoS, data, retain);
                 } catch (MqttsnException e) {
                     logger.log(Level.SEVERE, "error publishing message to broker", e);
                 }

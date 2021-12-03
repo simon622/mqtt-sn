@@ -94,14 +94,13 @@ public abstract class AbstractMqttsnBrokerService
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload) throws MqttsnBrokerException {
+    public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException {
         IMqttsnBrokerConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnBrokerException("underlying broker connection was not connected");
         }
-        boolean success = connection.publish(context, topicPath, QoS, false, payload);
+        boolean success = connection.publish(context, topicPath, QoS, retain, payload);
         if(success){
-            //TODO - this needs to increment on queue process not queue
             publishSentCount.incrementAndGet();
         }
         return new PublishResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR, success ? "publish success" : "publish refused by broker side");

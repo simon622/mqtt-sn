@@ -74,7 +74,7 @@ public class Example {
             client.start(registry);
 
             //-- register any publish receive listeners you require
-            client.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data) -> {
+            client.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
                 receiveCounter.incrementAndGet();
                 System.err.println(String.format("received message [%s] [%s]",
                         receiveCounter.get(), new String(data, MqttsnConstants.CHARSET)));

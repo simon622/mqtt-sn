@@ -290,7 +290,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 PublishData data = registry.getCodec().getData(message);
                 CommitOperation op = CommitOperation.outbound(context, queuedPublishMessage.getMessageId(),
                         queuedPublishMessage.getTopicPath(), queuedPublishMessage.getGrantedQoS(),
-                        data.getData());
+                        data.getData(), data.isRetained());
                 confirmPublish(op);
             }
 
@@ -447,8 +447,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                             PublishData data = registry.getCodec().getData(confirmedMessage);
                             CommitOperation op = CommitOperation.inbound(context,
                                     confirmedMessage instanceof MqttsnPublish ? getTopicPathFromPublish(context, (MqttsnPublish) confirmedMessage) : null,
-                                    data.getQos(),
-                                    data.getData());
+                                    data.getQos(), data.getData(), data.isRetained());
                             confirmPublish(op);
                         }
 
@@ -458,7 +457,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                             PublishData data = registry.getCodec().getData(confirmedMessage);
                             CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(),
                                     rim.getQueuedPublishMessage().getTopicPath(), rim.getQueuedPublishMessage().getGrantedQoS(),
-                                    data.getData());
+                                    data.getData(), data.isRetained());
                             confirmPublish(op);
                         }
                     }
@@ -475,7 +474,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     PublishData data = registry.getCodec().getData(inflight.getMessage());
                     CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(),
                             rim.getQueuedPublishMessage().getTopicPath(), rim.getQueuedPublishMessage().getGrantedQoS(),
-                            data.getData());
+                            data.getData(), data.isRetained());
                     confirmPublish(op);
                 }
 
@@ -500,9 +499,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     //-- Qos 0 & 1 are inbound are confirmed on receipt of message
 
                     CommitOperation op = CommitOperation.inbound(context,
-                            message instanceof MqttsnPublish ? getTopicPathFromPublish(context, (MqttsnPublish) message) : null,
-                            data.getQos(),
-                            data.getData());
+                            getTopicPathFromPublish(context, (MqttsnPublish) message),
+                            data.getQos(), data.getData(), data.isRetained());
                     confirmPublish(op);
                 }
             }
@@ -517,7 +515,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         getRegistry().getRuntime().async(() -> {
             IMqttsnContext context = operation.context;
             if(operation.inbound){
-                registry.getRuntime().messageReceived(context, operation.topicPath, operation.QoS, operation.payload);
+                registry.getRuntime().messageReceived(context, operation.topicPath, operation.QoS, operation.payload, operation.retained);
             } else {
                 registry.getRuntime().messageSent(context, operation.messageId, operation.topicPath, operation.QoS, operation.payload);
             }
@@ -710,26 +708,28 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         protected int QoS;
         protected String topicPath;
         protected byte[] payload;
+        protected boolean retained;
         protected IMqttsnContext context;
         protected long timestamp;
         protected UUID messageId;
         protected boolean inbound = true;
 
-        public CommitOperation(IMqttsnContext context, long timestamp, String topicPath, int QoS, byte[] payload, boolean inbound) {
+        public CommitOperation(IMqttsnContext context, long timestamp, String topicPath, int QoS, byte[] payload, boolean retained, boolean inbound) {
             this.context = context;
             this.timestamp = timestamp;
             this.inbound = inbound;
             this.topicPath = topicPath;
             this.payload = payload;
+            this.retained = retained;
             this.QoS = QoS;
         }
 
-        public static CommitOperation inbound(IMqttsnContext context, String topicPath, int QoS, byte[] payload){
-            return new CommitOperation(context, System.currentTimeMillis(), topicPath, QoS, payload, true);
+        public static CommitOperation inbound(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retained){
+            return new CommitOperation(context, System.currentTimeMillis(), topicPath, QoS, payload, retained, true);
         }
 
-        public static CommitOperation outbound(IMqttsnContext context, UUID messageId, String topicPath, int QoS, byte[] payload){
-            CommitOperation c = new CommitOperation(context, System.currentTimeMillis(), topicPath, QoS, payload, false);
+        public static CommitOperation outbound(IMqttsnContext context, UUID messageId, String topicPath, int QoS, byte[] payload, boolean retained){
+            CommitOperation c = new CommitOperation(context, System.currentTimeMillis(), topicPath, QoS, payload, retained, false);
             c.messageId = messageId;
             return c;
         }

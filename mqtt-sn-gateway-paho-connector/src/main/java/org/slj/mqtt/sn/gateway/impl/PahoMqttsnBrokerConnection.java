@@ -34,6 +34,7 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,12 +48,8 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
 
     private Logger logger = Logger.getLogger(PahoMqttsnBrokerConnection.class.getName());
     private volatile MqttClient client = null;
-    private MqttsnBrokerOptions options = null;
+    private MqttsnBrokerOptions options;
     private final String clientId;
-    private Thread publishingThread = null;
-    private final Object monitor = new Object();
-    private final Queue<PublishOp> queue = new LinkedList<>();
-    private volatile boolean running = false;
 
     public PahoMqttsnBrokerConnection(MqttsnBrokerOptions options, String clientId) {
         this.options = options;
@@ -83,38 +80,10 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
         client.setCallback(this);
         client.setTimeToWait(options.getConnectionTimeout() * 1000);
         logger.log(Level.INFO, String.format("initiated client with host [%s] and clientId [%s]", connectionStr, clientId));
-        initPublisher();
-    }
-
-    private void initPublisher(){
-        running = true;
-        publishingThread = new Thread(() -> {
-            do {
-                try {
-                    if(client != null && client.isConnected()) {
-                        PublishOp op = queue.poll();
-                        if(op != null){
-                            logger.log(Level.INFO, String.format("dequeing message to PAHO from queue, [%s] remaining", queue.size()));
-                            client.publish(op.topicPath, op.data, op.QoS, op.retain);
-                        }
-                    }
-                    if(queue.peek() == null) {
-                        synchronized (monitor){
-                            monitor.wait();
-                        }
-                    }
-                } catch(Exception e){
-                    logger.log(Level.SEVERE, String.format("error publishing via PAHO queue publisher"), e);
-                }
-            } while(running);
-        }, "mqtt-sn-broker-paho-publisher");
-        publishingThread.setDaemon(true);
-        publishingThread.setPriority(Thread.MIN_PRIORITY);
-        publishingThread.start();
     }
 
     @Override
-    public boolean isConnected() throws MqttsnBrokerException {
+    public boolean isConnected() {
         return client != null && client.isConnected();
     }
 
@@ -127,8 +96,6 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
             client = null;
         } catch(MqttException e){
             logger.log(Level.SEVERE, "error encountered closing paho client;", e);
-        } finally {
-            running = false;
         }
     }
 
@@ -166,18 +133,11 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
     @Override
     public boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException {
         try {
-            PublishOp op = new PublishOp();
-            op.data = data;
-            op.context = context;
-            op.retain = retain;
-            op.topicPath = topicPath;
-            op.QoS = QoS;
-            queue.add(op);
-            logger.log(Level.INFO, String.format("queuing message for publish [%s] -> [%s] bytes, queue contains [%s]", topicPath, data.length, queue.size()));
-            synchronized (monitor){
-                monitor.notify();
-            }
-            return true;
+           if(client != null && client.isConnected()){
+               client.publish(topicPath, data, QoS, retain);
+               return true;
+           }
+           return false;
         } catch(Exception e){
             throw new MqttsnBrokerException(e);
         }
@@ -191,7 +151,6 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
         } catch(Exception e){
         } finally {
             client = null;
-            running = false;
         }
     }
 
@@ -208,17 +167,9 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        if(logger.isLoggable(Level.FINE)){
+        if (logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, String.format("broker confirm delivery complete [%s] -> [%s]",
                     token.getMessageId(), Arrays.toString(token.getTopics())));
         }
-    }
-
-    static class PublishOp {
-        public IMqttsnContext context;
-        public String topicPath;
-        public int QoS;
-        public boolean retain;
-        public byte[] data;
     }
 }

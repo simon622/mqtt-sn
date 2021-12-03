@@ -26,19 +26,22 @@ package org.slj.mqtt.sn;
 
 public class PublishData {
 
+    boolean retained;
     String topicPath;
     int qos;
     byte[] data;
 
-    public PublishData(int qos, byte[] data) {
+    public PublishData(int qos, byte[] data, boolean retained) {
         this.qos = qos;
         this.data = data;
+        this.retained = retained;
     }
 
-    public PublishData(String topicPath, int qos, byte[] data) {
+    public PublishData(String topicPath, int qos, byte[] data, boolean retained) {
         this.topicPath = topicPath;
         this.qos = qos;
         this.data = data;
+        this.retained = retained;
     }
 
     public String getTopicPath() {
@@ -51,5 +54,9 @@ public class PublishData {
 
     public byte[] getData() {
         return data;
+    }
+
+    public boolean isRetained() {
+        return retained;
     }
 }

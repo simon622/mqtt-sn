@@ -39,7 +39,7 @@ public interface IMqttsnBrokerService {
 
     DisconnectResult disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException ;
 
-    PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload) throws MqttsnBrokerException;
+    PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException;
 
     SubscribeResult subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException;
 

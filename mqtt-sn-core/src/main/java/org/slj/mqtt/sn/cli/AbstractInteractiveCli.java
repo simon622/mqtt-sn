@@ -94,7 +94,7 @@ public abstract class AbstractInteractiveCli {
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
 
-        runtime.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data) -> {
+        runtime.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retain) -> {
             try {
                 receiveCount.incrementAndGet();
                 receivedPublishBytesCount.addAndGet(data.length);

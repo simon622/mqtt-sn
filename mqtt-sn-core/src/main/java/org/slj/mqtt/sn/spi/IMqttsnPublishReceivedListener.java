@@ -28,5 +28,5 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 
 public interface IMqttsnPublishReceivedListener {
 
-    void receive(IMqttsnContext context, String topicName, int QoS, byte[] data);
+    void receive(IMqttsnContext context, String topicName, int QoS, byte[] data, boolean retain);
 }

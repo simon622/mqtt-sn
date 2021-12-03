@@ -24,13 +24,18 @@
 
 package org.slj.mqtt.sn.gateway.impl.broker;
 
+import org.slj.mqtt.sn.gateway.spi.PublishResult;
+import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -42,9 +47,18 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
 
     volatile IMqttsnBrokerConnection connection;
     volatile boolean stopped = false;
+    private Thread publishingThread = null;
+    private final Object monitor = new Object();
+    private final Queue<PublishOp> queue = new LinkedList<>();
 
     public MqttsnAggregatingBrokerService(MqttsnBrokerOptions options){
         super(options);
+    }
+
+    @Override
+    public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
+        super.start(runtime);
+        initPublisher();
     }
 
     @Override
@@ -55,6 +69,10 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
             close(connection);
         } catch(MqttsnBrokerException e){
             logger.log(Level.WARNING, "error encountered shutting down broker connection;", e);
+        } finally {
+            synchronized (monitor){
+                monitor.notifyAll();
+            }
         }
     }
 
@@ -69,6 +87,26 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     @Override
     public boolean isConnected(IMqttsnContext context) throws MqttsnBrokerException {
         return !stopped && connection != null && connection.isConnected();
+    }
+
+    @Override
+    public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException {
+        try {
+            PublishOp op = new PublishOp();
+            op.data = payload;
+            op.context = context;
+            op.retain = retain;
+            op.topicPath = topicPath;
+            op.QoS = QoS;
+            queue.add(op);
+            logger.log(Level.INFO, String.format("queuing message for publish [%s] -> [%s] bytes, queue contains [%s]", topicPath, payload.length, queue.size()));
+            synchronized (monitor){
+                monitor.notifyAll();
+            }
+            return new PublishResult(Result.STATUS.SUCCESS,"queued for sending on publishing thread");
+        } catch(Exception e){
+            throw new MqttsnBrokerException(e);
+        }
     }
 
     @Override
@@ -101,6 +139,39 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
         if(stopped) throw new MqttsnBrokerException("broker service is in the process or shutting down");
         initConnection();
         return connection;
+    }
+
+    private void initPublisher(){
+        publishingThread = new Thread(() -> {
+            do {
+                try {
+                    if(connection != null && connection.isConnected()) {
+                        PublishOp op = queue.poll();
+                        if(op != null){
+                            logger.log(Level.INFO, String.format("dequeing message to broker from queue, [%s] remaining", queue.size()));
+                            super.publish(op.context, op.topicPath, op.QoS, op.data, op.retain);
+                        }
+                    } else {
+                        synchronized (monitor){
+                            // the connection is dead, lets not harass on a tight
+                            // loop trying to deliver until we're reconnected again
+                            monitor.wait(30000);
+                        }
+                    }
+
+                    if(running && !stopped && queue.peek() == null) {
+                        synchronized (monitor){
+                            monitor.wait();
+                        }
+                    }
+                } catch(Exception e){
+                    logger.log(Level.SEVERE, String.format("error publishing via PAHO queue publisher"), e);
+                }
+            } while(running && !stopped);
+        }, "mqtt-sn-broker-publisher");
+        publishingThread.setDaemon(true);
+        publishingThread.setPriority(Thread.MIN_PRIORITY);
+        publishingThread.start();
     }
 
     protected void initConnection() throws MqttsnBrokerException {
@@ -147,5 +218,14 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     @Override
     protected String getDaemonName() {
         return "gateway-broker-managed-connection";
+    }
+
+
+    static class PublishOp {
+        public IMqttsnContext context;
+        public String topicPath;
+        public int QoS;
+        public boolean retain;
+        public byte[] data;
     }
 }

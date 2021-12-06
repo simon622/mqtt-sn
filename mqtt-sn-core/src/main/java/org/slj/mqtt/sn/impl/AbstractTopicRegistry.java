@@ -64,7 +64,10 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
     @Override
     public void register(IMqttsnContext context, String topicPath, int topicAlias) throws MqttsnException {
 
-        logger.log(Level.INFO, String.format("registering topic path [%s] -> [%s]", topicPath, topicAlias));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] registering [%s] -> [%s]", registry.getOptions().getContextId(), context, topicPath, topicAlias));
+        }
+
         Map<String, Integer> map = getRegistrationsInternal(context, false);
         if(map.containsKey(topicPath)){
             //update existing
@@ -189,7 +192,10 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
             }
         }
 
-        logger.log(Level.INFO, String.format("topic-registry lookup for [%s] => [%s] found [%s]", context, topicPath, info));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] lookup for [%s] found [%s]", registry.getOptions().getContextId(), context, topicPath, info));
+        }
+
         return info;
     }
 

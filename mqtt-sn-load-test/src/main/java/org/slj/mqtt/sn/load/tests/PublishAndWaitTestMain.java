@@ -40,7 +40,7 @@ public class PublishAndWaitTestMain {
             ConnectPublishWaitProfile.PublishAndWaitClientInput input = new ConnectPublishWaitProfile.PublishAndWaitClientInput(350, TimeUnit.SECONDS);
             input.host = "localhost";//"34.248.60.25";//";
             input.port = 2442;
-            input.messageCount = 20;
+            input.messageCount = 10;
             runner.start(input);
 
         } catch(Exception e){

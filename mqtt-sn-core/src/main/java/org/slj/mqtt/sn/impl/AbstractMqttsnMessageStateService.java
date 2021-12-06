@@ -337,15 +337,14 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             if(token.isComplete()){
                 response = token.getResponseMessage();
                 if(logger.isLoggable(Level.INFO)){
-                    logger.log(Level.INFO, String.format("token [%s] in [%s], confirmation of message [%s] -> [%s]",
-                            token.isError() ? "error" : "ok", MqttsnUtils.getDurationString(time), context, response == null ? "<null>" : response));
+                    logger.log(Level.INFO, String.format("mqtt-sn state [%s <- %s] wait for token [%s] in [%s], confirmation of message -> [%s]",
+                            registry.getOptions().getContextId(), context, token.isError() ? "error" : "ok", MqttsnUtils.getDurationString(time), response == null ? "<null>" : response));
                 }
                 return Optional.ofNullable(response);
             } else {
-                logger.log(Level.WARNING, String.format("token timed out waiting [%s]ms for response to [%s] in [%s] on thread [%s]",
-                        waitTime,
-                        message,
-                        MqttsnUtils.getDurationString(time), Thread.currentThread().getName()));
+                logger.log(Level.WARNING, String.format("mqtt-sn state [%s <- %s] timed out waiting [%s]ms for response to [%s] in [%s] on thread [%s]",
+                        registry.getOptions().getContextId(), context, waitTime,
+                        message, MqttsnUtils.getDurationString(time), Thread.currentThread().getName()));
                 token.markError();
 
                 //a timeout should unblock the sender UNLESS its a PUBLISH in which case this is the jod of the

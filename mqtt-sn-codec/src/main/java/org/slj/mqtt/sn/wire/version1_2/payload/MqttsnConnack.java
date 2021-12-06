@@ -55,7 +55,9 @@ public class MqttsnConnack extends AbstractMqttsnMessage implements IMqttsnMessa
     public String toString() {
         final StringBuilder sb = new StringBuilder("MqttsnConnack{");
         sb.append("messageType=").append(messageType);
-        sb.append(", returnCode=").append(returnCode);
+        if(returnCode != 0){
+            sb.append(", errorReturnCode=").append(returnCode);
+        }
         sb.append('}');
         return sb.toString();
     }

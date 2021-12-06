@@ -68,12 +68,13 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
                             withNetworkAddressEntry("gatewayId", NetworkAddress.from(port, host)).
                             withContextId(clientId).
                             withMinFlushTime(200).
+                            withMaxWait(20000).
                             withPredefinedTopic("my/predefined/example/topic/1", 1);
                     AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
                             withTransport(new MqttsnUdpTransport(udpOptions)).
                             withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 
-                    client = new MqttsnClient();
+                    client = new MqttsnClient(true, false);
                     client.start(registry);
                 }
             }

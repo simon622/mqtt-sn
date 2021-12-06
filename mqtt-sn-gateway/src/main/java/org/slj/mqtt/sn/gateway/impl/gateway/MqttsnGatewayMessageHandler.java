@@ -187,6 +187,11 @@ public class MqttsnGatewayMessageHandler
             }
         }
 
+        if(MqttsnUtils.in(state.getClientState(), MqttsnClientState.CONNECTED)){
+            if(registry.getMessageQueue().size(context) > 0){
+                registry.getMessageStateService().scheduleFlush(context);
+            }
+        }
         if(MqttsnUtils.in(state.getClientState(), MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)){
             //-- only wake the client if there is messages outstanding
             if(registry.getMessageQueue().size(context) > 0){

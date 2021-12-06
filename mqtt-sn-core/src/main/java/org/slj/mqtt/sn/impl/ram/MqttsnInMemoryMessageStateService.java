@@ -100,7 +100,7 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    protected Map<Integer, InflightMessage> getInflightMessages(IMqttsnContext context) {
+    public Map<Integer, InflightMessage> getInflightMessages(IMqttsnContext context) {
         Map<Integer, InflightMessage> map = inflightMessages.get(context);
         if(map == null){
             synchronized (this){
@@ -114,6 +114,18 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
             logger.log(Level.FINE, String.format("inflight for [%s] is [%s]", context, Objects.toString(map)));
         }
         return map;
+    }
+
+    public List<IMqttsnContext> getActiveInflights(){
+        List<IMqttsnContext> l = new ArrayList<>();
+        synchronized (inflightMessages){
+            Iterator<IMqttsnContext> itr = inflightMessages.keySet().iterator();
+            while(itr.hasNext()){
+                IMqttsnContext c = itr.next();
+                l.add(c);
+            }
+        }
+        return l;
     }
 
     @Override

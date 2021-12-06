@@ -28,14 +28,17 @@ import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
+import org.slj.mqtt.sn.gateway.impl.gateway.MqttsnGatewaySessionService;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
+import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.NetworkRegistryException;
@@ -56,7 +59,9 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     enum COMMANDS {
         POKE("Poke the queue", new String[0], true),
+        INFLIGHT("List inlight messages", new String[0], false),
         REINIT("Reinit the backend broker connection", new String[0]),
+        FLUSH("Run inflight reaper on clientId", new String[0]),
         NETWORK("View network registry", new String[0]),
         SESSIONS("View sessions", new String[0]),
         TD("Output a thread dump", new String[0]),
@@ -171,6 +176,13 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                             captureMandatoryString(input, output, "Supply the data to publish"),
                             captureMandatoryInt(input, output, "What is QoS for the publish?", new int[]{0,1,2}));
                     break;
+                case FLUSH:
+                    flush(
+                            captureMandatoryString(input, output, "What is the clientId you wish to flush?"));
+                    break;
+                case INFLIGHT:
+                    inflight();
+                    break;
                 case EXIT:
                 case BYE:
                 case QUIT:
@@ -196,6 +208,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     protected void resetMetrics() throws IOException {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         gatewayRuntimeRegistry.getBrokerService().clearStats();
+        ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).reset();
         super.resetMetrics();
     }
 
@@ -203,6 +216,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     protected void stats() {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         super.stats();
+
+        message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).getExpansionCount()));
         message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingBrokerService)gatewayRuntimeRegistry.getBrokerService()).getLastPublishAttempt()));
         message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getQueuedCount()));
         message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishSentCount()));
@@ -257,20 +272,52 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message(String.format("State:  %s", getColorForState(state.getClientState())));
             message(String.format("Queue size:  %s", gatewayRuntimeRegistry.getMessageQueue().size(c)));
 
+            message(String.format("Inflight (Egress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(state.getContext(), InflightMessage.DIRECTION.SENDING)));
+            message(String.format("Inflight (Ingress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(state.getContext(), InflightMessage.DIRECTION.RECEIVING)));
+
             Set<Subscription> subs = gatewayRuntimeRegistry.getSubscriptionRegistry().readSubscriptions(c);
-            Iterator<Subscription> itr = subs.iterator();
             message("Subscription(s): ");
-            synchronized (subs){
-                while(itr.hasNext()){
-                    Subscription s = itr.next();
-                    tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getQoS()));
-                }
+            Iterator<Subscription> itr = subs.iterator();
+            while(itr.hasNext()){
+                Subscription s = itr.next();
+                tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getQoS()));
             }
 
             INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
             message(String.format("Network Address(s): %s", networkContext.getNetworkAddress()));
 
         } else {
+            message(String.format("No session found: %s", clientId));
+        }
+    }
+
+    protected void inflight(){
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        List<IMqttsnContext> m = ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getActiveInflights();
+        Iterator<IMqttsnContext> itr = m.iterator();
+        while (itr.hasNext()){
+            IMqttsnContext c = itr.next();
+            Map<Integer, InflightMessage> msgs = ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getInflightMessages(c);
+            Iterator<Integer> i = msgs.keySet().iterator();
+            while(i.hasNext()){
+                Integer id = i.next();
+                InflightMessage message = msgs.get(id);
+                tabmessage(String.format("%s -> %s { %s }", c.getId(), id, message.getDirection() + " " + message.getMessage().getMessageName()));
+            }
+        }
+    }
+
+    protected void flush(String clientId) throws MqttsnException {
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        Optional<IMqttsnContext> context =
+                gatewayRuntimeRegistry.getGatewaySessionService().lookupClientIdSession(clientId);
+        if(context.isPresent()) {
+            IMqttsnContext c = context.get();
+            gatewayRuntimeRegistry.getMessageStateService().clearInflight(c);
+            message(String.format("Inflight reaper run on: %s", clientId));
+            gatewayRuntimeRegistry.getMessageStateService().scheduleFlush(c);
+        }
+        else {
             message(String.format("No session found: %s", clientId));
         }
     }

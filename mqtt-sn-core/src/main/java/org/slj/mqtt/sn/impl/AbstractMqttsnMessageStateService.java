@@ -39,7 +39,6 @@ import java.util.logging.Level;
 public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntimeRegistry>
         extends AbstractMqttsnBackoffThreadService<T> implements IMqttsnMessageStateService<T> {
 
-    static final int MAX_BACKOFF_INCR = 10;
     protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.USIGNED_MAX_16 + 1);
     protected boolean clientMode;
 

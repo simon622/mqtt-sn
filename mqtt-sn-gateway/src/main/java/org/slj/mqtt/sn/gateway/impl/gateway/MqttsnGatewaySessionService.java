@@ -35,12 +35,15 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadService<IMqttsnGatewayRuntimeRegistry>
         implements IMqttsnGatewaySessionRegistryService {
 
     protected Map<IMqttsnContext, IMqttsnSessionState> sessionLookup;
+
+    private AtomicLong expansionCount = new AtomicLong(0);
 
     @Override
     public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
@@ -323,6 +326,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             try {
                 registry.getMessageQueue().offer(client, new QueuedPublishMessage(
                     messageId, topicPath, q));
+                expansionCount.incrementAndGet();
             } catch(MqttsnQueueAcceptException e){
                 throw new MqttsnException(e);
             }
@@ -362,5 +366,13 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             copy = new HashSet(s);
         }
         return copy.iterator();
+    }
+
+    public long getExpansionCount(){
+        return expansionCount.get();
+    }
+
+    public void reset(){
+        expansionCount.set(0);
     }
 }

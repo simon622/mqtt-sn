@@ -74,7 +74,6 @@ public class NetworkContext extends AbstractContextObject implements INetworkCon
         return "NetworkContext{" +
                 "networkAddress=" + networkAddress +
                 ", receivePort=" + receivePort +
-                "," + super.toString() +
                 '}';
     }
 }

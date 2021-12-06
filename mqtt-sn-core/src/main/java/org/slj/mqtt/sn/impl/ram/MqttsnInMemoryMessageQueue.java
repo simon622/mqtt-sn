@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.util.*;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 
 public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
@@ -131,7 +132,7 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
             synchronized (this){
                 if((queue = queues.get(context)) == null){
                     //-- queued message uses date for natural sort
-                    queue = new PriorityQueue<>();
+                    queue = new PriorityBlockingQueue<>();
                     queues.put(context, queue);
                 }
             }

@@ -75,7 +75,8 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
 
     protected Thread createDatagramServer(final String threadName, final int bufSize, final DatagramSocket socketIn){
         Thread thread = new Thread(() -> {
-            logger.log(Level.INFO, String.format("creating udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]", threadName, socketIn.getLocalPort(), bufSize, running));
+            logger.log(Level.INFO, String.format("mqtt-sn udp [%s] creating udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]",
+                    registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running));
             byte[] buff = new byte[bufSize];
             while(running && !socketIn.isClosed() &&
                     !Thread.currentThread().isInterrupted()){
@@ -114,6 +115,10 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                     buff = new byte[bufSize];
                 }
             }
+
+            logger.log(Level.WARNING, String.format("mqtt-sn udp [%s] stopping udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]",
+                    registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running));
+
         }, threadName);
         thread.setDaemon(true);
         thread.setPriority(Thread.MIN_PRIORITY + 1);

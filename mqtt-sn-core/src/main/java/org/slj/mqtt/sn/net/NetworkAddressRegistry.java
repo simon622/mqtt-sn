@@ -83,8 +83,8 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
     @Override
     public Optional<INetworkContext> first() throws NetworkRegistryException {
-        Iterator<NetworkAddress> itr = networkRegistry.keySet().iterator();
         synchronized (networkRegistry){
+            Iterator<NetworkAddress> itr = networkRegistry.keySet().iterator();
             while(itr.hasNext()){
                 NetworkAddress address = itr.next();
                 INetworkContext c = networkRegistry.get(address);
@@ -106,19 +106,23 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
     @Override
     public void putContext(INetworkContext context) {
-        networkRegistry.put(context.getNetworkAddress(), context);
-        logger.log(Level.INFO, String.format("adding network context to RAM registry - [%s]", context));
-        synchronized(mutex){
-            mutex.notifyAll();
+        synchronized (networkRegistry){
+            networkRegistry.put(context.getNetworkAddress(), context);
+            logger.log(Level.INFO, String.format("adding network context to RAM registry - [%s]", context));
+            synchronized(mutex){
+                mutex.notifyAll();
+            }
         }
     }
 
     @Override
     public void bindContexts(INetworkContext context, IMqttsnContext sessionContext) {
         logger.log(Level.INFO, String.format("binding network to session contexts - [%s] -> [%s]", context, sessionContext));
-        mqttsnContextRegistry.put(sessionContext, context);
-        networkContextRegistry.put(context, sessionContext);
-        putContext(context);
+        synchronized (networkRegistry){
+            mqttsnContextRegistry.put(sessionContext, context);
+            networkContextRegistry.put(context, sessionContext);
+            putContext(context);
+        }
     }
 
     @Override

@@ -64,6 +64,9 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
     public void stop() throws MqttsnException {
         super.stop();
         t = null;
+        synchronized (monitor){
+            monitor.notifyAll();
+        }
     }
 
     @Override

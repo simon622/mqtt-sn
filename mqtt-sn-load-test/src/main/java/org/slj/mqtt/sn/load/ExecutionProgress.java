@@ -60,7 +60,7 @@ public class ExecutionProgress {
     public void incrementProgress(int completed){
         if(started == null) markStarted();
         int val = complete.addAndGet(completed);
-System.err.println(val +  " / " + work.get());
+//System.err.println(val +  " / " + work.get());
         if(val >= work.get()){
             markFinished();
         }

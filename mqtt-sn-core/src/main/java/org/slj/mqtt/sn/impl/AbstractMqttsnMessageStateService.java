@@ -92,7 +92,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                             IMqttsnMessageQueueProcessor.RESULT.REMOVE_PROCESS;
                     boolean process = !flushOperations.containsKey(context) ||
                             !flushOperations.get(context).isDone();
-                    logger.log(Level.INFO, String.format("processing scheduled work for context [%s] -> [%s]", context, process));
+                    if(logger.isLoggable(Level.FINE)){
+                        logger.log(Level.FINE, String.format("processing scheduled work for context [%s] -> [%s]", context, process));
+                    }
                     if(process){
                         result = processQueue(context);
                         switch(result){
@@ -100,13 +102,17 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                                 synchronized (flushOperations){
                                     flushOperations.remove(context);
                                 }
-                                logger.log(Level.FINE, String.format("removed context from work list [%s]", context));
+                                if(logger.isLoggable(Level.FINE)){
+                                    logger.log(Level.FINE, String.format("removed context from work list [%s]", context));
+                                }
                                 break;
                             case BACKOFF_PROCESS:
                                 Long lastReceived = lastMessageReceived.get(context);
                                 long delta = lastReceived == null ? 0 : System.currentTimeMillis() - lastReceived;
                                 boolean remove = registry.getOptions().getActiveContextTimeout() < delta;
-                                logger.log(Level.INFO, String.format("backoff requested for [%s], activity delta is [%s], remove work ? [%s]", context, delta, remove));
+                                if(logger.isLoggable(Level.FINE)){
+                                    logger.log(Level.FINE, String.format("backoff requested for [%s], activity delta is [%s], remove work ? [%s]", context, delta, remove));
+                                }
                                 if(remove){
                                     synchronized (flushOperations){
                                         flushOperations.remove(context);
@@ -156,7 +162,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     public void scheduleFlush(IMqttsnContext context)  {
         if(!flushOperations.containsKey(context) ||
                 flushOperations.get(context).isDone()){
-            logger.log(Level.INFO, String.format("scheduling outbound work for [%s]", context));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("scheduling outbound work for [%s]", context));
+            }
             scheduleWork(context,
                     ThreadLocalRandom.current().nextInt(1, 250), TimeUnit.MILLISECONDS);
         }
@@ -274,8 +282,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
             if(logger.isLoggable(Level.INFO)){
                 logger.log(Level.INFO,
-                        String.format("sending message [%s] to [%s] via state service, marking inflight ? [%s]",
-                                message, context, requiresResponse));
+                        String.format("mqtt-sn state [%s -> %s] sending message [%s], marking inflight ? [%s]",
+                                registry.getOptions().getContextId(), context, message, requiresResponse));
             }
 
             registry.getTransport().writeToTransport(registry.getNetworkRegistry().getContext(context), message);
@@ -557,9 +565,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
         addInflightMessage(context, msgId, inflight);
 
-        if(logger.isLoggable(Level.INFO)){
-            logger.log(Level.INFO, String.format("[%s] marking [%s] message [%s] inflight id context [%s]", context,
-                    direction, message, idContext));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("[%s - %s] marking [%s] message [%s] inflight id context [%s]",
+                    registry.getOptions().getContextId(), context, direction, message, idContext));
         }
 
         if(msgId != WEAK_ATTACH_ID) lastUsedMsgIds.put(idContext, msgId);

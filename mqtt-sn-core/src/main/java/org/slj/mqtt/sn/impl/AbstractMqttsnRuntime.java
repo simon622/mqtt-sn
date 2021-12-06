@@ -233,7 +233,7 @@ public abstract class AbstractMqttsnRuntime {
      * @return should the local runtime send a DISCONNECT in reponse
      */
     public boolean handleRemoteDisconnect(IMqttsnContext context){
-        logger.log(Level.INFO, String.format("notified of remote disconnect [%s]", context));
+        logger.log(Level.INFO, String.format("notified of remote disconnect [%s <- %s]", registry.getOptions().getContextId(), context));
         connectionListeners.forEach(p -> p.notifyRemoteDisconnect(context));
         return true;
     }
@@ -248,7 +248,7 @@ public abstract class AbstractMqttsnRuntime {
      * if not, the exception is reported into the transport layer
      */
     public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
-        logger.log(Level.INFO, String.format("notified of local disconnect [%s]", context), t);
+        logger.log(Level.INFO, String.format("notified of local disconnect [%s !- %s]", registry.getOptions().getContextId(), context), t);
         connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
     }
@@ -260,7 +260,7 @@ public abstract class AbstractMqttsnRuntime {
      * @param t - the exception that was encountered
      */
     public void handleConnectionLost(IMqttsnContext context, Throwable t){
-        logger.log(Level.INFO, String.format("notified of connection lost [%s]", context), t);
+        logger.log(Level.INFO, String.format("notified of connection lost [%s !- %s]", registry.getOptions().getContextId(), context), t);
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
 
@@ -269,7 +269,7 @@ public abstract class AbstractMqttsnRuntime {
      * @param context
      */
     public void handleConnected(IMqttsnContext context){
-        logger.log(Level.INFO, String.format("notified of new connection [%s]", context));
+        logger.log(Level.INFO, String.format("notified of new connection [%s <- %s]", registry.getOptions().getContextId(), context));
         connectionListeners.forEach(p -> p.notifyConnected(context));
     }
 
@@ -278,7 +278,7 @@ public abstract class AbstractMqttsnRuntime {
      * @param context
      */
     public void handleActiveTimeout(IMqttsnContext context){
-        logger.log(Level.INFO, String.format("notified of active timeout [%s]", context));
+        logger.log(Level.INFO, String.format("notified of active timeout [%s <- %s]", registry.getOptions().getContextId(), context));
         connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
     }
 

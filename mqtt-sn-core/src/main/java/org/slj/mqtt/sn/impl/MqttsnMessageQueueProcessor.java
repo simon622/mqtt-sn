@@ -50,8 +50,8 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
             //-- so safe to remove
             int count = registry.getMessageQueue().size(context);
 
-            if(logger.isLoggable(Level.INFO)){
-                logger.log(Level.INFO,
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE,
                         String.format("processing queue size [%s] on thread [%s] in client-mode [%s] for [%s]", count, Thread.currentThread().getName(), clientMode, context));
             }
 
@@ -94,7 +94,9 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
         String topicPath = queuedMessage.getTopicPath();
         TopicInfo info = registry.getTopicRegistry().lookup(context, topicPath, true);
         if(info == null){
-            logger.log(Level.INFO, String.format("need to register for delivery to [%s] on topic [%s]", context, topicPath));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("need to register for delivery to [%s] on topic [%s]", context, topicPath));
+            }
             if(!clientMode){
                 //-- only the server hands out alias's
                 info = registry.getTopicRegistry().register(context, topicPath);
@@ -137,7 +139,9 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
 
                 RESULT res = ((registry.getMessageQueue().size(context) > 0) ||
                         queuedMessage.getGrantedQoS() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
-                logger.log(Level.INFO, String.format("sending complete returning [%s] for [%s]", res, context));
+                if(logger.isLoggable(Level.FINE)){
+                    logger.log(Level.FINE, String.format("sending complete returning [%s] for [%s]", res, context));
+                }
                 return res;
             } catch (MqttsnException e) {
 

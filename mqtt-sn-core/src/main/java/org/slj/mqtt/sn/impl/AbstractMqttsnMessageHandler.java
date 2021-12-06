@@ -203,7 +203,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         try {
 
             if(!canHandle(context, message)){
-                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s] dropping message it could not handle [%s]",
+                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] dropping message it could not handle [%s]",
                         context, message.getMessageName()));
                 return;
             }
@@ -211,15 +211,15 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             int msgType = message.getMessageType();
 
             if(message.isErrorMessage()){
-                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s] received error message [%s]",
-                        context, message));
+                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] received error message [%s]",
+                        registry.getOptions().getContextId(), context, message));
             }
 
             beforeHandle(context, message);
 
             if(logger.isLoggable(Level.INFO)){
-                logger.log(Level.INFO, String.format("mqtt-sn handler [%s] handling inbound message [%s]",
-                        context, message));
+                logger.log(Level.INFO, String.format("mqtt-sn handler [%s <- %s] handling inbound message [%s]",
+                        registry.getOptions().getContextId(), context, message));
             }
 
             boolean errord = false;
@@ -231,8 +231,8 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                             registry.getMessageStateService().notifyMessageReceived(context, message);
                 } catch(MqttsnException e){
                     errord = true;
-                    logger.log(Level.WARNING, String.format("mqtt-sn state service errord, allow message lifecycle to handle [%s] -> [%s]",
-                            context, e.getMessage()));
+                    logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] state service errord, allow message lifecycle to handle [%s] -> [%s]",
+                            registry.getOptions().getContextId(), context, e.getMessage()));
                 }
             }
 
@@ -241,8 +241,8 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             //-- if the state service threw a wobbler but for some reason this didnt lead to an error message
             //-- we should just disconnect the device
             if(errord && !response.isErrorMessage()){
-                logger.log(Level.WARNING, String.format("mqtt-sn state service errord, message handler did not produce an error, so overrule and disconnect [%s] -> [%s]",
-                        context, message));
+                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] state service errord, message handler did not produce an error, so overrule and disconnect [%s] -> [%s]",
+                        registry.getOptions().getContextId(), context, message));
                 response = registry.getMessageFactory().createDisconnect();
             }
 
@@ -440,8 +440,11 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     protected void handleResponse(IMqttsnContext context, IMqttsnMessage response)
             throws MqttsnException {
 
-        logger.log(Level.INFO, String.format("mqtt-sn handler [%s] sending outbound message [%s]",
-                context, response));
+        if(logger.isLoggable(Level.INFO)){
+            logger.log(Level.INFO, String.format("mqtt-sn handler [%s -> %s] sending outbound message [%s]",
+                    registry.getOptions().getContextId(), context, response));
+        }
+
         registry.getTransport().writeToTransport(
                 registry.getNetworkRegistry().getContext(context), response);
     }

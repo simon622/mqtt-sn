@@ -91,7 +91,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
     public void close() {
         try {
             logger.log(Level.INFO, "closing connection to broker");
-            client.disconnect();
+            client.disconnectForcibly();
             client.close(true);
             client = null;
         } catch(MqttException e){

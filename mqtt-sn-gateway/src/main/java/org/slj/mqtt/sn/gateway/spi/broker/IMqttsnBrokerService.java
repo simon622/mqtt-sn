@@ -47,10 +47,16 @@ public interface IMqttsnBrokerService {
 
     void receive(String topicPath, byte[] payload, int QoS) throws MqttsnException;
 
+    void reinit() throws MqttsnBrokerException;
+
     int getPublishReceiveCount();
 
     int getPublishSentCount();
 
+    int getQueuedCount();
+
     void clearStats();
+
+    void pokeQueue() throws MqttsnBrokerException;
 
 }

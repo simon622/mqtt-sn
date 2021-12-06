@@ -35,10 +35,10 @@ public class PublishAndWaitTestMain {
         try {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 200, 10);
+                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 200, 60);
 
-            ConnectPublishWaitProfile.PublishAndWaitClientInput input = new ConnectPublishWaitProfile.PublishAndWaitClientInput(300, TimeUnit.SECONDS);
-            input.host = "34.248.60.25";//""localhost";
+            ConnectPublishWaitProfile.PublishAndWaitClientInput input = new ConnectPublishWaitProfile.PublishAndWaitClientInput(350, TimeUnit.SECONDS);
+            input.host = "localhost";//"34.248.60.25";//";
             input.port = 2442;
             input.messageCount = 20;
             runner.start(input);

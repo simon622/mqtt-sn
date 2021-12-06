@@ -168,6 +168,12 @@ public abstract class AbstractMqttsnBrokerService
         publishSentCount.set(0);
     }
 
+    @Override
+    public int getQueuedCount() {
+        return 0;
+    }
+
+
     protected abstract void close(IMqttsnBrokerConnection connection) throws MqttsnBrokerException;
 
     protected abstract IMqttsnBrokerConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBrokerException;

@@ -34,9 +34,11 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 /**
@@ -49,7 +51,8 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     volatile boolean stopped = false;
     private Thread publishingThread = null;
     private final Object monitor = new Object();
-    private final Queue<PublishOp> queue = new LinkedList<>();
+    private final Queue<PublishOp> queue = new LinkedBlockingQueue<>();
+    private volatile Date lastPublishAttempt = null;
 
     public MqttsnAggregatingBrokerService(MqttsnBrokerOptions options){
         super(options);
@@ -149,7 +152,12 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                         PublishOp op = queue.poll();
                         if(op != null){
                             logger.log(Level.INFO, String.format("dequeing message to broker from queue, [%s] remaining", queue.size()));
-                            super.publish(op.context, op.topicPath, op.QoS, op.data, op.retain);
+                            lastPublishAttempt = new Date();
+                            PublishResult res = super.publish(op.context, op.topicPath, op.QoS, op.data, op.retain);
+                            if(res.isError()){
+                                logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
+                                queue.offer(op);
+                            }
                         }
                     } else {
                         synchronized (monitor){
@@ -159,9 +167,11 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                         }
                     }
 
-                    if(running && !stopped && queue.peek() == null) {
+                    if(running && !stopped) {
                         synchronized (monitor){
-                            monitor.wait();
+                            while(queue.peek() == null){
+                                monitor.wait();
+                            }
                         }
                     }
                 } catch(Exception e){
@@ -215,11 +225,31 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
         this.connection = null;
     }
 
+    public int getQueuedCount() {
+        return queue.size();
+    }
+
+    public void reinit() throws MqttsnBrokerException {
+        if(connection != null){
+            close(connection);
+        }
+        initConnection();
+    }
+
+    public void pokeQueue() {
+        synchronized (monitor){
+            monitor.notifyAll();
+        }
+    }
+
+    public Date getLastPublishAttempt(){
+        return lastPublishAttempt;
+    }
+
     @Override
     protected String getDaemonName() {
         return "gateway-broker-managed-connection";
     }
-
 
     static class PublishOp {
         public IMqttsnContext context;

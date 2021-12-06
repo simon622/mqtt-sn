@@ -116,7 +116,7 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     }
 
     protected void bindReceiveLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data) -> {
+        createOrGetClient().registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
             getProgress().incrementProgress(1);
         });
     }

@@ -27,6 +27,8 @@ package org.slj.mqtt.sn.gateway.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
+import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
@@ -53,6 +55,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     protected String password;
 
     enum COMMANDS {
+        POKE("Poke the queue", new String[0], true),
+        REINIT("Reinit the backend broker connection", new String[0]),
         NETWORK("View network registry", new String[0]),
         SESSIONS("View sessions", new String[0]),
         TD("Output a thread dump", new String[0]),
@@ -123,6 +127,12 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                         output.println("\t\t" + c.getDescription());
                     }
                     break;
+                case REINIT:
+                    reinit();
+                    break;
+                case POKE:
+                    poke();
+                    break;
                 case SESSION:
                     session(captureMandatoryString(input, output, "Please supply the clientId whose session you would like to see"));
                     break;
@@ -172,16 +182,35 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         }
     }
 
+    protected void poke() throws  MqttsnBrokerException {
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        gatewayRuntimeRegistry.getBrokerService().pokeQueue();
+    }
+
+    protected void reinit() throws  MqttsnBrokerException {
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        gatewayRuntimeRegistry.getBrokerService().reinit();
+    }
+
+    @Override
+    protected void resetMetrics() throws IOException {
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        gatewayRuntimeRegistry.getBrokerService().clearStats();
+        super.resetMetrics();
+    }
+
     @Override
     protected void stats() {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         super.stats();
+        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingBrokerService)gatewayRuntimeRegistry.getBrokerService()).getLastPublishAttempt()));
+        message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getQueuedCount()));
         message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishSentCount()));
         message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishReceiveCount()));
     }
 
     protected void queue(String topicName, String payload, int QoS)
-            throws IOException, MqttsnException {
+            throws MqttsnException {
 
         message("Enqueued publish to all subscribed sessions: " + topicName);
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
@@ -307,6 +336,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message( "Gateway status: awaiting connection..");
         }
     }
+
+
 
     @Override
     protected MqttsnOptions createOptions() {

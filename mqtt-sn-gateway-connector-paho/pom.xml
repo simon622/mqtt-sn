@@ -29,7 +29,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.slj</groupId>
-    <artifactId>mqtt-sn-connector-paho</artifactId>
+    <artifactId>mqtt-sn-gateway-connector-paho</artifactId>
     <version>1.0.0</version>
 
     <properties>

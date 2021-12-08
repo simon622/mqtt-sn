@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl;
+package org.slj.mqtt.sn.gateway.connector.paho;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -32,9 +32,6 @@ import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

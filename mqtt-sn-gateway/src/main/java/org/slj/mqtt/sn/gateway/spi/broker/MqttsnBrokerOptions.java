@@ -45,8 +45,40 @@ public final class MqttsnBrokerOptions {
     private int port = DEFAULT_MQTT_PORT;
     private String protocol = DEFAULT_MQTT_PROTOCOL;
 
+    private String keystoreLocation = null;
+    private String keystorePassword = null;
+    private String keyPassword = null;
+
+    private String certificateFileLocation = null;
+    private String privateKeyFileLocation = null;
+
     public MqttsnBrokerOptions(){
 
+    }
+
+    public MqttsnBrokerOptions withCertificateFileLocation(String certificateFileLocation){
+        this.certificateFileLocation = certificateFileLocation;
+        return this;
+    }
+
+    public MqttsnBrokerOptions withPrivateKeyFileLocation(String privateKeyFileLocation){
+        this.privateKeyFileLocation = privateKeyFileLocation;
+        return this;
+    }
+
+    public MqttsnBrokerOptions withKeystoreLocation(String keystoreLocation){
+        this.keystoreLocation = keystoreLocation;
+        return this;
+    }
+
+    public MqttsnBrokerOptions withKeystorePassword(String keystorePassword){
+        this.keystorePassword = keystorePassword;
+        return this;
+    }
+
+    public MqttsnBrokerOptions withKeyPassword(String keyPassword){
+        this.keyPassword = keyPassword;
+        return this;
     }
 
     public MqttsnBrokerOptions withConnectOnStartup(boolean connectOnStartup){
@@ -131,7 +163,27 @@ public final class MqttsnBrokerOptions {
     }
 
     public boolean validConnectionDetails(){
-        return !nonEmpty(protocol) && !nonEmpty(host) && port > 0 && !nonEmpty(username);
+        return !nonEmpty(protocol) && !nonEmpty(host) && port > 0;
+    }
+
+    public String getKeystoreLocation() {
+        return keystoreLocation;
+    }
+
+    public String getKeystorePassword() {
+        return keystorePassword;
+    }
+
+    public String getKeyPassword() {
+        return keyPassword;
+    }
+
+    public String getCertificateFileLocation() {
+        return certificateFileLocation;
+    }
+
+    public String getPrivateKeyFileLocation() {
+        return privateKeyFileLocation;
     }
 
     static boolean nonEmpty(String val){

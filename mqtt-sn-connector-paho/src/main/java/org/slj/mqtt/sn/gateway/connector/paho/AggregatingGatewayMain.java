@@ -22,9 +22,11 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl;
+package org.slj.mqtt.sn.gateway.connector.paho;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
+import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
+import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;

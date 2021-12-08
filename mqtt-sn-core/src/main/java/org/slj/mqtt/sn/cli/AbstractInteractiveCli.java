@@ -375,6 +375,16 @@ public abstract class AbstractInteractiveCli {
         output.println(ThreadDump.create());
     }
 
+    protected String captureString(Scanner input, PrintStream output, String question){
+        String value = null;
+        while(value == null){
+            output.print(cli_reset(String.format("%s : ", question)));
+            value = input.nextLine();
+            value = value.trim();
+        }
+        return value.length() == 0 ? null : value;
+    }
+
     protected String captureMandatoryString(Scanner input, PrintStream output, String question){
         String value = null;
         while(value == null){
@@ -382,6 +392,39 @@ public abstract class AbstractInteractiveCli {
             value = input.nextLine();
             value = value.trim();
             if(value.length() == 0) {
+                value = null;
+            }
+        }
+        return value;
+    }
+
+    protected String captureFilePath(Scanner input, PrintStream output, String question){
+        String value = null;
+        while(value == null){
+            output.print(cli_reset(String.format("%s : ", question)));
+            value = input.nextLine();
+            value = value.trim();
+            if(value.length() > 0) {
+                File f = new File(value);
+                if(!f.exists() || !f.isFile()){
+                    value = null;
+                }
+            }
+        }
+        return value.length() == 0 ? null : value;
+    }
+
+    protected String captureMandatoryFilePath(Scanner input, PrintStream output, String question){
+        String value = null;
+        while(value == null){
+            output.print(cli_reset(String.format("%s : ", question)));
+            value = input.nextLine();
+            value = value.trim();
+            if(value.length() == 0) {
+                value = null;
+            }
+            File f = new File(value);
+            if(!f.exists() || !f.isFile()){
                 value = null;
             }
         }

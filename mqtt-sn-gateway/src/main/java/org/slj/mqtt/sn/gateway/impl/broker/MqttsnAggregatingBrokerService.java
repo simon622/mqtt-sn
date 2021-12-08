@@ -175,7 +175,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                         }
                     }
                 } catch(Exception e){
-                    logger.log(Level.SEVERE, String.format("error publishing via PAHO queue publisher"), e);
+                    logger.log(Level.SEVERE, String.format("error publishing via queue publisher;"), e);
                 }
             } while(running && !stopped);
         }, "mqtt-sn-broker-publisher");

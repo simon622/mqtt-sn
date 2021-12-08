@@ -22,19 +22,19 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl;
+package org.slj.mqtt.sn.gateway.connector.aws.iotcore;
 
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnectionFactory;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 
-public class PahoMqttsnBrokerConnectionFactory implements IMqttsnBrokerConnectionFactory<PahoMqttsnBrokerConnection> {
+public class AWSIoTCoreMqttsnBrokerConnectionFactory implements IMqttsnBrokerConnectionFactory<AWSIoTCoreMqttsnBrokerConnection> {
 
     @Override
-    public PahoMqttsnBrokerConnection createConnection(MqttsnBrokerOptions options, String clientId) throws MqttsnBrokerException {
+    public AWSIoTCoreMqttsnBrokerConnection createConnection(MqttsnBrokerOptions options, String clientId) throws MqttsnBrokerException {
         try {
-            PahoMqttsnBrokerConnection connection = new PahoMqttsnBrokerConnection(options, clientId);
-            connection.connect();
+            AWSIoTCoreMqttsnBrokerConnection connection = new AWSIoTCoreMqttsnBrokerConnection(options, clientId);
+            if(options.getConnectOnStartup()) connection.connect();
             return connection;
         } catch(Exception e){
             throw new MqttsnBrokerException("error creating connection;", e);

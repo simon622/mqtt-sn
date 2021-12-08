@@ -373,8 +373,11 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 queuedMessages += gatewayRuntimeRegistry.getMessageQueue().size(c);
             }
 
-            message(String.format("Currently connected clients: %s", allState.size()));
-            message(String.format("Current buffered messages: %s", queuedMessages));
+
+            message(String.format("Current active sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.CONNECTED).count()));
+            message(String.format("Current sleeping sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.ASLEEP).count()));
+            message(String.format("Current disconnected sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.DISCONNECTED).count()));
+            message(String.format("All queued session messages: %s", queuedMessages));
 
             //-- broker stuff
             message(String.format("Broker TCP/IP Connection State: %s", (connected ? cli_green("ESTABLISHED") : cli_red("UNESTABLISHED"))));
@@ -429,8 +432,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected void configure() throws IOException {
         super.configure();
-        username = captureMandatoryString(input, output, "Please enter a valid username for you broker connection");
-        password = captureMandatoryString(input, output,  "Please enter a valid password for you broker connection");
+        username = captureString(input, output, "Please enter a valid username for you broker connection");
+        password = captureString(input, output,  "Please enter a valid password for you broker connection");
     }
 
     @Override

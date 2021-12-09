@@ -60,6 +60,15 @@ public class MqttsnUtils {
         return false;
     }
 
+    public static boolean in(String needle, String... haystack){
+        if(haystack == null) return false;
+        if(needle == null) return false;
+        for (int i = 0; i < haystack.length; i++) {
+            if(haystack[i].equals(needle)) return true;
+        }
+        return false;
+    }
+
     public static void responseCheck(MqttsnWaitToken token, Optional<IMqttsnMessage> response)
             throws MqttsnExpectationFailedException{
         if(response.isPresent() &&

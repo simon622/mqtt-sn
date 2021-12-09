@@ -70,12 +70,19 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
                     try {
                         logger.log(Level.INFO, String.format("connecting client with options [%s]", options));
                         client.connect(connectOptions);
+                        if(client.isConnected()){
+                            onClientConnected(client);
+                        }
                     } catch(MqttException e){
                         throw new MqttsnBrokerException(e);
                     }
                 }
             }
         }
+    }
+
+    protected void onClientConnected(MqttClient client){
+
     }
 
     protected MqttConnectOptions createConnectOptions(MqttsnBrokerOptions options) throws MqttsnBrokerException{

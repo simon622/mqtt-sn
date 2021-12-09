@@ -102,7 +102,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 try {
                     result = registry.getBrokerService().connect(state.getContext(), state.getContext().getId(), cleanSession, keepAlive);
                 } finally {
-                    if(!result.isError()){
+                    if(result == null || !result.isError()){
                         //clear down all prior session state
                         cleanSession(state.getContext(), cleanSession);
                         state.setKeepAlive(keepAlive);

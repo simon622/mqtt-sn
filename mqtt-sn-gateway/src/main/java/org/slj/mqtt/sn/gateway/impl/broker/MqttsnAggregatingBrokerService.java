@@ -104,6 +104,15 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     @Override
     public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException {
         try {
+
+            if(isConnected(context)){
+                if(!connection.canAccept(context, topicPath, QoS, payload)){
+                    logger.log(Level.WARNING, String.format("unable to accept publish [%s] -> [%s] bytes", topicPath, payload.length));
+                    return new PublishResult(Result.STATUS.ERROR,
+                            String.format("publisher unable to accept message on [%s]", topicPath));
+                }
+            }
+
             rateLimiter.acquire();
             PublishOp op = new PublishOp();
             op.data = payload;
@@ -157,15 +166,19 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                     if(connection != null && connection.isConnected()) {
                         PublishOp op = queue.poll();
                         if(op != null){
-                            logger.log(Level.INFO, String.format("dequeing message to broker from queue, [%s] remaining", queue.size()));
                             lastPublishAttempt = new Date();
-                            PublishResult res = super.publish(op.context, op.topicPath, op.QoS, op.data, op.retain);
-                            if(res.isError()){
-                                logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
-                                queue.offer(op);
-                                errorCount++;
+                            if(connection.canAccept(op.context, op.topicPath, op.QoS, op.data)){
+                                logger.log(Level.INFO, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
+                                PublishResult res = super.publish(op.context, op.topicPath, op.QoS, op.data, op.retain);
+                                if(res.isError()){
+                                    logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
+                                    queue.offer(op);
+                                    errorCount++;
+                                } else {
+                                    errorCount = 0;
+                                }
                             } else {
-                                errorCount = 0;
+                                logger.log(Level.WARNING, "unable to accept publish operation from queue - discard");
                             }
                         }
                     } else {

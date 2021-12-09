@@ -26,6 +26,8 @@ package org.slj.mqtt.sn.gateway.impl.broker;
 
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerService;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
+import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 /**
@@ -44,5 +46,10 @@ public abstract class AbstractMqttsnBrokerConnection implements IMqttsnBrokerCon
             throw new MqttsnException("brokerService not available to connection, receive will fail");
         }
         brokerService.receive(topicPath, payload, QoS);
+    }
+
+    @Override
+    public boolean canAccept(IMqttsnContext context, String topicPath, int QoS, byte[] data) throws MqttsnBrokerException {
+        return true;
     }
 }

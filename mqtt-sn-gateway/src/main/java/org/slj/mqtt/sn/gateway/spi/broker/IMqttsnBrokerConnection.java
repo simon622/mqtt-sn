@@ -43,4 +43,6 @@ public interface IMqttsnBrokerConnection extends Closeable {
     boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException;
 
     boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException;
+
+    boolean canAccept(IMqttsnContext context, String topicPath, int QoS, byte[] data) throws MqttsnBrokerException;
 }

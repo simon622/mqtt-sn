@@ -29,12 +29,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.joda.time.DateTime;
 import org.slj.mqtt.sn.gateway.connector.paho.PahoMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -80,6 +81,62 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
                         getGoogleIoTGatewayId(options));
 
         return mqttClientId;
+    }
+
+    @Override
+    public boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException {
+
+        ///devices/{device_ID_to_attach}/attach
+        logger.log(Level.INFO, String.format("attaching gateway device " + context.getId()));
+
+        //-- tell IoT core we are attaching a device
+        super.publish(context, String.format("/devices/%s/attach", context.getId()), 1, false, new byte[0]);
+
+        //-- listen for a devices config changes
+        subscribe(context, String.format("/devices/%s/config", context.getId()), 0);
+        return true;
+    }
+
+    @Override
+    public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
+
+        logger.log(Level.INFO, String.format("detaching gateway device " + context.getId()));
+        super.publish(context, String.format("/devices/%s/detach", context.getId()), 1, false, new byte[0]);
+        return true;
+    }
+
+    @Override
+    public boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException {
+        return super.publish(context, topicPath, 1, false, data);
+    }
+
+    @Override
+    public boolean canAccept(IMqttsnContext context, String topicPath, int QoS, byte[] data) throws MqttsnBrokerException {
+        return MqttsnUtils.in(topicPath, new String[] {
+                String.format("/devices/%s/state", context.getId()),
+                String.format("/devices/%s/events", context.getId())
+        });
+    }
+
+    @Override
+    protected void onClientConnected(MqttClient client){
+        try {
+            ///devices/{gateway_ID}/errors
+            {
+                String topic = String.format("/devices/%s/errors", getGoogleIoTGatewayId(options));
+                logger.log(Level.INFO, String.format("subscribing to Google gateway error topic [%s]", topic));
+                client.subscribe(topic, 0);
+            }
+
+            ///devices/{gateway_ID}/config
+            {
+                String topic = String.format("/devices/%s/config", getGoogleIoTGatewayId(options));
+                logger.log(Level.INFO, String.format("subscribing to Google gateway error topic [%s]", topic));
+                client.subscribe(topic, 0);
+            }
+        } catch(Exception e){
+            logger.log(Level.SEVERE, String.format("error subscribing to error topic"), e);
+        }
     }
 
     @Override
@@ -179,5 +236,11 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
             throw new IllegalArgumentException("please specify -DcloudRegion=<cloudRegion>");
         }
         return cloudRegion;
+    }
+
+    @Override
+    public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
+        logger.log(Level.INFO, String.format("received message from google iot [%s] -> [%s]", s, new String(mqttMessage.getPayload())));
+        super.messageArrived(s, mqttMessage);
     }
 }

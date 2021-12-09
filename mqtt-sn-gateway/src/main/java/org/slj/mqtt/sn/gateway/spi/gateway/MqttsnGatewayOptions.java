@@ -51,14 +51,25 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
      */
     public static final int DEFAULT_GATEWAY_ADVERTISE_TIME = 60;
 
+    /**
+     * The maximum number of publish operations per second that the gateway will send to the gateway
+     */
+    public static final double MAX_BROKER_PUBLISHES_PER_SECOND = 5.0d;
+
     private Set<String> allowedClientIds = new HashSet();
     {
         allowedClientIds.add(DEFAULT_CLIENT_ALLOWED_ALL);
     }
 
     private int maxConnectedClients = DEFAULT_MAX_CONNECTED_CLIENTS;
+    private double maxBrokerPublishesPerSecond = MAX_BROKER_PUBLISHES_PER_SECOND;
     private int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
     private int gatewayId = DEFAULT_GATEWAY_ID;
+
+    public MqttsnGatewayOptions withMaxBrokerPublishesPerSecond(double maxBrokerPublishesPerSecond){
+        this.maxBrokerPublishesPerSecond = maxBrokerPublishesPerSecond;
+        return this;
+    }
 
     public MqttsnGatewayOptions withMaxConnectedClients(int maxConnectedClients){
         this.maxConnectedClients = maxConnectedClients;
@@ -89,6 +100,10 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
 
     public Set<String> getAllowedClientIds() {
         return allowedClientIds;
+    }
+
+    public double getMaxBrokerPublishesPerSecond() {
+        return maxBrokerPublishesPerSecond;
     }
 
     public MqttsnGatewayOptions withAllowedClientId(String clientId){

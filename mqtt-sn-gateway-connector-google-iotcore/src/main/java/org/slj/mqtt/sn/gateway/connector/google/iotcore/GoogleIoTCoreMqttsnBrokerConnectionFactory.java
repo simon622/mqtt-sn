@@ -22,18 +22,18 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.connector.paho;
+package org.slj.mqtt.sn.gateway.connector.google.iotcore;
 
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnectionFactory;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 
-public class PahoMqttsnBrokerConnectionFactory implements IMqttsnBrokerConnectionFactory<PahoMqttsnBrokerConnection> {
+public class GoogleIoTCoreMqttsnBrokerConnectionFactory implements IMqttsnBrokerConnectionFactory<GoogleIoTCoreMqttsnBrokerConnection> {
 
     @Override
-    public PahoMqttsnBrokerConnection createConnection(MqttsnBrokerOptions options, String clientId) throws MqttsnBrokerException {
+    public GoogleIoTCoreMqttsnBrokerConnection createConnection(MqttsnBrokerOptions options, String clientId) throws MqttsnBrokerException {
         try {
-            PahoMqttsnBrokerConnection connection = new PahoMqttsnBrokerConnection(options, clientId);
+            GoogleIoTCoreMqttsnBrokerConnection connection = new GoogleIoTCoreMqttsnBrokerConnection(options, clientId);
             if(options.getConnectOnStartup()) connection.connect();
             return connection;
         } catch(Exception e){

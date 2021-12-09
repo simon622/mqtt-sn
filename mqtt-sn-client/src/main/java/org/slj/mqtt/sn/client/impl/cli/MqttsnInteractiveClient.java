@@ -474,7 +474,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 withNetworkAddressEntry("remote-gateway",
                         NetworkAddress.from(port, hostName)).
                 withContextId(clientId).
-                withMaxMessagesInQueue(1000).
+                withMaxMessagesInQueue(100000).
                 withMinFlushTime(0).
                 withMaxProtocolMessageSize(4096).
                 withSleepClearsRegistrations(false);

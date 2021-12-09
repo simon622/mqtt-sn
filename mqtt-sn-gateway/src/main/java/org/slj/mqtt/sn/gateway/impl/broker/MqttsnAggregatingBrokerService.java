@@ -24,14 +24,17 @@
 
 package org.slj.mqtt.sn.gateway.impl.broker;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
+import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Date;
@@ -39,6 +42,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
 /**
@@ -53,6 +57,9 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     private final Object monitor = new Object();
     private final Queue<PublishOp> queue = new LinkedBlockingQueue<>();
     private volatile Date lastPublishAttempt = null;
+    private volatile RateLimiter rateLimiter = null;
+    private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
+    private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
 
     public MqttsnAggregatingBrokerService(MqttsnBrokerOptions options){
         super(options);
@@ -61,6 +68,8 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     @Override
     public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
+        rateLimiter = RateLimiter.create(((MqttsnGatewayOptions)runtime.getOptions()).
+                getMaxBrokerPublishesPerSecond());
         initPublisher();
     }
 
@@ -95,6 +104,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     @Override
     public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException {
         try {
+            rateLimiter.acquire();
             PublishOp op = new PublishOp();
             op.data = payload;
             op.context = context;
@@ -125,16 +135,11 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                 } else {
                     initConnection();
                 }
-            } else {
-                if(options.getConnectOnStartup() && connection == null){
-                    initConnection();
-                }
             }
         } catch(Exception e){
             logger.log(Level.SEVERE, "error occurred monitoring connections;", e);
         }
-
-        return 10000;
+        return MANAGED_CONNECTION_VALIDATION_TIME;
     }
 
     @Override
@@ -146,6 +151,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
 
     private void initPublisher(){
         publishingThread = new Thread(() -> {
+            int errorCount = 0;
             do {
                 try {
                     if(connection != null && connection.isConnected()) {
@@ -157,20 +163,25 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                             if(res.isError()){
                                 logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
                                 queue.offer(op);
+                                errorCount++;
+                            } else {
+                                errorCount = 0;
                             }
                         }
                     } else {
-                        synchronized (monitor){
-                            // the connection is dead, lets not harass on a tight
-                            // loop trying to deliver until we're reconnected again
-                            monitor.wait(30000);
-                        }
+                        errorCount++;
+                    }
+
+                    if(errorCount > 0){
+                        //exponential back off to allow the connection to reestablish
+                        Thread.sleep(
+                                MqttsnUtils.getExponentialBackoff(errorCount, true));
                     }
 
                     if(running && !stopped) {
                         synchronized (monitor){
                             while(queue.peek() == null){
-                                monitor.wait();
+                                monitor.wait(PUBLISH_THREAD_MAX_WAIT);
                             }
                         }
                     }

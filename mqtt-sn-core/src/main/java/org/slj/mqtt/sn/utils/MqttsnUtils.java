@@ -33,6 +33,7 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -86,6 +87,19 @@ public class MqttsnUtils {
             if(!used.contains(nextValue)) return nextValue;
         } while(nextValue <= 0xFFFF);
         throw new MqttsnException("unable to assigned lease client");
+    }
+
+    /**
+     * This will back off at intervals of;
+     * 250,500,1000,2000,4000,8000,16000,32000,64000,128000,256000,256000...
+     * @param retryCount - the number of retries (the larger the number the higher the backoff)
+     */
+    public static long getExponentialBackoff(int retryCount, boolean addFuzziness){
+        long factor = (long) (Math.pow(2, Math.min(retryCount, 10)) * 250);
+        if(addFuzziness){
+            factor += ThreadLocalRandom.current().nextInt(0, Math.min((int) factor, 999));
+        }
+        return factor;
     }
 
     public static String getDurationString(long millis) {

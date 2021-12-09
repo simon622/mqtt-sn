@@ -29,7 +29,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.slj</groupId>
-    <artifactId>mqtt-sn-gateway</artifactId>
+    <artifactId>mqtt-sn-gateway-connector-google-iotcore</artifactId>
     <version>1.0.0</version>
 
     <properties>
@@ -38,9 +38,16 @@
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
+        <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
+        <exec-maven-plugin.version>1.5.0</exec-maven-plugin.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.slj</groupId>
+            <artifactId>mqtt-sn-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-codec</artifactId>
@@ -48,13 +55,13 @@
         </dependency>
         <dependency>
             <groupId>org.slj</groupId>
-            <artifactId>mqtt-sn-core</artifactId>
+            <artifactId>mqtt-sn-gateway</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>29.0-jre</version>
+            <groupId>org.slj</groupId>
+            <artifactId>mqtt-sn-gateway-connector-paho</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -65,12 +72,42 @@
     </dependencies>
 
     <build>
+        <finalName>mqtt-sn-google-iotcore-gateway-${version}</finalName>
         <plugins>
+            <!-- Maven Shade Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <!-- Run shade goal on package phase -->
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.slj.mqtt.sn.gateway.connector.google.iotcore.GoogleIoTCoreAggregatingGatewayInteractiveMain</mainClass>
+                                </transformer>
+                            </transformers>
+                            <!--minimizeJar>true</minimizeJar-->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
+
         </plugins>
     </build>
-
 </project>

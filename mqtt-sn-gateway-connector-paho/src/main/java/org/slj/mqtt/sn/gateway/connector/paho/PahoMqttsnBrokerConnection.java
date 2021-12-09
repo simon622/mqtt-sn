@@ -54,14 +54,21 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
     }
 
     public void connect() throws MqttException {
-        if(client == null || !client.isConnected()){
+        if(client == null){
             synchronized (this){
-                if(client == null || !client.isConnected()){
-                    initClient();
+                if(client == null){
+                    client = createClient();
+                }
+            }
+        }
+
+        if(client != null && !client.isConnected()){
+            synchronized (this){
+                if (client != null && !client.isConnected()){
                     MqttConnectOptions connectOptions = new MqttConnectOptions();
                     connectOptions.setAutomaticReconnect(false);
-                    connectOptions.setPassword(options.getPassword().toCharArray());
-                    connectOptions.setUserName(options.getUsername());
+                    if(options.getPassword() != null) connectOptions.setPassword(options.getPassword().toCharArray());
+                    if(options.getUsername() != null) connectOptions.setUserName(options.getUsername());
                     connectOptions.setKeepAliveInterval(options.getKeepAlive());
                     connectOptions.setConnectionTimeout(options.getConnectionTimeout());
                     client.connect(connectOptions);
@@ -71,12 +78,13 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
         }
     }
 
-    private void initClient() throws MqttException {
+    private MqttClient createClient() throws MqttException {
         String connectionStr = String.format("%s://%s:%s", options.getProtocol(), options.getHost(), options.getPort());
-        client = new MqttClient(connectionStr, clientId, new MemoryPersistence());
+        logger.log(Level.INFO, String.format("creating new paho client with host [%s] and clientId [%s]", connectionStr, clientId));
+        MqttClient client = new MqttClient(connectionStr, clientId, new MemoryPersistence());
         client.setCallback(this);
         client.setTimeToWait(options.getConnectionTimeout() * 1000);
-        logger.log(Level.INFO, String.format("initiated client with host [%s] and clientId [%s]", connectionStr, clientId));
+        return client;
     }
 
     @Override
@@ -86,31 +94,36 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
 
     @Override
     public void close() {
-        try {
-            logger.log(Level.INFO, "closing connection to broker");
-            client.disconnectForcibly();
-            client.close(true);
-            client = null;
-        } catch(MqttException e){
-            logger.log(Level.SEVERE, "error encountered closing paho client;", e);
+        synchronized (this){
+            try {
+                if(client != null && client.isConnected()){
+                    logger.log(Level.INFO, "closing connection to broker");
+                    client.disconnectForcibly();
+                }
+            } catch(MqttException e){
+                logger.log(Level.SEVERE, "error encountered closing paho client;", e);
+            } finally {
+                try {
+                    if(client != null){
+                        client.close(true);
+                    }
+                } catch(Exception e){
+                } finally {
+                    client = null;
+                }
+            }
         }
-    }
-
-    @Override
-    public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
-        return true;
-    }
-
-    public boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException{
-        return true;
     }
 
     @Override
     public boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException {
         try {
             logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
-            client.subscribe(topicPath, QoS);
-            return true;
+            if(isConnected()) {
+                client.subscribe(topicPath, QoS);
+                return true;
+            }
+            return false;
         } catch(MqttException e){
             throw new MqttsnBrokerException(e);
         }
@@ -120,8 +133,11 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
     public boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException {
         try {
             logger.log(Level.INFO, String.format("unsubscribing connection from [%s]", topicPath));
-            client.unsubscribe(topicPath);
-            return true;
+            if(isConnected()){
+                client.unsubscribe(topicPath);
+                return true;
+            }
+            return false;
         } catch(MqttException e){
             throw new MqttsnBrokerException(e);
         }
@@ -130,7 +146,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
     @Override
     public boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException {
         try {
-           if(client != null && client.isConnected()){
+           if(isConnected()){
                client.publish(topicPath, data, QoS, retain);
                return true;
            }
@@ -168,5 +184,15 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
             logger.log(Level.FINE, String.format("broker confirm delivery complete [%s] -> [%s]",
                     token.getMessageId(), Arrays.toString(token.getTopics())));
         }
+    }
+
+    @Override
+    public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
+        return true;
+    }
+
+    @Override
+    public boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException{
+        return true;
     }
 }

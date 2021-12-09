@@ -87,13 +87,13 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
             synchronized (monitor){
                 try {
                     monitor.wait(Math.max(1, maxBackoff));
-                    if(logger.isLoggable(Level.FINE)){
-                        logger.log(Level.FINE,
-                                String.format("worker [%s] waited for [%s] in the end", Thread.currentThread().getName(), System.currentTimeMillis() - waitStart));
-                    }
                 } catch(InterruptedException e){
                     Thread.currentThread().interrupt();
                 }
+            }
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE,
+                        String.format("worker [%s] waited for [%s] in the end", Thread.currentThread().getName(), System.currentTimeMillis() - waitStart));
             }
         }
         logger.log(Level.WARNING, String.format("stopped %s thread", Thread.currentThread().getName()));

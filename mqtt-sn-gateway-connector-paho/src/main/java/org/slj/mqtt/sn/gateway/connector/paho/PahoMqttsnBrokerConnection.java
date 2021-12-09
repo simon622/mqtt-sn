@@ -29,6 +29,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slj.mqtt.sn.gateway.impl.broker.AbstractMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 
 import java.util.Arrays;
@@ -45,19 +46,19 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
 
     private Logger logger = Logger.getLogger(PahoMqttsnBrokerConnection.class.getName());
     private volatile MqttClient client = null;
-    private MqttsnBrokerOptions options;
-    private final String clientId;
+    protected MqttsnBrokerOptions options;
+    protected final String clientId;
 
     public PahoMqttsnBrokerConnection(MqttsnBrokerOptions options, String clientId) {
         this.options = options;
         this.clientId = clientId;
     }
 
-    public void connect() throws MqttException {
+    public void connect() throws MqttsnBrokerException {
         if(client == null){
             synchronized (this){
                 if(client == null){
-                    client = createClient();
+                    client = createClient(options);
                 }
             }
         }
@@ -65,26 +66,48 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
         if(client != null && !client.isConnected()){
             synchronized (this){
                 if (client != null && !client.isConnected()){
-                    MqttConnectOptions connectOptions = new MqttConnectOptions();
-                    connectOptions.setAutomaticReconnect(false);
-                    if(options.getPassword() != null) connectOptions.setPassword(options.getPassword().toCharArray());
-                    if(options.getUsername() != null) connectOptions.setUserName(options.getUsername());
-                    connectOptions.setKeepAliveInterval(options.getKeepAlive());
-                    connectOptions.setConnectionTimeout(options.getConnectionTimeout());
-                    client.connect(connectOptions);
-                    logger.log(Level.INFO, String.format("connecting client with username [%s] and keepAlive [%s]", options.getUsername(), options.getKeepAlive()));
+                    MqttConnectOptions connectOptions = createConnectOptions(options);
+                    try {
+                        logger.log(Level.INFO, String.format("connecting client with options [%s]", options));
+                        client.connect(connectOptions);
+                    } catch(MqttException e){
+                        throw new MqttsnBrokerException(e);
+                    }
                 }
             }
         }
     }
 
-    private MqttClient createClient() throws MqttException {
-        String connectionStr = String.format("%s://%s:%s", options.getProtocol(), options.getHost(), options.getPort());
-        logger.log(Level.INFO, String.format("creating new paho client with host [%s] and clientId [%s]", connectionStr, clientId));
-        MqttClient client = new MqttClient(connectionStr, clientId, new MemoryPersistence());
-        client.setCallback(this);
-        client.setTimeToWait(options.getConnectionTimeout() * 1000);
-        return client;
+    protected MqttConnectOptions createConnectOptions(MqttsnBrokerOptions options) throws MqttsnBrokerException{
+        MqttConnectOptions connectOptions = new MqttConnectOptions();
+        connectOptions.setAutomaticReconnect(false);
+        if(options.getPassword() != null) connectOptions.setPassword(options.getPassword().toCharArray());
+        if(options.getUsername() != null) connectOptions.setUserName(options.getUsername());
+        connectOptions.setKeepAliveInterval(options.getKeepAlive());
+        connectOptions.setConnectionTimeout(options.getConnectionTimeout());
+        return connectOptions;
+    }
+
+    protected String createClientId(MqttsnBrokerOptions options) throws MqttsnBrokerException {
+        return clientId;
+    }
+
+    protected String createConnectionString(MqttsnBrokerOptions options) throws MqttsnBrokerException {
+        return String.format("%s://%s:%s", options.getProtocol(), options.getHost(), options.getPort());
+    }
+
+    protected MqttClient createClient(MqttsnBrokerOptions options) throws MqttsnBrokerException {
+        try {
+            String clientId = createClientId(options);
+            String connectionStr = createConnectionString(options);
+            logger.log(Level.INFO, String.format("creating new paho client with host [%s] and clientId [%s]", connectionStr, clientId));
+            MqttClient client = new MqttClient(connectionStr, clientId, new MemoryPersistence());
+            client.setCallback(this);
+            client.setTimeToWait(options.getConnectionTimeout() * 1000);
+            return client;
+        } catch(MqttException e){
+            throw new MqttsnBrokerException(e);
+        }
     }
 
     @Override

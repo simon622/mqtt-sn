@@ -189,4 +189,24 @@ public final class MqttsnBrokerOptions {
     static boolean nonEmpty(String val){
         return !Objects.isNull(val) && "".equals(val.trim());
     }
+
+    @Override
+    public String toString() {
+        return "MqttsnBrokerOptions{" +
+                "connectOnStartup=" + connectOnStartup +
+                ", managedConnections=" + managedConnections +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", keepAlive=" + keepAlive +
+                ", connectionTimeout=" + connectionTimeout +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", protocol='" + protocol + '\'' +
+                ", keystoreLocation='" + keystoreLocation + '\'' +
+                ", keystorePassword='" + keystorePassword + '\'' +
+                ", keyPassword='" + keyPassword + '\'' +
+                ", certificateFileLocation='" + certificateFileLocation + '\'' +
+                ", privateKeyFileLocation='" + privateKeyFileLocation + '\'' +
+                '}';
+    }
 }

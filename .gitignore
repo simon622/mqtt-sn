@@ -29,3 +29,5 @@ mqtt-sn-client-sec/
 /client.properties
 /config.properties
 /gateway.properties
+/gateway-keystore.properties
+/gateway-keystore-aws.properties

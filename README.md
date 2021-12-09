@@ -134,7 +134,7 @@ pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend be
 maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
 
 ### Related people & projects
-Our goal on the [MQTT-SN technial committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments.
+Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments.
 
 Project | Author | Link | Description
 ------------ | ------------- | ------------- | -------------

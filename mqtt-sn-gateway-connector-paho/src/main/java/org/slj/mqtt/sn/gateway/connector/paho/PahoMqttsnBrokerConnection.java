@@ -81,6 +81,9 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
         }
     }
 
+    /**
+     * hook method called on successful initial connection
+     */
     protected void onClientConnected(MqttClient client){
 
     }

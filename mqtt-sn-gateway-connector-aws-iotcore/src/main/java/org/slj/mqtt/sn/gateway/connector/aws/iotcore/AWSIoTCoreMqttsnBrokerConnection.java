@@ -64,15 +64,12 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
         return Math.max(options.getConnectionTimeout() * 1000, MIN_TIMEOUT);
     }
 
-
-
     public void connect() throws MqttsnBrokerException {
         if(client == null || !isConnected()){
             synchronized (this){
                 if(client == null || !isConnected()){
                     try {
                         if(client != null){
-                            client.disconnect();
                             client = null;
                         }
                         initClient();
@@ -144,11 +141,14 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         try {
-            logger.log(Level.INFO, "closing connection to broker");
-            client.disconnect(getOperationTimeout());
-            client = null;
+            logger.log(Level.INFO, "disconnecting & closing connection to broker");
+            if(client != null){
+                if(client.getConnectionStatus() != AWSIotConnectionStatus.DISCONNECTED){
+                    client.disconnect(getOperationTimeout(), true);
+                }
+            }
         } catch(AWSIotException | AWSIotTimeoutException e){
             logger.log(Level.SEVERE, "error encountered closing AWS IoT client;", e);
         } finally {
@@ -159,20 +159,23 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
     @Override
     public boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException {
         try {
-            logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
-            client.subscribe(new AWSIotTopic(topicPath, AWSIotQos.valueOf(awsSafeQoS(QoS))){
-                @Override
-                public void onMessage(AWSIotMessage message) {
-                    try {
-                        byte[] data = message.getPayload();
-                        logger.log(Level.INFO, String.format("received message from AWS IoT broker [%s] -> [%s] bytes", getTopic(), data.length));
-                        receive(getTopic(), data, message.getQos().getValue());
-                    } catch(Exception e){
-                        logger.log(Level.SEVERE, String.format("error receiving message from broker;"), e);
+            if(isConnected()){
+                logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
+                client.subscribe(new AWSIotTopic(topicPath, AWSIotQos.valueOf(awsSafeQoS(QoS))){
+                    @Override
+                    public void onMessage(AWSIotMessage message) {
+                        try {
+                            byte[] data = message.getPayload();
+                            logger.log(Level.INFO, String.format("received message from AWS IoT broker [%s] -> [%s] bytes", getTopic(), data.length));
+                            receive(getTopic(), data, message.getQos().getValue());
+                        } catch(Exception e){
+                            logger.log(Level.SEVERE, String.format("error receiving message from broker;"), e);
+                        }
                     }
-                }
-            });
-            return true;
+                });
+                return true;
+            }
+            return false;
         } catch(AWSIotException e){
             throw new MqttsnBrokerException(e);
         }
@@ -181,9 +184,12 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
     @Override
     public boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException {
         try {
-            logger.log(Level.INFO, String.format("unsubscribing broker from [%s]", topicPath));
-            client.unsubscribe(topicPath);
-            return true;
+            if(isConnected()){
+                logger.log(Level.INFO, String.format("unsubscribing broker from [%s]", topicPath));
+                client.unsubscribe(topicPath);
+                return true;
+            }
+            return false;
         } catch(AWSIotException e){
             throw new MqttsnBrokerException(e);
         }

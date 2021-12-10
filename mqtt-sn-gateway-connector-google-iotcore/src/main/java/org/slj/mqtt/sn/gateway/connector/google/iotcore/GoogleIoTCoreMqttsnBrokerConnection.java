@@ -56,11 +56,6 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
 
     private Logger logger = Logger.getLogger(GoogleIoTCoreMqttsnBrokerConnection.class.getName());
 
-    //SimonsFirstRegistry
-    //SimonsFirstDevice
-    //europe-west1
-    //RS256
-
     static final String ALG_RSA = "RS256";
     static final String ALG_ES = "ES256";
 
@@ -85,29 +80,35 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
 
     @Override
     public boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException {
-
-        ///devices/{device_ID_to_attach}/attach
-        logger.log(Level.INFO, String.format("attaching gateway device " + context.getId()));
-
-        //-- tell IoT core we are attaching a device
-        super.publish(context, String.format("/devices/%s/attach", context.getId()), 1, false, new byte[0]);
-
-        //-- listen for a devices config changes
-        subscribe(context, String.format("/devices/%s/config", context.getId()), 0);
-        return true;
+        if(isConnected()){
+            logger.log(Level.INFO, String.format("attaching [%s] device by clientId", context.getId()));
+            //-- tell IoT core we are attaching a device & register for device changes
+            if(super.publish(context, String.format("/devices/%s/attach", context.getId()), 1, false, new byte[0])){
+                logger.log(Level.INFO, String.format("device [%s] attached, subscribing or config changes", context.getId()));
+                subscribe(context, String.format("/devices/%s/config", context.getId()), 0);
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
-
-        logger.log(Level.INFO, String.format("detaching gateway device " + context.getId()));
-        super.publish(context, String.format("/devices/%s/detach", context.getId()), 1, false, new byte[0]);
-        return true;
+        if(isConnected()){
+            logger.log(Level.INFO, String.format("detaching gateway device " + context.getId()));
+            super.publish(context, String.format("/devices/%s/detach", context.getId()), 1, false, new byte[0]);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException {
-        return super.publish(context, topicPath, 1, false, data);
+        if(isConnected()){
+            super.publish(context, topicPath, 1, false, data);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -161,6 +162,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
                         createJwtRsa(getGoogleIoTProjectId(options),
                                 options.getPrivateKeyFileLocation()).toCharArray());
             }
+            logger.log(Level.INFO, new String(connectOptions.getPassword()));
             return connectOptions;
         } catch(Exception e){
             throw new MqttsnBrokerException(e);
@@ -185,7 +187,6 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return jwtBuilder.signWith(SignatureAlgorithm.RS256, kf.generatePrivate(spec)).compact();
     }
-    // [END iot_mqtt_jwt]
 
     /** Create a Cloud IoT Core JWT for the given project id, signed with the given ES key. */
     private static String createJwtEs(String projectId, String privateKeyFile)
@@ -197,7 +198,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
         JwtBuilder jwtBuilder =
                 Jwts.builder()
                         .setIssuedAt(now.toDate())
-                        .setExpiration(now.plusMinutes(20).toDate())
+                        .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
                         .setAudience(projectId);
 
         byte[] keyBytes = Files.readAllBytes(Paths.get(privateKeyFile));

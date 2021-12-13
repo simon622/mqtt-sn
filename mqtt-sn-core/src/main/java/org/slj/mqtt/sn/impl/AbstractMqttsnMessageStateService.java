@@ -578,16 +578,20 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         int startAt = Math.max(lastUsedMsgIds.get(context) == null ? 1 : lastUsedMsgIds.get(context) + 1,
                 registry.getOptions().getMsgIdStartAt());
 
+        startAt = startAt % MqttsnConstants.USIGNED_MAX_16;
+        startAt = Math.max(Math.max(1, registry.getOptions().getMsgIdStartAt()), startAt);
+
         Set<Integer> set = map.keySet();
         while(set.contains(new Integer(startAt))){
             startAt = ++startAt % MqttsnConstants.USIGNED_MAX_16;
+            startAt = Math.max(registry.getOptions().getMsgIdStartAt(), startAt);
         }
 
         if(set.contains(new Integer(startAt)))
             throw new MqttsnRuntimeException("cannot assign msg id " + startAt);
 
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("next id available for context [%s] is [%s]", context, startAt));
+        if(logger.isLoggable(Level.INFO)){
+            logger.log(Level.INFO, String.format("next id available for context [%s] is [%s]", context, startAt));
         }
 
         return startAt;
@@ -805,5 +809,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         public static LastIdContext from(IMqttsnContext context, InflightMessage.DIRECTION direction){
             return new LastIdContext(context, direction);
         }
+    }
+
+    public static void main(String[] args) {
+        System.err.println(65535 % MqttsnConstants.USIGNED_MAX_16);
     }
 }

@@ -59,10 +59,10 @@ mvn -f mqtt-sn-codec clean install
 mvn -f mqtt-sn-core clean install
 mvn -f mqtt-sn-gateway clean install
 mvn -f mqtt-sn-client clean install
-mvn -f mqtt-sn-gateway-paho-connector clean package
+mvn -f mqtt-sn-gateway-connector-paho clean package
 ```
 
-This will yield a file in your mqtt-sn-gateway-paho-connector/target directory that will be called mqtt-sn-gateway-<version>.jar. You can then start a broker
+This will yield a file in your mqtt-sn-gateway-connector-paho/target directory that will be called mqtt-sn-gateway-<version>.jar. You can then start a broker
 from a command line using;
 
 ```shell script

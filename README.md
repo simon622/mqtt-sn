@@ -146,8 +146,3 @@ Paho Mqtt C Client | Various | [GitHub Repository](https://github.com/eclipse/pa
 Paho Mqtt C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.embedded-c) | Fully featured embedded MQTT C client library
 Paho Mqtt-Sn C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt-sn.embedded-c) | C implementation of a transparent MQTT-SN gateway, client and codecs
 Mqtt-sn Transparent Java Gateway | Ian Craggs & jsaak | [GitHub Repository](https://github.com/jsaak/mqtt-sn-gateway) | Java implementation of a transparent MQTT-SN gateway, c
-
-### Aggregating gateway diagram
-
-![MQTT-SN Aggregating Gateway Architecture](/images/mqttsn-arch.png)
-

@@ -43,6 +43,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     protected Map<IMqttsnContext, IMqttsnSessionState> sessionLookup;
 
+    private static final int MIN_SESSION_MONITOR_CHECK = 30000;
     private AtomicLong expansionCount = new AtomicLong(0);
 
     @Override
@@ -58,25 +59,37 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             while(itr.hasNext()){
                 IMqttsnContext context = itr.next();
                 IMqttsnSessionState state = sessionLookup.get(context);
-                deamon_validateKeepAlive(state);
-            }
-        }
-        return 10000;
-    }
 
-    protected void deamon_validateKeepAlive(IMqttsnSessionState state){
-        if(state.getClientState() == MqttsnClientState.CONNECTED ||
-                state.getClientState() == MqttsnClientState.ASLEEP){
-            long time = System.currentTimeMillis();
-            if(state != null && state.getKeepAlive() > 0){
-                long lastSeen = state.getLastSeen().getTime();
-                long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
-                if(expires < time){
-                    logger.log(Level.WARNING, String.format("keep-alive deamon detected stale session for [%s], disconnecting", state.getContext()));
-                    state.setClientState(MqttsnClientState.DISCONNECTED);
+                //check keep alive timing
+                if(state.getClientState() == MqttsnClientState.CONNECTED ||
+                        state.getClientState() == MqttsnClientState.ASLEEP){
+                    long time = System.currentTimeMillis();
+                    if(state != null && state.getKeepAlive() > 0){
+                        long lastSeen = state.getLastSeen().getTime();
+                        long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
+                        if(expires < time){
+                            markSessionDisconnected(state);
+                        }
+                    }
+                }
+                else  if(state.getClientState() == MqttsnClientState.DISCONNECTED){
+                    // check disconnected time
+                    long time = System.currentTimeMillis();
+                    Date lastSeen = state.getLastSeen();
+                    long expires = lastSeen.getTime() + (registry.getOptions().getRemoveDisconnectedSessionsSeconds() * 1000);
+                    if(expires < time){
+                        logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
+                        itr.remove();
+                    }
                 }
             }
         }
+        return MIN_SESSION_MONITOR_CHECK;
+    }
+
+    protected void markSessionDisconnected(IMqttsnSessionState state){
+        logger.log(Level.WARNING, String.format("marking inactive session [%s], disconnected", state.getContext()));
+        state.setClientState(MqttsnClientState.DISCONNECTED);
     }
 
     @Override
@@ -134,7 +147,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                             registry.getOptions().isSleepClearsRegistrations());
                 } else {
                     logger.log(Level.INFO, String.format("[%s] disconnecting client", state.getContext()));
-                    sessionLookup.remove(state.getContext());
+                    clear(state.getContext());
                 }
             }
         }
@@ -270,6 +283,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     public void cleanSession(IMqttsnContext context, boolean deepClean) throws MqttsnException {
 
+        logger.log(Level.INFO, String.format(String.format("cleaning session state [%s], deepClean ? [%s]", context, deepClean)));
         //clear down all prior session state
         synchronized (context){
             if(deepClean){
@@ -294,7 +308,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     @Override
     public void clear(IMqttsnContext context) {
-        logger.log(Level.INFO, String.format(String.format("removing context from active/sleepings sessions [%s]", context)));
+        logger.log(Level.INFO, String.format(String.format("removing session reference [%s]", context)));
         sessionLookup.remove(context);
     }
 
@@ -306,8 +320,6 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         }
         return null;
     }
-
-
 
     @Override
     public void receiveToSessions(String topicPath, byte[] payload, int QoS) throws MqttsnException {

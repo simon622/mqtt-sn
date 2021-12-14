@@ -170,6 +170,12 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_CONGESTION_WAIT = 5;
 
+    /**
+     * The default time (in seconds) after which a disconnected session becomes eligible
+     * for removal
+     */
+    public static final int DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS = 60 * 60 * 24 * 7;
+
     private String contextId;
     private int transportHandoffThreadCount = DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
@@ -196,10 +202,25 @@ public class MqttsnOptions {
     private int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
     private int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
     private int congestionWait = DEFAULT_CONGESTION_WAIT;
+    private int removeDisconnectedSessionsSeconds = DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS;
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
 
     private Map<String, Integer> predefinedTopics = new HashMap<>();
     private volatile Map<String, NetworkAddress> networkAddressEntries;
+
+    /**
+     * How many seconds after a client is last seen should disconnected sessions be removed from
+     * the session state service
+     *
+     * @param removeDisconnectedSessionsSeconds - Number of threads to use to service outbound queue processing
+     *
+     * @see {@link MqttsnOptions#DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS}
+     * @return this configuration
+     */
+    public MqttsnOptions withRemoveDisconnectedSessionsSeconds(int removeDisconnectedSessionsSeconds){
+        this.removeDisconnectedSessionsSeconds = removeDisconnectedSessionsSeconds;
+        return this;
+    }
 
     /**
      * How many threads should be used to process connected context message queues
@@ -715,5 +736,9 @@ public class MqttsnOptions {
 
     public int getCongestionWait() {
         return congestionWait;
+    }
+
+    public int getRemoveDisconnectedSessionsSeconds() {
+        return removeDisconnectedSessionsSeconds;
     }
 }

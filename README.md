@@ -25,7 +25,7 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-gateway-connector-google-iotcore](/mqtt-sn-gateway-connector-google-iotcore) | Java 1.8, Maven | Optional | Connector to bind to a Google IoT Core Gateway using pkcs8 (RS256) 
 [mqtt-sn-gateway-connector-paho](/mqtt-sn-gateway-connector-paho) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
 
-### Gateway system overview
+### Gateway system diagram
 The system was built to be pluggable, to allow implementations to provide their own functionality and implementations where needed. Some aspects of the system are mandatory, others (for example AAA, Backend broker implementation etc) can be plugged in as required by a deployment.
 ![System Overview](/images/MQTT-SN-Aggregating-Gateway-Sys.png)
 

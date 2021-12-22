@@ -41,7 +41,8 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
     public boolean temporaryAuthorizeContext(INetworkContext context) {
         try {
-            IMqttsnContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context);
+            IMqttsnContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context,
+                    getRegistry().getCodec().getProtocolVersion());
             if(mqttsnContext != null){
                 registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                 return true;

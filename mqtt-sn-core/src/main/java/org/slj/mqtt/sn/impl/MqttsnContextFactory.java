@@ -59,10 +59,11 @@ public class MqttsnContextFactory<T extends IMqttsnRuntimeRegistry>
     }
 
     @Override
-    public IMqttsnContext createTemporaryApplicationContext(INetworkContext networkContext) throws MqttsnSecurityException {
+    public IMqttsnContext createTemporaryApplicationContext(INetworkContext networkContext, int protocolVersion) throws MqttsnSecurityException {
 
-        logger.log(Level.INFO, String.format("create temporary mqtt-sn context for [%s]", networkContext));
+        logger.log(Level.INFO, String.format("create temporary mqtt-sn context for [%s], protocolVersion [%s]", networkContext, protocolVersion));
         MqttsnContext context = new MqttsnContext(null);
+        context.setProtocolVersion(protocolVersion);
         return context;
     }
 }

@@ -42,7 +42,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     @Override
     public PublishData getData(IMqttsnMessage message) {
         MqttsnPublish publish = (MqttsnPublish) message ;
-        return new PublishData(publish.getQoS(), publish.getData(), publish.isRetainedPublish());
+        return new PublishData(Math.max(publish.getQoS(), 0), publish.getData(), publish.isRetainedPublish());
     }
 
     @Override

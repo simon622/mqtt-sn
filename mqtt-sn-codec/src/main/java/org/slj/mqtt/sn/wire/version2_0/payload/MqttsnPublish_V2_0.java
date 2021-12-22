@@ -120,7 +120,7 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     }
 
     public int getQoS() {
-        return QoS;
+        return QoS == 3 ? -1 : QoS;
     }
 
     public void setQoS(int qoS) {
@@ -273,7 +273,7 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         MqttsnSpecificationValidator.validatePacketIdentifier(id);
         MqttsnSpecificationValidator.validateUInt16(topicLength);
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
-        MqttsnSpecificationValidator.validateQoS(QoS);
+        MqttsnSpecificationValidator.validateQoS(getQoS());
         MqttsnSpecificationValidator.validatePublishData(data);
     }
 }

@@ -73,6 +73,6 @@ public interface IMqttsnContextFactory <T extends IMqttsnRuntimeRegistry> {
      * @return the new instance of the application context coupled to the network context
      * @throws MqttsnSecurityException - The supplied clientId was not allowed on the gateway
      */
-    IMqttsnContext createTemporaryApplicationContext(INetworkContext context) throws MqttsnSecurityException;
+    IMqttsnContext createTemporaryApplicationContext(INetworkContext context, int protocolVersion) throws MqttsnSecurityException;
 
 }

@@ -110,7 +110,7 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateQoS(QoS);
+        MqttsnSpecificationValidator.validateQoS(getQoS());
         MqttsnSpecificationValidator.validatePublishData(data);
     }
 }

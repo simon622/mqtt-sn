@@ -99,6 +99,15 @@ public interface IMqttsnMessageFactory {
     IMqttsnMessage createConnack(int returnCode)
             throws MqttsnCodecException;
 
+
+    /**
+     * The CONNACK message is sent by the server in response to a connection request from a client.
+     * @param returnCode: see above
+     */
+    IMqttsnMessage createConnack(int returnCode, boolean sessionExists, String assignedClientId, long sessionExpiryInterval)
+            throws MqttsnCodecException;
+
+
     /**
      * The WILLTOPICREQ message is sent by the GW to request a client for sending the Will topic name.
      */
@@ -374,9 +383,17 @@ public interface IMqttsnMessageFactory {
      * The receipt of this message is also acknowledged by the gateway by means of a DISCONNECT message
      * (without a duration field).
      *
-     * @param duration - length of sleeping session
+     * @param sessionExpiryInterval - length of sleeping session
      */
-    IMqttsnMessage createDisconnect(int duration)
+    IMqttsnMessage createDisconnect(long sessionExpiryInterval)
+            throws MqttsnCodecException;
+
+    /**
+     * A DISCONNECT message for use in error conditions including the returnCode and reasonString
+     *
+     * @param returnCode - return code to send
+     */
+    IMqttsnMessage createDisconnect(int returnCode, String reasonString)
             throws MqttsnCodecException;
 
     /**

@@ -484,7 +484,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
         AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
                 withTransport(transport).
-                withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+                withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0);
         return registry;
     }
 

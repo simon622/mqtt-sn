@@ -37,7 +37,7 @@ public interface IMqttsnBrokerService {
 
     ConnectResult connect(IMqttsnContext context, String clientId, boolean cleanSession, int keepAlive) throws MqttsnBrokerException;
 
-    DisconnectResult disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException ;
+    DisconnectResult disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException ;
 
     PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException;
 

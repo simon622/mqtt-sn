@@ -93,7 +93,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
     }
 
     @Override
-    public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
+    public boolean disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException {
         if(isConnected()){
             logger.log(Level.INFO, String.format("detaching gateway device " + context.getId()));
             super.publish(context, String.format("/devices/%s/detach", context.getId()), 1, false, new byte[0]);

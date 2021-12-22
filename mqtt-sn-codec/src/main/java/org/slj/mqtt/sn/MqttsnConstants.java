@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 public interface MqttsnConstants {
 
     //-- protocol versions
+    int PROTOCOL_VERSION_UNKNOWN = 0x00;
     int PROTOCOL_VERSION_1_2 = 0x01;
     int PROTOCOL_VERSION_2_0 = 0x02;
 
@@ -86,7 +87,8 @@ public interface MqttsnConstants {
     int RETURN_CODE_ACCEPTED = 0x00,
             RETURN_CODE_REJECTED_CONGESTION = 0x01,
             RETURN_CODE_INVALID_TOPIC_ID = 0x02,
-            RETURN_CODE_SERVER_UNAVAILABLE = 0x03;
+            RETURN_CODE_SERVER_UNAVAILABLE = 0x03,
+            RETURN_CODE_PAYLOAD_FORMAT_INVALID = 0x99;
 
     int QoS0 = 0,
             QoS1 = 1,

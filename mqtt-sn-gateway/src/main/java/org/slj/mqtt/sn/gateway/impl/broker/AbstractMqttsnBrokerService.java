@@ -84,7 +84,7 @@ public abstract class AbstractMqttsnBrokerService
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
+    public DisconnectResult disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException {
         IMqttsnBrokerConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnBrokerException("underlying broker connection was not connected");

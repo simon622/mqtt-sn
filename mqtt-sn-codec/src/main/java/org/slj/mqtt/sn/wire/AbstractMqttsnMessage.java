@@ -118,7 +118,7 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
         return decodedString;
     }
 
-    protected void writeUTF8EncodedStringData(byte[] dest, int startIdx, String stringData) {
+    protected static void writeUTF8EncodedStringData(byte[] dest, int startIdx, String stringData) {
 
         byte[] arr = stringData.getBytes(MqttsnConstants.CHARSET);
         if(arr.length > MqttsnConstants.UNSIGNED_MAX_16)
@@ -182,5 +182,11 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
             length = (data[0] & 0xFF);
         }
         return length;
+    }
+
+    public static void main(String[] args) {
+        byte[] arr = new byte[7];
+        writeUTF8EncodedStringData(arr, 0, "simon");
+        System.out.println(MqttsnWireUtils.toBinary(arr));
     }
 }

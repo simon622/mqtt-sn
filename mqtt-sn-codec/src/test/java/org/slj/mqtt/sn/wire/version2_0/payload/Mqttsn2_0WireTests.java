@@ -25,7 +25,11 @@
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.junit.Before;
+import org.junit.Test;
+import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.wire.version1_2.payload.Mqttsn1_2WireTests;
 
 public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
@@ -36,5 +40,11 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
         factory = codec.createMessageFactory();
     }
 
+
+    @Test
+    public void testMqttsnConnack() throws MqttsnCodecException {
+        IMqttsnMessage message = factory.createConnack(MqttsnConstants.RETURN_CODE_ACCEPTED, true, "XXXXX", 240);
+        testWireMessage(message);
+    }
 
 }

@@ -27,10 +27,11 @@ package org.slj.mqtt.sn.wire.version1_2.payload;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnDisconnectPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnDisconnect extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public class MqttsnDisconnect extends AbstractMqttsnMessage implements IMqttsnMessageValidator, IMqttsnDisconnectPacket {
 
     protected int duration;
 

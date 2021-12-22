@@ -22,11 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.spi;
 
-public interface IMqttsnContext extends IContextObject {
-
-    String getId();
-
-    int getProtocolVersion();
+public interface IMqttsnDisconnectPacket {
 }

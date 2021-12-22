@@ -53,7 +53,7 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 7 + (assignedClientId == null ? 0 : assignedClientId.length());
+        int length = 7 + (assignedClientId == null ? 0 : assignedClientId.length() + 2);
         byte[] msg;
         int idx = 0;
         if ((length) > 0xFF) {
@@ -68,6 +68,7 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         }
 
         msg[idx++] = (byte) getMessageType();
+        msg[idx++] = (byte) getReturnCode();
 
         writeUInt32(msg, idx, sessionExpiryInterval);
         idx += 4;

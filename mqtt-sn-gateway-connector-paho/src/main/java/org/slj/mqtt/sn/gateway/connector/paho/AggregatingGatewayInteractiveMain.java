@@ -49,7 +49,7 @@ public class AggregatingGatewayInteractiveMain {
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingBrokerService(brokerOptions)).
                         withTransport(createTransport()).
-                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0);
             }
         });
     }

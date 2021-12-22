@@ -134,14 +134,17 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public void disconnect(IMqttsnSessionState state, int duration) throws MqttsnException {
+    public void disconnect(IMqttsnSessionState state, long duration) throws MqttsnException {
         DisconnectResult result = null;
         synchronized (state.getContext()){
             result = registry.getBrokerService().disconnect(state.getContext(), duration);
             if(!result.isError()){
                 if(duration > 0){
                     logger.log(Level.INFO, String.format("[%s] setting client state asleep for [%s]", state.getContext(), duration));
-                    state.setKeepAlive(duration);
+
+                    //TODO - the gateway should use the sei for sleep monitoring
+                    state.setKeepAlive((int) duration);
+                    state.setSessionExpiryInterval(duration);
                     state.setClientState(MqttsnClientState.ASLEEP);
                     registry.getTopicRegistry().clear(state.getContext(),
                             registry.getOptions().isSleepClearsRegistrations());

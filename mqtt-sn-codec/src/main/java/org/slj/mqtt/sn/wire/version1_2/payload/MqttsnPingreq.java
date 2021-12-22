@@ -31,7 +31,8 @@ import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
+public class MqttsnPingreq extends AbstractMqttsnMessage
+        implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
 
     protected String clientId;
 

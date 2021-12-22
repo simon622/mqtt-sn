@@ -28,13 +28,14 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.spi.IMqttsnPublishPacket;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.AbstractMqttsnMessageWithTopicData;
 
 import java.util.Arrays;
 
-public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator, IMqttsnPublishPacket {
 
     public boolean needsId() {
         return true;

@@ -101,6 +101,12 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
+    public IMqttsnMessage createConnack(int returnCode, boolean sessionExists, String assignedClientId, long sessionExpiryInterval)
+            throws MqttsnCodecException {
+        return createConnack(returnCode);
+    }
+
+    @Override
     public IMqttsnMessage createWillTopicReq() throws MqttsnCodecException {
         MqttsnWilltopicreq msg = new MqttsnWilltopicreq();
         return msg;
@@ -372,10 +378,21 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createDisconnect(int duration) throws MqttsnCodecException {
+    public IMqttsnMessage createDisconnect(long duration) throws MqttsnCodecException {
+
+        if(duration > MqttsnConstants.UNSIGNED_MAX_16){
+            throw new MqttsnCodecException("invalid disconnect duration for codec");
+        }
+        MqttsnDisconnect msg = new MqttsnDisconnect();
+        msg.setDuration((int) duration);
+        msg.validate();
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createDisconnect(int returnCode, String reasonString) throws MqttsnCodecException {
 
         MqttsnDisconnect msg = new MqttsnDisconnect();
-        msg.setDuration(duration);
         msg.validate();
         return msg;
     }

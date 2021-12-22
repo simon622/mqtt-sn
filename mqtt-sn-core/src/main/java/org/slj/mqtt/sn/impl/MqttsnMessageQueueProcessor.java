@@ -145,6 +145,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
                 return res;
             } catch (MqttsnException e) {
 
+                logger.log(Level.WARNING, String.format("encountered error dequeing publish"), e);
                 //-- error so back off a little
                 return RESULT.BACKOFF_PROCESS;
             }

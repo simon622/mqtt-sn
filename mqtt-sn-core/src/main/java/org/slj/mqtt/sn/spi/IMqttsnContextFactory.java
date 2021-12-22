@@ -64,7 +64,7 @@ public interface IMqttsnContextFactory <T extends IMqttsnRuntimeRegistry> {
      * @return the new instance of the application context coupled to the network context
      * @throws MqttsnSecurityException - The supplied clientId was not allowed on the gateway
      */
-    IMqttsnContext createInitialApplicationContext(INetworkContext context, String clientId) throws MqttsnSecurityException;
+    IMqttsnContext createInitialApplicationContext(INetworkContext context, String clientId, int protocolVersion) throws MqttsnSecurityException;
 
     /**
      * No application existed for the network context OR a new clientId was detected, so we

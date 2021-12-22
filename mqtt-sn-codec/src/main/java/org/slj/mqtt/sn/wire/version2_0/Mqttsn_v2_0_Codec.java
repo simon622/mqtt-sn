@@ -26,11 +26,13 @@ package org.slj.mqtt.sn.wire.version2_0;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
+import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
@@ -47,6 +49,18 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
 
     @Override
     public boolean isPuback(IMqttsnMessage message) { return message instanceof MqttsnPuback_V2_0; }
+
+    @Override
+    public PublishData getData(IMqttsnMessage message) {
+        MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message ;
+        return new PublishData(publish.getQoS(), publish.getData(), publish.isRetainedPublish());
+    }
+
+    @Override
+    public int getQoS(IMqttsnMessage message) {
+        MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message ;
+        return publish.getQoS();
+    }
 
     @Override
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
@@ -66,7 +80,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 msg = new MqttsnConnect_V2_0();
                 break;
             case MqttsnConstants.CONNACK:
-                validateLengthEquals(data, 7);
+                validateLengthGreaterThanOrEquals(data, 7);
                 msg = new MqttsnConnack_V2_0();
                 break;
             case MqttsnConstants.REGACK:
@@ -126,5 +140,15 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
             }
         }
         return messageFactory;
+    }
+
+    @Override
+    public boolean supportsVersion(int protocolVersion) throws MqttsnCodecException {
+        return protocolVersion == MqttsnConstants.PROTOCOL_VERSION_2_0;
+    }
+
+    @Override
+    public int getProtocolVersion() throws MqttsnCodecException {
+        return MqttsnConstants.PROTOCOL_VERSION_2_0;
     }
 }

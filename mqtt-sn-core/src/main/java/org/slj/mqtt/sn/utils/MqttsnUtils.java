@@ -162,6 +162,16 @@ public class MqttsnUtils {
         return false;
     }
 
+    public static <T extends Object> boolean containsInt(int[] haystack, int needle){
+        if(haystack.length == 0) return false;
+        for (int i = 0; i < haystack.length; i++) {
+            if(haystack[i] == needle){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean validTopicScheme(int topicIdType, byte[] topicBytes, boolean topicDataAsString) {
         if(topicIdType == MqttsnConstants.TOPIC_PREDEFINED){
             return topicBytes.length == 2;

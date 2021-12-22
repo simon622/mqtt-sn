@@ -27,11 +27,15 @@ package org.slj.mqtt.sn.wire.version2_0.payload;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnConnectPacket;
+import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.spi.IMqttsnProtocolVersionPacket;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
 
-public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
+        implements IMqttsnMessageValidator, IMqttsnIdentificationPacket, IMqttsnProtocolVersionPacket, IMqttsnConnectPacket {
 
     protected int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
     protected boolean auth;
@@ -214,7 +218,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     @Override
     public String toString() {
         return "MqttsnConnect_V2_0{" +
-                ", protocolVersion=" + protocolVersion +
+                "protocolVersion=" + protocolVersion +
                 ", auth=" + auth +
                 ", will=" + will +
                 ", cleanStart=" + cleanStart +

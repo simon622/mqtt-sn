@@ -87,6 +87,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
                 NetworkAddress address = options.getNetworkAddressEntries().get(key);
                 NetworkContext networkContext = new NetworkContext(address);
                 MqttsnContext sessionContext = new MqttsnContext(key);
+                sessionContext.setProtocolVersion(getCodec().getProtocolVersion());
                 networkAddressRegistry.bindContexts(networkContext, sessionContext);
             }
         }

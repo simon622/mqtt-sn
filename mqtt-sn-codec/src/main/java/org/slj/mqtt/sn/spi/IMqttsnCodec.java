@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 
 /**
  * A codec contains all the functionality to marshall and unmarshall
@@ -42,6 +43,12 @@ public interface IMqttsnCodec {
      * @return - Does the message represent a PUBLISH
      */
     PublishData getData(IMqttsnMessage message);
+
+
+    /**
+     * @return - Get the QoS from the supplied messages
+     */
+    int getQoS(IMqttsnMessage message);
 
     /**
      * @return - Does the message represent a PUBLISH
@@ -117,4 +124,16 @@ public interface IMqttsnCodec {
      * @throws MqttsnCodecException
      */
     void validate(IMqttsnMessage message) throws MqttsnCodecException;
+
+    /**
+     * Determine if the codec supports the protocol version presented by the client
+     * @param protocolVersion
+     */
+    boolean supportsVersion(int protocolVersion) throws MqttsnCodecException;
+
+
+    /**
+     * Returns the protocolVersion that this codec supports. Where is supports multiple, the highest should be chosen
+     */
+    int getProtocolVersion() throws MqttsnCodecException;
 }

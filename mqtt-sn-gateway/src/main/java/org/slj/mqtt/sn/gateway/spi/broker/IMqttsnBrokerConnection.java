@@ -34,7 +34,7 @@ public interface IMqttsnBrokerConnection extends Closeable {
 
     void close();
 
-    boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException;
+    boolean disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException;
 
     boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException;
 

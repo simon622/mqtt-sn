@@ -46,6 +46,12 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     }
 
     @Override
+    public int getQoS(IMqttsnMessage message) {
+        MqttsnPublish publish = (MqttsnPublish) message ;
+        return publish.getQoS();
+    }
+
+    @Override
     public boolean isDisconnect(IMqttsnMessage message) {
         return message instanceof MqttsnDisconnect;
     }
@@ -81,6 +87,8 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
         MqttsnSpecificationValidator.validatePacketLength(data);
         return AbstractMqttsnMessage.readMessageLength(data);
     }
+
+
 
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
 
@@ -236,5 +244,15 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
             IMqttsnMessageValidator v = (IMqttsnMessageValidator) message;
             v.validate();
         }
+    }
+
+    @Override
+    public boolean supportsVersion(int protocolVersion) throws MqttsnCodecException {
+        return protocolVersion == MqttsnConstants.PROTOCOL_VERSION_1_2;
+    }
+
+    @Override
+    public int getProtocolVersion() throws MqttsnCodecException {
+        return MqttsnConstants.PROTOCOL_VERSION_1_2;
     }
 }

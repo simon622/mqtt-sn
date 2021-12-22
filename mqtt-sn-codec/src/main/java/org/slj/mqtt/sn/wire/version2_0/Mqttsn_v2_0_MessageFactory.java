@@ -80,6 +80,18 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
+    public IMqttsnMessage createConnack(int returnCode, boolean sessionExists, String assignedClientId, long sessionExpiryInterval)
+            throws MqttsnCodecException {
+
+        MqttsnConnack_V2_0 msg = new MqttsnConnack_V2_0();
+        msg.setReturnCode(returnCode);
+        msg.setAssignedClientId(assignedClientId);
+        msg.setSessionExpiryInterval(sessionExpiryInterval);
+        msg.validate();
+        return msg;
+    }
+
+    @Override
     public IMqttsnMessage createRegack(int topicAlias, int returnCode) throws MqttsnCodecException {
 
         //TODO
@@ -247,11 +259,21 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createDisconnect(int sessionExpiry) throws MqttsnCodecException {
+    public IMqttsnMessage createDisconnect(long sessionExpiry) throws MqttsnCodecException {
 
         MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
         msg.setSessionExpiryInterval(sessionExpiry);
         msg.setReasonString(null);
+        msg.validate();
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createDisconnect(int returnCode, String reasonString) throws MqttsnCodecException {
+
+        MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
+        msg.setReturnCode(returnCode);
+        msg.setReasonString(reasonString);
         msg.validate();
         return msg;
     }

@@ -54,7 +54,7 @@ public interface IMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry> extends
      * @return - true if we consider the context authorised, false otherwise
      * @throws MqttsnException - an error occurred
      */
-    boolean authorizeContext(INetworkContext context, String clientId)
+    boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion)
             throws MqttsnException;
 
     void receiveMessage(IMqttsnContext context, IMqttsnMessage message)

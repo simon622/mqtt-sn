@@ -59,7 +59,7 @@ public interface IMqttsnGatewaySessionRegistryService extends IMqttsnRegistry<IM
 
     void cleanSession(IMqttsnContext state, boolean deepClean) throws MqttsnException;
 
-    void disconnect(IMqttsnSessionState state, int duration) throws MqttsnException;
+    void disconnect(IMqttsnSessionState state, long sessionExpiryInterval) throws MqttsnException;
 
     void receiveToSessions(String topicPath, byte[] payload, int QoS) throws MqttsnException ;
 

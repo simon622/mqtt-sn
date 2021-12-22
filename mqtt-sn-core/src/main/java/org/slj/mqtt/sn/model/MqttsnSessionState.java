@@ -32,6 +32,7 @@ public class MqttsnSessionState implements IMqttsnSessionState {
     private MqttsnClientState state;
     private Date lastSeen;
     private int keepAlive;
+    private long sessionExpiryInterval;
     private Date sessionStarted;
 
     public MqttsnSessionState(IMqttsnContext context, MqttsnClientState state){
@@ -77,6 +78,16 @@ public class MqttsnSessionState implements IMqttsnSessionState {
     }
 
     @Override
+    public long getSessionExpiryInterval() {
+        return sessionExpiryInterval;
+    }
+
+    @Override
+    public void setSessionExpiryInterval(long sessionExpiryInterval) {
+        this.sessionExpiryInterval = sessionExpiryInterval;
+    }
+
+    @Override
     public Date getSessionStarted() {
         return sessionStarted;
     }
@@ -92,6 +103,7 @@ public class MqttsnSessionState implements IMqttsnSessionState {
                 ", state=" + state +
                 ", lastSeen=" + lastSeen +
                 ", keepAlive=" + keepAlive +
+                ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", sessionStarted=" + sessionStarted +
                 '}';
     }

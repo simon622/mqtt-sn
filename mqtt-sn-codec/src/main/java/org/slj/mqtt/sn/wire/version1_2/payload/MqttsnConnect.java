@@ -27,20 +27,23 @@ package org.slj.mqtt.sn.wire.version1_2.payload;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnConnectPacket;
 import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.spi.IMqttsnProtocolVersionPacket;
 
 /**
  * NB: despite the spec only allowing 23 chars in the clientId field, this type has been designed safely to support
  * clientIds which take the message into an extended type (> 255).
  */
-public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
+public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField
+        implements IMqttsnIdentificationPacket, IMqttsnMessageValidator, IMqttsnProtocolVersionPacket, IMqttsnConnectPacket {
 
     /* The Duration field is 2-octet long and specifies the duration of a time period in seconds.
     The maximum value that can be encoded is approximately 18 hours. */
     protected int duration;
 
-    protected int protocolId = MqttsnConstants.PROTOCOL_VERSION_1_2;
+    protected int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_1_2;
 
     /* 1-23 characters long string that uniquely identifies the client to the server */
     protected String clientId = null;
@@ -61,8 +64,8 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
         this.clientId = clientId;
     }
 
-    public int getProtocolId() {
-        return protocolId;
+    public int getProtocolVersion() {
+        return protocolVersion;
     }
 
     @Override
@@ -79,7 +82,7 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
             readFlags(data[2]);
         }
 
-        protocolId = readUInt8Adjusted(data, 3);
+        protocolVersion = readUInt8Adjusted(data, 3);
         duration = readUInt16Adjusted(data, 4);
 
         byte[] body = readRemainingBytesAdjusted(data, 6);
@@ -107,7 +110,7 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
 
         msg[idx++] = (byte) getMessageType();
         msg[idx++] = writeFlags();
-        msg[idx++] = (byte) protocolId; //protocol id
+        msg[idx++] = (byte) protocolVersion; //protocol id
 
         msg[idx++] = (byte) ((duration >> 8) & 0xFF);
         msg[idx++] = (byte) (duration & 0xFF);
@@ -124,7 +127,7 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
     public String toString() {
         final StringBuilder sb = new StringBuilder("MqttsnConnect{");
         sb.append("duration=").append(duration);
-        sb.append(", protocolId=").append(protocolId);
+        sb.append(", protocolVersion=").append(protocolVersion);
         sb.append(", clientId='").append(clientId).append('\'');
         sb.append(", will=").append(will);
         sb.append(", cleanSession=").append(cleanSession);
@@ -134,7 +137,7 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateProtocolId(protocolId);
+        MqttsnSpecificationValidator.validateProtocolId(protocolVersion);
         MqttsnSpecificationValidator.validateClientId(clientId);
         MqttsnSpecificationValidator.validateKeepAlive(duration);
     }

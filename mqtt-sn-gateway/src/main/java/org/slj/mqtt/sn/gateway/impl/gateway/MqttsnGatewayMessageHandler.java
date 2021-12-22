@@ -34,11 +34,11 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.IMqttsnSessionState;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 import java.util.logging.Level;
 
@@ -68,16 +68,16 @@ public class MqttsnGatewayMessageHandler
             //if they do NOT, the only time we can process messages
             //on their behalf is if its a CONNECT or a PUBLISH M 1
             boolean shouldContinue = false;
-            if(message instanceof MqttsnConnect){
+            if(message instanceof IMqttsnConnectPacket){
                 //this is ok
                 shouldContinue = true;
-            } else if(message instanceof MqttsnPublish){
-                MqttsnPublish p = (MqttsnPublish) message;
+            } else if(message instanceof IMqttsnPublishPacket){
+                IMqttsnPublishPacket p = (IMqttsnPublishPacket) message;
                 if(p.getQoS() == MqttsnConstants.QoSM1){
                     //this is ok
                     shouldContinue = true;
                 }
-            } else if(message instanceof MqttsnDisconnect){
+            } else if(message instanceof IMqttsnDisconnectPacket){
                 shouldContinue = true;
             }
             if(!shouldContinue){
@@ -125,27 +125,52 @@ public class MqttsnGatewayMessageHandler
     @Override
     protected IMqttsnMessage handleConnect(IMqttsnContext context, IMqttsnMessage connect) throws MqttsnException, MqttsnCodecException {
 
-        MqttsnConnect connectMessage = (MqttsnConnect) connect ;
+        String clientId = null;
+        boolean cleanStart = false;
+        int keepAlive = 0;
+        boolean will = false;
+        long sessionExpiryInterval = 0;
+        int maxPacketSize = MqttsnConstants.UNSIGNED_MAX_16;
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnConnect connectMessage = (MqttsnConnect) connect ;
+            clientId = connectMessage.getClientId();
+            cleanStart = connectMessage.isCleanSession();
+            keepAlive = connectMessage.getDuration();
+            will = connectMessage.isWill();
+        }
+        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnConnect_V2_0 connectMessage = (MqttsnConnect_V2_0) connect ;
+            clientId = connectMessage.getClientId();
+            cleanStart = connectMessage.isCleanStart();
+            will = connectMessage.isWill();
+            keepAlive = connectMessage.getKeepAlive();
+            sessionExpiryInterval = connectMessage.getSessionExpiryInterval();
+            maxPacketSize = connectMessage.getMaxPacketSize();
+        }
+
+
         if(registry.getAuthenticationService() != null){
-            if(!registry.getAuthenticationService().allowConnect(context, connectMessage.getClientId())){
-                logger.log(Level.WARNING, String.format("authentication service rejected client [%s]", connectMessage.getClientId()));
+            if(!registry.getAuthenticationService().allowConnect(context, clientId)){
+                logger.log(Level.WARNING, String.format("authentication service rejected client [%s]", clientId));
                 return registry.getMessageFactory().createConnack(MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
             }
         }
 
         IMqttsnSessionState state = getSessionState(context, true);
-        ConnectResult result = registry.getGatewaySessionService().connect(state, connectMessage.getClientId(),
-                connectMessage.getDuration(), connectMessage.isCleanSession());
+        ConnectResult result = registry.getGatewaySessionService().connect(state, clientId,
+                keepAlive, cleanStart);
 
         processSessionResult(result);
         if(result.isError()){
             return registry.getMessageFactory().createConnack(result.getReturnCode());
         }
         else {
-            if(connectMessage.isWill()){
+            if(will){
                 return registry.getMessageFactory().createWillTopicReq();
             } else {
-                return registry.getMessageFactory().createConnack(result.getReturnCode());
+                return registry.getMessageFactory().createConnack(
+                        result.getReturnCode(), false, clientId, sessionExpiryInterval);
             }
         }
     }
@@ -153,34 +178,48 @@ public class MqttsnGatewayMessageHandler
     @Override
     protected IMqttsnMessage handleDisconnect(IMqttsnContext context, IMqttsnMessage initialDisconnect, IMqttsnMessage receivedDisconnect) throws MqttsnException, MqttsnCodecException, MqttsnInvalidSessionStateException {
 
-        MqttsnDisconnect d = (MqttsnDisconnect) receivedDisconnect;
+        long keepAlive = 0;
+        String reasonString = null;
 
-        if(!MqttsnSpecificationValidator.validUInt16(d.getDuration())){
-            logger.log(Level.WARNING, String.format("invalid sleep duration specified, reject client [%s]", d.getDuration()));
-            return super.handleDisconnect(context, initialDisconnect, receivedDisconnect);
-        } else {
-            IMqttsnSessionState state = getSessionState(context, false);
-            //was disconnected already?
-
-            boolean needsResponse = initialDisconnect != null ||
-                    (state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED));
-            if(state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED)){
-                registry.getGatewaySessionService().disconnect(state, d.getDuration());
-            }
-            return needsResponse ?
-                        super.handleDisconnect(context, initialDisconnect, receivedDisconnect) : null;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnDisconnect d = (MqttsnDisconnect) receivedDisconnect;
+            keepAlive = d.getDuration();
         }
+        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnDisconnect_V2_0 d = (MqttsnDisconnect_V2_0) receivedDisconnect ;
+            keepAlive = d.getSessionExpiryInterval();
+            reasonString = d.getReasonString();
+        }
+
+        IMqttsnSessionState state = getSessionState(context, false);
+        boolean needsResponse = initialDisconnect != null ||
+                (state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED));
+        if(state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED)){
+            registry.getGatewaySessionService().disconnect(state, keepAlive);
+        }
+        return needsResponse ?
+                super.handleDisconnect(context, initialDisconnect, receivedDisconnect) : null;
     }
 
     @Override
     protected IMqttsnMessage handlePingreq(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException, MqttsnCodecException, MqttsnInvalidSessionStateException {
 
+        String clientId = null;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnPingreq ping = (MqttsnPingreq) message;
+            clientId = ping.getClientId();
+        }
+        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnPingreq_V2_0 ping = (MqttsnPingreq_V2_0) message;
+            clientId = ping.getClientId();
+        }
+
         IMqttsnSessionState state = getSessionState(context);
-        MqttsnPingreq ping = (MqttsnPingreq) message;
-        if(ping.getClientId() != null){
-            //-- ensure the clientid matches the context
-            if(!ping.getClientId().trim().equals(context.getId())){
-                logger.log(Level.WARNING, "ping-req contained clientId that did not match that from context");
+        if(clientId != null){
+            //-- ensure the clientId matches the context
+            if(!clientId.trim().equals(context.getId())){
+                logger.log(Level.WARNING, String.format("ping-req contained clientId [%s] that did not match that from context [%s]",
+                        clientId, context.getId()));
                 return super.handlePingreq(context, message);
             }
         }
@@ -219,26 +258,42 @@ public class MqttsnGatewayMessageHandler
     protected IMqttsnMessage handleSubscribe(IMqttsnContext context, IMqttsnMessage message)
             throws MqttsnException, MqttsnCodecException, MqttsnInvalidSessionStateException {
 
-        MqttsnSubscribe subscribe = (MqttsnSubscribe) message;
-        if(!MqttsnUtils.validTopicScheme(subscribe.getTopicType(), subscribe.getTopicData(), true)){
-            logger.log(Level.WARNING, String.format("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId [%s] topicData [%s]", subscribe.getTopicType(),
-                    MqttsnWireUtils.toBinary(subscribe.getTopicData())));
+        int topicIdType = 0;
+        byte[] topicData = null;
+        int QoS = 0;
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnSubscribe subscribe = (MqttsnSubscribe) message;
+            topicIdType = subscribe.getTopicType();
+            topicData = subscribe.getTopicData();
+            QoS = subscribe.getQoS();
+        }
+        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnSubscribe_V2_0 subscribe = (MqttsnSubscribe_V2_0) message;
+            topicIdType = subscribe.getTopicIdType();
+            topicData = subscribe.getTopicData();
+            QoS = subscribe.getQoS();
+        }
+
+        if(!MqttsnUtils.validTopicScheme(topicIdType, topicData, true)){
+            logger.log(Level.WARNING, String.format("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId [%s] topicData [%s]", topicIdType,
+                    MqttsnWireUtils.toBinary(topicData)));
             return registry.getMessageFactory().createSuback(0, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         }
 
         IMqttsnSessionState state = getSessionState(context);
-        TopicInfo info = registry.getTopicRegistry().normalize((byte) subscribe.getTopicType(), subscribe.getTopicData(),
-                subscribe.getTopicType() == 0);
+        TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData,
+                topicIdType == 0);
 
-
-        SubscribeResult result = registry.getGatewaySessionService().subscribe(state, info, subscribe.getQoS());
-        logger.log(Level.INFO, "subscribe message yeilded info " + info + " and result " + result);
+        SubscribeResult result = registry.getGatewaySessionService().subscribe(state, info, QoS);
+        logger.log(Level.INFO, "subscribe message yielded info " + info + " and result " + result);
         processSessionResult(result);
         if(result.isError()){
             return registry.getMessageFactory().createSuback(0, 0, result.getReturnCode());
         } else {
             //-- this is a flaw in the current spec, you should be able to send back the topicIdType in the response
-            IMqttsnMessage suback = registry.getMessageFactory().createSuback(result.getGrantedQoS(), result.getTopicInfo().getTopicId(), result.getReturnCode());
+            IMqttsnMessage suback = registry.getMessageFactory().createSuback(result.getGrantedQoS(),
+                    result.getTopicInfo().getTopicId(), result.getReturnCode());
             return suback;
         }
     }
@@ -283,13 +338,21 @@ public class MqttsnGatewayMessageHandler
     protected IMqttsnMessage handlePublish(IMqttsnContext context, IMqttsnMessage message)
             throws MqttsnException, MqttsnCodecException, MqttsnInvalidSessionStateException {
 
-        MqttsnPublish publish = (MqttsnPublish) message;
+        int QoS = 0;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnPublish publish = (MqttsnPublish) message;
+            QoS = publish.getQoS();
+        } else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message;
+            QoS = publish.getQoS();
+        }
+
         IMqttsnSessionState state = null;
         try {
             state = getSessionState(context);
         } catch(MqttsnInvalidSessionStateException e){
             //-- connectionless publish (m1)
-            if(publish.getQoS() != MqttsnConstants.QoSM1)
+            if(QoS != MqttsnConstants.QoSM1)
                 throw e;
         }
 

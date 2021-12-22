@@ -31,6 +31,7 @@ import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnPublish_V2_0;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -427,6 +428,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                                         message, confirmedMessage, context));
 
                         //received an error message in response, if its requeuable do so
+
                         if (inflight instanceof RequeueableInflightMessage) {
 
                             try {
@@ -451,7 +453,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                         if (registry.getCodec().isPubRel(message)) {
                             PublishData data = registry.getCodec().getData(confirmedMessage);
                             CommitOperation op = CommitOperation.inbound(context,
-                                    confirmedMessage instanceof MqttsnPublish ? getTopicPathFromPublish(context, (MqttsnPublish) confirmedMessage) : null,
+                                    getTopicPathFromPublish(context, confirmedMessage),
                                     data.getQos(), data.getData(), data.isRetained());
                             confirmPublish(op);
                         }
@@ -504,7 +506,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     //-- Qos 0 & 1 are inbound are confirmed on receipt of message
 
                     CommitOperation op = CommitOperation.inbound(context,
-                            getTopicPathFromPublish(context, (MqttsnPublish) message),
+                            getTopicPathFromPublish(context, message),
                             data.getQos(), data.getData(), data.isRetained());
                     confirmPublish(op);
                 }
@@ -693,13 +695,20 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         return lastMessageReceived.get(context);
     }
 
-//    @Override
-//    public Long getContextLastActive(IMqttsnContext context) throws MqttsnException {
-//        return lastActiveMessage.get(context);
-//    }
+    protected String getTopicPathFromPublish(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
-    protected String getTopicPathFromPublish(IMqttsnContext context, MqttsnPublish publish) throws MqttsnException {
-        TopicInfo info = registry.getTopicRegistry().normalize((byte) publish.getTopicType(), publish.getTopicData(), false);
+        int topicIdType = 0;
+        byte[] topicData = null;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2) {
+            MqttsnPublish publish = (MqttsnPublish) message;
+            topicIdType = publish.getTopicType();
+            topicData = publish.getTopicData();
+        } else  if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0) {
+            MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message;
+            topicIdType = publish.getTopicIdType();
+            topicData = publish.getTopicData();
+        }
+        TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);
         String topicPath = registry.getTopicRegistry().topicPath(context, info, true);
         return topicPath;
     }

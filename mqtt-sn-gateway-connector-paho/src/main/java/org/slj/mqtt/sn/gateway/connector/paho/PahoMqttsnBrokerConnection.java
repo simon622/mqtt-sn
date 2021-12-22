@@ -220,7 +220,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection i
     }
 
     @Override
-    public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
+    public boolean disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException {
         return true;
     }
 

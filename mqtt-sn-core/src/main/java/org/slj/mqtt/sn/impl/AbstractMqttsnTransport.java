@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
@@ -68,57 +70,71 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
 
     protected void receiveFromTransportInternal(INetworkContext networkContext, ByteBuffer buffer) {
         try {
-            if(!registry.getMessageHandler().running()){
+            if (!registry.getMessageHandler().running()) {
                 return;
             }
             byte[] data = drain(buffer);
 
-            if(data.length > registry.getOptions().getMaxProtocolMessageSize()){
+            if (data.length > registry.getOptions().getMaxProtocolMessageSize()) {
                 logger.log(Level.SEVERE, String.format("receiving [%s] bytes - max allowed message size [%s] - error",
                         data.length, registry.getOptions().getMaxProtocolMessageSize()));
                 throw new MqttsnRuntimeException("received message was larger than allowed max");
             }
 
-            if(registry.getOptions().isWireLoggingEnabled()){
+            if (registry.getOptions().isWireLoggingEnabled()) {
                 logger.log(Level.INFO, String.format("receiving [%s] ",
                         MqttsnWireUtils.toBinary(data)));
             }
 
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
 
-            if(logger.isLoggable(Level.FINE)){
+            if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, String.format("receiving [%s] bytes (%s) from [%s] on thread [%s]",
                         data.length, message.getMessageName(), networkContext, Thread.currentThread().getName()));
             }
 
             boolean authd = true;
+            int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
             //-- if we detect an inbound id packet, we should authorise the context every time (even if the impl just reuses existing auth)
-            if(message instanceof IMqttsnIdentificationPacket){
-                if(!registry.getNetworkRegistry().hasBoundSessionContext(networkContext)){
-                    authd = registry.getMessageHandler().authorizeContext(networkContext,
-                            ((IMqttsnIdentificationPacket)message).getClientId());
+            if (message instanceof IMqttsnProtocolVersionPacket) {
+                protocolVersion = ((IMqttsnProtocolVersionPacket)message).getProtocolVersion();
+                if(!registry.getCodec().supportsVersion(protocolVersion)){
+                    logger.log(Level.WARNING, String.format("codec does not support presented protocol version [%s] for [%s]", protocolVersion, networkContext));
+                    throw new MqttsnCodecException("unsupported codec version");
                 }
             }
-            else {
+            if (message instanceof IMqttsnIdentificationPacket) {
+                if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
+                    authd = registry.getMessageHandler().authorizeContext(networkContext,
+                            ((IMqttsnIdentificationPacket) message).getClientId(), protocolVersion);
+                }
+            } else {
                 //-- sort the case where publish -1 can be recieved without an authd context from the
                 //-- network address alone
-                if(!registry.getNetworkRegistry().hasBoundSessionContext(networkContext) &&
+                if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext) &&
                         registry.getCodec().isPublish(message) &&
-                        registry.getCodec().getData(message).getQos() == -1){
+                        registry.getCodec().getData(message).getQos() == -1) {
                     logger.log(Level.INFO, String.format("detected non authorised publish -1, apply for temporary auth from network context [%s]", networkContext));
                     authd = registry.getMessageHandler().temporaryAuthorizeContext(networkContext);
                 }
             }
 
-            if(authd && registry.getNetworkRegistry().hasBoundSessionContext(networkContext)){
+            if (authd && registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
                 notifyTrafficReceived(networkContext, data, message);
                 registry.getMessageHandler().receiveMessage(registry.getNetworkRegistry().getSessionContext(networkContext), message);
             } else {
                 logger.log(Level.WARNING, "auth could not be established, send disconnect that is not processed by application");
-                writeToTransportInternal(networkContext, registry.getMessageFactory().createDisconnect(), false);
+                writeToTransportInternal(networkContext,
+                        registry.getMessageFactory().createDisconnect(), false);
             }
-        } catch(Throwable t){
-            logger.log(Level.SEVERE, "unhandled error;", t);
+        }
+        catch(MqttsnCodecException e){
+            logger.log(Level.SEVERE, "protocol error - sending payload format error disconnect;", e);
+            writeToTransportInternal(networkContext,
+                    registry.getMessageFactory().createDisconnect(MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
+        }
+        catch(Throwable t){
+            logger.log(Level.SEVERE, "unknown error;", t);
         }
     }
 

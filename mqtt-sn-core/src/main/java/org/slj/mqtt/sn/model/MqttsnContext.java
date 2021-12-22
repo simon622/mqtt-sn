@@ -29,6 +29,7 @@ import java.util.Objects;
 public class MqttsnContext extends AbstractContextObject implements IMqttsnContext {
 
     private String id;
+    private int protocolVersion;
 
     public MqttsnContext(){
 
@@ -41,6 +42,19 @@ public class MqttsnContext extends AbstractContextObject implements IMqttsnConte
     @Override
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public int getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public void setProtocolVersion(int protocolVersion) {
+        this.protocolVersion = protocolVersion;
     }
 
     @Override

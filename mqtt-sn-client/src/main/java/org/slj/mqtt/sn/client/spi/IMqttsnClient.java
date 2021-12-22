@@ -119,10 +119,10 @@ public interface IMqttsnClient extends Closeable {
     /**
      * Put the device into the SLEEP mode for the duration in seconds. NOTE: this is a non-supervized sleep, which means the application
      * is responsible for issuing PINGREQ and CONNECTS from this mode
-     * @param duration - Time in seconds to put the device to sleep.
+     * @param sessionExpiryInterval - Time in seconds to put the device to sleep.
      * @throws MqttsnException -  An error occurred
      */
-    void sleep(int duration) throws MqttsnException;
+    void sleep(long sessionExpiryInterval) throws MqttsnException;
 
     /**
      * Unsupervised Wake the device up by issuing a PINGREQ from SLEEP state. The maxWait time will be taken from the core client configuration
@@ -154,13 +154,13 @@ public interface IMqttsnClient extends Closeable {
      * Registers a new Publish listener which will be notified when a PUBLISH message is successfully committed to the gateway
      * @param listener - The instance of the listener to notify
      */
-    void registerSentListener(IMqttsnPublishSentListener listener);
+    void registerPublishSentListener(IMqttsnPublishSentListener listener);
 
     /**
      * Registers a new Publish listener which will be notified when a PUBLISH message is successfully RECEIVED committed from the gateway
      * @param listener - The instance of the listener to notify
      */
-    void registerReceivedListener(IMqttsnPublishReceivedListener listener);
+    void registerPublishReceivedListener(IMqttsnPublishReceivedListener listener);
 
     /**
      * Return the clientId associated with this instance. The clientId is passed to the client from the configuration (contextId).

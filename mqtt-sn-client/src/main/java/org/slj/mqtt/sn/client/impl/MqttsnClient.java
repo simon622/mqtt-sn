@@ -359,13 +359,13 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     /**
      * @see {@link IMqttsnClient#sleep(int)}
      */
-    public void sleep(int duration)  throws MqttsnException{
+    public void sleep(long sessionExpiryInterval)  throws MqttsnException{
 
-        MqttsnSpecificationValidator.validateDuration(duration);
+        MqttsnSpecificationValidator.validateSessionExpiry(sessionExpiryInterval);
 
-        logger.log(Level.INFO, String.format("sleeping for [%s] seconds", duration));
+        logger.log(Level.INFO, String.format("sleeping for [%s] seconds", sessionExpiryInterval));
         IMqttsnSessionState state = checkSession(true);
-        IMqttsnMessage message = registry.getMessageFactory().createDisconnect(duration);
+        IMqttsnMessage message = registry.getMessageFactory().createDisconnect(sessionExpiryInterval);
         synchronized (this){
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
             Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(state.getContext(), token);

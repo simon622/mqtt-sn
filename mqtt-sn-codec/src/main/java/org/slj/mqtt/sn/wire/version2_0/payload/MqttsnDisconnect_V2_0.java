@@ -27,12 +27,13 @@ package org.slj.mqtt.sn.wire.version2_0.payload;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnDisconnectPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 import java.nio.charset.StandardCharsets;
 
-public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator, IMqttsnDisconnectPacket {
 
     protected long sessionExpiryInterval;
     protected String reasonString;

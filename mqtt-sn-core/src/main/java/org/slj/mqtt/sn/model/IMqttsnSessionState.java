@@ -38,9 +38,13 @@ public interface IMqttsnSessionState {
 
     int getKeepAlive();
 
+    long getSessionExpiryInterval();
+
     void setClientState(MqttsnClientState state);
 
     void setLastSeen(Date date);
 
     void setKeepAlive(int keepAlive);
+
+    void setSessionExpiryInterval(long sessionExpiryInterval);
 }

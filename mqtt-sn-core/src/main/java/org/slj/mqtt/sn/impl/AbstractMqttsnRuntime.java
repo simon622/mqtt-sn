@@ -187,13 +187,13 @@ public abstract class AbstractMqttsnRuntime {
         sendFailureListeners.forEach(p -> p.sendFailure(context, messageId, topicName, QoS, payload, retryCount));
     }
 
-    public void registerReceivedListener(IMqttsnPublishReceivedListener listener) {
+    public void registerPublishReceivedListener(IMqttsnPublishReceivedListener listener) {
         if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
         if(!receivedListeners.contains(listener))
             receivedListeners.add(listener);
     }
 
-    public void registerSentListener(IMqttsnPublishSentListener listener) {
+    public void registerPublishSentListener(IMqttsnPublishSentListener listener) {
         if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
         if(!sentListeners.contains(listener))
             sentListeners.add(listener);
@@ -274,8 +274,11 @@ public abstract class AbstractMqttsnRuntime {
     }
 
     /**
-     * Reported the when a CONNECTION is successfully established
-     * @param context
+     * Any context the gateway (or client) is communicating to will report into active timeout when
+     * the last received message FROM this context exceeds to the active timeout threshold. (NOTE: this is NOT keep alive,
+     * is merely to give an indication to the application that a context is not actively communicating)
+     *
+     * @param context - the context who hasnt been heard of since the timeout
      */
     public void handleActiveTimeout(IMqttsnContext context){
         logger.log(Level.INFO, String.format("notified of active timeout [%s <- %s]", registry.getOptions().getContextId(), context));

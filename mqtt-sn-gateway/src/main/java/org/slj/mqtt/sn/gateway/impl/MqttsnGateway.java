@@ -27,7 +27,6 @@ package org.slj.mqtt.sn.gateway.impl;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnPublishReceivedListener;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
@@ -64,7 +63,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getTransport());
 
         //-- notify the broker of confirmed message
-        registerReceivedListener((context, topicName, QoS, data, retain) -> {
+        registerPublishReceivedListener((context, topicName, QoS, data, retain) -> {
             try {
                 ((IMqttsnGatewayRuntimeRegistry) registry).getBrokerService().publish(context, topicName, QoS, data, retain);
             } catch (MqttsnException e) {

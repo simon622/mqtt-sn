@@ -49,6 +49,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     protected Map<LastIdContext, Integer> lastUsedMsgIds;
     protected Map<IMqttsnContext, ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT>> flushOperations;
     protected ScheduledExecutorService executorService = null;
+    private static final int TIMEOUT_BACKOFF = 15000;
 
     public AbstractMqttsnMessageStateService(boolean clientMode) {
         this.clientMode = clientMode;
@@ -172,8 +173,6 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     protected long doWork() {
 
-        long nextWork = 15000;
-
         //-- monitor active context timeouts
         int activeMessageTimeout = registry.getOptions().getActiveContextTimeout();
         if(activeMessageTimeout > 0){
@@ -196,7 +195,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         } catch(Exception e){
             logger.log(Level.SEVERE, "error tidying message registry on state thread;", e);
         }
-        return nextWork;
+        return TIMEOUT_BACKOFF;
     }
 
     protected boolean allowedToSend(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {

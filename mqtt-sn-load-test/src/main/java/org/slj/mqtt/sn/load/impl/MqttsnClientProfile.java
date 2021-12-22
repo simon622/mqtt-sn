@@ -117,13 +117,13 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     }
 
     protected void bindReceiveLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
+        createOrGetClient().registerPublishReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
             getProgress().incrementProgress(1);
         });
     }
 
     protected void bindSendLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
+        createOrGetClient().registerPublishSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
             getProgress().incrementProgress(1);
         });
     }

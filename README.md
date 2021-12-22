@@ -91,9 +91,26 @@ You can very easily plug transport implementations into the runtime by hooking t
         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 ```
 
+#### Publish Listeners
+
+Application messages sent and received by the application can be accessed by registering publish listeners against
+the runtime.
+
+```java
+    client.registerPublishReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
+        // some custom code that will be called for every confirmed messages received
+    });
+
+    client.registerPublishSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
+        // some custom code that will be called for every confirmed messages sent
+    });
+```
+
 #### Traffic Listeners
 
-You can access all the data sent to and from the transport adapter by using traffic listeners.
+All traffic to and from the transport layer can be monitored by the application by registering traffic listeners. These will
+get called back after the traffic has been sent / received to the transport adapter top enable you to see what is going over
+the wire.
 
 ```java
     MqttsnClientRuntimeRegistry.defaultConfiguration(options).

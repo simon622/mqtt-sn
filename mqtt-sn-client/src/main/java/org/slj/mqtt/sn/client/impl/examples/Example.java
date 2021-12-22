@@ -31,11 +31,13 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
-import org.slj.mqtt.sn.utils.MqttsnUtils;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -74,7 +76,7 @@ public class Example {
             client.start(registry);
 
             //-- register any publish receive listeners you require
-            client.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
+            client.registerPublishReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
                 receiveCounter.incrementAndGet();
                 System.err.println(String.format("received message [%s] [%s]",
                         receiveCounter.get(), new String(data, MqttsnConstants.CHARSET)));
@@ -82,10 +84,12 @@ public class Example {
             });
 
             //-- register any publish sent listeners you require
-            client.registerSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
+            client.registerPublishSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
                 System.err.println(String.format("sent message [%s]",
                         new String(data, MqttsnConstants.CHARSET)));
             });
+
+
 
             //-- issue a connect command - the method will block until completion
             client.connect(360, true);

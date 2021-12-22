@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
@@ -30,69 +30,50 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnGwInfo extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public class MqttsnPuback_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
-    protected int gatewayId;
-    protected String gatewayAddress;
-
-    public int getGatewayId() {
-        return gatewayId;
-    }
-
-    public void setGatewayId(int gatewayId) {
-        this.gatewayId = gatewayId;
-    }
-
-    public String getGatewayAddress() {
-        return gatewayAddress;
-    }
-
-    public void setGatewayAddress(String gatewayAddress) {
-        this.gatewayAddress = gatewayAddress;
+    public boolean needsId() {
+        return true;
     }
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.GWINFO;
+        return MqttsnConstants.PUBACK;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        gatewayId = (data[2] & 0xFF);
-        byte[] body = new byte[data[0] - 3];
-        if (body.length > 0) {
-            System.arraycopy(data, 3, body, 0, body.length);
-            gatewayAddress = new String(body, MqttsnConstants.CHARSET);
-        }
+        id = readUInt16Adjusted(data, 2);
+        returnCode = (data[4] & 0xFF);
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 3 + (gatewayAddress == null ? 0 : gatewayAddress.length());
-        byte[] data = new byte[length];
-        data[0] = (byte) length;
+        byte[] data = new byte[5];
+        data[0] = (byte) data.length;
         data[1] = (byte) getMessageType();
-        data[2] = (byte) gatewayId;
-        if (gatewayAddress != null) {
-            System.arraycopy(gatewayAddress.getBytes(MqttsnConstants.CHARSET), 0, data, 3, gatewayAddress.length());
-        }
+        data[2] = (byte) ((id >> 8) & 0xFF);
+        data[3] = (byte) (id & 0xFF);
+        data[4] = (byte) returnCode;
         return data;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnGwInfo{");
-        sb.append("gatewayId=").append(gatewayId);
-        sb.append(", gatewayAddress='").append(gatewayAddress).append('\'');
+        final StringBuilder sb = new StringBuilder("MqttsnPuback{");
+        sb.append(", msgId=").append(id);
+        if(returnCode != 0){
+            sb.append(", errorReturnCode=").append(returnCode);
+        }
         sb.append('}');
         return sb.toString();
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateUInt8(gatewayId);
-        MqttsnSpecificationValidator.validateStringData(gatewayAddress, false);
+        MqttsnSpecificationValidator.validatePacketIdentifier(id);
+        MqttsnSpecificationValidator.validateReturnCode(returnCode);
     }
 }

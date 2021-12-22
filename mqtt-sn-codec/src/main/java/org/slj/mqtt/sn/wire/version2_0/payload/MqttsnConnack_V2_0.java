@@ -22,47 +22,41 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
+public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
-    protected String clientId;
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
+    protected long sessionExpiryInterval;
+    protected String assignedClientId;
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PINGREQ;
+        return MqttsnConstants.CONNACK;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        byte[] body = readRemainingBytesAdjusted(data, 2);
-        if (body.length > 0) {
-            clientId = new String(body, MqttsnConstants.CHARSET);
+
+        returnCode = readUInt8Adjusted(data, 2);
+        sessionExpiryInterval = readUInt32Adjusted(data, 3);
+        if(data.length > 7){
+            assignedClientId = readUTF8EncodedStringAdjusted(data, 7);
         }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 2 + (clientId == null ? 0 : clientId.length());
-        byte[] msg = null;
+        int length = 7 + (assignedClientId == null ? 0 : assignedClientId.length());
+        byte[] msg;
         int idx = 0;
-        if (length > 0xFF) {
+        if ((length) > 0xFF) {
             length += 2;
             msg = new byte[length];
             msg[idx++] = (byte) 0x01;
@@ -75,22 +69,45 @@ public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdent
 
         msg[idx++] = (byte) getMessageType();
 
-        if (clientId != null) {
-            System.arraycopy(clientId.getBytes(MqttsnConstants.CHARSET), 0, msg, idx, clientId.length());
+        writeUInt32(msg, idx, sessionExpiryInterval);
+        idx += 4;
+
+        if (assignedClientId != null) {
+            writeUTF8EncodedStringData(msg, idx, assignedClientId);
         }
+
         return msg;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnPingreq{");
-        sb.append("clientId='").append(clientId).append('\'');
-        sb.append('}');
-        return sb.toString();
+    public long getSessionExpiryInterval() {
+        return sessionExpiryInterval;
+    }
+
+    public void setSessionExpiryInterval(long sessionExpiryInterval) {
+        this.sessionExpiryInterval = sessionExpiryInterval;
+    }
+
+    public String getAssignedClientId() {
+        return assignedClientId;
+    }
+
+    public void setAssignedClientId(String assignedClientId) {
+        this.assignedClientId = assignedClientId;
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
-        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
+        MqttsnSpecificationValidator.validateReturnCode(returnCode);
+        MqttsnSpecificationValidator.validateSessionExpiry(sessionExpiryInterval);
+        if(assignedClientId != null) MqttsnSpecificationValidator.validateClientId(assignedClientId);
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnConnack_V2_0{" +
+                "returnCode=" + returnCode +
+                ", sessionExpiryInterval=" + sessionExpiryInterval +
+                ", assignedClientId='" + assignedClientId + '\'' +
+                '}';
     }
 }

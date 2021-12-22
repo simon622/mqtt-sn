@@ -29,8 +29,6 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
 /**
  * NB: despite the spec only allowing 23 chars in the clientId field, this type has been designed safely to support
@@ -42,7 +40,7 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
     The maximum value that can be encoded is approximately 18 hours. */
     protected int duration;
 
-    protected int protocolId;
+    protected int protocolId = MqttsnConstants.PROTOCOL_VERSION_1_2;
 
     /* 1-23 characters long string that uniquely identifies the client to the server */
     protected String clientId = null;
@@ -67,10 +65,6 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
         return protocolId;
     }
 
-    public void setProtocolId(int protocolId) {
-        this.protocolId = protocolId;
-    }
-
     @Override
     public int getMessageType() {
         return MqttsnConstants.CONNECT;
@@ -79,16 +73,16 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        if (Mqttsn_v1_2_Codec.isExtendedMessage(data)) {
+        if (isLargeMessage(data)) {
             readFlags(data[4]);
         } else {
             readFlags(data[2]);
         }
 
-        protocolId = read8BitAdjusted(data, 3);
-        duration = read16BitAdjusted(data, 4);
+        protocolId = readUInt8Adjusted(data, 3);
+        duration = readUInt16Adjusted(data, 4);
 
-        byte[] body = readRemainingBytesFromIndexAdjusted(data, 6);
+        byte[] body = readRemainingBytesAdjusted(data, 6);
         if (body.length > 0) {
             clientId = new String(body, MqttsnConstants.CHARSET);
         }
@@ -140,6 +134,7 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField implement
 
     @Override
     public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateProtocolId(protocolId);
         MqttsnSpecificationValidator.validateClientId(clientId);
         MqttsnSpecificationValidator.validateKeepAlive(duration);
     }

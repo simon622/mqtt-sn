@@ -33,12 +33,12 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
-public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory implements IMqttsnMessageFactory {
+public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
     //singleton
-    private static Mqttsn_v1_2_MessageFactory instance;
+    private static volatile Mqttsn_v1_2_MessageFactory instance;
 
-    private Mqttsn_v1_2_MessageFactory() {
+    protected Mqttsn_v1_2_MessageFactory() {
     }
 
     public static IMqttsnMessageFactory getInstance() {
@@ -85,7 +85,6 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory imp
         MqttsnConnect msg = new MqttsnConnect();
         msg.setClientId(clientId);
         msg.setDuration(keepAlive);
-        msg.setProtocolId(0);
         msg.setCleanSession(cleanSession);
         msg.setWill(willPrompt);
         msg.validate();

@@ -36,7 +36,7 @@ public class MqttsnPubcomp extends AbstractMqttsnPublishMessageConfirmation {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MqttsnPubcomp{");
-        sb.append("msgId=").append(msgId);
+        sb.append("msgId=").append(id);
         sb.append('}');
         return sb.toString();
     }

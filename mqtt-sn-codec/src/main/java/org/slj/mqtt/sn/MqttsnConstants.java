@@ -29,6 +29,10 @@ import java.nio.charset.StandardCharsets;
 
 public interface MqttsnConstants {
 
+    //-- protocol versions
+    int PROTOCOL_VERSION_1_2 = 0x01;
+    int PROTOCOL_VERSION_2_0 = 0x02;
+
     //-- the restricted range
     char MIN_HIGH_UTF = '\uD800';
     char MAX_HIGH_UTF = '\uDBFF';
@@ -40,27 +44,28 @@ public interface MqttsnConstants {
     char MIN_CONTROL2_UTF = '\u007F';
     char MAX_CONTROL2_UTF = '\u009F';
 
-    int USIGNED_MAX_16 = 65535;
-    int USIGNED_MAX_8 = 255;
+    long UNSIGNED_MAX_32 = 4294967295L;
+    int UNSIGNED_MAX_16 = 65535;
+    int UNSIGNED_MAX_8 = 255;
 
     int MAX_CLIENT_ID_LENGTH = 1024;
     int MAX_TOPIC_LENGTH = 2048;
-    int MAX_PUBLISH_LENGTH = USIGNED_MAX_16 - 7;
-    int MAX_ENCAPSULATED_LENGTH = USIGNED_MAX_16 - 7;
+    int MAX_PUBLISH_LENGTH = UNSIGNED_MAX_16 - (9 + 2); //9 for the normal fields, + 2 for large message type
+    int MAX_ENCAPSULATED_LENGTH = UNSIGNED_MAX_16 - 7;
 
     Charset CHARSET = StandardCharsets.UTF_8;
 
     byte TOPIC_NORMAL = 0b00,
             TOPIC_PREDEFINED = 0b01,
             TOPIC_SHORT = 0b10,
-            TOPIC_RESERVED = 0b11;
+            TOPIC_FULL = 0b11;
 
     enum TOPIC_TYPE {
 
         NORMAL(TOPIC_NORMAL),
         PREDEFINED(TOPIC_PREDEFINED),
         SHORT(TOPIC_SHORT),
-        RESERVED(TOPIC_RESERVED);
+        FULL(TOPIC_FULL);
 
         byte flag;
 
@@ -73,6 +78,10 @@ public interface MqttsnConstants {
         }
 
     }
+
+    int RETAINED_SEND = 0x00,
+            RETAINED_SEND_NOT_EXISTS = 0x01,
+            RETAINED_NO_SEND = 0x02;
 
     int RETURN_CODE_ACCEPTED = 0x00,
             RETURN_CODE_REJECTED_CONGESTION = 0x01,
@@ -87,6 +96,7 @@ public interface MqttsnConstants {
     byte ADVERTISE = 0x00;
     byte SEARCHGW = 0x01;
     byte GWINFO = 0x02;
+    byte AUTH = 0x03;
     byte CONNECT = 0x04;
     byte CONNACK = 0x05;
     byte WILLTOPICREQ = 0x06;

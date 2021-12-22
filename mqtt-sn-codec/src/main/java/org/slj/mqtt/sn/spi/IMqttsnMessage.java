@@ -23,9 +23,6 @@
  */
 package org.slj.mqtt.sn.spi;
 
-
-import org.slj.mqtt.sn.codec.MqttsnCodecException;
-
 import java.io.Serializable;
 
 /**
@@ -48,11 +45,11 @@ public interface IMqttsnMessage extends Serializable {
     /**
      * If the underlying message uses a msg id as part of its contract
      */
-    boolean needsMsgId();
+    boolean needsId();
 
-    void setMsgId(int msgId);
+    void setId(int msgId);
 
-    int getMsgId();
+    int getId();
 
     int getMessageType();
 

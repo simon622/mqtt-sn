@@ -36,21 +36,18 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+public class Mqttsn1_2WireTests {
 
-public class MqttsnWireTests {
+    protected static final byte _payload = 0x10;
+    protected static final String _path = "/topic/path";
+    protected static final String _clientid = "client-id";
+    protected static final int _radius = 2;
+    protected static final int _alias = 12;
+    protected static final int _qos = 2;
+    protected static final int _msgId = MqttsnConstants.UNSIGNED_MAX_16;
 
-    static final byte _payload = 0x10;
-    static final String _path = "/topic/path";
-    static final String _clientid = "client-id";
-    static final int _radius = 2;
-    static final int _alias = 12;
-    static final int _qos = 2;
-    static final int _msgId = 254;
-//    static final int _msgId = MqttsnConstants.USIGNED_MAX_16;
-
-    IMqttsnCodec codec;
-    IMqttsnMessageFactory factory;
+    protected IMqttsnCodec codec;
+    protected IMqttsnMessageFactory factory;
 
     @Before
     public void setup(){
@@ -60,8 +57,8 @@ public class MqttsnWireTests {
 
     @Test
     public void testMqttsnAdvertise() throws MqttsnCodecException {
-        IMqttsnMessage message = factory.createAdvertise(MqttsnConstants.USIGNED_MAX_8,
-                MqttsnConstants.USIGNED_MAX_16);
+        IMqttsnMessage message = factory.createAdvertise(MqttsnConstants.UNSIGNED_MAX_8,
+                MqttsnConstants.UNSIGNED_MAX_16);
         testWireMessage(message);
     }
 
@@ -75,7 +72,7 @@ public class MqttsnWireTests {
     public void testMqttsnConnect() throws MqttsnCodecException {
 
         //-- test normal length clientId
-        IMqttsnMessage message = factory.createConnect(_clientid, MqttsnConstants.USIGNED_MAX_16, false, true);
+        IMqttsnMessage message = factory.createConnect(_clientid, MqttsnConstants.UNSIGNED_MAX_16, false, true);
         testWireMessage(message);
     }
 
@@ -88,7 +85,7 @@ public class MqttsnWireTests {
             sb.append("A");
         }
 
-        IMqttsnMessage message = factory.createConnect(sb.toString(), MqttsnConstants.USIGNED_MAX_16, false, true);
+        IMqttsnMessage message = factory.createConnect(sb.toString(), MqttsnConstants.UNSIGNED_MAX_16, false, true);
         testWireMessage(message);
     }
 
@@ -102,14 +99,14 @@ public class MqttsnWireTests {
     @Test
     public void testMqttsnDisconnectWithDuration() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.USIGNED_MAX_16);
+        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_16);
         testWireMessage(message);
     }
 
     @Test
     public void testMqttsnGwinfo() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createGwinfo(MqttsnConstants.USIGNED_MAX_8, "123:123123:0:c:12:2");
+        IMqttsnMessage message = factory.createGwinfo(MqttsnConstants.UNSIGNED_MAX_8, "123:123123:0:c:12:2");
         testWireMessage(message);
     }
 
@@ -138,7 +135,7 @@ public class MqttsnWireTests {
     public void testMqttsnPublishNormalTopic() throws MqttsnCodecException {
 
         IMqttsnMessage message = factory.createPublish(_qos, true, false, MqttsnConstants.TOPIC_TYPE.NORMAL, _alias, payload(4));
-        message.setMsgId(25);
+        message.setId(25);
         testWireMessage(message);
     }
 
@@ -159,7 +156,8 @@ public class MqttsnWireTests {
     @Test
     public void testMqttsnPublishLong() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createPublish(_qos, true, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias, payload(MqttsnConstants.USIGNED_MAX_16));
+        IMqttsnMessage message = factory.createPublish(_qos, true, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
         testWireMessage(message);
     }
 
@@ -333,8 +331,8 @@ public class MqttsnWireTests {
 
     protected void testWireMessage(IMqttsnMessage message) throws MqttsnCodecException {
 
-        if(message.needsMsgId()){
-            message.setMsgId(_msgId);
+        if(message.needsId()){
+            message.setId(_msgId);
         }
 
         String toString = message.toString();

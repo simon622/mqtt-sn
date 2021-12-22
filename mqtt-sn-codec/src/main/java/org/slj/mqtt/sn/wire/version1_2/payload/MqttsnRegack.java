@@ -28,12 +28,13 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public class MqttsnRegack extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     protected int topicId;
 
-    public boolean needsMsgId() {
+    public boolean needsId() {
         return true;
     }
 
@@ -53,8 +54,8 @@ public class MqttsnRegack extends AbstractMqttsnMessage implements IMqttsnMessag
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        topicId = read16BitAdjusted(data, 2);
-        msgId = read16BitAdjusted(data, 4);
+        topicId = readUInt16Adjusted(data, 2);
+        id = readUInt16Adjusted(data, 4);
         returnCode = (data[6] & 0xFF);
     }
 
@@ -68,8 +69,8 @@ public class MqttsnRegack extends AbstractMqttsnMessage implements IMqttsnMessag
         data[2] = (byte) ((topicId >> 8) & 0xFF);
         data[3] = (byte) (topicId & 0xFF);
 
-        data[4] = (byte) ((msgId >> 8) & 0xFF);
-        data[5] = (byte) (msgId & 0xFF);
+        data[4] = (byte) ((id >> 8) & 0xFF);
+        data[5] = (byte) (id & 0xFF);
 
         data[6] = (byte) returnCode;
 
@@ -80,7 +81,7 @@ public class MqttsnRegack extends AbstractMqttsnMessage implements IMqttsnMessag
     public String toString() {
         final StringBuilder sb = new StringBuilder("MqttsnRegack{");
         sb.append("topicId=").append(topicId);
-        sb.append(", msgId=").append(msgId);
+        sb.append(", id=").append(id);
         if(returnCode != 0){
             sb.append(", errorReturnCode=").append(returnCode);
         }

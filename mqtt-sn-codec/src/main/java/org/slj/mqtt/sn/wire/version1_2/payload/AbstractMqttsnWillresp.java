@@ -25,12 +25,13 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public abstract class AbstractMqttsnWillresp extends AbstractMqttsnMessage {
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        setReturnCode(read8BitAdjusted(data, 2));
+        setReturnCode(readUInt8Adjusted(data, 2));
     }
 
     @Override

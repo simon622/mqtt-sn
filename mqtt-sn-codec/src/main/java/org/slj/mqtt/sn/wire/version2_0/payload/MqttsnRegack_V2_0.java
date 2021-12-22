@@ -22,16 +22,18 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField implements IMqttsnMessageValidator {
+public class MqttsnRegack_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     protected int topicId;
+    protected int topicIdType;
 
     public boolean needsId() {
         return true;
@@ -47,44 +49,81 @@ public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField implements
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.SUBACK;
+        return MqttsnConstants.REGACK;
+    }
+
+    public int getTopicIdType() {
+        return topicIdType;
+    }
+
+    public void setTopicIdType(int topicIdType) {
+        this.topicIdType = topicIdType;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
         readFlags(data[2]);
+
         topicId = readUInt16Adjusted(data, 3);
         id = readUInt16Adjusted(data, 5);
-        returnCode = readUInt8Adjusted(data, 7);
+        returnCode = (data[7] & 0xFF);
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
         byte[] data = new byte[8];
-        data[0] = (byte) data.length;
-        data[1] = (byte) getMessageType();
+        int idx = 0;
+        data[idx++] = (byte) data.length;
+        data[idx++] = (byte) getMessageType();
 
-        data[2] = writeFlags();
+        data[idx++] = writeFlags();
 
-        data[3] = (byte) ((topicId >> 8) & 0xFF);
-        data[4] = (byte) (topicId & 0xFF);
+        data[idx++] = (byte) ((topicId >> 8) & 0xFF);
+        data[idx++] = (byte) (topicId & 0xFF);
 
-        data[5] = (byte) ((id >> 8) & 0xFF);
-        data[6] = (byte) (id & 0xFF);
+        data[idx++] = (byte) ((id >> 8) & 0xFF);
+        data[idx++] = (byte) (id & 0xFF);
 
-        data[7] = (byte) returnCode;
+        data[idx++] = (byte) returnCode;
 
         return data;
     }
 
+    protected void setTopicType(byte topicType) {
+        if (topicType != MqttsnConstants.TOPIC_PREDEFINED &&
+                topicType != MqttsnConstants.TOPIC_NORMAL &&
+                topicType != MqttsnConstants.TOPIC_SHORT &&
+                topicType != MqttsnConstants.TOPIC_FULL) {
+            throw new IllegalArgumentException("unable to set invalid topicIdType value on message " + topicType);
+        }
+        this.topicIdType = topicType;
+    }
+
+    protected void readFlags(byte v) {
+        //topic type
+        topicIdType = (v & 0x03);
+    }
+
+    protected byte writeFlags() {
+
+        byte v = 0x00;
+
+        //topic type
+        if (topicIdType == MqttsnConstants.TOPIC_PREDEFINED) v |= 0x01;
+        else if (topicIdType == MqttsnConstants.TOPIC_SHORT) v |= 0x02;
+        else if (topicIdType == MqttsnConstants.TOPIC_FULL) v |= 0x03;
+
+        return v;
+    }
+
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnSuback{");
+        final StringBuilder sb = new StringBuilder("MqttsnRegack{");
         sb.append("topicId=").append(topicId);
-        sb.append(", grantedQoS=").append(getQoS());
-        sb.append(", msgId=").append(id);
+        sb.append("topicIdType=").append(topicIdType);
+        sb.append(", id=").append(id);
         if(returnCode != 0){
             sb.append(", errorReturnCode=").append(returnCode);
         }
@@ -94,8 +133,8 @@ public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField implements
 
     @Override
     public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
         MqttsnSpecificationValidator.validateTopicAlias(topicId);
         MqttsnSpecificationValidator.validateReturnCode(returnCode);
-        MqttsnSpecificationValidator.validateQoS(getQoS());
     }
 }

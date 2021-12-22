@@ -32,7 +32,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
 public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
@@ -79,7 +79,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     @Override
     public int readMessageSize(byte[] data) throws MqttsnCodecException {
         MqttsnSpecificationValidator.validatePacketLength(data);
-        return readMessageLength(data);
+        return AbstractMqttsnMessage.readMessageLength(data);
     }
 
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
@@ -212,32 +212,12 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
     public static int readMessageType(byte[] data) {
         int msgType;
-        if (isExtendedMessage(data)) {
+        if (data[0] == 0x01) {
             msgType = (data[3] & 0xFF);
         } else {
             msgType = (data[1] & 0xFF);
         }
         return msgType;
-    }
-
-    public static byte readHeaderByteWithOffset(byte[] data, int index) {
-        return isExtendedMessage(data) ? data[index + 2] : data[index];
-    }
-
-    public static boolean isExtendedMessage(byte[] data) {
-        return data[0] == 0x01;
-    }
-
-    public static int readMessageLength(byte[] data) {
-        int length = 0;
-        if (isExtendedMessage(data)) {
-            //big payload
-            length = ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
-        } else {
-            //small payload
-            length = (data[0] & 0xFF);
-        }
-        return length;
     }
 
     @Override

@@ -43,8 +43,8 @@ public abstract class AbstractMqttsnWillTopicMessage extends AbstractMqttsnMessa
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        readFlags(Mqttsn_v1_2_Codec.readHeaderByteWithOffset(data, 2));
-        willTopicData = readRemainingBytesFromIndexAdjusted(data, 3);
+        readFlags(readHeaderByteWithOffset(data, 2));
+        willTopicData = readRemainingBytesAdjusted(data, 3);
     }
 
     @Override

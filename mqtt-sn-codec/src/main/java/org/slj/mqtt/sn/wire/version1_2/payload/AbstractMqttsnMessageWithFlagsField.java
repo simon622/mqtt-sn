@@ -25,32 +25,33 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 
 public abstract class AbstractMqttsnMessageWithFlagsField extends AbstractMqttsnMessage {
 
     /* set to “0” if message is sent for the first time; set to “1” if retransmitted (only relevant within PUBLISH messages); */
-    boolean dupRedelivery = false;
+    protected boolean dupRedelivery = false;
 
     /* meaning as with MQTT for QoS level 0, 1, and 2; set to “0b00” for QoS level 0,
     “0b01” for QoS level1, “0b10” for QoS level 2, and “0b11” for new QoS level -1 */
-    int QoS;
+    protected int QoS;
 
     /* same meaning as with MQTT (only relevant within PUBLISH messages); */
-    boolean retainedPublish = false;
+    protected boolean retainedPublish = false;
 
     /* if set, indicates that client is asking for Will topic and Will message prompting
     (only relevant within CONNECT message) */
-    boolean will = false;
+    protected boolean will = false;
 
     /* same meaning as with MQTT, however extended for Will topic and Will message
     (only relevant within CONNECT message); */
-    boolean cleanSession = false;
+    protected boolean cleanSession = false;
 
     /* indicates whether the field TopicId or TopicName included in this message contains a normal topic id
     (set to “0b00”), a pre-defined topic id (set to “0b01”), or a short topic name (set to “0b10”).
     The value “0b11” is reserved. */
-    int topicType;
+    protected int topicType;
 
     public boolean isDupRedelivery() {
         return dupRedelivery;
@@ -106,7 +107,7 @@ public abstract class AbstractMqttsnMessageWithFlagsField extends AbstractMqttsn
         if (topicType != MqttsnConstants.TOPIC_PREDEFINED &&
                 topicType != MqttsnConstants.TOPIC_NORMAL &&
                 topicType != MqttsnConstants.TOPIC_SHORT &&
-                topicType != MqttsnConstants.TOPIC_RESERVED) {
+                topicType != MqttsnConstants.TOPIC_FULL) {
             throw new IllegalArgumentException("unable to set invalid topicIdType value on message " + topicType);
         }
         this.topicType = topicType;

@@ -22,51 +22,36 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
 import java.util.Arrays;
 
-public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements IMqttsnMessageValidator {
-
-    public boolean needsId() {
-        return true;
-    }
-
-    protected byte[] data;
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
+public class MqttsnUnsubscribe_V2_0 extends MqttsnSubscribe_V2_0 implements IMqttsnMessageValidator {
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PUBLISH;
+        return MqttsnConstants.UNSUBSCRIBE;
     }
 
     @Override
-    public void decode(byte[] arr) throws MqttsnCodecException {
-        readFlags(readHeaderByteWithOffset(arr, 2));
-        setTopicData(readBytesAdjusted(arr, 3, 2));
-        id = readUInt16Adjusted(arr, 5);
-        data = readRemainingBytesAdjusted(arr, 7);
+    public void decode(byte[] data) throws MqttsnCodecException {
+        readFlags(readHeaderByteWithOffset(data, 2));
+        id = readUInt16Adjusted(data, 3);
+        topicData = readRemainingBytesAdjusted(data, 5);
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
         byte[] msg;
-        int length = data.length + 7;
+        int length = 5 + topicData.length;
         int idx = 0;
 
         if ((length) > 0xFF) {
@@ -83,33 +68,45 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
         msg[idx++] = (byte) getMessageType();
         msg[idx++] = writeFlags();
 
-        //-- copy in the topic data
-        System.arraycopy(topicData, 0, msg, idx, topicData.length);
-        idx += topicData.length;
-
         msg[idx++] = (byte) ((id >> 8) & 0xFF);
         msg[idx++] = (byte) (id & 0xFF);
 
-        System.arraycopy(data, 0, msg, msg.length - (data.length), data.length);
+        if (topicData != null && topicData.length > 0) {
+            System.arraycopy(topicData, 0, msg, idx, topicData.length);
+        }
+
         return msg;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnPublish{");
-        sb.append("topicData=").append(Arrays.toString(topicData));
-        sb.append(", dup=").append(dupRedelivery);
-        sb.append(", QoS=").append(QoS);
-        sb.append(", retain=").append(retainedPublish);
-        sb.append(", topicIdType=").append(topicType);
-        sb.append(", msgId=").append(id);
-        sb.append('}');
-        return sb.toString();
+    protected void readFlags(byte v) {
+
+        //topic type
+        topicIdType = (v & 0x03);
+    }
+
+    protected byte writeFlags() {
+
+        byte v = 0x00;
+
+        //topic type
+        if (topicIdType == MqttsnConstants.TOPIC_PREDEFINED) v |= 0x01;
+        else if (topicIdType == MqttsnConstants.TOPIC_SHORT) v |= 0x02;
+
+        return v;
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateQoS(QoS);
-        MqttsnSpecificationValidator.validatePublishData(data);
+        MqttsnSpecificationValidator.validatePacketIdentifier(id);
+        MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnUnsubscribe_V2_0{" +
+                "id=" + id +
+                ", topicIdType=" + topicIdType +
+                ", topicData=" + Arrays.toString(topicData) +
+                '}';
     }
 }

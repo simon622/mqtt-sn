@@ -39,7 +39,7 @@ import java.util.logging.Level;
 public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntimeRegistry>
         extends AbstractMqttsnBackoffThreadService<T> implements IMqttsnMessageStateService<T> {
 
-    protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.USIGNED_MAX_16 + 1);
+    protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.UNSIGNED_MAX_16 + 1);
     protected boolean clientMode;
 
     protected Map<IMqttsnContext, Long> lastActiveMessage;
@@ -371,7 +371,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         }
         lastMessageReceived.put(context, System.currentTimeMillis());
 
-        Integer msgId = message.needsMsgId() ? message.getMsgId() : WEAK_ATTACH_ID;
+        Integer msgId = message.needsId() ? message.getId() : WEAK_ATTACH_ID;
         boolean matchedMessage = inflightExists(context, msgId);
         boolean terminalMessage = registry.getMessageHandler().isTerminalMessage(message);
         if (matchedMessage) {
@@ -552,12 +552,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
         LastIdContext idContext = LastIdContext.from(context, direction);
         int msgId = WEAK_ATTACH_ID;
-        if (message.needsMsgId()) {
-            if (message.getMsgId() > 0) {
-                msgId = message.getMsgId();
+        if (message.needsId()) {
+            if (message.getId() > 0) {
+                msgId = message.getId();
             } else {
                 msgId = getNextMsgId(idContext);
-                message.setMsgId(msgId);
+                message.setId(msgId);
             }
         }
 
@@ -578,12 +578,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         int startAt = Math.max(lastUsedMsgIds.get(context) == null ? 1 : lastUsedMsgIds.get(context) + 1,
                 registry.getOptions().getMsgIdStartAt());
 
-        startAt = startAt % MqttsnConstants.USIGNED_MAX_16;
+        startAt = startAt % MqttsnConstants.UNSIGNED_MAX_16;
         startAt = Math.max(Math.max(1, registry.getOptions().getMsgIdStartAt()), startAt);
 
         Set<Integer> set = map.keySet();
         while(set.contains(new Integer(startAt))){
-            startAt = ++startAt % MqttsnConstants.USIGNED_MAX_16;
+            startAt = ++startAt % MqttsnConstants.UNSIGNED_MAX_16;
             startAt = Math.max(registry.getOptions().getMsgIdStartAt(), startAt);
         }
 
@@ -812,6 +812,6 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     public static void main(String[] args) {
-        System.err.println(65535 % MqttsnConstants.USIGNED_MAX_16);
+        System.err.println(65535 % MqttsnConstants.UNSIGNED_MAX_16);
     }
 }

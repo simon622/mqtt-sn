@@ -22,47 +22,46 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
+public class MqttsnPingreq_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
+    protected int maxMessages = 0;
     protected String clientId;
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
 
     @Override
     public int getMessageType() {
         return MqttsnConstants.PINGREQ;
     }
 
+    public boolean needsId() {
+        return false;
+    }
+
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        byte[] body = readRemainingBytesAdjusted(data, 2);
-        if (body.length > 0) {
-            clientId = new String(body, MqttsnConstants.CHARSET);
+        if(data.length > 2){
+            maxMessages = readUInt8Adjusted(data, 2);
+        }
+        if(data.length > 3){
+            clientId = readUTF8EncodedStringAdjusted(data,3);
         }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 2 + (clientId == null ? 0 : clientId.length());
-        byte[] msg = null;
+        byte[] msg;
+        int length = 3 + (clientId == null ? 0 : (clientId.length() + 2));
         int idx = 0;
-        if (length > 0xFF) {
+
+        if ((length) > 0xFF) {
             length += 2;
             msg = new byte[length];
             msg[idx++] = (byte) 0x01;
@@ -73,24 +72,45 @@ public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdent
             msg[idx++] = (byte) length;
         }
 
+
         msg[idx++] = (byte) getMessageType();
+        msg[idx++] = (byte) getMaxMessages();
 
         if (clientId != null) {
-            System.arraycopy(clientId.getBytes(MqttsnConstants.CHARSET), 0, msg, idx, clientId.length());
+            writeUTF8EncodedStringData(msg, idx, clientId);
         }
+
         return msg;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnPingreq{");
-        sb.append("clientId='").append(clientId).append('\'');
-        sb.append('}');
-        return sb.toString();
+
+    public int getMaxMessages() {
+        return maxMessages;
+    }
+
+    public void setMaxMessages(int maxMessages) {
+        this.maxMessages = maxMessages;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateUInt8(maxMessages);
         if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnPingreq_V2_0{" +
+                "maxMessages=" + maxMessages +
+                ", clientId='" + clientId + '\'' +
+                '}';
     }
 }

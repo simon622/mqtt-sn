@@ -26,217 +26,96 @@ package org.slj.mqtt.sn.wire.version2_0;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
-import org.slj.mqtt.sn.PublishData;
-import org.slj.mqtt.sn.codec.AbstractMqttsnCodec;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
-import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
-import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
+import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
-public class Mqttsn_v2_0_Codec extends AbstractMqttsnCodec {
-
-    protected volatile IMqttsnMessageFactory messageFactory;
-
-    @Override
-    public PublishData getData(IMqttsnMessage message) {
-        MqttsnPublish publish = (MqttsnPublish) message ;
-        return new PublishData(publish.getQoS(), publish.getData(), publish.isRetainedPublish());
-    }
+public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
 
     @Override
     public boolean isDisconnect(IMqttsnMessage message) {
-        return message instanceof MqttsnDisconnect;
+        return message instanceof MqttsnDisconnect_V2_0;
     }
 
     @Override
     public boolean isPublish(IMqttsnMessage message) {
-        return message instanceof MqttsnPublish;
+        return message instanceof MqttsnPublish_V2_0;
     }
 
     @Override
-    public boolean isPuback(IMqttsnMessage message) {
-        return message instanceof MqttsnPuback;
-    }
+    public boolean isPuback(IMqttsnMessage message) { return message instanceof MqttsnPuback_V2_0; }
 
     @Override
-    public boolean isPubRel(IMqttsnMessage message) {
-        return message instanceof MqttsnPubrel;
-    }
-
-    @Override
-    public boolean isPubRec(IMqttsnMessage message) {
-        return message instanceof MqttsnPubrec;
-    }
-
-    @Override
-    public boolean isActiveMessage(IMqttsnMessage message) {
-        return ! (message instanceof MqttsnPingreq ||
-                message instanceof MqttsnDisconnect || message instanceof MqttsnPingresp);
-    }
-
-    @Override
-    public int readMessageSize(byte[] data) throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validatePacketLength(data);
-        return readMessageLength(data);
-    }
-
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
 
         MqttsnSpecificationValidator.validatePacketLength(data);
 
-        AbstractMqttsnMessage msg = null;
+        AbstractMqttsnMessage msg;
         int msgType = readMessageType(data);
 
         switch (msgType) {
-            case MqttsnConstants.ADVERTISE:
-                validateLengthGreaterThanOrEquals(data, 3);
-                msg = new MqttsnAdvertise();
-                break;
-            case MqttsnConstants.SEARCHGW:
-                validateLengthEquals(data, 3);
-                msg = new MqttsnSearchGw();
-                break;
-            case MqttsnConstants.GWINFO:
-                validateLengthGreaterThanOrEquals(data, 3);
-                msg = new MqttsnGwInfo();
+            case MqttsnConstants.AUTH:
+                validateLengthGreaterThanOrEquals(data, 5);
+                msg = new MqttsnAuth();
                 break;
             case MqttsnConstants.CONNECT:
-                validateLengthGreaterThanOrEquals(data, 6);
-                msg = new MqttsnConnect();
+                validateLengthGreaterThanOrEquals(data, 12);
+                msg = new MqttsnConnect_V2_0();
                 break;
             case MqttsnConstants.CONNACK:
-                validateLengthEquals(data, 3);
-                msg = new MqttsnConnack();
-                break;
-            case MqttsnConstants.REGISTER:
-                validateLengthGreaterThanOrEquals(data, 7);
-                msg = new MqttsnRegister();
+                validateLengthEquals(data, 7);
+                msg = new MqttsnConnack_V2_0();
                 break;
             case MqttsnConstants.REGACK:
-                validateLengthEquals(data, 7);
-                msg = new MqttsnRegack();
+                validateLengthEquals(data, 8);
+                msg = new MqttsnRegack_V2_0();
                 break;
             case MqttsnConstants.PUBLISH:
-                validateLengthGreaterThanOrEquals(data, 7);
-                msg = new MqttsnPublish();
+                validateLengthGreaterThanOrEquals(data, 9);
+                msg = new MqttsnPublish_V2_0();
                 msg.decode(data);
                 break;
             case MqttsnConstants.PUBACK:
-                validateLengthEquals(data, 7);
-                msg = new MqttsnPuback();
-                break;
-            case MqttsnConstants.PUBCOMP:
-                validateLengthEquals(data, 4);
-                msg = new MqttsnPubcomp();
-                break;
-            case MqttsnConstants.PUBREC:
-                validateLengthEquals(data, 4);
-                msg = new MqttsnPubrec();
-                break;
-            case MqttsnConstants.PUBREL:
-                validateLengthEquals(data, 4);
-                msg = new MqttsnPubrel();
+                validateLengthEquals(data, 5);
+                msg = new MqttsnPuback_V2_0();
                 break;
             case MqttsnConstants.PINGREQ:
                 validateLengthGreaterThanOrEquals(data, 2);
-                msg = new MqttsnPingreq();
+                msg = new MqttsnPingreq_V2_0();
                 break;
             case MqttsnConstants.PINGRESP:
-                validateLengthEquals(data, 2);
-                msg = new MqttsnPingresp();
+                validateLengthGreaterThanOrEquals(data, 2);
+                msg = new MqttsnPingresp_V2_0();
                 break;
             case MqttsnConstants.DISCONNECT:
                 validateLengthGreaterThanOrEquals(data, 2);
-                msg = new MqttsnDisconnect();
+                msg = new MqttsnDisconnect_V2_0();
                 break;
             case MqttsnConstants.SUBSCRIBE:
-                validateLengthGreaterThanOrEquals(data, 6);
-                msg = new MqttsnSubscribe();
+                validateLengthGreaterThanOrEquals(data, 7);
+                msg = new MqttsnSubscribe_V2_0();
                 break;
             case MqttsnConstants.SUBACK:
                 validateLengthEquals(data, 8);
-                msg = new MqttsnSuback();
+                msg = new MqttsnSuback_V2_0();
                 break;
             case MqttsnConstants.UNSUBSCRIBE:
-                validateLengthGreaterThanOrEquals(data, 6);
-                msg = new MqttsnUnsubscribe();
+                validateLengthGreaterThanOrEquals(data, 7);
+                msg = new MqttsnUnsubscribe_V2_0();
                 break;
             case MqttsnConstants.UNSUBACK:
-                validateLengthEquals(data, 4);
-                msg = new MqttsnUnsuback();
-                break;
-            case MqttsnConstants.WILLTOPICREQ:
-                validateLengthEquals(data, 2);
-                msg = new MqttsnWilltopicreq();
-                break;
-            case MqttsnConstants.WILLTOPIC:
-                validateLengthGreaterThanOrEquals(data, 3);
-                msg = new MqttsnWilltopic();
-                break;
-            case MqttsnConstants.WILLMSGREQ:
-                validateLengthEquals(data, 2);
-                msg = new MqttsnWillmsgreq();
-                break;
-            case MqttsnConstants.WILLMSG:
-                validateLengthGreaterThanOrEquals(data, 2);
-                msg = new MqttsnWillmsg();
-                break;
-            case MqttsnConstants.WILLTOPICUPD:
-                validateLengthGreaterThanOrEquals(data, 3);
-                msg = new MqttsnWilltopicudp();
-                break;
-            case MqttsnConstants.WILLTOPICRESP:
-                validateLengthEquals(data, 3);
-                msg = new MqttsnWilltopicresp();
-                break;
-            case MqttsnConstants.WILLMSGUPD:
-                validateLengthGreaterThanOrEquals(data, 2);
-                msg = new MqttsnWillmsgupd();
-                break;
-            case MqttsnConstants.WILLMSGRESP:
-                validateLengthEquals(data, 3);
-                msg = new MqttsnWillmsgresp();
-                break;
-            case MqttsnConstants.ENCAPSMSG:
-                validateLengthGreaterThanOrEquals(data, 5);
-                msg = new MqttsnEncapsmsg();
+                validateLengthEquals(data, 5);
+                msg = new MqttsnUnsuback_V2_0();
                 break;
             default:
-                throw new MqttsnCodecException(String.format("unknown message type [%s]", msgType));
+                msg = super.createInstance(data);
+                break;
         }
         msg.decode(data);
         return msg;
-    }
-
-    public static int readMessageType(byte[] data) {
-        int msgType;
-        if (isExtendedMessage(data)) {
-            msgType = (data[3] & 0xFF);
-        } else {
-            msgType = (data[1] & 0xFF);
-        }
-        return msgType;
-    }
-
-    public static byte readHeaderByteWithOffset(byte[] data, int index) {
-        return isExtendedMessage(data) ? data[index + 2] : data[index];
-    }
-
-    public static boolean isExtendedMessage(byte[] data) {
-        return data[0] == 0x01;
-    }
-
-    public static int readMessageLength(byte[] data) {
-        int length = 0;
-        if (isExtendedMessage(data)) {
-            //big payload
-            length = ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
-        } else {
-            //small payload
-            length = (data[0] & 0xFF);
-        }
-        return length;
     }
 
     @Override
@@ -247,13 +126,5 @@ public class Mqttsn_v2_0_Codec extends AbstractMqttsnCodec {
             }
         }
         return messageFactory;
-    }
-
-    @Override
-    public void validate(IMqttsnMessage message) throws MqttsnCodecException {
-        if(message instanceof IMqttsnMessageValidator){
-            IMqttsnMessageValidator v = (IMqttsnMessageValidator) message;
-            v.validate();
-        }
     }
 }

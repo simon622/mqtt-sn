@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public abstract class AbstractMqttsnWillMessage extends AbstractMqttsnMessage {
 
@@ -41,7 +42,7 @@ public abstract class AbstractMqttsnWillMessage extends AbstractMqttsnMessage {
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
         if (data.length > 2) {
-            msgData = readRemainingBytesFromIndexAdjusted(data, 2);
+            msgData = readRemainingBytesAdjusted(data, 2);
         }
     }
 

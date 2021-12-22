@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public class MqttsnDisconnect extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
@@ -49,7 +50,7 @@ public class MqttsnDisconnect extends AbstractMqttsnMessage implements IMqttsnMe
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
         if (data.length == 4) {
-            duration = read16BitAdjusted(data, 2);
+            duration = readUInt16Adjusted(data, 2);
         }
     }
 

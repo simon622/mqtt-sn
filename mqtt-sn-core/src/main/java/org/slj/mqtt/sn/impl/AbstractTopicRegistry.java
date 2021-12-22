@@ -104,7 +104,7 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
                 }
                 break;
             default:
-            case RESERVED:
+            case FULL:
                 break;
         }
 

@@ -22,47 +22,65 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdentificationPacket, IMqttsnMessageValidator {
+public class MqttsnAuth extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
-    protected String clientId;
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
+    protected int authMethodLength;
+    protected String authMethod;
+    protected byte[] authData;
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PINGREQ;
+        return MqttsnConstants.AUTH;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        byte[] body = readRemainingBytesAdjusted(data, 2);
-        if (body.length > 0) {
-            clientId = new String(body, MqttsnConstants.CHARSET);
-        }
+
+        returnCode = readUInt8Adjusted(data, 2);
+        authMethodLength = readUInt8Adjusted(data, 3);
+        authMethod = new String(
+                readBytesAdjusted(data, 4, authMethodLength), MqttsnConstants.CHARSET);
+        authData = readRemainingBytesAdjusted(data, 4 + authMethodLength);
+    }
+
+    public int getAuthMethodLength() {
+        return authMethodLength;
+    }
+
+    public String getAuthMethod() {
+        return authMethod;
+    }
+
+    public void setAuthMethod(String authMethod) {
+        this.authMethod = authMethod;
+        this.authMethodLength = authMethod == null ? 0 : authMethod.length();
+    }
+
+    public byte[] getAuthData() {
+        return authData;
+    }
+
+    public void setAuthData(byte[] authData) {
+        this.authData = authData;
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 2 + (clientId == null ? 0 : clientId.length());
-        byte[] msg = null;
+        int length = 4 + authMethodLength;
+        length += authData == null ? 0 : authData.length;
+
+        byte[] msg;
         int idx = 0;
-        if (length > 0xFF) {
+        if ((length) > 0xFF) {
             length += 2;
             msg = new byte[length];
             msg[idx++] = (byte) 0x01;
@@ -74,23 +92,23 @@ public class MqttsnPingreq extends AbstractMqttsnMessage implements IMqttsnIdent
         }
 
         msg[idx++] = (byte) getMessageType();
+        msg[idx++] = (byte) getReturnCode();
+        msg[idx++] = (byte) authMethodLength;
 
-        if (clientId != null) {
-            System.arraycopy(clientId.getBytes(MqttsnConstants.CHARSET), 0, msg, idx, clientId.length());
-        }
+        System.arraycopy(authMethod.getBytes(MqttsnConstants.CHARSET), 0, msg, idx, authMethodLength);
+        idx += authMethodLength;
+        System.arraycopy(authData, 0, msg, idx, authData.length);
         return msg;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnPingreq{");
-        sb.append("clientId='").append(clientId).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
 
     @Override
     public void validate() throws MqttsnCodecException {
-        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
+        MqttsnSpecificationValidator.validateAuthReasonCode(returnCode);
+        MqttsnSpecificationValidator.validateUInt8(authMethodLength);
+        MqttsnSpecificationValidator.validateStringData(authMethod, false);
+        if(authMethodLength != authMethod.length()){
+            throw new MqttsnCodecException("auth method does not match auth method length");
+        }
     }
 }

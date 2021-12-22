@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public class MqttsnSearchGw extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
@@ -71,7 +72,7 @@ public class MqttsnSearchGw extends AbstractMqttsnMessage implements IMqttsnMess
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validate8Bit(radius);
+        MqttsnSpecificationValidator.validateUInt8(radius);
     }
 
 }

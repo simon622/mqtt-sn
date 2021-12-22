@@ -30,14 +30,17 @@ import org.slj.mqtt.sn.codec.AbstractMqttsnMessageFactory;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
+import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_MessageFactory;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
-public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory implements IMqttsnMessageFactory {
+public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory implements IMqttsnMessageFactory {
 
     //singleton
-    private static Mqttsn_v2_0_MessageFactory instance;
+    private static volatile Mqttsn_v2_0_MessageFactory instance;
 
-    private Mqttsn_v2_0_MessageFactory() {
+
+    protected Mqttsn_v2_0_MessageFactory() {
     }
 
     public static IMqttsnMessageFactory getInstance() {
@@ -50,42 +53,14 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     }
 
     @Override
-    public IMqttsnMessage createAdvertise(int gatewayId, int duration) throws MqttsnCodecException {
-
-        MqttsnAdvertise msg = new MqttsnAdvertise();
-        msg.setGatewayId(gatewayId);
-        msg.setDuration(duration);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createSearchGw(int radius) throws MqttsnCodecException {
-
-        MqttsnSearchGw msg = new MqttsnSearchGw();
-        msg.setRadius(radius);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createGwinfo(int gatewayId, String gatewayAddress) throws MqttsnCodecException {
-
-        MqttsnGwInfo msg = new MqttsnGwInfo();
-        msg.setGatewayId(gatewayId);
-        msg.setGatewayAddress(gatewayAddress);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
     public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession) throws MqttsnCodecException {
 
-        MqttsnConnect msg = new MqttsnConnect();
+        //TODO add session expiry interval
+        MqttsnConnect_V2_0 msg = new MqttsnConnect_V2_0();
         msg.setClientId(clientId);
-        msg.setDuration(keepAlive);
-        msg.setProtocolId(0);
-        msg.setCleanSession(cleanSession);
+        msg.setKeepAlive(keepAlive);
+        msg.setSessionExpiryInterval(keepAlive);
+        msg.setCleanStart(cleanSession);
         msg.setWill(willPrompt);
         msg.validate();
         return msg;
@@ -94,94 +69,12 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     @Override
     public IMqttsnMessage createConnack(int returnCode) throws MqttsnCodecException {
 
-        MqttsnConnack msg = new MqttsnConnack();
+        //TODO
+
+        MqttsnConnack_V2_0 msg = new MqttsnConnack_V2_0();
         msg.setReturnCode(returnCode);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillTopicReq() throws MqttsnCodecException {
-        MqttsnWilltopicreq msg = new MqttsnWilltopicreq();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillTopic(int QoS, boolean retain, String topicPath) throws MqttsnCodecException {
-
-        MqttsnWilltopic msg = new MqttsnWilltopic();
-        msg.setQoS(QoS);
-        msg.setRetainedPublish(retain);
-        msg.setWillTopic(topicPath);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillTopicResp(int returnCode) throws MqttsnCodecException {
-
-        MqttsnWilltopicresp msg = new MqttsnWilltopicresp();
-        msg.setReturnCode(returnCode);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillTopicupd(int QoS, boolean retain, String topicPath) throws MqttsnCodecException {
-
-        MqttsnWilltopicudp msg = new MqttsnWilltopicudp();
-        msg.setQoS(QoS);
-        msg.setRetainedPublish(retain);
-        msg.setWillTopic(topicPath);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillMsgupd(byte[] payload) throws MqttsnCodecException {
-        MqttsnWillmsgupd msg = new MqttsnWillmsgupd();
-        msg.setMsgData(payload);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillMsgReq() throws MqttsnCodecException {
-        MqttsnWillmsgreq msg = new MqttsnWillmsgreq();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillMsg(byte[] payload) throws MqttsnCodecException {
-        MqttsnWillmsg msg = new MqttsnWillmsg();
-        msg.setMsgData(payload);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createWillMsgResp(int returnCode) throws MqttsnCodecException {
-
-        MqttsnWillmsgresp msg = new MqttsnWillmsgresp();
-        msg.setReturnCode(returnCode);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createRegister(int topicAlias, String topicPath) throws MqttsnCodecException {
-
-        MqttsnRegister msg = new MqttsnRegister();
-        msg.setTopicId(topicAlias);
-        msg.setTopicName(topicPath);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createRegister(String topicPath) throws MqttsnCodecException {
-        MqttsnRegister msg = new MqttsnRegister();
-        msg.setTopicName(topicPath);
+        msg.setAssignedClientId(null);
+        msg.setSessionExpiryInterval(0);
         msg.validate();
         return msg;
     }
@@ -189,7 +82,10 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     @Override
     public IMqttsnMessage createRegack(int topicAlias, int returnCode) throws MqttsnCodecException {
 
-        MqttsnRegack msg = new MqttsnRegack();
+        //TODO
+
+        MqttsnRegack_V2_0 msg = new MqttsnRegack_V2_0();
+        msg.setTopicIdType(MqttsnConstants.TOPIC_NORMAL);
         msg.setTopicId(topicAlias);
         msg.setReturnCode(returnCode);
         msg.validate();
@@ -199,7 +95,7 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     @Override
     public IMqttsnMessage createPublish(int QoS, boolean DUP, boolean retain, MqttsnConstants.TOPIC_TYPE type, int topicId, byte[] payload) throws MqttsnCodecException {
 
-        MqttsnPublish msg = new MqttsnPublish();
+        MqttsnPublish_V2_0 msg = new MqttsnPublish_V2_0();
         msg.setQoS(QoS);
         msg.setDupRedelivery(DUP);
         msg.setRetainedPublish(retain);
@@ -227,10 +123,7 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     @Override
     public IMqttsnMessage createPublish(int QoS, boolean DUP, boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException {
 
-        int length = topicPath.getBytes(MqttsnConstants.CHARSET).length;
-        if (length > 2)
-            throw new MqttsnCodecException(String.format("invalid short topic supplied [%s] > 2", length));
-        MqttsnPublish msg = new MqttsnPublish();
+        MqttsnPublish_V2_0 msg = new MqttsnPublish_V2_0();
         msg.setQoS(QoS);
         msg.setDupRedelivery(DUP);
         msg.setRetainedPublish(retain);
@@ -242,36 +135,18 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
 
     @Override
     public IMqttsnMessage createPuback(int topicId, int returnCode) throws MqttsnCodecException {
-        MqttsnPuback msg = new MqttsnPuback();
-        msg.setTopicId(topicId);
+        MqttsnPuback_V2_0 msg = new MqttsnPuback_V2_0();
         msg.setReturnCode(returnCode);
         msg.validate();
         return msg;
     }
 
-    @Override
-    public IMqttsnMessage createPubrec() throws MqttsnCodecException {
-        MqttsnPubrec msg = new MqttsnPubrec();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createPubrel() throws MqttsnCodecException {
-        MqttsnPubrel msg = new MqttsnPubrel();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createPubcomp() throws MqttsnCodecException {
-        MqttsnPubcomp msg = new MqttsnPubcomp();
-        return msg;
-    }
 
     @Override
     public IMqttsnMessage createSubscribe(int QoS, MqttsnConstants.TOPIC_TYPE type, int topicId) throws MqttsnCodecException {
 
         MqttsnSpecificationValidator.validateTopicAlias(topicId);
-        MqttsnSubscribe msg = new MqttsnSubscribe();
+        MqttsnSubscribe_V2_0 msg = new MqttsnSubscribe_V2_0();
         msg.setQoS(QoS);
         switch (type) {
             case NORMAL:
@@ -294,11 +169,12 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     public IMqttsnMessage createSubscribe(int QoS, String topicName) throws MqttsnCodecException {
 
         MqttsnSpecificationValidator.validateTopicPath(topicName);
-
-        MqttsnSubscribe msg = new MqttsnSubscribe();
+        MqttsnSubscribe_V2_0 msg = new MqttsnSubscribe_V2_0();
         msg.setQoS(QoS);
         msg.setTopicName(topicName);
-
+        msg.setRetainHandling(MqttsnConstants.RETAINED_SEND);
+        msg.setNoLocal(false);
+        msg.setRetainAsPublished(false);
         msg.validate();
         return msg;
     }
@@ -306,8 +182,9 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
     @Override
     public IMqttsnMessage createSuback(int grantedQoS, int topicId, int returnCode) throws MqttsnCodecException {
 
-        MqttsnSuback msg = new MqttsnSuback();
+        MqttsnSuback_V2_0 msg = new MqttsnSuback_V2_0();
         msg.setQoS(grantedQoS);
+        msg.setTopicIdType(MqttsnConstants.TOPIC_NORMAL);
         msg.setTopicId(topicId);
         msg.setReturnCode(returnCode);
         msg.validate();
@@ -316,10 +193,8 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
 
     @Override
     public IMqttsnMessage createUnsubscribe(MqttsnConstants.TOPIC_TYPE type, int topicId) throws MqttsnCodecException {
-
         MqttsnSpecificationValidator.validateTopicAlias(topicId);
-
-        MqttsnUnsubscribe msg = new MqttsnUnsubscribe();
+        MqttsnUnsubscribe_V2_0 msg = new MqttsnUnsubscribe_V2_0();
         switch (type) {
             case NORMAL:
                 msg.setNormalTopicAlias(topicId);
@@ -335,58 +210,48 @@ public class Mqttsn_v2_0_MessageFactory extends AbstractMqttsnMessageFactory imp
 
     @Override
     public IMqttsnMessage createUnsubscribe(String topicName) throws MqttsnCodecException {
-
         MqttsnSpecificationValidator.validateTopicPath(topicName);
-
-        MqttsnUnsubscribe msg = new MqttsnUnsubscribe();
+        MqttsnUnsubscribe_V2_0 msg = new MqttsnUnsubscribe_V2_0();
         msg.setTopicName(topicName);
         return msg;
     }
 
     @Override
     public IMqttsnMessage createUnsuback() throws MqttsnCodecException {
-        MqttsnUnsuback msg = new MqttsnUnsuback();
+        MqttsnUnsuback_V2_0 msg = new MqttsnUnsuback_V2_0();
+        msg.setReturnCode(MqttsnConstants.RETURN_CODE_ACCEPTED);
         return msg;
     }
 
     @Override
     public IMqttsnMessage createPingreq(String clientId) throws MqttsnCodecException {
-
-        MqttsnPingreq msg = new MqttsnPingreq();
+        MqttsnPingreq_V2_0 msg = new MqttsnPingreq_V2_0();
         msg.setClientId(clientId);
+        msg.setMaxMessages(0);
         msg.validate();
         return msg;
     }
 
     @Override
     public IMqttsnMessage createPingresp() throws MqttsnCodecException {
-        MqttsnPingresp msg = new MqttsnPingresp();
+        MqttsnPingresp_V2_0 msg = new MqttsnPingresp_V2_0();
+        msg.setMessagesRemaining(0);
         return msg;
     }
 
     @Override
     public IMqttsnMessage createDisconnect() throws MqttsnCodecException {
-        MqttsnDisconnect msg = new MqttsnDisconnect();
+        MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
         msg.validate();
         return msg;
     }
 
     @Override
-    public IMqttsnMessage createDisconnect(int duration) throws MqttsnCodecException {
+    public IMqttsnMessage createDisconnect(int sessionExpiry) throws MqttsnCodecException {
 
-        MqttsnDisconnect msg = new MqttsnDisconnect();
-        msg.setDuration(duration);
-        msg.validate();
-        return msg;
-    }
-
-    @Override
-    public IMqttsnMessage createEncapsulatedMessage(String wirelessNodeId, int radius, byte[] messageData) throws MqttsnCodecException {
-
-        MqttsnEncapsmsg msg = new MqttsnEncapsmsg();
-        msg.setEncapsulatedMsg(messageData);
-        msg.setRadius(radius);
-        msg.setWirelessNodeId(wirelessNodeId);
+        MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
+        msg.setSessionExpiryInterval(sessionExpiry);
+        msg.setReasonString(null);
         msg.validate();
         return msg;
     }

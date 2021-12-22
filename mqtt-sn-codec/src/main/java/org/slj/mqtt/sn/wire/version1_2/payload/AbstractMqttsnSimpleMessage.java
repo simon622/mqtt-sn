@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public abstract class AbstractMqttsnSimpleMessage extends AbstractMqttsnMessage {
 

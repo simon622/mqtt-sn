@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.codec;
 import org.slj.mqtt.sn.spi.IMqttsnCodec;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.payload.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 /**
  * Base class for simple codec implementations. This version will only support message

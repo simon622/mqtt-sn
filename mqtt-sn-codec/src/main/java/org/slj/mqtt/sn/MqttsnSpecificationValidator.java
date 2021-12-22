@@ -38,7 +38,7 @@ public class MqttsnSpecificationValidator {
         if(data == null && !allowNull){
             return false;
         }
-        if(data.length() > MqttsnConstants.USIGNED_MAX_16){
+        if(data.length() > MqttsnConstants.UNSIGNED_MAX_16){
             return false;
         }
         for (int i = 0; i < data.length(); i++) {
@@ -73,18 +73,31 @@ public class MqttsnSpecificationValidator {
                 (clientId != null && clientId.length() <= maxLength);
     }
 
-    public static boolean valid8Bit(int field) throws MqttsnCodecException {
-        if (field < 0 || field > MqttsnConstants.USIGNED_MAX_8) {
+    public static boolean validUInt8(int field) {
+        if (field < 0 || field > MqttsnConstants.UNSIGNED_MAX_8) {
             return false;
         }
         return true;
     }
 
-    public static boolean valid16Bit(int field) throws MqttsnCodecException {
-        if (field < 0 || field > MqttsnConstants.USIGNED_MAX_16) {
+    public static boolean validUInt16(int field) {
+        if (field < 0 || field > MqttsnConstants.UNSIGNED_MAX_16) {
             return false;
         }
         return true;
+    }
+
+    public static boolean validUInt32(long field) {
+        if (field < 0 || field > MqttsnConstants.UNSIGNED_MAX_32) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean validTopicIdType(int field) {
+        return field == MqttsnConstants.TOPIC_PREDEFINED ||
+                field == MqttsnConstants.TOPIC_SHORT ||
+                field == MqttsnConstants.TOPIC_NORMAL || field == MqttsnConstants.TOPIC_FULL;
     }
 
     //-- these methods throw
@@ -104,9 +117,19 @@ public class MqttsnSpecificationValidator {
             throw new MqttsnCodecException("invalid topicPath - " + topicPath);
     }
 
+    public static void validateProtocolId(int protocolId){
+        if(protocolId != MqttsnConstants.PROTOCOL_VERSION_1_2 &&
+                 protocolId != MqttsnConstants.PROTOCOL_VERSION_2_0){
+            throw new MqttsnCodecException("invalid protocol version - " + protocolId);
+        }
+    }
+
     public static void validatePublishData(byte[] data) {
-        if(data == null || data.length > MqttsnConstants.MAX_PUBLISH_LENGTH)
-            throw new MqttsnCodecException("invalid publish data");
+        if(data == null)
+            throw new MqttsnCodecException("publish data cannot be null");
+
+        if(data.length > MqttsnConstants.MAX_PUBLISH_LENGTH)
+            throw new MqttsnCodecException("data too long for packet " + data.length);
     }
 
     public static void validateEncapsulatedData(byte[] data) {
@@ -115,23 +138,43 @@ public class MqttsnSpecificationValidator {
     }
 
     public static void validateReturnCode(int field) throws MqttsnCodecException {
-       validate8Bit(field);
+       validateUInt8(field);
+    }
+
+    public static void validateAuthReasonCode(int field) throws MqttsnCodecException {
+        validateUInt8(field);
+        if(field != 0x00 && field != 0x18 && field != 0x19)
+            throw new MqttsnCodecException("invalid auth reason code, must be one of 0x00, 0x18, 0x19");
     }
 
     public static void validatePacketIdentifier(int field) throws MqttsnCodecException {
-        validate16Bit(field);
+        validateUInt16(field);
+    }
+
+    public static void validateMaxPacketSize(int field) throws MqttsnCodecException {
+        validateUInt16(field);
     }
 
     public static void validateKeepAlive(int field) throws MqttsnCodecException {
-        validate16Bit(field);
+        validateUInt16(field);
+    }
+
+    public static void validateSessionExpiry(long field) throws MqttsnCodecException {
+        validateUInt32(field);
     }
 
     public static void validateDuration(int duration) throws MqttsnCodecException {
-        validate16Bit(duration);
+        validateUInt16(duration);
     }
 
     public static void validateTopicAlias(int field) throws MqttsnCodecException {
-        validate16Bit(field);
+        validateUInt16(field);
+    }
+
+    public static void validateTopicIdType(int field) throws MqttsnCodecException {
+        if (!validTopicIdType(field)) {
+            throw new MqttsnCodecException("invalid topicIdType - " + field);
+        }
     }
 
     public static void validatePacketLength(byte[] packet){
@@ -139,21 +182,27 @@ public class MqttsnSpecificationValidator {
             throw new MqttsnCodecException("malformed mqtt-sn packet, null");
         }
         if(packet.length < 2){
-            throw new MqttsnCodecException("malformed mqtt-sn packet, small");
+            throw new MqttsnCodecException("malformed mqtt-sn packet, small ("+packet.length+")");
         }
-        if(packet.length > MqttsnConstants.USIGNED_MAX_16){
-            throw new MqttsnCodecException("malformed mqtt-sn packet, large");
+        if(packet.length > MqttsnConstants.UNSIGNED_MAX_16){
+            throw new MqttsnCodecException("malformed mqtt-sn packet, large ("+packet.length+")");
         }
     }
 
-    public static void validate8Bit(int field) throws MqttsnCodecException {
-        if (!valid8Bit(field)) {
+    public static void validateUInt8(int field) throws MqttsnCodecException {
+        if (!validUInt8(field)) {
             throw new MqttsnCodecException("invalid unsigned 8 bit number - " + field);
         }
     }
 
-    public static void validate16Bit(int field) throws MqttsnCodecException {
-        if (!valid16Bit(field)) {
+    public static void validateUInt16(int field) throws MqttsnCodecException {
+        if (!validUInt16(field)) {
+            throw new MqttsnCodecException("invalid unsigned 16 bit number - " + field);
+        }
+    }
+
+    public static void validateUInt32(long field) throws MqttsnCodecException {
+        if (!validUInt32(field)) {
             throw new MqttsnCodecException("invalid unsigned 16 bit number - " + field);
         }
     }
@@ -164,6 +213,14 @@ public class MqttsnSpecificationValidator {
                 QoS != MqttsnConstants.QoS1 &&
                 QoS != MqttsnConstants.QoS2) {
             throw new MqttsnCodecException("invalid QoS number - " + QoS);
+        }
+    }
+
+    public static void validateRetainHandling(int retain) throws MqttsnCodecException {
+        if (retain != MqttsnConstants.RETAINED_SEND &&
+                retain != MqttsnConstants.RETAINED_NO_SEND &&
+                retain != MqttsnConstants.RETAINED_SEND_NOT_EXISTS) {
+            throw new MqttsnCodecException("invalid retain handling number - " + retain);
         }
     }
 

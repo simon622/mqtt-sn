@@ -22,36 +22,64 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.wire.version1_2.payload;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnPingresp extends AbstractMqttsnMessage {
+public class MqttsnPingresp_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+
+    protected int messagesRemaining = 0;
 
     @Override
     public int getMessageType() {
         return MqttsnConstants.PINGRESP;
     }
 
+    public boolean needsId() {
+        return false;
+    }
+
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
+        if(data.length > 2){
+            messagesRemaining = readUInt8Adjusted(data, 2);
+        }
+    }
+
+    public int getMessagesRemaining() {
+        return messagesRemaining;
+    }
+
+    public void setMessagesRemaining(int messagesRemaining) {
+        this.messagesRemaining = messagesRemaining;
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        byte[] data = new byte[2];
-        data[0] = (byte) data.length;
-        data[1] = (byte) getMessageType();
-        return data;
+        int length = 3;
+        int idx = 0;
+        byte[] msg = new byte[length];
+        msg[idx++] = (byte) length;
+        msg[idx++] = (byte) getMessageType();
+        msg[idx++] = (byte) getMessagesRemaining();
+
+        return msg;
+    }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateUInt8(messagesRemaining);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnPingresp{");
-        sb.append('}');
-        return sb.toString();
+        return "MqttsnPingresp_V2_0{" +
+                "messagesRemaining=" + messagesRemaining +
+                '}';
     }
 }

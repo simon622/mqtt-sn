@@ -29,7 +29,6 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageHandler;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.IMqttsnSessionState;
@@ -41,7 +40,6 @@ import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
-import java.util.Set;
 import java.util.logging.Level;
 
 public class MqttsnGatewayMessageHandler
@@ -157,7 +155,7 @@ public class MqttsnGatewayMessageHandler
 
         MqttsnDisconnect d = (MqttsnDisconnect) receivedDisconnect;
 
-        if(!MqttsnSpecificationValidator.valid16Bit(d.getDuration())){
+        if(!MqttsnSpecificationValidator.validUInt16(d.getDuration())){
             logger.log(Level.WARNING, String.format("invalid sleep duration specified, reject client [%s]", d.getDuration()));
             return super.handleDisconnect(context, initialDisconnect, receivedDisconnect);
         } else {

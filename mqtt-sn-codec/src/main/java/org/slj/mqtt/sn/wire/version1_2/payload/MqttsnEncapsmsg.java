@@ -28,8 +28,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 import java.util.Arrays;
 
@@ -72,10 +71,10 @@ public class MqttsnEncapsmsg extends AbstractMqttsnMessage implements IMqttsnMes
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        int length = Mqttsn_v1_2_Codec.readMessageLength(data);
+        int length = readMessageLength(data);
 
         int offset = 0;
-        if (Mqttsn_v1_2_Codec.isExtendedMessage(data)) {
+        if (isLargeMessage(data)) {
             offset = 2;
         }
         int idx = 2 + offset;
@@ -152,7 +151,7 @@ public class MqttsnEncapsmsg extends AbstractMqttsnMessage implements IMqttsnMes
     public void validate() throws MqttsnCodecException {
 
         if(wirelessNodeId != null) MqttsnSpecificationValidator.validStringData(getWirelessNodeId(), false);
-        MqttsnSpecificationValidator.validate8Bit(radius);
+        MqttsnSpecificationValidator.validateUInt8(radius);
         MqttsnSpecificationValidator.validateEncapsulatedData(encapsulatedMsg);
     }
 }

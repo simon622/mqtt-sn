@@ -26,10 +26,11 @@ package org.slj.mqtt.sn.wire.version1_2.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public class MqttsnUnsuback extends AbstractMqttsnMessage {
 
-    public boolean needsMsgId() {
+    public boolean needsId() {
         return true;
     }
 
@@ -40,7 +41,7 @@ public class MqttsnUnsuback extends AbstractMqttsnMessage {
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        msgId = read16BitAdjusted(data, 2);
+        id = readUInt16Adjusted(data, 2);
     }
 
     @Override
@@ -50,8 +51,8 @@ public class MqttsnUnsuback extends AbstractMqttsnMessage {
         data[0] = (byte) data.length;
         data[1] = (byte) getMessageType();
 
-        data[2] = (byte) ((msgId >> 8) & 0xFF);
-        data[3] = (byte) (msgId & 0xFF);
+        data[2] = (byte) ((id >> 8) & 0xFF);
+        data[3] = (byte) (id & 0xFF);
 
         return data;
     }
@@ -59,7 +60,7 @@ public class MqttsnUnsuback extends AbstractMqttsnMessage {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MqttsnUnsuback{");
-        sb.append("msgId=").append(msgId);
+        sb.append("id=").append(id);
         sb.append('}');
         return sb.toString();
     }

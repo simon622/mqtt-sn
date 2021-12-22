@@ -250,9 +250,9 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             afterHandle(context, message, response);
 
             if (response != null) {
-                if (response.needsMsgId() && response.getMsgId() == 0) {
-                    int msgId = message.getMsgId();
-                    response.setMsgId(msgId);
+                if (response.needsId() && response.getId() == 0) {
+                    int msgId = message.getId();
+                    response.setId(msgId);
                 }
 
                 handleResponse(context, response);
@@ -418,8 +418,8 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
         if(response != null && response.isErrorMessage()){
             //we need to remove any message that was marked inflight
-            if(message.needsMsgId()){
-                if(registry.getMessageStateService().removeInflight(context, message.getMsgId()) != null){
+            if(message.needsId()){
+                if(registry.getMessageStateService().removeInflight(context, message.getId()) != null){
                     logger.log(Level.WARNING, "tidied up bad message that was marked inflight and yeilded error response");
                 }
             }

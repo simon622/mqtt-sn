@@ -28,15 +28,14 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     protected int topicId;
     protected String topicName;
 
-    public boolean needsMsgId() {
+    public boolean needsId() {
         return true;
     }
 
@@ -64,15 +63,15 @@ public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMess
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        if (Mqttsn_v1_2_Codec.isExtendedMessage(data)) {
-            topicId = read16BitAdjusted(data, 4);
-            msgId = read16BitAdjusted(data, 6);
+        if (isLargeMessage(data)) {
+            topicId = readUInt16Adjusted(data, 4);
+            id = readUInt16Adjusted(data, 6);
         } else {
-            topicId = read16BitAdjusted(data, 2);
-            msgId = read16BitAdjusted(data, 4);
+            topicId = readUInt16Adjusted(data, 2);
+            id = readUInt16Adjusted(data, 4);
         }
 
-        byte[] body = readRemainingBytesFromIndexAdjusted(data, 6);
+        byte[] body = readRemainingBytesAdjusted(data, 6);
         if (body.length > 0) {
             topicName = new String(body, MqttsnConstants.CHARSET);
         }
@@ -105,8 +104,8 @@ public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMess
         msg[idx++] = ((byte) (0xFF & (topicId >> 8)));
         msg[idx++] = ((byte) (0xFF & topicId));
 
-        msg[idx++] = ((byte) (0xFF & (msgId >> 8)));
-        msg[idx++] = ((byte) (0xFF & msgId));
+        msg[idx++] = ((byte) (0xFF & (id >> 8)));
+        msg[idx++] = ((byte) (0xFF & id));
 
         if (topicByteArr != null && topicByteArr.length > 0) {
             System.arraycopy(topicByteArr, 0, msg, idx, topicByteArr.length);
@@ -120,7 +119,7 @@ public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMess
         final StringBuilder sb = new StringBuilder("MqttsnRegister{");
         sb.append("topicId=").append(topicId);
         sb.append(", topicName='").append(topicName).append('\'');
-        sb.append(", msgId=").append(msgId);
+        sb.append(", id=").append(id);
         sb.append('}');
         return sb.toString();
     }

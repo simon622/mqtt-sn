@@ -24,22 +24,20 @@
 
 package org.slj.mqtt.sn.wire.version1_2.payload;
 
-import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
 public abstract class AbstractMqttsnSubscribeUnsubscribe extends AbstractMqttsnMessageWithTopicData {
 
-    public boolean needsMsgId() {
+    public boolean needsId() {
         return true;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        readFlags(Mqttsn_v1_2_Codec.readHeaderByteWithOffset(data, 2));
-        msgId = read16BitAdjusted(data, 3);
-        topicData = readRemainingBytesFromIndexAdjusted(data, 5);
+        readFlags(readHeaderByteWithOffset(data, 2));
+        id = readUInt16Adjusted(data, 3);
+        topicData = readRemainingBytesAdjusted(data, 5);
     }
 
     @Override
@@ -63,8 +61,8 @@ public abstract class AbstractMqttsnSubscribeUnsubscribe extends AbstractMqttsnM
         msg[idx++] = (byte) getMessageType();
         msg[idx++] = writeFlags();
 
-        msg[idx++] = (byte) ((msgId >> 8) & 0xFF);
-        msg[idx++] = (byte) (msgId & 0xFF);
+        msg[idx++] = (byte) ((id >> 8) & 0xFF);
+        msg[idx++] = (byte) (id & 0xFF);
 
         if (topicData != null && topicData.length > 0) {
             System.arraycopy(topicData, 0, msg, idx, topicData.length);

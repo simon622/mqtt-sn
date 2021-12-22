@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 public class MqttsnAdvertise extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
@@ -57,8 +58,8 @@ public class MqttsnAdvertise extends AbstractMqttsnMessage implements IMqttsnMes
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        gatewayId = read8BitAdjusted(data, 2);
-        duration = read16BitAdjusted(data, 3);
+        gatewayId = readUInt8Adjusted(data, 2);
+        duration = readUInt16Adjusted(data, 3);
     }
 
     @Override
@@ -84,7 +85,7 @@ public class MqttsnAdvertise extends AbstractMqttsnMessage implements IMqttsnMes
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validate8Bit(gatewayId);
-        MqttsnSpecificationValidator.validate16Bit(duration);
+        MqttsnSpecificationValidator.validateUInt8(gatewayId);
+        MqttsnSpecificationValidator.validateUInt16(duration);
     }
 }

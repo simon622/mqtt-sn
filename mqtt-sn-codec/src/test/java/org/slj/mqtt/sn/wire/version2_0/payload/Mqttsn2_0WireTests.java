@@ -22,11 +22,19 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.codec;
+package org.slj.mqtt.sn.wire.version2_0.payload;
 
-import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
+import org.junit.Before;
+import org.slj.mqtt.sn.codec.MqttsnCodecs;
+import org.slj.mqtt.sn.wire.version1_2.payload.Mqttsn1_2WireTests;
 
-public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFactory  {
+public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
+
+    @Before
+    public void setup(){
+        codec = MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0;
+        factory = codec.createMessageFactory();
+    }
 
 
 }

@@ -71,7 +71,21 @@ public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
         super.start(runtime);
         rateLimiter = RateLimiter.create(((MqttsnGatewayOptions)runtime.getOptions()).
                 getMaxBrokerPublishesPerSecond());
+        connectOnStartup();
         initPublisher();
+    }
+
+    protected void connectOnStartup() throws MqttsnException{
+        if(options.getConnectOnStartup()){
+            logger.log(Level.INFO, "aggregating backend connecting during startup requested..");
+            try {
+                getBrokerConnection(null);
+            } catch(MqttsnBackendException e){
+                logger.log(Level.SEVERE, "encountered error attempting broker connect..", e);
+                throw new MqttsnException("encountered error attempting broker connect..",e);
+            }
+            logger.log(Level.INFO, "connection complete, backend service ready.");
+        }
     }
 
     @Override
@@ -200,7 +214,7 @@ public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
                     logger.log(Level.SEVERE, String.format("error publishing via queue publisher;"), e);
                 }
             } while(running && !stopped);
-        }, "mqtt-sn-broker-publisher");
+        }, "mqtt-sn-backend-publisher");
         publishingThread.setDaemon(true);
         publishingThread.setPriority(Thread.MIN_PRIORITY);
         publishingThread.start();

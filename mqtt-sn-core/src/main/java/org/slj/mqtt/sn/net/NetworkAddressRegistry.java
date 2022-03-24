@@ -133,8 +133,8 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
     @Override
     public boolean removeExistingClientId(String clientId){
-        Iterator<IMqttsnContext> itr = mqttsnContextRegistry.keySet().iterator();
         synchronized (mqttsnContextRegistry) {
+            Iterator<IMqttsnContext> itr = mqttsnContextRegistry.keySet().iterator();
             while (itr.hasNext()) {
                 IMqttsnContext m = itr.next();
                 if(m.getId().equals(clientId)){

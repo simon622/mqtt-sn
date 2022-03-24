@@ -57,16 +57,6 @@ public abstract class AbstractMqttsnBackendService
     public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         validateBrokerConnectionDetails();
-        if(options.getConnectOnStartup()){
-            logger.log(Level.INFO, "connect during startup requested..");
-            try {
-                getBrokerConnection(null);
-            } catch(MqttsnBackendException e){
-                logger.log(Level.SEVERE, "encountered error attempting broker connect..", e);
-                throw new MqttsnException("encountered error attempting broker connect..",e);
-            }
-            logger.log(Level.INFO, "connection complete, broker service ready.");
-        }
     }
 
     protected void validateBrokerConnectionDetails(){

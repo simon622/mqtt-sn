@@ -25,10 +25,15 @@
 package org.slj.mqtt.sn.gateway.connector.aws.iotcore;
 
 import com.amazonaws.services.iot.client.*;
-import org.slj.mqtt.sn.gateway.impl.broker.AbstractMqttsnBrokerConnection;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
+import org.slj.mqtt.sn.gateway.spi.*;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,17 +50,17 @@ import java.util.logging.Logger;
  *
  * Uses the AWS SDK (which in turn uses PAHO) to connect to the AWS IoT Core
  */
-public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnection {
+public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConnection {
 
     private Logger logger = Logger.getLogger(AWSIoTCoreMqttsnBrokerConnection.class.getName());
 
     static int MIN_TIMEOUT = 5000;
 
     private volatile AWSIotMqttClient client = null;
-    private MqttsnBrokerOptions options;
+    private MqttsnBackendOptions options;
     private final String clientId;
 
-    public AWSIoTCoreMqttsnBrokerConnection(MqttsnBrokerOptions options, String clientId) {
+    public AWSIoTCoreMqttsnBrokerConnection(MqttsnBackendOptions options, String clientId) {
         this.options = options;
         this.clientId = clientId;
     }
@@ -64,7 +69,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
         return Math.max(options.getConnectionTimeout() * 1000, MIN_TIMEOUT);
     }
 
-    public void connect() throws MqttsnBrokerException {
+    public void connect() throws MqttsnBackendException {
         if(client == null || !isConnected()){
             synchronized (this){
                 if(client == null || !isConnected()){
@@ -77,7 +82,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
                         logger.log(Level.INFO, String.format("connecting new AWS client with username [%s] and keepAlive [%s]",
                                 options.getUsername(), options.getKeepAlive()));
                     } catch(Exception e){
-                        throw new MqttsnBrokerException(e);
+                        throw new MqttsnBackendException(e);
                     }
                 }
             }
@@ -157,11 +162,13 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
     }
 
     @Override
-    public boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException {
+    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
+            throws MqttsnBackendException {
         try {
             if(isConnected()){
+                int QoS = ((MqttsnSubscribe)message).getQoS();
                 logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
-                client.subscribe(new AWSIotTopic(topicPath, AWSIotQos.valueOf(awsSafeQoS(QoS))){
+                client.subscribe(new AWSIotTopic(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(QoS))){
                     @Override
                     public void onMessage(AWSIotMessage message) {
                         try {
@@ -173,55 +180,59 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBrokerConnec
                         }
                     }
                 });
-                return true;
+                return new SubscribeResult(Result.STATUS.SUCCESS);
             }
-            return false;
+            return new SubscribeResult(Result.STATUS.NOOP);
         } catch(AWSIotException e){
-            throw new MqttsnBrokerException(e);
+            throw new MqttsnBackendException(e);
         }
     }
 
     @Override
-    public boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException {
+    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
+            throws MqttsnBackendException {
         try {
             if(isConnected()){
                 logger.log(Level.INFO, String.format("unsubscribing broker from [%s]", topicPath));
-                client.unsubscribe(topicPath);
-                return true;
+                client.unsubscribe(topicPath.toString());
+                return new UnsubscribeResult(Result.STATUS.SUCCESS);
             }
-            return false;
+            return new UnsubscribeResult(Result.STATUS.NOOP);
         } catch(AWSIotException e){
-            throw new MqttsnBrokerException(e);
+            throw new MqttsnBackendException(e);
         }
     }
 
     @Override
-    public boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
+            throws MqttsnBackendException {
         try {
            if(isConnected()){
                try {
-                   client.publish(topicPath, AWSIotQos.valueOf(awsSafeQoS(QoS)), data,
-                           getOperationTimeout());
-                   return true;
+                   //TODO defer to codec
+                   int QoS = ((MqttsnPublish)message).getQoS();
+                   byte[] data = ((MqttsnPublish)message).getData();
+                   client.publish(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(QoS)), data, getOperationTimeout());
+                   return new PublishResult(Result.STATUS.SUCCESS);
                } catch(AWSIotTimeoutException e){
                    logger.log(Level.WARNING, String.format("timedout sending message to broker [%s]", topicPath));
-                   return false;
+                   return new PublishResult(Result.STATUS.ERROR, "timed out publishing to broker");
                }
            }
-           return false;
+           return new PublishResult(Result.STATUS.NOOP);
         } catch(Exception e){
-            throw new MqttsnBrokerException(e);
+            throw new MqttsnBackendException(e);
         }
     }
 
     @Override
-    public boolean disconnect(IMqttsnContext context, int keepAlive) throws MqttsnBrokerException {
-        return true;
+    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) {
+        return new DisconnectResult(Result.STATUS.SUCCESS);
     }
 
     @Override
-    public boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException{
-        return true;
+    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) {
+        return new ConnectResult(Result.STATUS.SUCCESS);
     }
 
     protected static KeyStore loadKeyStore(File keyStoreFile, String password)

@@ -54,7 +54,8 @@ public class MqttsnGatewayQueueProcessorStateService extends MqttsnService<IMqtt
             if(MqttsnUtils.in(state.getClientState() , MqttsnClientState.AWAKE)){
                 logger.log(Level.INFO, String.format("notified that the queue is empty, putting device back to sleep and sending ping-resp - [%s]", context));
                 //-- need to transition the device back to sleep
-                getRegistry().getGatewaySessionService().disconnect(state, state.getKeepAlive());
+                getRegistry().getGatewaySessionService().disconnect(state,
+                        getRegistry().getMessageFactory().createDisconnect(state.getKeepAlive()));
                 //-- need to send the closing ping-resp
                 IMqttsnMessage pingResp = getRegistry().getMessageFactory().createPingresp();
                 getRegistry().getTransport().writeToTransport(getRegistry().getNetworkRegistry().getContext(context), pingResp);

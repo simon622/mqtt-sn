@@ -24,22 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.spi.broker;
 
-import org.slj.mqtt.sn.spi.MqttsnException;
+public interface IMqttsnBackendConnectionFactory<T extends IMqttsnBackendConnection> {
 
-public class MqttsnBrokerException extends MqttsnException {
-
-    public MqttsnBrokerException() {
-    }
-
-    public MqttsnBrokerException(String message) {
-        super(message);
-    }
-
-    public MqttsnBrokerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MqttsnBrokerException(Throwable cause) {
-        super(cause);
-    }
+    T createConnection(MqttsnBackendOptions options, String clientId) throws MqttsnBackendException;
 }

@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.gateway.spi.broker;
 
 import java.util.Objects;
 
-public final class MqttsnBrokerOptions {
+public final class MqttsnBackendOptions {
 
     public static final boolean DEFAULT_CONNECT_ON_STARTUP = true;
     public static final boolean DEFAULT_MANAGED_CONNECTIONS = true;
@@ -52,76 +52,76 @@ public final class MqttsnBrokerOptions {
     private String certificateFileLocation = null;
     private String privateKeyFileLocation = null;
 
-    public MqttsnBrokerOptions(){
+    public MqttsnBackendOptions(){
 
     }
 
-    public MqttsnBrokerOptions withCertificateFileLocation(String certificateFileLocation){
+    public MqttsnBackendOptions withCertificateFileLocation(String certificateFileLocation){
         this.certificateFileLocation = certificateFileLocation;
         return this;
     }
 
-    public MqttsnBrokerOptions withPrivateKeyFileLocation(String privateKeyFileLocation){
+    public MqttsnBackendOptions withPrivateKeyFileLocation(String privateKeyFileLocation){
         this.privateKeyFileLocation = privateKeyFileLocation;
         return this;
     }
 
-    public MqttsnBrokerOptions withKeystoreLocation(String keystoreLocation){
+    public MqttsnBackendOptions withKeystoreLocation(String keystoreLocation){
         this.keystoreLocation = keystoreLocation;
         return this;
     }
 
-    public MqttsnBrokerOptions withKeystorePassword(String keystorePassword){
+    public MqttsnBackendOptions withKeystorePassword(String keystorePassword){
         this.keystorePassword = keystorePassword;
         return this;
     }
 
-    public MqttsnBrokerOptions withKeyPassword(String keyPassword){
+    public MqttsnBackendOptions withKeyPassword(String keyPassword){
         this.keyPassword = keyPassword;
         return this;
     }
 
-    public MqttsnBrokerOptions withConnectOnStartup(boolean connectOnStartup){
+    public MqttsnBackendOptions withConnectOnStartup(boolean connectOnStartup){
         this.connectOnStartup = connectOnStartup;
         return this;
     }
 
-    public MqttsnBrokerOptions withManagedConnections(boolean managedConnections){
+    public MqttsnBackendOptions withManagedConnections(boolean managedConnections){
         this.managedConnections = managedConnections;
         return this;
     }
 
-    public MqttsnBrokerOptions withProtocol(String protocol){
+    public MqttsnBackendOptions withProtocol(String protocol){
         this.protocol = protocol;
         return this;
     }
 
-    public MqttsnBrokerOptions withUsername(String username){
+    public MqttsnBackendOptions withUsername(String username){
         this.username = username;
         return this;
     }
 
-    public MqttsnBrokerOptions withPassword(String password){
+    public MqttsnBackendOptions withPassword(String password){
         this.password = password;
         return this;
     }
 
-    public MqttsnBrokerOptions withKeepAlive(int keepAlive){
+    public MqttsnBackendOptions withKeepAlive(int keepAlive){
         this.keepAlive = keepAlive;
         return this;
     }
 
-    public MqttsnBrokerOptions withConnectionTimeout(int connectionTimeout){
+    public MqttsnBackendOptions withConnectionTimeout(int connectionTimeout){
         this.connectionTimeout = connectionTimeout;
         return this;
     }
 
-    public MqttsnBrokerOptions withHost(String host){
+    public MqttsnBackendOptions withHost(String host){
         this.host = host;
         return this;
     }
 
-    public MqttsnBrokerOptions withPort(int port){
+    public MqttsnBackendOptions withPort(int port){
         this.port = port;
         return this;
     }

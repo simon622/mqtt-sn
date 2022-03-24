@@ -27,8 +27,8 @@ package org.slj.mqtt.sn.gateway.connector.paho;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -58,7 +58,7 @@ public class AggregatingGatewayMain {
         //-- the password of the MQTT broker you are connecting to
         String password = args[5].trim();
 
-        MqttsnBrokerOptions brokerOptions = new MqttsnBrokerOptions().
+        MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
                 withHost(host).
                 withPort(port).
                 withUsername(username).
@@ -74,7 +74,7 @@ public class AggregatingGatewayMain {
         //-- construct the registry of controllers and config
         AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(gatewayOptions).
                 withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                withBrokerService(new MqttsnAggregatingBrokerService(brokerOptions)).
+                withBrokerService(new MqttsnAggregatingBroker(brokerOptions)).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

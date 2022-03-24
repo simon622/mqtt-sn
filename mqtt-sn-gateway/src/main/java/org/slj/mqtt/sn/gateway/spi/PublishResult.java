@@ -26,6 +26,10 @@ package org.slj.mqtt.sn.gateway.spi;
 
 public class PublishResult extends Result {
 
+    public PublishResult(STATUS status) {
+        super(status);
+    }
+
     public PublishResult(STATUS status, String message) {
         super(status);
         setMessage(message);

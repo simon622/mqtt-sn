@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.spi.IMqttsnCodec;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.version1_2.payload.AbstractMqttsnMessageWithFlagsField;
 
 /**
  * Base class for simple codec implementations. This version will only support message
@@ -67,9 +68,16 @@ public abstract class AbstractMqttsnCodec implements IMqttsnCodec {
     }
 
     @Override
+    public int getQoS(IMqttsnMessage message, boolean convertMinus1) {
+        return convertMinus1 ? Math.max(getQoS(message), 0) : getQoS(message);
+    }
+
+    @Override
     public String print(IMqttsnMessage message) throws MqttsnCodecException {
         return MqttsnWireUtils.toBinary(encode(message));
     }
 
     protected abstract IMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException;
+
+    protected abstract int getQoS(IMqttsnMessage message);
 }

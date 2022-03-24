@@ -34,6 +34,7 @@ import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.ThreadDump;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.*;
 import java.net.UnknownHostException;
@@ -94,7 +95,7 @@ public abstract class AbstractInteractiveCli {
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
 
-        runtime.registerPublishReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retain) -> {
+        runtime.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
             try {
                 receiveCount.incrementAndGet();
                 receivedPublishBytesCount.addAndGet(data.length);
@@ -104,12 +105,12 @@ public abstract class AbstractInteractiveCli {
                 e.printStackTrace();
             }
         });
-        runtime.registerPublishSentListener((IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] data) -> {
+        runtime.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
             try {
                 sentCount.incrementAndGet();
                 publishedBytesCount.addAndGet(data.length);
                 if(enableOutput) asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
-                        data.length, topicName, context.getId(), new String(data)));
+                        data.length, topic, context.getId(), new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -117,11 +118,12 @@ public abstract class AbstractInteractiveCli {
         enableOutput();
         message("Adding runtime listeners.. DONE");
 
-        runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] data, int retryCount) -> {
+        runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topic, byte[] data, IMqttsnMessage message, int retryCount) -> {
             try {
                 sentCount.incrementAndGet();
+                int QoS = runtimeRegistry.getCodec().getQoS(message, true);
                 asyncmessage(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] \"%s\"",
-                        retryCount, data.length, topicName, QoS, new String(data)));
+                        retryCount, data.length, topic, QoS, new String(data)));
             } catch(Exception e){
                 e.printStackTrace();
             }

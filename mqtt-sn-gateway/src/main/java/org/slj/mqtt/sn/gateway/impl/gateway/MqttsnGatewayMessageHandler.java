@@ -158,8 +158,7 @@ public class MqttsnGatewayMessageHandler
         }
 
         IMqttsnSessionState state = getSessionState(context, true);
-        ConnectResult result = registry.getGatewaySessionService().connect(state, clientId,
-                keepAlive, cleanStart);
+        ConnectResult result = registry.getGatewaySessionService().connect(state, connect);
 
         processSessionResult(result);
         if(result.isError()){
@@ -195,7 +194,7 @@ public class MqttsnGatewayMessageHandler
         boolean needsResponse = initialDisconnect != null ||
                 (state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED));
         if(state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED)){
-            registry.getGatewaySessionService().disconnect(state, keepAlive);
+            registry.getGatewaySessionService().disconnect(state, receivedDisconnect);
         }
         return needsResponse ?
                 super.handleDisconnect(context, initialDisconnect, receivedDisconnect) : null;
@@ -285,7 +284,7 @@ public class MqttsnGatewayMessageHandler
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData,
                 topicIdType == 0);
 
-        SubscribeResult result = registry.getGatewaySessionService().subscribe(state, info, QoS);
+        SubscribeResult result = registry.getGatewaySessionService().subscribe(state, info, message);
         logger.log(Level.INFO, "subscribe message yielded info " + info + " and result " + result);
         processSessionResult(result);
         if(result.isError()){
@@ -311,7 +310,7 @@ public class MqttsnGatewayMessageHandler
 
         IMqttsnSessionState state = getSessionState(context);
         TopicInfo info = registry.getTopicRegistry().normalize((byte) unsubscribe.getTopicType(), unsubscribe.getTopicData(), true);
-        UnsubscribeResult result = registry.getGatewaySessionService().unsubscribe(state, info);
+        UnsubscribeResult result = registry.getGatewaySessionService().unsubscribe(state, info, message);
         processSessionResult(result);
         return registry.getMessageFactory().createUnsuback();
     }

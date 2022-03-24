@@ -22,29 +22,35 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl.broker;
+package org.slj.mqtt.sn.gateway.impl.backend;
 
 import org.slj.mqtt.sn.gateway.spi.*;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnection;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerService;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
+import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-public abstract class AbstractMqttsnBrokerService
-        extends AbstractMqttsnBackoffThreadService<IMqttsnGatewayRuntimeRegistry> implements IMqttsnBrokerService {
+public abstract class AbstractMqttsnBackendService
+        extends AbstractMqttsnBackoffThreadService<IMqttsnGatewayRuntimeRegistry> implements IMqttsnBackendService {
 
-    protected MqttsnBrokerOptions options;
+    protected MqttsnBackendOptions options;
 
-    public AbstractMqttsnBrokerService(MqttsnBrokerOptions options){
+    public AbstractMqttsnBackendService(MqttsnBackendOptions options){
         this.options = options;
     }
 
@@ -59,7 +65,7 @@ public abstract class AbstractMqttsnBrokerService
             logger.log(Level.INFO, "connect during startup requested..");
             try {
                 getBrokerConnection(null);
-            } catch(MqttsnBrokerException e){
+            } catch(MqttsnBackendException e){
                 logger.log(Level.SEVERE, "encountered error attempting broker connect..", e);
                 throw new MqttsnException("encountered error attempting broker connect..",e);
             }
@@ -74,65 +80,63 @@ public abstract class AbstractMqttsnBrokerService
     }
 
     @Override
-    public ConnectResult connect(IMqttsnContext context, String clientId, boolean cleanSession, int keepAlive) throws MqttsnBrokerException {
-        IMqttsnBrokerConnection connection = getBrokerConnection(context);
+    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException {
+        IMqttsnBackendConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
-            throw new MqttsnBrokerException("underlying broker connection was not connected");
+            throw new MqttsnBackendException("underlying broker connection was not connected");
         }
-        boolean success = connection.connect(context, cleanSession, keepAlive);
-        return new ConnectResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR, success  ? "connection success" : "connection refused by broker side");
+        ConnectResult result = connection.connect(context, message);
+        return result;
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException {
-        IMqttsnBrokerConnection connection = getBrokerConnection(context);
+    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException {
+        IMqttsnBackendConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
-            throw new MqttsnBrokerException("underlying broker connection was not connected");
+            throw new MqttsnBackendException("underlying broker connection was not connected");
         }
-        boolean success = connection.disconnect(context, keepAlive);
-        return new DisconnectResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR, success  ? "disconnection success" : "disconnection refused by broker side");
+        DisconnectResult result = connection.disconnect(context, message);
+        return result;
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException {
-        IMqttsnBrokerConnection connection = getBrokerConnection(context);
+    public PublishResult publish(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException {
+        IMqttsnBackendConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
-            throw new MqttsnBrokerException("underlying broker connection was not connected");
+            throw new MqttsnBackendException("underlying broker connection was not connected");
         }
-        boolean success = connection.publish(context, topicPath, QoS, retain, payload);
-        if(success){
+        PublishResult result = connection.publish(context, topic, message);
+        if(!result.isError()){
             publishSentCount.incrementAndGet();
         }
-        return new PublishResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR, success ? "publish success" : "publish refused by broker side");
+        return result;
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException {
-        IMqttsnBrokerConnection connection = getBrokerConnection(context);
+    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException {
+        IMqttsnBackendConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
-            throw new MqttsnBrokerException("underlying broker connection was not connected");
+            throw new MqttsnBackendException("underlying broker connection was not connected");
         }
-        boolean success = connection.subscribe(context, topicPath, QoS);
-        SubscribeResult res = new SubscribeResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR);
-        if(success) res.setGrantedQoS(QoS);
+        SubscribeResult res = connection.subscribe(context, topic, message);
         return res;
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException {
-        IMqttsnBrokerConnection connection = getBrokerConnection(context);
+    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException {
+        IMqttsnBackendConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
-            throw new MqttsnBrokerException("underlying broker connection was not connected");
+            throw new MqttsnBackendException("underlying broker connection was not connected");
         }
-        boolean success = connection.unsubscribe(context, topicPath);
-        return new UnsubscribeResult(success ? Result.STATUS.SUCCESS : Result.STATUS.ERROR);
+        UnsubscribeResult res = connection.unsubscribe(context, topic, message);
+        return res;
     }
 
-    protected IMqttsnBrokerConnection getBrokerConnection(IMqttsnContext context) throws MqttsnBrokerException{
+    protected IMqttsnBackendConnection getBrokerConnection(IMqttsnContext context) throws MqttsnBackendException {
         synchronized (this){
-            IMqttsnBrokerConnection connection = getBrokerConnectionInternal(context);
+            IMqttsnBackendConnection connection = getBrokerConnectionInternal(context);
             if(!connection.isConnected()){
-                throw new MqttsnBrokerException("underlying broker connection was not connected");
+                throw new MqttsnBackendException("underlying broker connection was not connected");
             }
             return connection;
         }
@@ -174,7 +178,7 @@ public abstract class AbstractMqttsnBrokerService
     }
 
 
-    protected abstract void close(IMqttsnBrokerConnection connection) throws MqttsnBrokerException;
+    protected abstract void close(IMqttsnBackendConnection connection) throws MqttsnBackendException;
 
-    protected abstract IMqttsnBrokerConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBrokerException;
+    protected abstract IMqttsnBackendConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBackendException;
 }

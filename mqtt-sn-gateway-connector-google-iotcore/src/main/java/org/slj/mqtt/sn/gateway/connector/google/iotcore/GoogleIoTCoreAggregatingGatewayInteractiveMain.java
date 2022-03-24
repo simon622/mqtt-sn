@@ -28,8 +28,8 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayWithKeystore;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
@@ -39,7 +39,7 @@ public class GoogleIoTCoreAggregatingGatewayInteractiveMain {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGatewayWithKeystore() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
 
-                MqttsnBrokerOptions brokerOptions = new MqttsnBrokerOptions().
+                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
                         withHost(hostName).
                         withPort(1). //unused
                         withUsername(username).
@@ -52,7 +52,7 @@ public class GoogleIoTCoreAggregatingGatewayInteractiveMain {
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new GoogleIoTCoreMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingBrokerService(brokerOptions)).
+                        withBrokerService(new MqttsnAggregatingBroker(brokerOptions)).
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }

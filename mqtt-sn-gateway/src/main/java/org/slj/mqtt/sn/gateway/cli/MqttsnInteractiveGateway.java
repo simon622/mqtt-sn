@@ -27,9 +27,9 @@ package org.slj.mqtt.sn.gateway.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
+import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
 import org.slj.mqtt.sn.gateway.impl.gateway.MqttsnGatewaySessionService;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
@@ -38,13 +38,11 @@ import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.NetworkRegistryException;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -194,20 +192,20 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         }
     }
 
-    protected void poke() throws  MqttsnBrokerException {
+    protected void poke() throws MqttsnBackendException {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getBrokerService().pokeQueue();
+        gatewayRuntimeRegistry.getBackendService().pokeQueue();
     }
 
-    protected void reinit() throws  MqttsnBrokerException {
+    protected void reinit() throws MqttsnBackendException {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getBrokerService().reinit();
+        gatewayRuntimeRegistry.getBackendService().reinit();
     }
 
     @Override
     protected void resetMetrics() throws IOException {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getBrokerService().clearStats();
+        gatewayRuntimeRegistry.getBackendService().clearStats();
         ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).reset();
         super.resetMetrics();
     }
@@ -218,10 +216,10 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         super.stats();
 
         message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).getExpansionCount()));
-        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingBrokerService)gatewayRuntimeRegistry.getBrokerService()).getLastPublishAttempt()));
-        message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getQueuedCount()));
-        message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishSentCount()));
-        message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBrokerService().getPublishReceiveCount()));
+        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingBroker)gatewayRuntimeRegistry.getBackendService()).getLastPublishAttempt()));
+        message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBackendService().getQueuedCount()));
+        message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishSentCount()));
+        message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishReceiveCount()));
     }
 
     protected void queue(String topicName, String payload, int QoS)
@@ -328,7 +326,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         if(runtime != null) {
 
-            boolean connected = gatewayRuntimeRegistry.getBrokerService().isConnected(null);
+            boolean connected = gatewayRuntimeRegistry.getBackendService().isConnected(null);
 
             int maxClients = opts.getMaxConnectedClients();
             int advertiseTime = opts.getGatewayAdvertiseTime();

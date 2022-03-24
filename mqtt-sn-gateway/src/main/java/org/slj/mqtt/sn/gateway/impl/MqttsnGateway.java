@@ -52,8 +52,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         //-- start the network last
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBrokerConnectionFactory());
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBrokerService());
+        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendConnectionFactory());
+        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
 
         //-- start discovery
         if (runtime.getOptions().isEnableDiscovery()) {
@@ -62,12 +62,13 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         callStartup(runtime.getTransport());
 
-        //-- notify the broker of confirmed message
-        registerPublishReceivedListener((context, topicName, QoS, data, retain) -> {
+        //-- notify the backend of confirmed message
+        registerPublishReceivedListener((context, topicPath, data, message) -> {
             try {
-                ((IMqttsnGatewayRuntimeRegistry) registry).getBrokerService().publish(context, topicName, QoS, data, retain);
+                ((IMqttsnGatewayRuntimeRegistry) registry).
+                        getBackendService().publish(context, topicPath, message);
             } catch (MqttsnException e) {
-                logger.log(Level.SEVERE, "error publishing message to broker", e);
+                logger.log(Level.SEVERE, "error publishing message to backend", e);
             }
         });
     }
@@ -82,8 +83,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         }
 
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBrokerConnectionFactory());
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBrokerService());
+        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendConnectionFactory());
+        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
 
         //-- ensure we stop all the startable services
 

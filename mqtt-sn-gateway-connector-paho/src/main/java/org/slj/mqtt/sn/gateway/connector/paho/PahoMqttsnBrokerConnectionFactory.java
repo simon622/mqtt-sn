@@ -24,20 +24,20 @@
 
 package org.slj.mqtt.sn.gateway.connector.paho;
 
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 
-public class PahoMqttsnBrokerConnectionFactory implements IMqttsnBrokerConnectionFactory<PahoMqttsnBrokerConnection> {
+public class PahoMqttsnBrokerConnectionFactory implements IMqttsnBackendConnectionFactory<PahoMqttsnBrokerConnection> {
 
     @Override
-    public PahoMqttsnBrokerConnection createConnection(MqttsnBrokerOptions options, String clientId) throws MqttsnBrokerException {
+    public PahoMqttsnBrokerConnection createConnection(MqttsnBackendOptions options, String clientId) throws MqttsnBackendException {
         try {
             PahoMqttsnBrokerConnection connection = new PahoMqttsnBrokerConnection(options, clientId);
             if(options.getConnectOnStartup()) connection.connect();
             return connection;
         } catch(Exception e){
-            throw new MqttsnBrokerException("error creating connection;", e);
+            throw new MqttsnBackendException("error creating connection;", e);
         }
     }
 }

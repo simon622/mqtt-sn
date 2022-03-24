@@ -22,15 +22,30 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.spi;
+package org.slj.mqtt.sn.gateway.spi.broker;
 
+import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.UUID;
+import java.io.Closeable;
 
-public interface IMqttsnPublishFailureListener {
+public interface IMqttsnBackendConnection extends Closeable {
 
-    void sendFailure(IMqttsnContext context, UUID messageId, TopicPath topicPath, byte[] data, IMqttsnMessage message, int retryCount);
+    boolean isConnected() throws MqttsnBackendException;
 
+    void close();
+
+    DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
+
+    ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
+
+    SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+
+    UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+
+    PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+
+    boolean canAccept(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
 }

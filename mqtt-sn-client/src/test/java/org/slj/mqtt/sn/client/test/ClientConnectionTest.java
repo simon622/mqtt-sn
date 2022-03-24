@@ -147,7 +147,7 @@ public class ClientConnectionTest {
                     final byte[] payload = "hello".getBytes();
                     try (MqttsnClient client = new MqttsnClient()) {
                         client.start(createClientRuntimeRegistry("testClientId"));
-                        client.registerPublishReceivedListener((context, topicName, qos, data, retained) -> {
+                        client.registerPublishReceivedListener((context, topicName, data, message) -> {
                             if(Objects.deepEquals(data, payload)){
                                 latch.countDown();
                                 localLatch.countDown();

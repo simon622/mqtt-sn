@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -166,25 +167,25 @@ public abstract class AbstractMqttsnRuntime {
         }
     }
 
-    protected final void messageReceived(IMqttsnContext context, String topicName, int QoS, byte[] payload, boolean retain){
+    protected final void messageReceived(IMqttsnContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message){
         if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("publish received by application [%s], notifying [%s] listeners", topicName, receivedListeners.size()));
+            logger.log(Level.FINE, String.format("publish received by application [%s], notifying [%s] listeners", topicPath, receivedListeners.size()));
         }
-        receivedListeners.forEach(p -> p.receive(context, topicName, QoS, payload, retain));
+        receivedListeners.forEach(p -> p.receive(context, topicPath, data, message));
     }
 
-    protected final void messageSent(IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] payload){
+    protected final void messageSent(IMqttsnContext context, UUID messageId, TopicPath topicPath, byte[] data, IMqttsnMessage message){
         if(logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, String.format("sent confirmed by application [%s], notifying [%s] listeners", topicName, sentListeners.size()));
+            logger.log(Level.FINE, String.format("sent confirmed by application [%s], notifying [%s] listeners", topicPath, sentListeners.size()));
         }
-        sentListeners.forEach(p -> p.sent(context, messageId, topicName, QoS, payload));
+        sentListeners.forEach(p -> p.sent(context, messageId, topicPath, data, message));
     }
 
-    protected final void messageSendFailure(IMqttsnContext context, UUID messageId, String topicName, int QoS, byte[] payload, int retryCount){
+    protected final void messageSendFailure(IMqttsnContext context, UUID messageId, TopicPath topicPath, byte[] data, IMqttsnMessage message, int retryCount){
         if(logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, String.format("message failed sending [%s], notifying [%s] listeners", topicName, sendFailureListeners.size()));
+            logger.log(Level.FINE, String.format("message failed sending [%s], notifying [%s] listeners", topicPath, sendFailureListeners.size()));
         }
-        sendFailureListeners.forEach(p -> p.sendFailure(context, messageId, topicName, QoS, payload, retryCount));
+        sendFailureListeners.forEach(p -> p.sendFailure(context, messageId, topicPath, data, message, retryCount));
     }
 
     public void registerPublishReceivedListener(IMqttsnPublishReceivedListener listener) {

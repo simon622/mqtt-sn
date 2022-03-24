@@ -105,7 +105,7 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
         return ((readHeaderByteWithOffset(data, startIdx) & 0xFF) << 24) |
                         ((readHeaderByteWithOffset(data, startIdx + 1) & 0xFF) <<  16) |
                         ((readHeaderByteWithOffset(data, startIdx + 2) & 0xFF) << 8) |
-                        ((long) (readHeaderByteWithOffset(data, startIdx + 3) & 0xFF) << 0);
+                        ((long) (readHeaderByteWithOffset(data, startIdx + 3) & 0xFF));
     }
 
     protected String readUTF8EncodedStringAdjusted(byte[] data, int startIdx) {

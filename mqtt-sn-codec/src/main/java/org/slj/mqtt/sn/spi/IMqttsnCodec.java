@@ -44,11 +44,36 @@ public interface IMqttsnCodec {
      */
     PublishData getData(IMqttsnMessage message);
 
+    /**
+     * @return - Get the is retained from the supplied messages
+     */
+    boolean isRetainedPublish(IMqttsnMessage message);
 
     /**
      * @return - Get the QoS from the supplied messages
+     * If convert is used, the -1 will be upgraded to 0 for onward publishing
      */
-    int getQoS(IMqttsnMessage message);
+    int getQoS(IMqttsnMessage message, boolean convertMinus1);
+
+    /**
+     * @return the client from a CONNECT message
+     */
+    String getClientId(IMqttsnMessage message);
+
+    /**
+     * @return the cleanSession flag
+     */
+    boolean isCleanSession(IMqttsnMessage message);
+
+    /**
+     * @return the keepAlive flag
+     */
+    long getKeepAlive(IMqttsnMessage message);
+
+    /**
+     * @return the duration flag
+     */
+    long getDuration(IMqttsnMessage message);
 
     /**
      * @return - Does the message represent a PUBLISH

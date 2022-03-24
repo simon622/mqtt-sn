@@ -242,6 +242,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         }
 
         IMqttsnSessionState state = checkSession(QoS >= 0);
+        if(state.getClientState() == MqttsnClientState.ASLEEP ||
+                state.getClientState() == MqttsnClientState.DISCONNECTED){
+            startProcessing(true);
+        }
         UUID messageId = registry.getMessageRegistry().add(data, getMessageExpiry());
         return registry.getMessageQueue().offer(state.getContext(),
                 new QueuedPublishMessage(

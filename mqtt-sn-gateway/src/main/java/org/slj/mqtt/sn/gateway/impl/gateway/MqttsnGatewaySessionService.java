@@ -27,19 +27,23 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionRegistryService;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadService<IMqttsnGatewayRuntimeRegistry>
-        implements IMqttsnGatewaySessionRegistryService {
+        implements IMqttsnGatewaySessionService {
 
     protected Map<IMqttsnContext, IMqttsnSessionState> sessionLookup;
 
@@ -107,18 +111,23 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public ConnectResult connect(IMqttsnSessionState state, String clientId, int keepAlive, boolean cleanSession) throws MqttsnException {
+    public ConnectResult connect(IMqttsnSessionState state, IMqttsnMessage message) throws MqttsnException {
+
+        String clientId = getRegistry().getCodec().getClientId(message);
+        boolean cleanSession = getRegistry().getCodec().isCleanSession(message);
+        long keepAlive = getRegistry().getCodec().getKeepAlive(message);
+
         ConnectResult result = null;
         result = checkSessionSize(clientId);
         if(result == null){
             synchronized (state.getContext()){
                 try {
-                    result = registry.getBrokerService().connect(state.getContext(), state.getContext().getId(), cleanSession, keepAlive);
+                    result = registry.getBackendService().connect(state.getContext(), message);
                 } finally {
                     if(result == null || !result.isError()){
                         //clear down all prior session state
                         cleanSession(state.getContext(), cleanSession);
-                        state.setKeepAlive(keepAlive);
+                        state.setKeepAlive((int) keepAlive);
                         state.setClientState(MqttsnClientState.CONNECTED);
                     } else {
                         //-- connect was not successful ensure we
@@ -134,10 +143,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public void disconnect(IMqttsnSessionState state, long duration) throws MqttsnException {
+    public DisconnectResult disconnect(IMqttsnSessionState state, IMqttsnMessage message) throws MqttsnException {
         DisconnectResult result = null;
         synchronized (state.getContext()){
-            result = registry.getBrokerService().disconnect(state.getContext(), duration);
+
+            long duration = getRegistry().getCodec().getDuration(message);
+            result = registry.getBackendService().disconnect(state.getContext(), message);
             if(!result.isError()){
                 if(duration > 0){
                     logger.log(Level.INFO, String.format("[%s] setting client state asleep for [%s]", state.getContext(), duration));
@@ -154,13 +165,16 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 }
             }
         }
+        return result;
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, int QoS) throws MqttsnException {
+    public SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException {
 
         IMqttsnContext context = state.getContext();
         synchronized (context){
+
+            int QoS = getRegistry().getCodec().getQoS(message, true);
             String topicPath = null;
             if(info.getType() == MqttsnConstants.TOPIC_TYPE.PREDEFINED){
                 topicPath = registry.getTopicRegistry().lookupPredefined(context, info.getTopicId());
@@ -197,7 +211,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 }
 
                 if(registry.getSubscriptionRegistry().subscribe(state.getContext(), topicPath, QoS)){
-                    SubscribeResult result = registry.getBrokerService().subscribe(context, topicPath, QoS);
+                    SubscribeResult result = registry.getBackendService().subscribe(context, new TopicPath(topicPath), message);
                     result.setTopicInfo(info);
                     return result;
                 } else {
@@ -211,7 +225,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnSessionState state, TopicInfo info) throws MqttsnException {
+    public UnsubscribeResult unsubscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException {
 
         IMqttsnContext context = state.getContext();
         synchronized (context){
@@ -241,7 +255,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         "no topic found by specification");
             } else {
                 if(registry.getSubscriptionRegistry().unsubscribe(context, topicPath)){
-                    UnsubscribeResult result = registry.getBrokerService().unsubscribe(context, topicPath);
+                    UnsubscribeResult result = registry.getBackendService().unsubscribe(context, new TopicPath(topicPath), message);
                     return result;
                 } else {
                     return new UnsubscribeResult(Result.STATUS.NOOP);

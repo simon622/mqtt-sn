@@ -28,8 +28,8 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.broker.MqttsnAggregatingBrokerService;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
@@ -39,7 +39,7 @@ public class AggregatingGatewayInteractiveMain {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
 
-                MqttsnBrokerOptions brokerOptions = new MqttsnBrokerOptions().
+                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
                         withHost(hostName).
                         withPort(port).
                         withUsername(username).
@@ -47,9 +47,9 @@ public class AggregatingGatewayInteractiveMain {
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingBrokerService(brokerOptions)).
+                        withBrokerService(new MqttsnAggregatingBroker(brokerOptions)).
                         withTransport(createTransport()).
-                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0);
+                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
         });
     }

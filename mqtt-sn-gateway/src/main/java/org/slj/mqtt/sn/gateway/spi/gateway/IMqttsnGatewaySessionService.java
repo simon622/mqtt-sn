@@ -24,32 +24,22 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
-import org.slj.mqtt.sn.gateway.spi.ConnectResult;
-import org.slj.mqtt.sn.gateway.spi.RegisterResult;
-import org.slj.mqtt.sn.gateway.spi.SubscribeResult;
-import org.slj.mqtt.sn.gateway.spi.UnsubscribeResult;
+import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.IMqttsnSessionState;
 import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.util.Iterator;
 import java.util.Optional;
 
-public interface IMqttsnGatewaySessionRegistryService extends IMqttsnRegistry<IMqttsnGatewayRuntimeRegistry> {
+public interface IMqttsnGatewaySessionService extends IMqttsnRegistry<IMqttsnGatewayRuntimeRegistry> {
 
     Optional<IMqttsnContext> lookupClientIdSession(String clientId) throws MqttsnException;
 
     IMqttsnSessionState getSessionState(IMqttsnContext context, boolean createIfNotExists) throws MqttsnException;
-
-    ConnectResult connect(IMqttsnSessionState state, String clientId, int keepAlive, boolean cleanSession) throws MqttsnException;
-
-    SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, int QoS) throws MqttsnException;
-
-    UnsubscribeResult unsubscribe(IMqttsnSessionState state, TopicInfo info) throws MqttsnException;
-
-    RegisterResult register(IMqttsnSessionState state, String topicPath) throws MqttsnException;
 
     void wake(IMqttsnSessionState state) throws MqttsnException;
 
@@ -59,9 +49,19 @@ public interface IMqttsnGatewaySessionRegistryService extends IMqttsnRegistry<IM
 
     void cleanSession(IMqttsnContext state, boolean deepClean) throws MqttsnException;
 
-    void disconnect(IMqttsnSessionState state, long sessionExpiryInterval) throws MqttsnException;
-
     void receiveToSessions(String topicPath, byte[] payload, int QoS) throws MqttsnException ;
 
     Iterator<IMqttsnContext> iterator();
+
+    //-- methods that deletegate to the backend
+
+    ConnectResult connect(IMqttsnSessionState state, IMqttsnMessage message) throws MqttsnException;
+
+    SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
+
+    UnsubscribeResult unsubscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
+
+    RegisterResult register(IMqttsnSessionState state, String topicPath) throws MqttsnException;
+
+    DisconnectResult disconnect(IMqttsnSessionState state, IMqttsnMessage message) throws MqttsnException;
 }

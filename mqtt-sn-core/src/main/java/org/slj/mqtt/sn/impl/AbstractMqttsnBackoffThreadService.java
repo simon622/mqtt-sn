@@ -51,12 +51,8 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
             t.setPriority(Thread.MIN_PRIORITY);
             t.setDaemon(true);
             t.start();
-            t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-                @Override
-                public void uncaughtException(Thread t, Throwable e) {
-                    logger.log(Level.SEVERE, "uncaught error on deamon process;", e);
-                }
-            });
+            t.setUncaughtExceptionHandler((t, e) ->
+                    logger.log(Level.SEVERE, "uncaught error on deamon process;", e));
         }
     }
 

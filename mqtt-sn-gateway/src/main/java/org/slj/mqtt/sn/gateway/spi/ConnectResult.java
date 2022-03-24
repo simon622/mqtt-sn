@@ -26,6 +26,10 @@ package org.slj.mqtt.sn.gateway.spi;
 
 public class ConnectResult extends Result {
 
+    public ConnectResult(STATUS status) {
+        super(status);
+    }
+
     public ConnectResult(STATUS status, String message) {
         super(status);
         setMessage(message);

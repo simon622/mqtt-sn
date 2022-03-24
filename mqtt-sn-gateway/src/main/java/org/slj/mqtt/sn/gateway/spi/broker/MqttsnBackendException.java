@@ -24,25 +24,22 @@
 
 package org.slj.mqtt.sn.gateway.spi.broker;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
-import java.io.Closeable;
+public class MqttsnBackendException extends MqttsnException {
 
-public interface IMqttsnBrokerConnection extends Closeable {
+    public MqttsnBackendException() {
+    }
 
-    boolean isConnected() throws MqttsnBrokerException;
+    public MqttsnBackendException(String message) {
+        super(message);
+    }
 
-    void close();
+    public MqttsnBackendException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    boolean disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException;
-
-    boolean connect(IMqttsnContext context, boolean cleanSession, int keepAlive) throws MqttsnBrokerException;
-
-    boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException;
-
-    boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException;
-
-    boolean publish(IMqttsnContext context, String topicPath, int QoS, boolean retain, byte[] data) throws MqttsnBrokerException;
-
-    boolean canAccept(IMqttsnContext context, String topicPath, int QoS, byte[] data) throws MqttsnBrokerException;
+    public MqttsnBackendException(Throwable cause) {
+        super(cause);
+    }
 }

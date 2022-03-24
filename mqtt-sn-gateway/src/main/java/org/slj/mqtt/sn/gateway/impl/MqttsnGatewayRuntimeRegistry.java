@@ -25,11 +25,11 @@
 package org.slj.mqtt.sn.gateway.impl;
 
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerService;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayAdvertiseService;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionRegistryService;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -39,9 +39,9 @@ import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
 
     private IMqttsnGatewayAdvertiseService advertiseService;
-    private IMqttsnBrokerService brokerService;
-    private IMqttsnBrokerConnectionFactory connectionFactory;
-    private IMqttsnGatewaySessionRegistryService sessionService;
+    private IMqttsnBackendService brokerService;
+    private IMqttsnBackendConnectionFactory connectionFactory;
+    private IMqttsnGatewaySessionService sessionService;
 
     public MqttsnGatewayRuntimeRegistry(MqttsnOptions options){
         super(options);
@@ -71,33 +71,33 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return this;
     }
 
-    public MqttsnGatewayRuntimeRegistry withBrokerConnectionFactory(IMqttsnBrokerConnectionFactory connectionFactory){
+    public MqttsnGatewayRuntimeRegistry withBrokerConnectionFactory(IMqttsnBackendConnectionFactory connectionFactory){
         this.connectionFactory = connectionFactory;
         return this;
     }
 
-    public MqttsnGatewayRuntimeRegistry withGatewaySessionService(IMqttsnGatewaySessionRegistryService sessionService){
+    public MqttsnGatewayRuntimeRegistry withGatewaySessionService(IMqttsnGatewaySessionService sessionService){
         this.sessionService = sessionService;
         return this;
     }
 
-    public MqttsnGatewayRuntimeRegistry withBrokerService(IMqttsnBrokerService brokerService){
+    public MqttsnGatewayRuntimeRegistry withBrokerService(IMqttsnBackendService brokerService){
         this.brokerService = brokerService;
         return this;
     }
 
     @Override
-    public IMqttsnGatewaySessionRegistryService getGatewaySessionService() {
+    public IMqttsnGatewaySessionService getGatewaySessionService() {
         return sessionService;
     }
 
     @Override
-    public IMqttsnBrokerService getBrokerService() {
+    public IMqttsnBackendService getBackendService() {
         return brokerService;
     }
 
     @Override
-    public IMqttsnBrokerConnectionFactory getBrokerConnectionFactory() {
+    public IMqttsnBackendConnectionFactory getBackendConnectionFactory() {
         return connectionFactory;
     }
 

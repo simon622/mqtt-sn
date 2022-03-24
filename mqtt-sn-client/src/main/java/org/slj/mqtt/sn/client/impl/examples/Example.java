@@ -38,6 +38,7 @@ import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -76,7 +77,7 @@ public class Example {
             client.start(registry);
 
             //-- register any publish receive listeners you require
-            client.registerPublishReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
+            client.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
                 receiveCounter.incrementAndGet();
                 System.err.println(String.format("received message [%s] [%s]",
                         receiveCounter.get(), new String(data, MqttsnConstants.CHARSET)));
@@ -84,7 +85,7 @@ public class Example {
             });
 
             //-- register any publish sent listeners you require
-            client.registerPublishSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
+            client.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
                 System.err.println(String.format("sent message [%s]",
                         new String(data, MqttsnConstants.CHARSET)));
             });

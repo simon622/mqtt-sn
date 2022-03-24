@@ -44,7 +44,6 @@ public class AwsCertUtils {
         }
     }
 
-
     public static KeyStorePasswordPair getKeyStorePasswordPair(final String certificateFile, final String privateKeyFile) {
         return getKeyStorePasswordPair(certificateFile, privateKeyFile, null);
     }

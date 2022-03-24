@@ -24,20 +24,20 @@
 
 package org.slj.mqtt.sn.gateway.connector.google.iotcore;
 
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 
-public class GoogleIoTCoreMqttsnBrokerConnectionFactory implements IMqttsnBrokerConnectionFactory<GoogleIoTCoreMqttsnBrokerConnection> {
+public class GoogleIoTCoreMqttsnBrokerConnectionFactory implements IMqttsnBackendConnectionFactory<GoogleIoTCoreMqttsnBrokerConnection> {
 
     @Override
-    public GoogleIoTCoreMqttsnBrokerConnection createConnection(MqttsnBrokerOptions options, String clientId) throws MqttsnBrokerException {
+    public GoogleIoTCoreMqttsnBrokerConnection createConnection(MqttsnBackendOptions options, String clientId) throws MqttsnBackendException {
         try {
             GoogleIoTCoreMqttsnBrokerConnection connection = new GoogleIoTCoreMqttsnBrokerConnection(options, clientId);
             if(options.getConnectOnStartup()) connection.connect();
             return connection;
         } catch(Exception e){
-            throw new MqttsnBrokerException("error creating connection;", e);
+            throw new MqttsnBackendException("error creating connection;", e);
         }
     }
 }

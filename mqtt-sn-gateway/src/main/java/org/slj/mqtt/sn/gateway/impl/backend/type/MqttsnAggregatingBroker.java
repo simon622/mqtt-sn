@@ -22,37 +22,38 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl.broker;
+package org.slj.mqtt.sn.gateway.impl.backend.type;
 
 import com.google.common.util.concurrent.RateLimiter;
+import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
+import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBrokerConnection;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBrokerOptions;
+import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
 /**
  * A single broker connection is maintained and used for all connecting gateway side
  * devices
  */
-public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService {
+public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
 
-    volatile IMqttsnBrokerConnection connection;
-    volatile boolean stopped = false;
+    private volatile IMqttsnBackendConnection connection;
+    private volatile boolean stopped = false;
     private Thread publishingThread = null;
     private final Object monitor = new Object();
     private final Queue<PublishOp> queue = new LinkedBlockingQueue<>();
@@ -61,7 +62,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
 
-    public MqttsnAggregatingBrokerService(MqttsnBrokerOptions options){
+    public MqttsnAggregatingBroker(MqttsnBackendOptions options){
         super(options);
     }
 
@@ -79,7 +80,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
         super.stop();
         try {
             close(connection);
-        } catch(MqttsnBrokerException e){
+        } catch(MqttsnBackendException e){
             logger.log(Level.WARNING, "error encountered shutting down broker connection;", e);
         } finally {
             synchronized (monitor){
@@ -97,17 +98,16 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     }
 
     @Override
-    public boolean isConnected(IMqttsnContext context) throws MqttsnBrokerException {
+    public boolean isConnected(IMqttsnContext context) throws MqttsnBackendException {
         return !stopped && connection != null && connection.isConnected();
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
         try {
-
             if(isConnected(context)){
-                if(!connection.canAccept(context, topicPath, QoS, payload)){
-                    logger.log(Level.WARNING, String.format("unable to accept publish [%s] -> [%s] bytes", topicPath, payload.length));
+                if(!connection.canAccept(context, topicPath, message)){
+                    logger.log(Level.WARNING, String.format("unable to accept publish [%s]", topicPath));
                     return new PublishResult(Result.STATUS.ERROR,
                             String.format("publisher unable to accept message on [%s]", topicPath));
                 }
@@ -115,19 +115,17 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
 
             rateLimiter.acquire();
             PublishOp op = new PublishOp();
-            op.data = payload;
             op.context = context;
-            op.retain = retain;
             op.topicPath = topicPath;
-            op.QoS = QoS;
+            op.initialMessage = message;
             queue.add(op);
-            logger.log(Level.INFO, String.format("queuing message for publish [%s] -> [%s] bytes, queue contains [%s]", topicPath, payload.length, queue.size()));
+            logger.log(Level.INFO, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
             synchronized (monitor){
                 monitor.notifyAll();
             }
             return new PublishResult(Result.STATUS.SUCCESS,"queued for sending on publishing thread");
         } catch(Exception e){
-            throw new MqttsnBrokerException(e);
+            throw new MqttsnBackendException(e);
         }
     }
 
@@ -152,8 +150,8 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     }
 
     @Override
-    protected IMqttsnBrokerConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBrokerException {
-        if(stopped) throw new MqttsnBrokerException("broker service is in the process or shutting down");
+    protected IMqttsnBackendConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBackendException {
+        if(stopped) throw new MqttsnBackendException("broker service is in the process or shutting down");
         initConnection();
         return connection;
     }
@@ -167,9 +165,9 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                         PublishOp op = queue.poll();
                         if(op != null){
                             lastPublishAttempt = new Date();
-                            if(connection.canAccept(op.context, op.topicPath, op.QoS, op.data)){
+                            if(connection.canAccept(op.context, op.topicPath, op.initialMessage)){
                                 logger.log(Level.INFO, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
-                                PublishResult res = super.publish(op.context, op.topicPath, op.QoS, op.data, op.retain);
+                                PublishResult res = super.publish(op.context, op.topicPath, op.initialMessage);
                                 if(res.isError()){
                                     logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
                                     queue.offer(op);
@@ -208,15 +206,15 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
         publishingThread.start();
     }
 
-    protected void initConnection() throws MqttsnBrokerException {
+    protected void initConnection() throws MqttsnBackendException {
         if(connection == null){
             //-- in aggregation mode connect with the gatewayId as the clientId on the broker side
             synchronized (this){
                 if(connection == null){
-                    connection = registry.getBrokerConnectionFactory().createConnection(options,
+                    connection = registry.getBackendConnectionFactory().createConnection(options,
                             registry.getOptions().getContextId());
-                    if(connection instanceof AbstractMqttsnBrokerConnection){
-                        ((AbstractMqttsnBrokerConnection)connection).setBrokerService(this);
+                    if(connection instanceof AbstractMqttsnBackendConnection){
+                        ((AbstractMqttsnBackendConnection)connection).setBrokerService(this);
                         //-- ensure we subscribe the connection to any existing subscriptions
                         try {
                             Set<TopicPath> paths = getRuntimeRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
@@ -224,8 +222,8 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                                 logger.log(Level.INFO, String.format("new aggregated connection subscribing to [%s] existing topics..", paths.size()));
                                 paths.forEach(path -> {
                                     try {
-                                        connection.subscribe(null, path.toString(), 2);
-                                    } catch (MqttsnBrokerException e) {
+                                        connection.subscribe(null, path, null);
+                                    } catch (MqttsnBackendException e) {
                                         e.printStackTrace();
                                         logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
                                     }
@@ -233,7 +231,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
                             }
                         } catch (MqttsnException e) {
                             logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
-                            throw new MqttsnBrokerException(e);
+                            throw new MqttsnBackendException(e);
                         }
                     }
                 }
@@ -242,7 +240,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
     }
 
     @Override
-    protected void close(IMqttsnBrokerConnection connection) throws MqttsnBrokerException {
+    protected void close(IMqttsnBackendConnection connection) throws MqttsnBackendException {
         if(connection != null && connection.isConnected()){
             connection.close();
         }
@@ -253,7 +251,7 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
         return queue.size();
     }
 
-    public void reinit() throws MqttsnBrokerException {
+    public void reinit() throws MqttsnBackendException {
         if(connection != null){
             close(connection);
         }
@@ -272,14 +270,12 @@ public class MqttsnAggregatingBrokerService extends AbstractMqttsnBrokerService 
 
     @Override
     protected String getDaemonName() {
-        return "gateway-broker-managed-connection";
+        return "gateway-backend-managed-connection";
     }
 
     static class PublishOp {
         public IMqttsnContext context;
-        public String topicPath;
-        public int QoS;
-        public boolean retain;
-        public byte[] data;
+        public TopicPath topicPath;
+        public IMqttsnMessage initialMessage;
     }
 }

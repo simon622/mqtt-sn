@@ -130,7 +130,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     public boolean isTerminalMessage(IMqttsnMessage message) {
         switch(message.getMessageType()){
             case MqttsnConstants.PUBLISH:
-                return getRegistry().getCodec().getQoS(message) <= 0;
+                return getRegistry().getCodec().getQoS(message, false) <= 0;
             case MqttsnConstants.CONNACK:
             case MqttsnConstants.PUBACK:    //we delete QoS 1 sent PUBLISH on receipt of PUBACK
             case MqttsnConstants.PUBREL:    //we delete QoS 2 sent PUBLISH on receipt of PUBREL
@@ -157,7 +157,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     public boolean requiresResponse(IMqttsnMessage message) {
         switch(message.getMessageType()){
             case MqttsnConstants.PUBLISH:
-                    return getRegistry().getCodec().getQoS(message) > 0;
+                    return getRegistry().getCodec().getQoS(message, false) > 0;
             case MqttsnConstants.CONNECT:
             case MqttsnConstants.PUBREC:
             case MqttsnConstants.PUBREL:
@@ -534,9 +534,10 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             isError = suback.isErrorMessage();
             topicId = suback.getTopicId();
             grantedQoS = suback.getQoS();
-            topicIdType = suback.getTopicType();
+            //NB: note the type is derived from the subscribe as v1.2 doesnt allow for the transmission on the suback
+            topicIdType = subscribe.getTopicType();
             topicData = subscribe.getTopicData();
-            topicPath = subscribe.getTopicName();
+            topicPath = topicIdType == MqttsnConstants.TOPIC_PREDEFINED ? null : subscribe.getTopicName();
 
         } else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnSuback_V2_0 suback = (MqttsnSuback_V2_0) message;
@@ -547,7 +548,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             topicIdType = suback.getTopicIdType();
             grantedQoS = suback.getQoS();
             topicData = subscribe.getTopicData();
-            topicPath = subscribe.getTopicName();
+            topicPath = topicIdType == MqttsnConstants.TOPIC_PREDEFINED ? null : subscribe.getTopicName();
         }
 
         if(!isError){

@@ -26,28 +26,30 @@ package org.slj.mqtt.sn.gateway.spi.broker;
 
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.TopicPath;
 
-public interface IMqttsnBrokerService {
+public interface IMqttsnBackendService {
 
     IMqttsnRuntimeRegistry getRuntimeRegistry();
 
-    boolean isConnected(IMqttsnContext context) throws MqttsnBrokerException;
+    boolean isConnected(IMqttsnContext context) throws MqttsnBackendException;
 
-    ConnectResult connect(IMqttsnContext context, String clientId, boolean cleanSession, int keepAlive) throws MqttsnBrokerException;
+    ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
 
-    DisconnectResult disconnect(IMqttsnContext context, long keepAlive) throws MqttsnBrokerException ;
+    DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
 
-    PublishResult publish(IMqttsnContext context, String topicPath, int QoS, byte[] payload, boolean retain) throws MqttsnBrokerException;
+    PublishResult publish(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException;
 
-    SubscribeResult subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnBrokerException;
+    SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException;
 
-    UnsubscribeResult unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnBrokerException;
+    UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException;
 
     void receive(String topicPath, byte[] payload, int QoS) throws MqttsnException;
 
-    void reinit() throws MqttsnBrokerException;
+    void reinit() throws MqttsnBackendException;
 
     int getPublishReceiveCount();
 
@@ -57,6 +59,6 @@ public interface IMqttsnBrokerService {
 
     void clearStats();
 
-    void pokeQueue() throws MqttsnBrokerException;
+    void pokeQueue() throws MqttsnBackendException;
 
 }

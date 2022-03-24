@@ -32,6 +32,8 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
@@ -40,6 +42,46 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
     @Override
     public boolean isDisconnect(IMqttsnMessage message) {
         return message instanceof MqttsnDisconnect_V2_0;
+    }
+
+    @Override
+    public boolean isRetainedPublish(IMqttsnMessage message) {
+        if(isPublish(message)){
+            return ((MqttsnPublish_V2_0) message).isRetainedPublish();
+        }
+        throw new MqttsnCodecException("unable to read retained from non publish message");
+    }
+
+    @Override
+    public String getClientId(IMqttsnMessage message) {
+        if(message instanceof MqttsnConnect_V2_0){
+            return ((MqttsnConnect_V2_0) message).getClientId();
+        }
+        throw new MqttsnCodecException("unable to read clientId from non CONNECT message");
+    }
+
+    @Override
+    public boolean isCleanSession(IMqttsnMessage message) {
+        if(message instanceof MqttsnConnect_V2_0){
+            return ((MqttsnConnect_V2_0) message).isCleanStart();
+        }
+        throw new MqttsnCodecException("unable to read cleanStart from non CONNECT message");
+    }
+
+    @Override
+    public long getKeepAlive(IMqttsnMessage message) {
+        if(message instanceof MqttsnConnect_V2_0){
+            return ((MqttsnConnect_V2_0) message).getKeepAlive();
+        }
+        throw new MqttsnCodecException("unable to read keepAlive from non CONNECT message");
+    }
+
+    @Override
+    public long getDuration(IMqttsnMessage message) {
+        if(message instanceof MqttsnDisconnect_V2_0){
+            return ((MqttsnDisconnect_V2_0) message).getSessionExpiryInterval();
+        }
+        throw new MqttsnCodecException("unable to read duration from non DISCONNECT message");
     }
 
     @Override
@@ -57,9 +99,15 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
     }
 
     @Override
-    public int getQoS(IMqttsnMessage message) {
-        MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message ;
-        return publish.getQoS();
+    protected int getQoS(IMqttsnMessage message) {
+        if(message instanceof MqttsnPublish_V2_0){
+            MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message ;
+            return publish.getQoS();
+        } else if(message instanceof MqttsnSubscribe_V2_0){
+            MqttsnSubscribe_V2_0 publish = (MqttsnSubscribe_V2_0) message ;
+            return publish.getQoS();
+        }
+        throw new MqttsnCodecException("unable to read QoS from non SUBSCRIBE | PUBLISH message");
     }
 
     @Override

@@ -46,9 +46,52 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     }
 
     @Override
-    public int getQoS(IMqttsnMessage message) {
-        MqttsnPublish publish = (MqttsnPublish) message ;
-        return publish.getQoS();
+    protected int getQoS(IMqttsnMessage message) {
+        if(message instanceof AbstractMqttsnMessageWithFlagsField){
+            AbstractMqttsnMessageWithFlagsField msg = (AbstractMqttsnMessageWithFlagsField) message ;
+            return msg.getQoS();
+        }
+        throw new MqttsnCodecException("unable to read QoS from non flagged message");
+    }
+
+    @Override
+    public String getClientId(IMqttsnMessage message) {
+        if(message instanceof MqttsnConnect){
+            return ((MqttsnConnect) message).getClientId();
+        }
+        throw new MqttsnCodecException("unable to read clientId from non CONNECT message");
+    }
+
+    @Override
+    public boolean isCleanSession(IMqttsnMessage message) {
+        if(message instanceof MqttsnConnect){
+            return ((MqttsnConnect) message).isCleanSession();
+        }
+        throw new MqttsnCodecException("unable to read cleanSession from non CONNECT message");
+    }
+
+    @Override
+    public long getKeepAlive(IMqttsnMessage message) {
+        if(message instanceof MqttsnConnect){
+            return ((MqttsnConnect) message).getDuration();
+        }
+        throw new MqttsnCodecException("unable to read keepAlive from non CONNECT message");
+    }
+
+    @Override
+    public long getDuration(IMqttsnMessage message) {
+        if(message instanceof MqttsnDisconnect){
+            return ((MqttsnDisconnect) message).getDuration();
+        }
+        throw new MqttsnCodecException("unable to read duration from non DISCONNECT message");
+    }
+
+    @Override
+    public boolean isRetainedPublish(IMqttsnMessage message) {
+        if(isPublish(message)){
+            return ((MqttsnPublish) message).isRetainedPublish();
+        }
+        throw new MqttsnCodecException("unable to read retained from non publish message");
     }
 
     @Override
@@ -87,8 +130,6 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
         MqttsnSpecificationValidator.validatePacketLength(data);
         return AbstractMqttsnMessage.readMessageLength(data);
     }
-
-
 
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
 

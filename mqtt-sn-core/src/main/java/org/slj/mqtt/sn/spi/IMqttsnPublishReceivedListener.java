@@ -25,8 +25,9 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 public interface IMqttsnPublishReceivedListener {
 
-    void receive(IMqttsnContext context, String topicName, int QoS, byte[] data, boolean retain);
+    void receive(IMqttsnContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message);
 }

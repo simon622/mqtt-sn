@@ -37,10 +37,6 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.TopicPath;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;

@@ -35,7 +35,9 @@ import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.net.UnknownHostException;
 import java.util.UUID;
@@ -117,13 +119,13 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     }
 
     protected void bindReceiveLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data, boolean retained) -> {
+        createOrGetClient().registerPublishReceivedListener((IMqttsnContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message) -> {
             getProgress().incrementProgress(1);
         });
     }
 
     protected void bindSendLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
+        createOrGetClient().registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topicPath, byte[] data, IMqttsnMessage message) -> {
             getProgress().incrementProgress(1);
         });
     }

@@ -34,19 +34,19 @@ I have created simple interactive command lines for both client and gateway comp
 can be used simple to evaluate the software. For more complex use, please refer to the source build and configuration.
 
 #### Client CLI
-The latest interactive client build can be obtained from the releases section. Download the mqtt-sn-client-<version>.jar and run locally using;
+The latest interactive client build can be obtained from the releases section. Download the mqtt-sn-client-VERSION.jar and run locally using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-client-<version>.jar
+java -jar <path-to>/mqtt-sn-client-VERSION.jar
 ```
 
 ![Client CLI](/images/client-cli.png)
 
 #### Gateway CLI
-The latest interactive gateway build can be obtained from the releases section. Download the mqtt-sn-gateway-<version>.jar and run locally using;
+The latest interactive gateway build can be obtained from the releases section. Download the mqtt-sn-gateway-VERSION.jar and run locally using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-<version>.jar
+java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 ![Gateway CLI](/images/gateway-cli.png)
 
@@ -66,7 +66,7 @@ This will yield a file in your mqtt-sn-gateway-connector-paho/target directory t
 from a command line using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-<version>.jar
+java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 You can then follow the on screen instructions to get a gateway up and running.
 

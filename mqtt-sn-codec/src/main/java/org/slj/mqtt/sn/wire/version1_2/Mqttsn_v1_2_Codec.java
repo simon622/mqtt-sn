@@ -131,6 +131,8 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
         return AbstractMqttsnMessage.readMessageLength(data);
     }
 
+
+
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
 
         MqttsnSpecificationValidator.validatePacketLength(data);

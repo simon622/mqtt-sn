@@ -574,9 +574,27 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         return registry.getMessageFactory().createRegack(register.getTopicId(), MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
-    protected void handleRegack(IMqttsnContext context, IMqttsnMessage register, IMqttsnMessage regack) throws MqttsnException {
+    protected void handleRegack(IMqttsnContext context, IMqttsnMessage register, IMqttsnMessage msg) throws MqttsnException {
         String topicPath = ((MqttsnRegister)register).getTopicName();
-        registry.getTopicRegistry().register(context, topicPath, ((MqttsnRegack)regack).getTopicId());
+        int topicId = 0;
+        boolean isError = false;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnRegack regack = (MqttsnRegack) msg;
+            topicId = regack.getTopicId();
+            isError = regack.isErrorMessage();
+
+        }
+        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnRegack_V2_0 regack = (MqttsnRegack_V2_0) msg;
+            topicId = regack.getTopicId();
+            isError = regack.isErrorMessage();
+        }
+
+        if(!isError){
+            registry.getTopicRegistry().register(context, topicPath, topicId);
+        } else {
+            logger.log(Level.WARNING, String.format("received error regack response [%s]; Msg=%s", context, msg));
+        }
     }
 
     protected IMqttsnMessage handlePublish(IMqttsnContext context, IMqttsnMessage message)

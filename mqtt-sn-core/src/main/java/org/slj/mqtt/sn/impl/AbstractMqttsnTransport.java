@@ -27,15 +27,14 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.INetworkContext;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.Security;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -86,6 +85,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                         MqttsnWireUtils.toBinary(data)));
             }
 
+            data = readVerifiedProtocolMessage(networkContext, data);
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
 
             if (logger.isLoggable(Level.FINE)) {
@@ -133,6 +133,9 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             writeToTransportInternal(networkContext,
                     registry.getMessageFactory().createDisconnect(MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
         }
+        catch(MqttsnSecurityException e){
+            logger.log(Level.SEVERE, "security exception encountered processing, drop packet;", e);
+        }
         catch(Throwable t){
             logger.log(Level.SEVERE, "unknown error;", t);
         }
@@ -141,6 +144,8 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
     protected void writeToTransportInternal(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){
         try {
             byte[] data = registry.getCodec().encode(message);
+
+            data = writeVerifiedProtocolMessage(context, data);
 
             if(data.length > registry.getOptions().getMaxProtocolMessageSize()){
                 logger.log(Level.SEVERE, String.format("cannot send [%s] bytes - max allowed message size [%s]",
@@ -163,6 +168,63 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         } catch(Throwable e){
             logger.log(Level.SEVERE, String.format("[%s] transport layer errord sending buffer", context), e);
         }
+    }
+
+    protected byte[] readVerifiedProtocolMessage(INetworkContext networkContext, byte[] data) throws MqttsnException {
+        MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
+        if(securityOptions != null) {
+            MqttsnSecurityOptions.INTEGRITY_TYPE type = securityOptions.getIntegrityType();
+            if (type != MqttsnSecurityOptions.INTEGRITY_TYPE.none) {
+                if (securityOptions.getIntegrityPoint() ==
+                        MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages) {
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, String.format("message integrity enabled, verify bytes (%s) from [%s] on thread [%s]",
+                                data.length, networkContext, Thread.currentThread().getName()));
+                    }
+                    int length;
+                    boolean verified;
+                    if(securityOptions.getIntegrityType() == MqttsnSecurityOptions.INTEGRITY_TYPE.hmac){
+                        verified = Security.verifyHMac(securityOptions.getIntegrityHmacAlgorithm(),
+                                securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
+                        length = securityOptions.getIntegrityHmacAlgorithm().getSize();
+                    } else {
+                        verified = Security.verifyChecksum(securityOptions.getIntegrityChecksumAlgorithm(), data);
+                        length = securityOptions.getIntegrityHmacAlgorithm().getSize();
+                    }
+                    if(verified){
+                        return Security.readOriginalData(length, data);
+                    } else {
+                        logger.log(Level.WARNING, String.format("message integrity check failed (%s) bytes from [%s] on thread [%s]",
+                                data.length, networkContext, Thread.currentThread().getName()));
+                        throw new MqttsnSecurityException("message integrity check failed");
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
+    protected byte[] writeVerifiedProtocolMessage(INetworkContext networkContext, byte[] data) throws MqttsnException {
+        MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
+        if(securityOptions != null) {
+            MqttsnSecurityOptions.INTEGRITY_TYPE type = securityOptions.getIntegrityType();
+            if (type != MqttsnSecurityOptions.INTEGRITY_TYPE.none) {
+                if (securityOptions.getIntegrityPoint() ==
+                        MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages) {
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.log(Level.FINE, String.format("message integrity enabled, write verified bytes (%s) from [%s] on thread [%s]",
+                                data.length, networkContext, Thread.currentThread().getName()));
+                    }
+                    if(securityOptions.getIntegrityType() == MqttsnSecurityOptions.INTEGRITY_TYPE.hmac){
+                        data = Security.createHmacdData(securityOptions.getIntegrityHmacAlgorithm(),
+                                securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
+                    } else {
+                        data = Security.createChecksumdData(securityOptions.getIntegrityChecksumAlgorithm(), data);
+                    }
+                }
+            }
+        }
+        return data;
     }
 
     private void notifyTrafficReceived(final INetworkContext context, byte[] data, IMqttsnMessage message) {

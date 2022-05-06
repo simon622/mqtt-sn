@@ -106,6 +106,34 @@ the runtime.
     });
 ```
 
+#### Message Integrity
+
+You can optionally configure the gateway and client to require and produce message verification on either all packets or payload data. If enabled you
+must choose from HMAC (suggested) or CHECKSUM integrity checks. When enabled, data packets or payload will be prefixed with integrity fields
+according to the chosen specification which will then be validated by the receiver. The available integrity options are listed below with
+their respective lengths.
+
+** HMAC **
+* HmacSHA1 = 20 bytes
+* HmacMD5 = 16 bytes
+* HmacSHA224 = 28 bytes
+* HmacSHA256 = 32 bytes
+* HmacSHA384 = 48 bytes
+* HmacSHA512 = 64 bytes 
+
+** CHECKSUM **
+* CRC32 = 4 bytes
+* Adler32 = 4 bytes
+
+```java
+    MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
+        withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).               //hmac or checksum
+        withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages). //should each message be integrity prefixed or just payload
+        withIntegrityKey("my-pre-shared-key") //only used in HMAC
+
+    options.withSecurityOptions(securityOptions);
+```
+
 #### Traffic Listeners
 
 All traffic to and from the transport layer can be monitored by the application by registering traffic listeners. These will

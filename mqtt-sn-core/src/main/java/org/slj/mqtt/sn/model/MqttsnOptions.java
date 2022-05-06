@@ -24,12 +24,8 @@
 
 package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.net.NetworkAddress;
-import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.utils.MqttsnUtils;
-import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -207,6 +203,7 @@ public class MqttsnOptions {
 
     private Map<String, Integer> predefinedTopics = new HashMap<>();
     private volatile Map<String, NetworkAddress> networkAddressEntries;
+    private MqttsnSecurityOptions securityOptions;
 
     /**
      * How many seconds after a client is last seen should disconnected sessions be removed from
@@ -628,6 +625,16 @@ public class MqttsnOptions {
         return this;
     }
 
+    /**
+     * Set the security options which will be considered by the various components of the system
+     * @param securityOptions - the security options to use in the runtime
+     * @return this config
+     */
+    public MqttsnOptions withSecurityOptions(MqttsnSecurityOptions securityOptions){
+        this.securityOptions = securityOptions;
+        return this;
+    }
+
     public Map<String, NetworkAddress> getNetworkAddressEntries() {
         return networkAddressEntries;
     }
@@ -740,5 +747,13 @@ public class MqttsnOptions {
 
     public int getRemoveDisconnectedSessionsSeconds() {
         return removeDisconnectedSessionsSeconds;
+    }
+
+    public MqttsnSecurityOptions getSecurityOptions() {
+        return securityOptions;
+    }
+
+    public void setSecurityOptions(MqttsnSecurityOptions securityOptions) {
+        this.securityOptions = securityOptions;
     }
 }

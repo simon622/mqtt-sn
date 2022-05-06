@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
 public class AggregatingGatewayInteractiveMain {
@@ -44,6 +45,12 @@ public class AggregatingGatewayInteractiveMain {
                         withPort(port).
                         withUsername(username).
                         withPassword(password);
+
+                MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
+                        withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
+                        withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
+
+                options.withSecurityOptions(securityOptions);
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).

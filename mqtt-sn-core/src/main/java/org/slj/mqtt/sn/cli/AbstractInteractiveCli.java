@@ -29,12 +29,15 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.ThreadDump;
 import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.io.*;
 import java.net.UnknownHostException;
@@ -92,6 +95,17 @@ public abstract class AbstractInteractiveCli {
         options = createOptions();
         message(String.format("Creating runtime registry.. DONE"));
         runtimeRegistry = createRuntimeRegistry(options, createTransport());
+        if(options.getSecurityOptions() != null){
+            message(String.format("Creating security configuration.. DONE"));
+            message(String.format("Integrity type: %s", options.getSecurityOptions().getIntegrityType()));
+            if(options.getSecurityOptions().getIntegrityType() != MqttsnSecurityOptions.INTEGRITY_TYPE.none){
+                message(String.format("Integrity algorithm: %s", options.getSecurityOptions().getIntegrityType() ==
+                        MqttsnSecurityOptions.INTEGRITY_TYPE.hmac ? options.getSecurityOptions().getIntegrityHmacAlgorithm() :
+                        options.getSecurityOptions().getIntegrityChecksumAlgorithm()));
+                message(String.format("Integrity point: %s", options.getSecurityOptions().getIntegrityPoint()));
+                message(String.format("Integrity PSK: %s", new String(MqttsnUtils.arrayOf(options.getSecurityOptions().getIntegrityKey().length(), (byte) '*'))));
+            }
+        }
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
 

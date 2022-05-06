@@ -24,6 +24,11 @@
 
 package org.slj.mqtt.sn.client.impl.cli;
 
+import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
+import org.slj.mqtt.sn.codec.MqttsnCodecs;
+import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
@@ -31,10 +36,17 @@ import org.slj.mqtt.sn.spi.IMqttsnTransport;
 public class ClientInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
-            protected IMqttsnTransport createTransport() {
-                MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().withMtu(4096).withReceiveBuffer(4096).
-                        withPort(MqttsnUdpOptions.DEFAULT_LOCAL_CLIENT_PORT);
-                return new MqttsnUdpTransport(udpOptions);
+            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
+                MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
+                        withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
+                        withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
+                options.withSecurityOptions(securityOptions);
+
+                AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+                        withTransport(transport).
+                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+
+                return registry;
             }
         });
     }

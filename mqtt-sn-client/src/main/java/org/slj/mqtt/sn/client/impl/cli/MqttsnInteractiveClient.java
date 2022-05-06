@@ -36,6 +36,8 @@ import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.Subscription;
+import org.slj.mqtt.sn.net.MqttsnUdpOptions;
+import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -468,6 +470,13 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         }
     }
 
+    protected IMqttsnTransport createTransport() {
+        MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().withMtu(4096).withReceiveBuffer(4096).
+                withPort(MqttsnUdpOptions.DEFAULT_LOCAL_CLIENT_PORT);
+
+        return new MqttsnUdpTransport(udpOptions);
+    }
+
     @Override
     protected MqttsnOptions createOptions() throws UnknownHostException {
         return new MqttsnOptions().
@@ -478,14 +487,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 withMinFlushTime(0).
                 withMaxProtocolMessageSize(4096).
                 withSleepClearsRegistrations(false);
-    }
-
-    @Override
-    protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
-        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
-                withTransport(transport).
-                withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
-        return registry;
     }
 
     @Override

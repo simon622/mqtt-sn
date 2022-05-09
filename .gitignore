@@ -31,3 +31,4 @@ mqtt-sn-client-sec/
 /gateway.properties
 /gateway-keystore.properties
 /gateway-keystore-aws.properties
+/mqtt-sn-gateway-cluster/

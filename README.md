@@ -156,6 +156,13 @@ the wire.
         }).
         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 ```
+
+### Clustering
+
+The gateway runtime can be clustered. During connection establishment; the clustering service is notified of the connecting device. At this point, the implementation
+is responsible for synchronising the state of previous sessions onto the local gateway. For more information about clustering support please contact me to discuss the
+available options as the environment onto which the gateway is deployed impacts how clustering is achieved.  
+
 ### Configuration
 
 The default client/gateway behaviour can be customised using configuration options. Sensible defaults have been specified which allow it to all work out of the box.

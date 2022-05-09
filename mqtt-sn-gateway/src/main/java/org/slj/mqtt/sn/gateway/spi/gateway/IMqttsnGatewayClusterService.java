@@ -24,20 +24,16 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
+import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnService;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
-public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
+/**
+ * When bound in, sends notification to the cluster service that a device has connected
+ */
+public interface IMqttsnGatewayClusterService<T extends IMqttsnRuntimeRegistry> extends IMqttsnService<T> {
 
-    IMqttsnBackendService getBackendService();
-
-    IMqttsnBackendConnectionFactory getBackendConnectionFactory();
-
-    IMqttsnGatewaySessionService getGatewaySessionService();
-
-    IMqttsnGatewayAdvertiseService getGatewayAdvertiseService();
-
-    IMqttsnGatewayClusterService getGatewayClusterService();
+    boolean notifyConnection(IMqttsnContext context) throws MqttsnException;
 
 }

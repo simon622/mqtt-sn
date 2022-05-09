@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.gateway.impl.gateway.*;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayAdvertiseService;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayClusterService;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.impl.*;
@@ -42,6 +43,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     private IMqttsnBackendService brokerService;
     private IMqttsnBackendConnectionFactory connectionFactory;
     private IMqttsnGatewaySessionService sessionService;
+    private IMqttsnGatewayClusterService clusterService;
 
     public MqttsnGatewayRuntimeRegistry(MqttsnOptions options){
         super(options);
@@ -65,6 +67,11 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withAuthenticationService(new MqttsnGatewayAuthenticationService()).
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
         return registry;
+    }
+
+    public MqttsnGatewayRuntimeRegistry withGatewayClusterService(IMqttsnGatewayClusterService clusterService){
+        this.clusterService = clusterService;
+        return this;
     }
 
     public MqttsnGatewayRuntimeRegistry withGatewayAdvertiseService(IMqttsnGatewayAdvertiseService advertiseService){
@@ -102,8 +109,14 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return connectionFactory;
     }
 
+    @Override
     public IMqttsnGatewayAdvertiseService getGatewayAdvertiseService() {
         return advertiseService;
+    }
+
+    @Override
+    public IMqttsnGatewayClusterService getGatewayClusterService() {
+        return clusterService;
     }
 
     @Override

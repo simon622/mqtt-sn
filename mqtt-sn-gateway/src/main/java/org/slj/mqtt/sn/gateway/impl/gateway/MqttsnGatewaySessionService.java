@@ -140,6 +140,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 } finally {
                     if(result == null || !result.isError()){
                         //clear down all prior session state
+                        notifyCluster(state.getContext());
                         cleanSession(state.getContext(), cleanSession);
                         state.setKeepAlive((int) keepAlive);
                         state.setClientState(MqttsnClientState.CONNECTED);
@@ -310,6 +311,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     public void updateLastSeen(IMqttsnSessionState state) {
         state.setLastSeen(new Date());
+    }
+
+    public void notifyCluster(IMqttsnContext context) throws MqttsnException {
+        if(getRegistry().getGatewayClusterService() != null){
+            getRegistry().getGatewayClusterService().notifyConnection(context);
+        }
     }
 
     public void cleanSession(IMqttsnContext context, boolean deepClean) throws MqttsnException {

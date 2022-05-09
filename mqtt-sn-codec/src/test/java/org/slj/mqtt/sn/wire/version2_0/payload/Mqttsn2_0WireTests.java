@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slj.mqtt.sn.MqttsnConstants;
@@ -47,4 +48,32 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
         testWireMessage(message);
     }
 
+    @Test
+    public void testMqttsnDisconnectWithSessionExpiry() throws MqttsnCodecException {
+        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_32 / 2);
+        testWireMessage(message);
+
+        byte[] arr = codec.encode(message);
+        MqttsnDisconnect_V2_0 disconnect = (MqttsnDisconnect_V2_0) codec.decode(arr);
+        Assert.assertEquals("session expiry interval should match",
+                MqttsnConstants.UNSIGNED_MAX_32 / 2, disconnect.getSessionExpiryInterval());
+
+        Assert.assertNull("reason string should be empty", disconnect.getReasonString());
+        Assert.assertEquals("reason code should be empty", 0, disconnect.getReturnCode());
+    }
+
+    @Test
+    public void testMqttsnDisconnectWithReason() throws MqttsnCodecException {
+
+        String reason  = "This is some description of an invalid reason for disconnect";
+        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, reason);
+        testWireMessage(message);
+
+        byte[] arr = codec.encode(message);
+        MqttsnDisconnect_V2_0 disconnect = (MqttsnDisconnect_V2_0) codec.decode(arr);
+        Assert.assertEquals("session expiry interval should be empty",
+                0, disconnect.getSessionExpiryInterval());
+        Assert.assertEquals("reason string should be match", reason, disconnect.getReasonString());
+        Assert.assertEquals("reason code should match", MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, disconnect.getReturnCode());
+    }
 }

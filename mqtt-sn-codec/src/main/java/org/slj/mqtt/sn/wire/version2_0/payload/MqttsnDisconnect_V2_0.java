@@ -69,7 +69,8 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
         if(data.length > 3){
             sessionExpiryInterval = readUInt32Adjusted(data, 3);
             if(data.length > 7){
-                reasonString = new String(readRemainingBytesAdjusted(data, 7), MqttsnConstants.CHARSET);
+//                reasonString = new String(readRemainingBytesAdjusted(data, 7), MqttsnConstants.CHARSET);
+                reasonString = readUTF8EncodedStringAdjusted(data, 7);
             }
         }
     }
@@ -85,7 +86,7 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
             length += 4;
         }
         if(reasonString != null){
-            length += reasonString.length();
+            length += reasonString.length() + 2;
         }
 
         int idx = 0;
@@ -109,8 +110,9 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
             writeUInt32(msg, idx, sessionExpiryInterval);
             idx += 4;
             if(reasonString != null){
-                byte[] reasonBytes = reasonString.getBytes(MqttsnConstants.CHARSET);
-                System.arraycopy(reasonBytes, 0, msg, idx, reasonBytes.length);
+                writeUTF8EncodedStringData(msg, idx, reasonString);
+//                byte[] reasonBytes = reasonString.getBytes(MqttsnConstants.CHARSET);
+//                System.arraycopy(reasonBytes, 0, msg, idx, reasonBytes.length);
             }
         }
 

@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
+import org.slj.mqtt.sn.model.MqttsnWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 
@@ -167,5 +168,18 @@ public interface IMqttsnClient extends Closeable {
      * @return - Return the clientId associated with this instance
      */
     String getClientId();
+
+
+    /**
+     * Sets the will data on the runtime. If CONNECTED, the will data will be updated over the network, if NOT connected,
+     * any subsequent CONNECT messages will contain the will workflow to set the will data on the gateway
+     * @param willData - The will data you would like set
+     */
+    void setWillData(MqttsnWillData willData) throws MqttsnException ;
+
+    /**
+     * Clear any existing will data from the runtime.
+     */
+    void clearWillData() throws MqttsnException ;
 
 }

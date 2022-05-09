@@ -45,6 +45,7 @@ public class MqttsnClientRuntimeRegistry extends AbstractMqttsnRuntimeRegistry i
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).
                 withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).
                 withTopicRegistry(new MqttsnInMemoryTopicRegistry()).
+                withWillRegistry(new MqttsnInMemoryWillRegistry()).
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).
                 withMessageQueue(new MqttsnInMemoryMessageQueue()).
                 withQueueProcessor(new MqttsnMessageQueueProcessor(true)).

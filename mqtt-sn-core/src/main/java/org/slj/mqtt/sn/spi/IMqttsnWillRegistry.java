@@ -34,6 +34,10 @@ public interface IMqttsnWillRegistry<T extends IMqttsnRuntimeRegistry> extends I
 
     void setWillMessage(IMqttsnContext context, MqttsnWillData willData);
 
+    void updateWillTopic(IMqttsnContext context, String topicPath, int qos, boolean retain);
+
+    void updateWillMessage(IMqttsnContext context, byte[] data);
+
     MqttsnWillData getWillMessage(IMqttsnContext context);
 
     boolean hasWillMessage(IMqttsnContext context);

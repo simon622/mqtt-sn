@@ -27,17 +27,26 @@ package org.slj.mqtt.sn.model;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class MqttsnWillData implements Serializable {
 
     private static final long serialVersionUID = 2284318994034723218L;
 
     private TopicPath topicPath;
-    private byte data;
+    private int qos;
+    private boolean retain;
+    private byte[] data;
 
-    public MqttsnWillData(TopicPath topicPath, byte data) {
+    public MqttsnWillData() {
+
+    }
+
+    public MqttsnWillData(TopicPath topicPath, byte[] data, int qos, boolean retain) {
         this.topicPath = topicPath;
         this.data = data;
+        this.qos = qos;
+        this.retain = retain;
     }
 
     public TopicPath getTopicPath() {
@@ -48,11 +57,37 @@ public class MqttsnWillData implements Serializable {
         this.topicPath = topicPath;
     }
 
-    public byte getData() {
+    public byte[] getData() {
         return data;
     }
 
-    public void setData(byte data) {
+    public void setData(byte[] data) {
         this.data = data;
+    }
+
+    public boolean isRetain() {
+        return retain;
+    }
+
+    public void setRetain(boolean retain) {
+        this.retain = retain;
+    }
+
+    public int getQos() {
+        return qos;
+    }
+
+    public void setQos(int qos) {
+        this.qos = qos;
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnWillData{" +
+                "topicPath=" + topicPath +
+                ", qos=" + qos +
+                ", retain=" + retain +
+                ", data=" + (data == null ? "<null>" : data.length) +
+                '}';
     }
 }

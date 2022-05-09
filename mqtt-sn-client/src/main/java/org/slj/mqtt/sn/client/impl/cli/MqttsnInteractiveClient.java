@@ -32,15 +32,14 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryTopicRegistry;
-import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
-import org.slj.mqtt.sn.model.Subscription;
+import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
+import org.slj.mqtt.sn.spi.IMqttsnWillRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -64,6 +63,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         LOUD("Switch on the sent and receive listeners", new String[0]),
         RESET("Reset the stats and the local queue", new String[0]),
         CONNECT("Connect to the gateway and establish a new session", new String[]{"boolean cleanSession", "int16 keepAlive"}),
+        WILL("Set will data on your runtime", new String[0]),
         SUBSCRIBE("Subscribe to a topic", new String[]{"String* topicName", "int QoS"}),
         DISCONNECT("Disconnect from the gateway session", new String[0]),
         SLEEP("Send the remote session to sleep", new String[]{"int16 duration"}),
@@ -142,6 +142,13 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     connect(
                             captureMandatoryBoolean(input, output, "Would you like a clean session?"),
                             captureMandatoryInt(input, output, "How long would you like your keepAlive to be (in seconds)?", null));
+                    break;
+                case WILL:
+                    will(
+                            captureMandatoryBoolean(input, output, "Is your will message a retained message?"),
+                            captureMandatoryString(input, output, "Which topic is your will message destined for?"),
+                            captureMandatoryString(input, output, "What is the will message you would like to publish?"),
+                            captureMandatoryInt(input, output, "At which QoS would you like to subscribe (0,1,2)?", ALLOWED_QOS));
                     break;
                 case SUBSCRIBE:
                     subscribe(
@@ -241,6 +248,14 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         } else {
             message("Client is already connected");
         }
+    }
+
+    protected void will(boolean retained, String topic, String data, int QoS) throws MqttsnException {
+
+        MqttsnClient client = (MqttsnClient) getRuntime();
+        MqttsnWillData willData = new MqttsnWillData(new TopicPath(topic), data.getBytes(StandardCharsets.UTF_8), QoS, retained);
+        client.setWillData(willData);
+        message("DONE - successfully set will message data on runtime");
     }
 
     protected void loop(int count, String topicPath, int qos)

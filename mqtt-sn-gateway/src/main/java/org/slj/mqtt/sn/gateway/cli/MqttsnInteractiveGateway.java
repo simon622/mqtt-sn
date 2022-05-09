@@ -281,6 +281,14 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getQoS()));
             }
 
+            if(gatewayRuntimeRegistry.getWillRegistry().hasWillMessage(c)){
+                MqttsnWillData data = gatewayRuntimeRegistry.getWillRegistry().getWillMessage(c);
+                message(String.format("Will QoS: %s", data.getQos()));
+                message(String.format("Will Topic: %s", data.getTopicPath()));
+                message(String.format("Will Retained: %s", data.isRetain()));
+                message(String.format("Will Data: %s", data.getData().length));
+            }
+
             INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
             message(String.format("Network Address(s): %s", networkContext.getNetworkAddress()));
 

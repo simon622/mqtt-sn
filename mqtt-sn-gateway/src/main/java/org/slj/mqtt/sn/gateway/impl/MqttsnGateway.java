@@ -42,6 +42,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getMessageQueue());
         callStartup(runtime.getMessageRegistry());
         callStartup(runtime.getTopicRegistry());
+        callStartup(runtime.getWillRegistry());
         callStartup(runtime.getSubscriptionRegistry());
         callStartup(runtime.getMessageStateService());
         callStartup(runtime.getQueueProcessorStateCheckService());
@@ -94,6 +95,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callShutdown(runtime.getMessageHandler());
         callShutdown(runtime.getMessageQueue());
         callShutdown(runtime.getMessageRegistry());
+        callShutdown(runtime.getWillRegistry());
         callShutdown(runtime.getTopicRegistry());
         callShutdown(runtime.getSubscriptionRegistry());
         callShutdown(runtime.getQueueProcessorStateCheckService());

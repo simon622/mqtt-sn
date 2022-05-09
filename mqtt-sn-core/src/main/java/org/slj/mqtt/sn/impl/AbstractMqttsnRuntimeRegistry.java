@@ -453,5 +453,6 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         if(contextFactory == null) throw new MqttsnRuntimeException("context factory must be bound for valid runtime");
         if(queueProcessor == null) throw new MqttsnRuntimeException("queue processor must be bound for valid runtime");
         if(messageRegistry == null) throw new MqttsnRuntimeException("message registry must be bound for valid runtime");
+        if(willRegistry == null) throw new MqttsnRuntimeException("will registry must be bound for valid runtime");
     }
 }

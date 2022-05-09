@@ -138,6 +138,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         callStartup(registry.getContextFactory());
         callStartup(registry.getSubscriptionRegistry());
         callStartup(registry.getTopicRegistry());
+        callStartup(registry.getWillRegistry());
         callStartup(registry.getQueueProcessor());
         callStartup(registry.getTransport());
     }
@@ -151,6 +152,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         callShutdown(registry.getMessageQueue());
         callShutdown(registry.getMessageRegistry());
         callShutdown(registry.getContextFactory());
+        callShutdown(registry.getWillRegistry());
         callShutdown(registry.getSubscriptionRegistry());
         callShutdown(registry.getTopicRegistry());
     }
@@ -194,7 +196,8 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 startProcessing(false);
                 try {
                     IMqttsnMessage message = registry.getMessageFactory().createConnect(
-                            registry.getOptions().getContextId(), keepAlive, false, cleanSession);
+                            registry.getOptions().getContextId(), keepAlive,
+                            registry.getWillRegistry().hasWillMessage(state.getContext()), cleanSession);
                     MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
                     Optional<IMqttsnMessage> response =
                             registry.getMessageStateService().waitForCompletion(state.getContext(), token);
@@ -210,6 +213,52 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 }
             }
         }
+    }
+
+    @Override
+    /**
+     * @see {@link IMqttsnClient#setWillData(MqttsnWillData)}
+     */
+    public void setWillData(MqttsnWillData willData) throws MqttsnException {
+
+        //if connected, we need to update the existing session
+        IMqttsnSessionState state = checkSession(false);
+
+        registry.getWillRegistry().setWillMessage(state.getContext(), willData);
+
+        if (state.getClientState() == MqttsnClientState.CONNECTED) {
+            try {
+
+                //-- topic update first
+                IMqttsnMessage message = registry.getMessageFactory().createWillTopicupd(
+                        willData.getQos(),willData.isRetain(), willData.getTopicPath().toString());
+                MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
+                Optional<IMqttsnMessage> response =
+                        registry.getMessageStateService().waitForCompletion(state.getContext(), token);
+                MqttsnUtils.responseCheck(token, response);
+
+                //-- then the data udpate
+                message = registry.getMessageFactory().createWillMsgupd(willData.getData());
+                token = registry.getMessageStateService().sendMessage(state.getContext(), message);
+                response =
+                        registry.getMessageStateService().waitForCompletion(state.getContext(), token);
+                MqttsnUtils.responseCheck(token, response);
+
+            } catch(MqttsnExpectationFailedException e){
+                //-- something was not correct with the CONNECT, shut it down again
+                logger.log(Level.WARNING, "error issuing WILL UPDATE", e);
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    /**
+     * @see {@link IMqttsnClient#setWillData()}
+     */
+    public void clearWillData() throws MqttsnException {
+        IMqttsnSessionState state = checkSession(false);
+        registry.getWillRegistry().clear(state.getContext());
     }
 
     @Override

@@ -37,10 +37,13 @@ public class ClientInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
+
+                /* comment this in for integrity checking
                 MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
                         withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
                         withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
                 options.withSecurityOptions(securityOptions);
+                */
 
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
                         withTransport(transport).

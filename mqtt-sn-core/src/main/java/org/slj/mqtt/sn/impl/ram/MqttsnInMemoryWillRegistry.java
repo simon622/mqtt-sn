@@ -29,10 +29,12 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnWillData;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class MqttsnInMemoryWillRegistry<T extends IMqttsnRuntimeRegistry>
         extends AbstractWillRegistry<T> {
@@ -43,6 +45,44 @@ public class MqttsnInMemoryWillRegistry<T extends IMqttsnRuntimeRegistry>
     public synchronized void start(T runtime) throws MqttsnException {
         willLookup = Collections.synchronizedMap(new HashMap<>());
         super.start(runtime);
+    }
+
+    @Override
+    public void updateWillTopic(IMqttsnContext context, String topicPath, int qos, boolean retain) {
+        MqttsnWillData willData = getWillMessage(context);
+        if(willData == null){
+            synchronized (this){
+                if(willData == null){
+                    willData = new MqttsnWillData();
+                    setWillMessage(context, willData);
+                }
+            }
+        }
+        if(willData != null){
+            willData.setQos(qos);
+            willData.setRetain(retain);
+            willData.setTopicPath(new TopicPath(topicPath));
+        }
+
+        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", context, willData));
+    }
+
+    @Override
+    public void updateWillMessage(IMqttsnContext context, byte[] data) {
+        MqttsnWillData willData = getWillMessage(context);
+        if(willData == null){
+            synchronized (this){
+                if(willData == null){
+                    willData = new MqttsnWillData();
+                    setWillMessage(context, willData);
+                }
+            }
+        }
+        if(willData != null){
+            willData.setData(data);
+        }
+
+        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", context, willData));
     }
 
     @Override

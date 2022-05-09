@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
+import org.slj.mqtt.sn.model.MqttsnWillData;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
@@ -684,11 +685,17 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     }
 
     protected IMqttsnMessage handleWillmsgreq(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
-        byte[] willMsg = null;
+
+        MqttsnWillData willData = registry.getWillRegistry().getWillMessage(context);
+        byte[] willMsg = willData.getData();
         return registry.getMessageFactory().createWillMsg(willMsg);
     }
 
     protected IMqttsnMessage handleWillmsg(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+
+        MqttsnWillmsg update = (MqttsnWillmsg) message;
+        byte[] data = update.getMsgData();
+        registry.getWillRegistry().updateWillMessage(context, data);
         return registry.getMessageFactory().createConnack(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
@@ -696,6 +703,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
         MqttsnWillmsgupd update = (MqttsnWillmsgupd) message;
         byte[] data = update.getMsgData();
+        registry.getWillRegistry().updateWillMessage(context, data);
         return registry.getMessageFactory().createWillMsgResp(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
@@ -703,15 +711,23 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     }
 
     protected IMqttsnMessage handleWilltopicreq(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
-        int QoS = 0;
-        boolean retain = false;
-        String topicPath = null;
+
+        MqttsnWillData willData = registry.getWillRegistry().getWillMessage(context);
+        int QoS = willData.getQos();
+        boolean retain = willData.isRetain();
+        String topicPath = willData.getTopicPath().toString();
         return registry.getMessageFactory().createWillTopic(QoS, retain, topicPath);
     }
 
     protected IMqttsnMessage handleWilltopic(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
         //when in connect interaction, the will topic should yield a response of will message req
+
+        MqttsnWilltopic update = (MqttsnWilltopic) message;
+        int qos = update.getQoS();
+        boolean retain = update.isRetainedPublish();
+        String topicPath = update.getWillTopicData();
+        registry.getWillRegistry().updateWillTopic(context, topicPath, qos, retain);
         return registry.getMessageFactory().createWillMsgReq();
     }
 
@@ -720,6 +736,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         String topicPath = update.getWillTopicData();
         int qos = update.getQoS();
         boolean retain = update.isRetainedPublish();
+        registry.getWillRegistry().updateWillTopic(context, topicPath, qos, retain);
         return registry.getMessageFactory().createWillTopicResp(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 

@@ -46,11 +46,12 @@ public class AggregatingGatewayInteractiveMain {
                         withUsername(username).
                         withPassword(password);
 
+                /* comment this in for integrity checking
                 MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
                         withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
                         withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
-
                 options.withSecurityOptions(securityOptions);
+                */
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).

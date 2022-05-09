@@ -47,12 +47,9 @@ public class SubscribeResult extends Result {
         this.grantedQoS = grantedQoS;
     }
 
-    public TopicInfo getTopicInfo() {
-        return topicInfo;
-    }
-
-    public void setTopicInfo(TopicInfo topicInfo) {
-        this.topicInfo = topicInfo;
+    public SubscribeResult(int grantedQoS) {
+        super(STATUS.SUCCESS);
+        this.grantedQoS = grantedQoS;
     }
 
     public int getGrantedQoS() {
@@ -72,5 +69,13 @@ public class SubscribeResult extends Result {
 
     public void setGrantedQoS(int grantedQoS) {
         this.grantedQoS = grantedQoS;
+    }
+
+    public TopicInfo getTopicInfo() {
+        return topicInfo;
+    }
+
+    public void setTopicInfo(TopicInfo topicInfo) {
+        this.topicInfo = topicInfo;
     }
 }

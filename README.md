@@ -106,7 +106,31 @@ the runtime.
     });
 ```
 
-#### Message Integrity
+#### Traffic Listeners
+
+All traffic to and from the transport layer can be monitored by the application by registering traffic listeners. These will
+get called back after the traffic has been sent / received to the transport adapter top enable you to see what is going over
+the wire.
+
+```java
+    MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+        withTransport(new MqttsnClientUdpTransport(udpOptions)).
+        withTrafficListener(new IMqttsnTrafficListener() {
+            @Override
+            public void trafficSent(INetworkContext context, byte[] data, IMqttsnMessage message) {
+                System.err.println(String.format("message [%s]", message));
+            }
+
+            @Override
+            public void trafficReceived(INetworkContext context, byte[] data, IMqttsnMessage message) {
+                System.err.println(String.format("message [%s]", message));
+            }
+        }).
+        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+```
+
+
+### Message Integrity
 
 You can optionally configure the gateway and client to require and produce message verification on either all packets or payload data. If enabled you
 must choose from HMAC (suggested) or CHECKSUM integrity checks. When enabled, data packets or payload will be prefixed with integrity fields
@@ -132,29 +156,6 @@ their respective lengths.
         withIntegrityKey("my-pre-shared-key") //only used in HMAC
 
     options.withSecurityOptions(securityOptions);
-```
-
-#### Traffic Listeners
-
-All traffic to and from the transport layer can be monitored by the application by registering traffic listeners. These will
-get called back after the traffic has been sent / received to the transport adapter top enable you to see what is going over
-the wire.
-
-```java
-    MqttsnClientRuntimeRegistry.defaultConfiguration(options).
-        withTransport(new MqttsnClientUdpTransport(udpOptions)).
-        withTrafficListener(new IMqttsnTrafficListener() {
-            @Override
-            public void trafficSent(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                System.err.println(String.format("message [%s]", message));
-            }
-
-            @Override
-            public void trafficReceived(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                System.err.println(String.format("message [%s]", message));
-            }
-        }).
-        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 ```
 
 ### Clustering

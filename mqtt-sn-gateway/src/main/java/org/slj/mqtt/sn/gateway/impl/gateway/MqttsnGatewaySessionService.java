@@ -25,7 +25,9 @@
 package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.gateway.spi.*;
+import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
@@ -76,7 +78,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         }
                     }
                 }
-                else  if(state.getClientState() == MqttsnClientState.DISCONNECTED){
+                else if(state.getClientState() == MqttsnClientState.DISCONNECTED){
                     // check disconnected time
                     long time = System.currentTimeMillis();
                     Date lastSeen = state.getLastSeen();
@@ -91,9 +93,21 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         return MIN_SESSION_MONITOR_CHECK;
     }
 
-    protected void markSessionDisconnected(IMqttsnSessionState state){
-        logger.log(Level.WARNING, String.format("marking inactive session [%s], disconnected", state.getContext()));
+    protected void markSessionDisconnected(IMqttsnSessionState state) {
+        logger.log(Level.WARNING, String.format("session expired [%s], disconnected", state.getContext()));
         state.setClientState(MqttsnClientState.DISCONNECTED);
+
+        if(getRegistry().getWillRegistry().hasWillMessage(state.getContext())){
+            MqttsnWillData data = getRegistry().getWillRegistry().getWillMessage(state.getContext());
+            logger.log(Level.INFO, String.format("session expired has will data to publish[%s]", data));
+            IMqttsnMessage willPublish = getRegistry().getCodec().createMessageFactory().createPublish(data.getQos(), false, data.isRetain(),
+                    "ab", data.getData());
+            try {
+                registry.getBackendService().publish(state.getContext(), data.getTopicPath(), willPublish);
+            } catch(MqttsnBackendException e){
+                logger.log(Level.SEVERE, String.format("error publish will message for [%s] -> [%s]", state.getContext(), data), e);
+            }
+        }
     }
 
     @Override
@@ -316,6 +330,9 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
             //-- topic registrations
             registry.getTopicRegistry().clear(context);
+
+            //-- will data
+            registry.getWillRegistry().clear(context);
         }
     }
 

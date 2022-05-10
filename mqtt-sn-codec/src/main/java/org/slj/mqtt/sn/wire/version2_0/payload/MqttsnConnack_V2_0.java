@@ -34,6 +34,7 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
     protected long sessionExpiryInterval;
     protected String assignedClientId;
+    protected boolean sessionPresent;   //this field is not yet agreed!!
 
     @Override
     public int getMessageType() {
@@ -44,16 +45,17 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     public void decode(byte[] data) throws MqttsnCodecException {
 
         returnCode = readUInt8Adjusted(data, 2);
-        sessionExpiryInterval = readUInt32Adjusted(data, 3);
-        if(data.length > 7){
-            assignedClientId = readUTF8EncodedStringAdjusted(data, 7);
+        sessionPresent = readBooleanAdjusted(data, 3);
+        sessionExpiryInterval = readUInt32Adjusted(data, 4);
+        if(data.length > 8){
+            assignedClientId = readUTF8EncodedStringAdjusted(data, 8);
         }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 7 + (assignedClientId == null ? 0 : assignedClientId.length() + 2);
+        int length = 8 + (assignedClientId == null ? 0 : assignedClientId.length() + 2);
         byte[] msg;
         int idx = 0;
         if ((length) > 0xFF) {
@@ -69,6 +71,8 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
         msg[idx++] = (byte) getMessageType();
         msg[idx++] = (byte) getReturnCode();
+
+        msg[idx++] = sessionPresent ? (byte) 1 : 0;
 
         writeUInt32(msg, idx, sessionExpiryInterval);
         idx += 4;
@@ -96,6 +100,14 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         this.assignedClientId = assignedClientId;
     }
 
+    public boolean isSessionPresent() {
+        return sessionPresent;
+    }
+
+    public void setSessionPresent(boolean sessionPresent) {
+        this.sessionPresent = sessionPresent;
+    }
+
     @Override
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateReturnCode(returnCode);
@@ -109,6 +121,7 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
                 "returnCode=" + returnCode +
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", assignedClientId='" + assignedClientId + '\'' +
+                ", sessionPresent=" + sessionPresent +
                 '}';
     }
 }

@@ -87,6 +87,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setReturnCode(returnCode);
         msg.setAssignedClientId(assignedClientId);
         msg.setSessionExpiryInterval(sessionExpiryInterval);
+        msg.setSessionPresent(sessionExists);
         msg.validate();
         return msg;
     }

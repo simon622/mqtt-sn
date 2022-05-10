@@ -82,6 +82,11 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
         return body;
     }
 
+    protected boolean readBooleanAdjusted(byte[] data, int startIdx) {
+        return MqttsnWireUtils.read8bit(
+                readHeaderByteWithOffset(data, startIdx)) == 1;
+    }
+
     protected int readUInt8Adjusted(byte[] data, int startIdx) {
         return MqttsnWireUtils.read8bit(
                 readHeaderByteWithOffset(data, startIdx));

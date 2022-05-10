@@ -36,6 +36,8 @@ public interface IMqttsnSessionState {
 
     Date getSessionStarted();
 
+    int getMaxPacketSize();
+
     int getKeepAlive();
 
     long getSessionExpiryInterval();
@@ -47,4 +49,6 @@ public interface IMqttsnSessionState {
     void setKeepAlive(int keepAlive);
 
     void setSessionExpiryInterval(long sessionExpiryInterval);
+
+    void setMaxPacketSize(int maxPacketSize);
 }

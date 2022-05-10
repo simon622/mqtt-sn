@@ -34,6 +34,7 @@ public class MqttsnSessionState implements IMqttsnSessionState {
     private int keepAlive;
     private long sessionExpiryInterval;
     private Date sessionStarted;
+    private int maxPacketSize;
 
     public MqttsnSessionState(IMqttsnContext context, MqttsnClientState state){
         this.context = context;
@@ -97,6 +98,16 @@ public class MqttsnSessionState implements IMqttsnSessionState {
     }
 
     @Override
+    public int getMaxPacketSize() {
+        return maxPacketSize;
+    }
+
+    @Override
+    public void setMaxPacketSize(int maxPacketSize) {
+        this.maxPacketSize = maxPacketSize;
+    }
+
+    @Override
     public String toString() {
         return "MqttsnSessionState{" +
                 "context=" + context +
@@ -105,6 +116,7 @@ public class MqttsnSessionState implements IMqttsnSessionState {
                 ", keepAlive=" + keepAlive +
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", sessionStarted=" + sessionStarted +
+                ", maxPacketSize=" + maxPacketSize +
                 '}';
     }
 }

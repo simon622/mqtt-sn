@@ -374,7 +374,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         List<IMqttsnContext> recipients = registry.getSubscriptionRegistry().matches(topicPath);
         logger.log(Level.INFO, String.format("receiving broker side message into [%s] sessions", recipients.size()));
 
-        //if we only have 1 reciever remove message after read
+        //if we only have 1 receiver remove message after read
         UUID messageId = recipients.size() > 1 ?
                 registry.getMessageRegistry().add(payload, calculateExpiry()) :
                 registry.getMessageRegistry().add(payload, true) ;
@@ -383,9 +383,13 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
             int q = Math.min(grantedQos,QoS);
             try {
-                registry.getMessageQueue().offer(client, new QueuedPublishMessage(
-                    messageId, topicPath, q));
-                expansionCount.incrementAndGet();
+                if(payload.length > getSessionState(client, false).getMaxPacketSize()){
+                    logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
+                } else {
+                    registry.getMessageQueue().offer(client, new QueuedPublishMessage(
+                            messageId, topicPath, q));
+                    expansionCount.incrementAndGet();
+                }
             } catch(MqttsnQueueAcceptException e){
                 throw new MqttsnException(e);
             }

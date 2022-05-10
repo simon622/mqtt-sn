@@ -134,7 +134,7 @@ public class MqttsnGatewayMessageHandler
         boolean cleanStart = false;
         int keepAlive = 0;
         boolean will = false;
-        long sessionExpiryInterval = 0;
+        long sessionExpiryInterval = MqttsnConstants.UNSIGNED_MAX_32;
         int maxPacketSize = MqttsnConstants.UNSIGNED_MAX_16;
 
         if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
@@ -185,6 +185,7 @@ public class MqttsnGatewayMessageHandler
 
                 boolean changedFromRequested = sessionExpiryIntervalRequested != sessionExpiryInterval;
                 state.setSessionExpiryInterval(sessionExpiryInterval);
+                state.setMaxPacketSize(maxPacketSize);
                 return registry.getMessageFactory().createConnack(
                         result.getReturnCode(), stateExisted, clientId, changedFromRequested ? sessionExpiryInterval : 0);
             }

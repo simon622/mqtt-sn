@@ -225,6 +225,9 @@ Ref | Title | Description | Change Type
 574 | Add reason string to DISCONNECT | In conjunction to 560, add a textual representation to the DISCONNECT packet | Functional & Packet
 575 | New protocol version | Add a new protocol version | Functional & Descriptive
 576 | Separate the flags field for CONNECT, SUBSCRIBE & PUBLISH | The flags field is no longer aligned across packet types so each packet needs its own description | Descriptive & Packet
+581 | Add **sessionExpiryInterval** to CONNACK | The gateway can choose to change the value of the session expiry by sending the value | Functional & Packet
+582 | Add **maxPacketSize** to CONNECT | The client should be able to specify a max packet size they will be able to receive | Functional & Packet
+585 | Add **sessionPresent** indicator to CONNACK | The gateway should be able to communicate back to the client whether a session was held locally during non cleanStart | Functional & Packet
 
 #### Packet Types Affected By v2.0 Changes ####
 Packet Name | Change Type

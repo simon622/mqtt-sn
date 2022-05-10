@@ -123,6 +123,9 @@ public interface MqttsnConstants {
     byte WILLTOPICRESP = 0x1B;
     byte WILLMSGUPD = 0x1C;
     byte WILLMSGRESP = 0x1D;
+    byte HELO = 0x2D;
+
+
     int ENCAPSMSG = 0xFE;
 
 }

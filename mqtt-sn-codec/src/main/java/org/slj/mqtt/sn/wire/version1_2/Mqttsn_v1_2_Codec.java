@@ -250,6 +250,10 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
                 validateLengthEquals(data, 3);
                 msg = new MqttsnWillmsgresp();
                 break;
+            case MqttsnConstants.HELO:
+                validateLengthGreaterThanOrEquals(data, 2);
+                msg = new MqttsnHelo();
+                break;
             case MqttsnConstants.ENCAPSMSG:
                 validateLengthGreaterThanOrEquals(data, 5);
                 msg = new MqttsnEncapsmsg();

@@ -71,6 +71,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         PUBLISH("Publish a new message", new String[]{"String* topicName", "String* data", "int QoS"}),
         UNSUBSCRIBE("Unsubscribe an existing topic subscription", new String[]{"String* topicName"}),
         STATUS("Obtain the status of the client", new String[0]),
+        HELO("Send a HELO message to gateway", new String[0]),
         TEST("Execute an built in test suite", new String[0]),
         PREDEFINE("Add a predefined topic alias", new String[]{"String* topicName",  "int16 topicAlias"}),
         HELP("List this message", new String[0]),
@@ -176,6 +177,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     break;
                 case WAKE:
                     wake();
+                    break;
+                case HELO:
+                    helo();
                     break;
                 case STATS:
                     stats();
@@ -348,6 +352,17 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
             message("Client must first be asleep before issuing this command");
         }
     }
+
+    protected void helo()
+            throws IOException, MqttsnException {
+        MqttsnClient client = (MqttsnClient) getRuntime();
+        if(client != null && client.isConnected()){
+            message("Sending HELO message...");
+            String userAgent = client.helo();
+            message(String.format("Gateway responded with [%s]", userAgent));
+        }
+    }
+
 
     protected void quit()
             throws MqttsnException, IOException {

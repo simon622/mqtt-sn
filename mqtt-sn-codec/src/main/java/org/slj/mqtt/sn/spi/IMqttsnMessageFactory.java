@@ -397,6 +397,14 @@ public interface IMqttsnMessageFactory {
             throws MqttsnCodecException;
 
     /**
+     * A NON STANDARD HELO message to allow a client or gateway to ascertain which version of software a gateway or client is running
+     *
+     * @param userAgent - the userAgent of the client or gateway
+     */
+    IMqttsnMessage createHelo(String userAgent)
+            throws MqttsnCodecException;
+
+    /**
      * Encapsulate message for use on forwarders.
      *
      * @param wirelessNodeId - Wireless Node Id: identifies the wireless node which has sent or should receive the encapsulated MQTT-SN message.

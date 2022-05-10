@@ -33,6 +33,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnHelo;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -479,6 +480,23 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
             registry.getMessageStateService().waitForCompletion(state.getContext(), token);
         }
+    }
+
+    @Override
+    /**
+     * @see {@link IMqttsnClient#helo()}
+     */
+    public String helo()  throws MqttsnException{
+        IMqttsnSessionState state = checkSession(true);
+        IMqttsnMessage message = registry.getMessageFactory().createHelo(null);
+        synchronized (this){
+            MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
+            Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(state.getContext(), token);
+            if(response.isPresent()){
+                return ((MqttsnHelo)response.get()).getUserAgent();
+            }
+        }
+        return null;
     }
 
     @Override

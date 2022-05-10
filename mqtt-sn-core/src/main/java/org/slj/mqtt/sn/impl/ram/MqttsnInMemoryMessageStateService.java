@@ -96,7 +96,11 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
 
     @Override
     protected boolean inflightExists(IMqttsnContext context, Integer messageId) throws MqttsnException {
-        return getInflightMessages(context).containsKey(messageId);
+        boolean exists = getInflightMessages(context).containsKey(messageId);
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("context [%s] -> inflight exists for id [%s] ? [%s]", context, messageId, exists));
+        }
+        return exists;
     }
 
     @Override

@@ -182,4 +182,10 @@ public interface IMqttsnClient extends Closeable {
      */
     void clearWillData() throws MqttsnException ;
 
+
+    /**
+     * Send a HELO packet to determine version of gateway
+     */
+    String helo()  throws MqttsnException;
+
 }

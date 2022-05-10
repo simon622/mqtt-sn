@@ -329,6 +329,16 @@ public class Mqttsn1_2WireTests {
         testWireMessage(message);
     }
 
+    @Test
+    public void testMqttsnHelo() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createHelo("userAgent");
+        testWireMessage(message);
+
+        message = factory.createHelo(null);
+        testWireMessage(message);
+    }
+
     protected void testWireMessage(IMqttsnMessage message) throws MqttsnCodecException {
 
         if(message.needsId()){

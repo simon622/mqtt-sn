@@ -121,6 +121,8 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                 return new int[]{ MqttsnConstants.WILLTOPICRESP };
             case MqttsnConstants.WILLMSGUPD:
                 return new int[]{ MqttsnConstants.WILLMSGRESP };
+            case MqttsnConstants.HELO:
+                return new int[]{ MqttsnConstants.HELO };
             default:
                 throw new MqttsnRuntimeException(
                         String.format("invalid message type detected [%s], non terminal and non response!", message.getMessageName()));
@@ -142,6 +144,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             case MqttsnConstants.PUBCOMP:   //we delete QoS 2 received PUBLISH on receipt of PUBCOMP
             case MqttsnConstants.PINGRESP:
             case MqttsnConstants.DISCONNECT:
+            case MqttsnConstants.HELO:
             case MqttsnConstants.ENCAPSMSG:
             case MqttsnConstants.GWINFO:
             case MqttsnConstants.WILLMSG:
@@ -157,8 +160,10 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     @Override
     public boolean requiresResponse(IMqttsnMessage message) {
         switch(message.getMessageType()){
+            case MqttsnConstants.HELO:
+                return ((MqttsnHelo)message).getUserAgent() == null;
             case MqttsnConstants.PUBLISH:
-                    return getRegistry().getCodec().getQoS(message, false) > 0;
+                return getRegistry().getCodec().getQoS(message, false) > 0;
             case MqttsnConstants.CONNECT:
             case MqttsnConstants.PUBREC:
             case MqttsnConstants.PUBREL:
@@ -188,6 +193,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             case MqttsnConstants.REGISTER:
             case MqttsnConstants.PINGREQ:
             case MqttsnConstants.DISCONNECT:
+            case MqttsnConstants.HELO:
             case MqttsnConstants.SEARCHGW:
             case MqttsnConstants.WILLMSGREQ:
             case MqttsnConstants.WILLMSGUPD:
@@ -211,8 +217,6 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                 return;
             }
 
-            int msgType = message.getMessageType();
-
             if(message.isErrorMessage()){
                 logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] received error message [%s]",
                         registry.getOptions().getContextId(), context, message));
@@ -220,8 +224,8 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
             beforeHandle(context, message);
 
-            if(logger.isLoggable(Level.INFO)){
-                logger.log(Level.INFO, String.format("mqtt-sn handler [%s <- %s] handling inbound message [%s]",
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("mqtt-sn handler [%s <- %s] handling inbound message [%s]",
                         registry.getOptions().getContextId(), context, message));
             }
 
@@ -381,6 +385,9 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                 break;
             case MqttsnConstants.GWINFO:
                 handleGwinfo(context, message);
+                break;
+            case MqttsnConstants.HELO:
+                response = handleHelo(context, message);
                 break;
             case MqttsnConstants.SEARCHGW:
                 response = handleSearchGw(context, message);
@@ -682,6 +689,20 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     }
 
     protected void handleGwinfo(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+    }
+
+    protected IMqttsnMessage handleHelo(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+        MqttsnHelo helo = (MqttsnHelo) message;
+        if(helo.getUserAgent() == null){
+            //this is a request for a HELO reply
+            helo = new MqttsnHelo();
+            helo.setUserAgent(getRegistry().getRuntime().getUserAgent());
+            return helo;
+
+        } else {
+            logger.log(Level.INFO, String.format("received HELO reply from [%s] -> userAgent [%s]", context, helo.getUserAgent()));
+            return null;
+        }
     }
 
     protected IMqttsnMessage handleWillmsgreq(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {

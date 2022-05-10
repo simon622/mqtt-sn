@@ -284,8 +284,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 token = markInflight(context, message, queuedPublishMessage);
             }
 
-            if(logger.isLoggable(Level.INFO)){
-                logger.log(Level.INFO,
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE,
                         String.format("mqtt-sn state [%s -> %s] sending message [%s], marking inflight ? [%s]",
                                 registry.getOptions().getContextId(), context, message, requiresResponse));
             }
@@ -321,6 +321,11 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     public Optional<IMqttsnMessage> waitForCompletion(IMqttsnContext context, final MqttsnWaitToken token, int waitTime) throws MqttsnExpectationFailedException {
         try {
+            if(token == null){
+                logger.log(Level.WARNING, "cannot wait for a <null> token");
+                return Optional.empty();
+            }
+
             IMqttsnMessage message = token.getMessage();
             if(token.isComplete()){
                 return Optional.ofNullable(message);
@@ -379,6 +384,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         Integer msgId = message.needsId() ? message.getId() : WEAK_ATTACH_ID;
         boolean matchedMessage = inflightExists(context, msgId);
         boolean terminalMessage = registry.getMessageHandler().isTerminalMessage(message);
+
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("matched message by id [%s]->[%s], terminalMessage [%s], messageIn [%s]",
+                    msgId, matchedMessage, terminalMessage, message));
+        }
+
         if (matchedMessage) {
             if (terminalMessage) {
                 InflightMessage inflight = removeInflight(context, msgId);

@@ -390,6 +390,14 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
+    public IMqttsnMessage createHelo(String userAgent) throws MqttsnCodecException {
+
+        MqttsnHelo msg = new MqttsnHelo();
+        msg.setUserAgent(userAgent);
+        return msg;
+    }
+
+    @Override
     public IMqttsnMessage createDisconnect(int returnCode, String reasonString) throws MqttsnCodecException {
 
         MqttsnDisconnect msg = new MqttsnDisconnect();

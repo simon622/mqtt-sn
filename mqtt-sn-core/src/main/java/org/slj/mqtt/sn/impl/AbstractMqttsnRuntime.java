@@ -325,6 +325,11 @@ public abstract class AbstractMqttsnRuntime {
         return threadGroup;
     }
 
+    public String getUserAgent() {
+        //todo get the build to compile in constant VERSION from build system
+        return getClass().getCanonicalName();
+    }
+
     public abstract void close() throws IOException ;
 
     protected abstract void startupServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException;

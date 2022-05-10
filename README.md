@@ -185,12 +185,62 @@ maxMessagesInflight | 1 | int (max. 65535) | In theory, a gateway and broker can
 maxMessagesInQueue | 100 | int | Max number of messages allowed in a client's queue. When the max is reached any new messages will be discarded.
 requeueOnInflightTimeout | true | boolean | When a publish message fails to confirm, should it be re-queued for DUP sending at a later point.
 predefinedTopics | Config| Map | Where a client or gateway both know a topic alias in advance, any messages or subscriptions to the topic will be made using the predefined IDs.
-networkAddressEntries | Config | Map | You can prespecify known locations for gateways and clients in the network address registry. NB. The runtime will dynamically update the registry with new clients / gateways as they are discovered. In the case of clients, they are unable to connect or message until at least 1 gateway is defined in config OR discovered.
+networkAddressEntries | Config | Map | You can pre-specify known locations for gateways and clients in the network address registry. NB. The runtime will dynamically update the registry with new clients / gateways as they are discovered. In the case of clients, they are unable to connect or message until at least 1 gateway is defined in config OR discovered.
 sleepClearsRegistrations  | true | boolean | When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the next AWAKE or ACTIVE states.
 minFlushTime  | 1000 | int | Time in milliseconds between a gateway device last receiving a message before it begins processing the client queue
 discoveryTime  | 3600 | int | The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
 pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
 maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
+
+
+### Version 1.2 to Version 2.0
+There were a number of changes considered for the standardisation process into V2.0. It is also worth noting a number of issues were discussed but NOT included, a breakdown of these can be found in the OASIS ticket system.
+
+#### Changelog ####
+Below is a listing of the changes adopted for the standardisation work. There were also more general changes to the document text to add clarity to parts that may have been considered to be ambiguous or to draw more alignment to MQTT version 5.0. 
+
+Ref | Title | Description | Change Type
+------------ | ------------- | ------------- | -------------
+539 | Remove topicId from PUBACK packet | **topicId** being named and present in PUBACK was causing confusion and was not needed. | Packet
+540 | Clarify max size of small message types | Wording change to indicate that the size of small messages is 0-255 (< 256) octets inclusive. | Descriptive
+541 | Clean session should act like MQTT 5.0 | **cleanSession** changed to **cleanStart** and **sessionExpiryInterval** introduced to CONNECT packet. | Functional
+542 | Allow zero length clientId in CONNECT | The client should be able to pass a zero length clientId in the CONNECT packet. This indicates it should be assigned a clientId by the gateway. This **assignedClientId** should be sent back by the gateway as part of the CONNACK packet | Functional & Packet
+543 | Allow long topic names in PUBLISH for all QoS | The client should be able to pass a full topic name into the PUBLISH packet. Add a new **topicIdType** 0b11 to identify it. | Functional & Packet 
+544 | Add **returnCode** to UNSUBACK | Specify **returnCode** on the UNSUBACK packet | Functional & Packet
+545 | Ensure zero byte retained PUBLISH clears RETAINED messages | Align functional description of zero byte retained PUBLISH messages with MQTT 5.0. | Functional & Descriptive
+546 | Improve description of sleeping client packet workflow | Clarity added to sleeping client description and sequence diagrams. | Descriptive
+550 | Mandate the use of separate namespaces for device normal topic alias | Each device should have its own normal topicId space, distinct from other device's normal topicId space. | Functional & Descriptive
+552 | Clarify that gateways should accept QoS -1 messages from sleeping clients | A device should be able to publish at QoS -1 from any state, including sleeping. This should be made clearer in the specification. | Descriptive
+553 | Clarify the lifecycle of normal topicIds | Topic Alias mappings exist only while a client is active and last for the entire duration of the active state.  A receiver MUST NOT carry forward any Topic Alias mappings from one active state to another. | Descriptive & Functional
+554 | Sleeping state message buffering | Clarify that the gateway can choose to buffer QoS 0 messages during sleep state | Descriptive
+555 | Clarify gateway behaviour when REGISTER called for a PREDEFINED topic | Adding the **topicIdType** type to a REGACK to allow the gateway to inform clients of topic for which a PREDEFINED mapping already exists | Descriptive & Functional 
+558 | Clarify small topic name format | Need an explicit definition of 2 octet (16 bit) ints | Descriptive
+559 | Increase duration on DISCONNECT | Increase the duration a client can sleep for from 16 bit to 32 bit. Change from **duration** to **sessionExpiryInterval**  | Descriptive & Functional & Packet
+560 | Align error codes with MQTT 5.0 where appropriate | Increase the number of error codes in use and provide reason strings where appropriate  | Descriptive & Packet
+561 | Improve ping flush operation | Add **maxMessages** field to PINGREQ and **messagesRemaining** to PINGRESP to allow client to only retrieve some of their buffered messages before returning to sleep | Descriptive & Functional & Packet
+568 | Authentication | Add **auth** field to CONNECT and create SASL based authentication workflow | Functional & Packet & Descriptive
+570 | Align terminology with MQTT 5.0 | Message becomes application message or packet, topic name become topic name or topic filter, error code becomes reason code | Descriptive
+572 | Constrain MQTT-SN to only 1 inflight message in each direction | Update text to mandate that a client may only have a single message inflight in each direction at any given time | Descriptive & Functional
+573 | Subscription Options | Add **noLocal**, **retainAsPublished** and **retainHandling** to SUBSCRIBE packet | Descriptive & Functional & Packet
+574 | Add reason string to DISCONNECT | In conjunction to 560, add a textual representation to the DISCONNECT packet | Functional & Packet
+575 | New protocol version | Add a new protocol version | Functional & Descriptive
+576 | Separate the flags field for CONNECT, SUBSCRIBE & PUBLISH | The flags field is no longer aligned across packet types so each packet needs its own description | Descriptive & Packet
+
+#### Packet Types Affected By v2.0 Changes ####
+Packet Name | Change Type
+------------ | -------------
+AUTH | NEW
+CONNACK | MODIFIED
+CONNECT | MODIFIED
+PINGREQ | MODIFIED
+PINGRESP | MODIFIED
+PUBACK | MODIFIED
+PUBLISH | MODIFIED
+REGACK | MODIFIED
+SUBACK | MODIFIED
+SUBSCRIBE | MODIFIED
+UNSUBSCRIBE | MODIFIED
+UNSUBACK | MODIFIED
 
 ### Related people & projects
 Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments.

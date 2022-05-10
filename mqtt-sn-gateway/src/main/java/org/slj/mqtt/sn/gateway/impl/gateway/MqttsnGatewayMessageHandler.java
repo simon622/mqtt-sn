@@ -57,6 +57,11 @@ public class MqttsnGatewayMessageHandler
         return state;
     }
 
+    protected boolean hasSessionState(IMqttsnContext context) throws MqttsnException {
+        IMqttsnSessionState state = registry.getGatewaySessionService().getSessionState(context, false);
+        return state != null;
+    }
+
     @Override
     protected void beforeHandle(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
@@ -168,8 +173,20 @@ public class MqttsnGatewayMessageHandler
             if(will){
                 return registry.getMessageFactory().createWillTopicReq();
             } else {
+
+                boolean stateExisted = hasSessionState(context);
+
+                long sessionExpiryIntervalRequested = sessionExpiryInterval;
+                if(sessionExpiryInterval >
+                        registry.getOptions().getRemoveDisconnectedSessionsSeconds()){
+                    sessionExpiryInterval = Math.min(sessionExpiryInterval,
+                            registry.getOptions().getRemoveDisconnectedSessionsSeconds());
+                }
+
+                boolean changedFromRequested = sessionExpiryIntervalRequested != sessionExpiryInterval;
+                state.setSessionExpiryInterval(sessionExpiryInterval);
                 return registry.getMessageFactory().createConnack(
-                        result.getReturnCode(), false, clientId, sessionExpiryInterval);
+                        result.getReturnCode(), stateExisted, clientId, changedFromRequested ? sessionExpiryInterval : 0);
             }
         }
     }

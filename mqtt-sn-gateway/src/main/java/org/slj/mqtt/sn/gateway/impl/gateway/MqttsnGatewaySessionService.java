@@ -79,13 +79,17 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     }
                 }
                 else if(state.getClientState() == MqttsnClientState.DISCONNECTED){
-                    // check disconnected time
+                    // check last seen time
                     long time = System.currentTimeMillis();
                     Date lastSeen = state.getLastSeen();
-                    long expires = lastSeen.getTime() + (registry.getOptions().getRemoveDisconnectedSessionsSeconds() * 1000);
-                    if(expires < time){
-                        logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
-                        itr.remove();
+                    long expires;
+                    if(state.getSessionExpiryInterval() < MqttsnConstants.UNSIGNED_MAX_32){
+                        expires = lastSeen.getTime() + (state.getSessionExpiryInterval() * 1000);
+                        //only expire sessions set to less than the max which means forever
+                        if(expires < time){
+                            logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
+                            itr.remove();
+                        }
                     }
                 }
             }

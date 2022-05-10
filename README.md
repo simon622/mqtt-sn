@@ -137,17 +137,19 @@ must choose from HMAC (suggested) or CHECKSUM integrity checks. When enabled, da
 according to the chosen specification which will then be validated by the receiver. The available integrity options are listed below with
 their respective lengths.
 
-** HMAC **
-* HmacSHA1 = 20 bytes
-* HmacMD5 = 16 bytes
-* HmacSHA224 = 28 bytes
-* HmacSHA256 = 32 bytes
-* HmacSHA384 = 48 bytes
-* HmacSHA512 = 64 bytes 
 
-** CHECKSUM **
-* CRC32 = 4 bytes
-* Adler32 = 4 bytes
+Type | Name | Field Size
+------------ | ------------- | -------------
+HMAC | HmacMD5 | 16 Bytes
+HMAC | HmacSHA1 | 20 Bytes
+HMAC | HmacSHA224 | 28 Bytes
+HMAC | HmacSHA256 | 32 Bytes
+HMAC | HmacSHA384 | 48 Bytes
+HMAC | HmacSHA512 | 64 Bytes
+CHECKSUM | CRC32 | 4 Bytes
+CHECKSUM | Adler32 | 4 Bytes
+
+Use the following code to change the configuration on your runtime options.
 
 ```java
     MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().

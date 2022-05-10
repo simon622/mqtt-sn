@@ -140,14 +140,14 @@ their respective lengths.
 
 Type | Name | Field Size
 ------------ | ------------- | -------------
-HMAC | HmacMD5 | 16 Bytes
-HMAC | HmacSHA1 | 20 Bytes
-HMAC | HmacSHA224 | 28 Bytes
-HMAC | HmacSHA256 | 32 Bytes
-HMAC | HmacSHA384 | 48 Bytes
-HMAC | HmacSHA512 | 64 Bytes
-CHECKSUM | CRC32 | 4 Bytes
-CHECKSUM | Adler32 | 4 Bytes
+HMAC | MD5 | 16 Bytes
+HMAC | SHA-1 | 20 Bytes
+HMAC | SHA-224 | 28 Bytes
+HMAC | SHA-256 | 32 Bytes
+HMAC | SHA-384 | 48 Bytes
+HMAC | SHA-512 | 64 Bytes
+CHECKSUM | CRC-32 | 4 Bytes
+CHECKSUM | Adler-32 | 4 Bytes
 
 Use the following code to change the configuration on your runtime options.
 

@@ -43,8 +43,23 @@ public class ThreadPoolLoadTestRunner extends AbstractLoadTestRunner {
 
     @Override
     public void start(ExecutionInput input) throws LoadTestException {
-        init();
-        super.start(input);
+        try {
+            init();
+            super.start(input);
+        } finally {
+            try {
+                if(executorService != null){
+                    executorService.shutdown();
+                    if(!executorService.awaitTermination(10, TimeUnit.SECONDS)){
+                        executorService.shutdownNow();
+                    }
+                }
+            } catch(InterruptedException e){
+                throw new LoadTestException(e);
+            } finally {
+                executorService = null;
+            }
+        }
     }
 
     protected void init() {

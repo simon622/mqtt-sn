@@ -53,6 +53,7 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
     final AtomicInteger threadCount = new AtomicInteger();
     final AtomicInteger completeCount = new AtomicInteger();
     final AtomicInteger runningCount = new AtomicInteger();
+    final AtomicInteger errorCount = new AtomicInteger();
 
     protected ThreadFactory factory = new ThreadFactory (){
         final ThreadGroup threadGroup = new ThreadGroup("mqtt-sn-load-group");
@@ -99,8 +100,8 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
         try {
             if(latch.await(input.getMaxWait(), input.getMaxWaitUnit())){
                 logger.log(Level.INFO,
-                        String.format("all simulations in the load test completed within the global timeout period of [%s] seconds",
-                                input.getMaxWaitUnit().toSeconds(input.getMaxWait())));
+                                String.format("simulation finished in [%s] seconds, final status ([%s] finished, of [%s] (%s errors))",
+                                        (System.currentTimeMillis() - start) / 1000L, completeCount.get(), numInstances, errorCount.get()));
             } else {
                 logger.log(Level.WARNING,
                         String.format("simulations still running after cooldown - interrupting tests [%s] seconds",
@@ -121,9 +122,9 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
                        synchronized (interrupt){
                            interrupt.wait(5000);
                            watchdogLog.log(Level.INFO,
-                                   String.format("running for [%s] seconds, current status [%s] of [%s] (%s%%) profiles alive - ([%s] finished, of [%s])",
+                                   String.format("running for [%s] seconds, current status [%s] of [%s] (%s%%) profiles alive - ([%s] finished, of [%s] (%s errors))",
                                            (System.currentTimeMillis() - start) / 1000L, runningCount.get(), latch.getCount(),
-                                           Numbers.round2_display(Numbers.percent(runningCount.get(), latch.getCount())), completeCount.get(), numInstances));
+                                           Numbers.round2_display(Numbers.percent(runningCount.get(), latch.getCount())), completeCount.get(), numInstances, errorCount.get()));
                        }
                     } catch(InterruptedException e) {
                         watchdogLog.log(Level.INFO, "watchdog was interrupted");
@@ -175,6 +176,9 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
                     } finally {
                         runningCount.decrementAndGet();
                         completeCount.incrementAndGet();
+                        if(profile.getProgress().isError()){
+                            errorCount.incrementAndGet();
+                        }
                         latch.countDown();
                         Thread.currentThread().setName(oldName);
                     }

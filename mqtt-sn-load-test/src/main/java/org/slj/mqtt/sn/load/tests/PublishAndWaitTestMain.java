@@ -39,8 +39,9 @@ public class PublishAndWaitTestMain {
 //                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 1000, 100);
 
             ThreadPoolLoadTestRunner runner =
-                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 500, 100);
-            ConnectPublishWaitProfile.PublishAndWaitClientInput input = new ConnectPublishWaitProfile.PublishAndWaitClientInput(350, TimeUnit.SECONDS);
+                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 10000, 200);
+            ConnectPublishWaitProfile.PublishAndWaitClientInput input =
+                    new ConnectPublishWaitProfile.PublishAndWaitClientInput(3500, TimeUnit.SECONDS);
             input.host = "localhost";
             input.port = 2442;
             input.messageCount = 10;

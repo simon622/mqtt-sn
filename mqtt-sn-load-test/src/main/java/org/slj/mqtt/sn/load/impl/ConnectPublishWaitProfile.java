@@ -83,7 +83,8 @@ public class ConnectPublishWaitProfile extends MqttsnClientProfile {
             progress.waitForCompletion();
 
         } catch(Exception e){
-            throw new RuntimeException(e);
+            logger.log(Level.SEVERE, "error detected", e);
+            progress.setError(e);
         }
     }
 

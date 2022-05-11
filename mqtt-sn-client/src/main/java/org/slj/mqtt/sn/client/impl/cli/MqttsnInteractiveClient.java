@@ -169,7 +169,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 case PUBLISH:
                     publish(
                             captureMandatoryString(input, output, "Which topic would you like to publish to?"),
-                            captureMandatoryString(input, output, "What is the message you would like to publish?"),
+                            captureString(input, output, "What is the message you would like to publish?"),
                             captureMandatoryInt(input, output, "At which QoS would you like to publish (-1,0,1,2)?", ALLOWED_QOS));
                     break;
                 case SLEEP:
@@ -279,7 +279,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null && (client.isConnected() || qos == -1)){
             try {
-                client.publish(topicPath, qos, data.getBytes(StandardCharsets.UTF_8));
+                client.publish(topicPath, qos, data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
                 if(!client.isConnected()){
                     boolean stopAfterUse = false;
                     try {

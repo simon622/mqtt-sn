@@ -113,10 +113,6 @@ public class MqttsnUtils {
 
     public static String getDurationString(long millis) {
 
-        if(millis < 0) {
-            throw new IllegalArgumentException("must be greater than zero!");
-        }
-
         if(millis < 1000){
             return String.format("%s millisecond%s", millis, millis > 1 ? "s" : "");
         }

@@ -109,7 +109,7 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
         if(map == null){
             synchronized (this){
                 if((map = inflightMessages.get(context)) == null){
-                    map = new HashMap<>();
+                    map = Collections.synchronizedMap(new HashMap<>());
                     inflightMessages.put(context, map);
                 }
             }

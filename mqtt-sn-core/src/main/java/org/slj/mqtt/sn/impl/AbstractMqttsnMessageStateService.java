@@ -121,12 +121,15 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                                     }
                                 }
                                 else {
-                                    scheduleWork(context, Math.max(1000, registry.getOptions().getMinFlushTime()), TimeUnit.MILLISECONDS);
+                                    scheduleWork(context, Math.max(100, registry.getOptions().getMinFlushTime()), TimeUnit.MILLISECONDS);
                                 }
                                 break;
                             case REPROCESS:
                                 scheduleWork(context, registry.getOptions().getMinFlushTime(), TimeUnit.MILLISECONDS);
                         }
+                    }
+                    if(logger.isLoggable(Level.FINE)){
+                        logger.log(Level.FINE, String.format("context [%s] flush completed with [%s]", context, result));
                     }
                     return result;
         }, time, unit);
@@ -164,8 +167,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     public void scheduleFlush(IMqttsnContext context)  {
         if(!flushOperations.containsKey(context) ||
                 flushOperations.get(context).isDone()){
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("scheduling outbound work for [%s]", context));
+            if(logger.isLoggable(Level.INFO)){
+                logger.log(Level.INFO, String.format("scheduling outbound work for [%s]", context));
             }
             if(executorService != null &&
                     !executorService.isTerminated() && !executorService.isShutdown()){
@@ -719,7 +722,7 @@ logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
             while(itr.hasNext()){
                 Integer i = itr.next();
                 InflightMessage msg = map.get(i);
-                if(msg.getDirection() == direction) count++;
+                if(msg != null && msg.getDirection() == direction) count++;
             }
             return count;
         }

@@ -119,13 +119,19 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     }
 
     protected void bindReceiveLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishReceivedListener((IMqttsnContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message) -> {
+        createOrGetClient().registerPublishReceivedListener((IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             getProgress().incrementProgress(1);
         });
     }
 
     protected void bindSendLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topicPath, byte[] data, IMqttsnMessage message) -> {
+        createOrGetClient().registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+            getProgress().incrementProgress(1);
+        });
+    }
+
+    protected void bindFailedLatch() throws UnknownHostException, MqttsnException {
+        createOrGetClient().registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retry) -> {
             getProgress().incrementProgress(1);
         });
     }

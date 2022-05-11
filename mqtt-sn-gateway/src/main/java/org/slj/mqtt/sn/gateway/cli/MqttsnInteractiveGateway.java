@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.cli;
 
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -267,7 +268,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message(String.format("Session started: %s", format(state.getSessionStarted())));
             message(String.format("Last seen:  %s", format(state.getLastSeen())));
             message(String.format("Keep alive (seconds):  %s", state.getKeepAlive()));
-            message(String.format("Session length (seconds):  %s", ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000)));
+            message(String.format("Session expiry interval (seconds):  %s", state.getSessionExpiryInterval()));
+            message(String.format("Time since connect (seconds):  %s", ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000)));
             message(String.format("State:  %s", getColorForState(state.getClientState())));
             message(String.format("Queue size:  %s", gatewayRuntimeRegistry.getMessageQueue().size(c)));
 
@@ -404,7 +406,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 withGatewayId(101).
                 withContextId(clientId).
                 withMaxMessagesInQueue(100000).
-                withMinFlushTime(1).
+                withRemoveDisconnectedSessionsSeconds(60 * 60).
                 withTransportHandoffThreadCount(2).
                 withQueueProcessorThreadCount(4).
                 withSleepClearsRegistrations(false);

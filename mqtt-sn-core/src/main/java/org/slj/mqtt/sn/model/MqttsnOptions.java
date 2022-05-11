@@ -137,9 +137,9 @@ public class MqttsnOptions {
     public static final int DEFAULT_MAX_TIME_INFLIGHT = 30000;
 
     /**
-     * By default, the time to wait between activity (receiving and sending) is 1000 milliseconds
+     * By default, the time to wait between activity (receiving and sending publish messages) is 50 milliseconds
      */
-    public static final int DEFAULT_MIN_FLUSH_TIME = 1000;
+    public static final int DEFAULT_MIN_FLUSH_TIME = 25;
 
     /**
      * By default, the discovery search radius is 2 hops

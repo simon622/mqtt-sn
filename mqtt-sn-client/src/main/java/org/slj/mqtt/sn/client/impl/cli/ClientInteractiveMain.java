@@ -45,7 +45,7 @@ public class ClientInteractiveMain {
                         withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
                 options.withSecurityOptions(securityOptions);
                 */
-
+                options.withMaxMessagesInQueue(100000);
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
                         withTransport(transport).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);

@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.load.tests;
 
 import org.slj.mqtt.sn.load.impl.ConnectPublishWaitProfile;
 import org.slj.mqtt.sn.load.runner.ThreadPerProfileLoadTestRunner;
+import org.slj.mqtt.sn.load.runner.ThreadPoolLoadTestRunner;
 
 import java.util.concurrent.TimeUnit;
 
@@ -34,11 +35,13 @@ public class PublishAndWaitTestMain {
     public static void main(String[] args) {
         try {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
-            ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 5, 10);
+//            ThreadPerProfileLoadTestRunner runner =
+//                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 1000, 100);
 
+            ThreadPoolLoadTestRunner runner =
+                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 500, 100);
             ConnectPublishWaitProfile.PublishAndWaitClientInput input = new ConnectPublishWaitProfile.PublishAndWaitClientInput(350, TimeUnit.SECONDS);
-            input.host = "34.248.60.25";
+            input.host = "localhost";
             input.port = 2442;
             input.messageCount = 10;
             runner.start(input);

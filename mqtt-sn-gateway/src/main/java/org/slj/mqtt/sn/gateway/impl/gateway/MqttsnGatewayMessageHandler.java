@@ -30,10 +30,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageHandler;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.IMqttsnSessionState;
-import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
@@ -118,6 +115,10 @@ public class MqttsnGatewayMessageHandler
                         messageOut != null && isTerminalMessage(messageOut) && !messageOut.isErrorMessage() ){
                     if(MqttsnUtils.in(sessionState.getClientState(),
                             MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)) {
+
+                        if(logger.isLoggable(Level.FINE)){
+                            logger.log(Level.FINE, String.format("scheduling flush based on outbound message [%s] -> inflight [%s]", messageOut == null ? messageIn : messageOut, getRegistry().getMessageStateService().countInflight(context, InflightMessage.DIRECTION.SENDING)));
+                        }
                         registry.getMessageStateService().scheduleFlush(context);
                     }
                 }
@@ -279,7 +280,7 @@ public class MqttsnGatewayMessageHandler
         byte[] topicData = null;
         int QoS = 0;
 
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+        if(context.getProtocolVersion() <= MqttsnConstants.PROTOCOL_VERSION_1_2){
             MqttsnSubscribe subscribe = (MqttsnSubscribe) message;
             topicIdType = subscribe.getTopicType();
             topicData = subscribe.getTopicData();

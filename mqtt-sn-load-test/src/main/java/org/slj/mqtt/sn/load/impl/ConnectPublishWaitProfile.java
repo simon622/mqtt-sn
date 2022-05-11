@@ -29,9 +29,12 @@ import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConnectPublishWaitProfile extends MqttsnClientProfile {
 
+    static Logger logger = Logger.getLogger(ConnectPublishWaitProfile.class.getName());
     static final int KEEP_ALIVE = 240;
     private int messageCount;
 
@@ -50,21 +53,32 @@ public class ConnectPublishWaitProfile extends MqttsnClientProfile {
 
         try {
             MqttsnClient client = createOrGetClient();
-            progress.setTotalWork(1 + 1 + (messageCount * 2));
+            progress.setTotalWork(1 + 1 + 1 +(messageCount * 2));
             bindReceiveLatch();
             bindSendLatch();
+            bindFailedLatch();
 
             String topicPath = clientId;
             client.connect(KEEP_ALIVE, true);
             progress.incrementProgress(1);
 
             //subscribe
+            client.subscribe("foo", 2);
+            progress.incrementProgress(1);
             client.subscribe(topicPath, 2);
+
             progress.incrementProgress(1);
 
+            String prefix = clientId + " msg ";
             for (int i = 0; i < messageCount; i++){
-                client.publish(topicPath, 1, ("message " + (i + 1)).getBytes());
+                client.publish(topicPath, 1, false, (prefix + (i + 1)).getBytes());
             }
+
+            client.registerPublishReceivedListener((context, topicPath1, qos, retained, data, message) -> {
+                if(!new String(data).startsWith(prefix)){
+                    progress.setError(new Exception("message mismatch detected!!"));
+                }
+            });
 
             progress.waitForCompletion();
 

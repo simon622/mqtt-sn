@@ -62,7 +62,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     protected long doWork() {
         synchronized (sessionLookup){
-            Iterator<IMqttsnContext> itr = sessionLookup.keySet().iterator();
+            Iterator<IMqttsnContext> itr = new HashSet(sessionLookup.keySet()).iterator();
             while(itr.hasNext()){
                 IMqttsnContext context = itr.next();
                 IMqttsnSessionState state = sessionLookup.get(context);
@@ -89,7 +89,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         //only expire sessions set to less than the max which means forever
                         if(expires < time){
                             logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
-                            itr.remove();
+                            clear(context);
                         }
                     }
                 }
@@ -183,7 +183,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                             registry.getOptions().isSleepClearsRegistrations());
                 } else {
                     logger.log(Level.INFO, String.format("[%s] disconnecting client", state.getContext()));
-                    clear(state.getContext());
+                    state.setClientState(MqttsnClientState.DISCONNECTED);
                 }
             }
         }
@@ -358,6 +358,11 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     public void clear(IMqttsnContext context) {
         logger.log(Level.INFO, String.format(String.format("removing session reference [%s]", context)));
         sessionLookup.remove(context);
+        try {
+            cleanSession(context, true);
+        } catch(MqttsnException e){
+            logger.log(Level.SEVERE, String.format(String.format("error cleaning up session [%s]", context)), e);
+        }
     }
 
     protected ConnectResult checkSessionSize(String clientId){
@@ -384,14 +389,18 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
             int q = Math.min(grantedQos,qos);
             try {
-                if(payload.length > getSessionState(client, false).getMaxPacketSize()){
-                    logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
+                IMqttsnSessionState sessionState = getSessionState(client, false);
+                if(sessionState != null){
+                    if(payload.length > sessionState.getMaxPacketSize()){
+                        logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
+                    } else {
+                        PublishData data = new PublishData(topicPath, q, retained);
+                        registry.getMessageQueue().offer(client, new QueuedPublishMessage(
+                                messageId, data));
+                        expansionCount.incrementAndGet();
+                    }
                 } else {
-
-                    PublishData data = new PublishData(topicPath, q, retained);
-                    registry.getMessageQueue().offer(client, new QueuedPublishMessage(
-                            messageId, data));
-                    expansionCount.incrementAndGet();
+                    logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", client));
                 }
             } catch(MqttsnQueueAcceptException e){
                 throw new MqttsnException(e);

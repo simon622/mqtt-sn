@@ -24,7 +24,9 @@
 
 package org.slj.mqtt.sn.load.runner;
 
+import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProfile;
+import org.slj.mqtt.sn.load.LoadTestException;
 
 import java.util.concurrent.*;
 import java.util.logging.Level;
@@ -37,6 +39,12 @@ public class ThreadPoolLoadTestRunner extends AbstractLoadTestRunner {
 
     public ThreadPoolLoadTestRunner(Class<? extends ExecutionProfile> profile, int numInstances, int rampSeconds) {
         super(profile, numInstances, rampSeconds);
+    }
+
+    @Override
+    public void start(ExecutionInput input) throws LoadTestException {
+        init();
+        super.start(input);
     }
 
     protected void init() {

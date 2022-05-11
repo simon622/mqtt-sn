@@ -140,6 +140,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         callStartup(registry.getSubscriptionRegistry());
         callStartup(registry.getTopicRegistry());
         callStartup(registry.getWillRegistry());
+        callStartup(registry.getSecurityService());
         callStartup(registry.getQueueProcessor());
         callStartup(registry.getTransport());
     }
@@ -152,6 +153,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         callShutdown(registry.getMessageHandler());
         callShutdown(registry.getMessageQueue());
         callShutdown(registry.getMessageRegistry());
+        callShutdown(registry.getSecurityService());
         callShutdown(registry.getContextFactory());
         callShutdown(registry.getWillRegistry());
         callShutdown(registry.getSubscriptionRegistry());
@@ -671,7 +673,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public void resetConnection(IMqttsnContext context, Throwable t, boolean attemptRestart) {
         try {
             logger.log(Level.WARNING, String.format("connection lost at transport layer [%s]", context), t);
-            disconnect(false, false);
+            disconnect(false, true);
             //attempt to restart transport
             callShutdown(registry.getTransport());
             if(attemptRestart){
@@ -722,11 +724,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         logger.log(Level.INFO, String.format("clearing state, deep clean ? [%s]", deepClear));
         registry.getMessageStateService().clearInflight(context);
         registry.getTopicRegistry().clear(context,
-                registry.getOptions().isSleepClearsRegistrations());
+                deepClear || registry.getOptions().isSleepClearsRegistrations());
         if(getSessionState() != null) state.setKeepAlive(0);
         if(deepClear){
             registry.getSubscriptionRegistry().clear(context);
-            registry.getTopicRegistry().clear(context, true);
         }
     }
 
@@ -751,7 +752,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         @Override
         public void notifyRemoteDisconnect(IMqttsnContext context) {
             try {
-                disconnect(false, false);
+                disconnect(false, true);
             } catch(Exception e){}
         }
 

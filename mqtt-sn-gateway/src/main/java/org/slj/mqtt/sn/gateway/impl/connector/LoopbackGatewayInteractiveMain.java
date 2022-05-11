@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.connector.paho;
+package org.slj.mqtt.sn.gateway.impl.connector;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
@@ -32,10 +32,9 @@ import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
-public class AggregatingGatewayInteractiveMain {
+public class LoopbackGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
@@ -54,7 +53,7 @@ public class AggregatingGatewayInteractiveMain {
 */
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
-                        withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
+                        withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);

@@ -109,7 +109,7 @@ public abstract class AbstractInteractiveCli {
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
 
-        runtime.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
+        runtime.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
                 receiveCount.incrementAndGet();
                 receivedPublishBytesCount.addAndGet(data.length);
@@ -119,7 +119,7 @@ public abstract class AbstractInteractiveCli {
                 e.printStackTrace();
             }
         });
-        runtime.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
+        runtime.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
                 sentCount.incrementAndGet();
                 publishedBytesCount.addAndGet(data.length);
@@ -132,7 +132,7 @@ public abstract class AbstractInteractiveCli {
         enableOutput();
         message("Adding runtime listeners.. DONE");
 
-        runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topic, byte[] data, IMqttsnMessage message, int retryCount) -> {
+        runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
             try {
                 sentCount.incrementAndGet();
                 int QoS = runtimeRegistry.getCodec().getQoS(message, true);

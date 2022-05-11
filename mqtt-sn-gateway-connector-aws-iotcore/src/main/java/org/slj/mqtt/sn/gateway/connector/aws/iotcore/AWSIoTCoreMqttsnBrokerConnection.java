@@ -174,7 +174,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
                         try {
                             byte[] data = message.getPayload();
                             logger.log(Level.INFO, String.format("received message from AWS IoT broker [%s] -> [%s] bytes", getTopic(), data.length));
-                            receive(getTopic(), data, message.getQos().getValue());
+                            receive(getTopic(), message.getQos().getValue(), false, data);
                         } catch(Exception e){
                             logger.log(Level.SEVERE, String.format("error receiving message from broker;"), e);
                         }
@@ -204,16 +204,12 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message)
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message)
             throws MqttsnBackendException {
         try {
            if(isConnected()){
                try {
-                   //TODO defer to codec
-                   int QoS = backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
-                   boolean retained = backendService.getRuntimeRegistry().getCodec().isRetainedPublish(message);
-
-                   client.publish(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(QoS)), payload, getOperationTimeout());
+                   client.publish(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(qos)), payload, getOperationTimeout());
                    return new PublishResult(Result.STATUS.SUCCESS);
                } catch(AWSIotTimeoutException e){
                    logger.log(Level.WARNING, String.format("timedout sending message to broker [%s]", topicPath));

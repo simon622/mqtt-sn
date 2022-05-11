@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
@@ -107,7 +108,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             IMqttsnMessage willPublish = getRegistry().getCodec().createMessageFactory().createPublish(data.getQos(), false, data.isRetain(),
                     "ab", data.getData());
             try {
-                registry.getBackendService().publish(state.getContext(), data.getTopicPath(), data.getData(), willPublish);
+                registry.getBackendService().publish(state.getContext(), data.getTopicPath(), data.getQos(), data.isRetain(), data.getData(), willPublish);
                 //per the MQTT spec, once published the will message should be discarded
                 getRegistry().getWillRegistry().clear(state.getContext());
             } catch(MqttsnException e){
@@ -369,7 +370,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public void receiveToSessions(String topicPath, byte[] payload, int QoS) throws MqttsnException {
+    public void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {
         //-- expand the message onto the gateway connected device queues
         List<IMqttsnContext> recipients = registry.getSubscriptionRegistry().matches(topicPath);
         logger.log(Level.INFO, String.format("receiving broker side message into [%s] sessions", recipients.size()));
@@ -381,13 +382,15 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
         for (IMqttsnContext client : recipients){
             int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
-            int q = Math.min(grantedQos,QoS);
+            int q = Math.min(grantedQos,qos);
             try {
                 if(payload.length > getSessionState(client, false).getMaxPacketSize()){
                     logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
                 } else {
+
+                    PublishData data = new PublishData(topicPath, q, retained);
                     registry.getMessageQueue().offer(client, new QueuedPublishMessage(
-                            messageId, topicPath, q));
+                            messageId, data));
                     expansionCount.incrementAndGet();
                 }
             } catch(MqttsnQueueAcceptException e){

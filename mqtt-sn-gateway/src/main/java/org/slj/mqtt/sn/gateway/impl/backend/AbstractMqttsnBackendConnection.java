@@ -44,11 +44,11 @@ public abstract class AbstractMqttsnBackendConnection implements IMqttsnBackendC
         this.backendService = backendService;
     }
 
-    public void receive(String topicPath, byte[] payload, int QoS) throws MqttsnException {
+    public void receive(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {
         if(backendService == null){
             throw new MqttsnException("backendService not available to connection, receive will fail");
         }
-        backendService.receive(topicPath, payload, QoS);
+        backendService.receive(topicPath, qos, retained, payload);
     }
 
     @Override
@@ -77,7 +77,7 @@ public abstract class AbstractMqttsnBackendConnection implements IMqttsnBackendC
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         return new PublishResult(Result.STATUS.NOOP);
     }
 }

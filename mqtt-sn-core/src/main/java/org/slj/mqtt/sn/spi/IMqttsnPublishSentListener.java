@@ -31,5 +31,5 @@ import java.util.UUID;
 
 public interface IMqttsnPublishSentListener {
 
-    void sent(IMqttsnContext context, UUID messageId, TopicPath topicPath, byte[] data, IMqttsnMessage message);
+    void sent(IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message);
 }

@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.client.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
+import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.examples.Example;
 import org.slj.mqtt.sn.client.spi.IMqttsnClient;
@@ -279,13 +280,14 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
     @Override
     /**
-     * @see {@link IMqttsnClient#publish(String, int, byte[])}
+     * @see {@link IMqttsnClient#publish(String, int, boolean, byte[])}
      */
-    public MqttsnWaitToken publish(String topicName, int QoS, byte[] data) throws MqttsnException, MqttsnQueueAcceptException{
+    public MqttsnWaitToken publish(String topicName, int QoS, boolean retained, byte[] data) throws MqttsnException, MqttsnQueueAcceptException{
 
         MqttsnSpecificationValidator.validateQoS(QoS);
         MqttsnSpecificationValidator.validateTopicPath(topicName);
         MqttsnSpecificationValidator.validatePublishData(data);
+
 
         if(QoS == -1){
             Integer alias = registry.getTopicRegistry().lookupPredefined(state.getContext(), topicName);
@@ -298,10 +300,11 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 state.getClientState() == MqttsnClientState.DISCONNECTED){
             startProcessing(true);
         }
+        PublishData publishData = new PublishData(topicName, QoS, retained);
         UUID messageId = registry.getMessageRegistry().add(data, getMessageExpiry());
         return registry.getMessageQueue().offer(state.getContext(),
                 new QueuedPublishMessage(
-                        messageId, topicName, QoS));
+                        messageId, publishData));
     }
 
     @Override

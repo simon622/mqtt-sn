@@ -65,10 +65,10 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getTransport());
 
         //-- notify the backend of confirmed message
-        registerPublishReceivedListener((context, topicPath, data, message) -> {
+        registerPublishReceivedListener((context, topicPath, qos, retained, data, message) -> {
             try {
                 ((IMqttsnGatewayRuntimeRegistry) registry).
-                        getBackendService().publish(context, topicPath, data, message);
+                        getBackendService().publish(context, topicPath, qos, retained, data, message);
             } catch (MqttsnException e) {
                 logger.log(Level.SEVERE, "error publishing message to backend", e);
             }

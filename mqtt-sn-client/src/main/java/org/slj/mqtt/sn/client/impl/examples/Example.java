@@ -77,7 +77,7 @@ public class Example {
             client.start(registry);
 
             //-- register any publish receive listeners you require
-            client.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
+            client.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 receiveCounter.incrementAndGet();
                 System.err.println(String.format("received message [%s] [%s]",
                         receiveCounter.get(), new String(data, MqttsnConstants.CHARSET)));
@@ -85,7 +85,7 @@ public class Example {
             });
 
             //-- register any publish sent listeners you require
-            client.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, byte[] data, IMqttsnMessage message) -> {
+            client.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 System.err.println(String.format("sent message [%s]",
                         new String(data, MqttsnConstants.CHARSET)));
             });
@@ -99,7 +99,7 @@ public class Example {
             client.subscribe("my/example/topic/1", 2);
 
             //-- issue a publish command - the method will queue the message for sending and return immediately
-            client.publish("my/example/topic/1", 1,  "hello world".getBytes());
+            client.publish("my/example/topic/1", 1,  false, "hello world".getBytes());
 
             //-- wait for the sent message to be looped back before closing
             latch.await(30, TimeUnit.SECONDS);

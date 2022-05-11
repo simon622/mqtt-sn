@@ -49,7 +49,7 @@ public interface IMqttsnGatewaySessionService extends IMqttsnRegistry<IMqttsnGat
 
     void cleanSession(IMqttsnContext state, boolean deepClean) throws MqttsnException;
 
-    void receiveToSessions(String topicPath, byte[] payload, int QoS) throws MqttsnException ;
+    void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException ;
 
     Iterator<IMqttsnContext> iterator();
 

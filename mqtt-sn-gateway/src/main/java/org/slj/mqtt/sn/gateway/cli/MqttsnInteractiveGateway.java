@@ -172,6 +172,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                     queue(
                             captureMandatoryString(input, output, "What is the topic you would like to publish to?"),
                             captureMandatoryString(input, output, "Supply the data to publish"),
+                            captureMandatoryBoolean(input, output, "Is the message retained?"),
                             captureMandatoryInt(input, output, "What is QoS for the publish?", new int[]{0,1,2}));
                     break;
                 case FLUSH:
@@ -222,12 +223,12 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishReceiveCount()));
     }
 
-    protected void queue(String topicName, String payload, int QoS)
+    protected void queue(String topicName, String payload, boolean retained, int qos)
             throws MqttsnException {
 
         message("Enqueued publish to all subscribed sessions: " + topicName);
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getGatewaySessionService().receiveToSessions(topicName, payload.getBytes(StandardCharsets.UTF_8), QoS);
+        gatewayRuntimeRegistry.getGatewaySessionService().receiveToSessions(topicName, qos, retained, payload.getBytes(StandardCharsets.UTF_8));
     }
 
     protected void network() throws NetworkRegistryException {

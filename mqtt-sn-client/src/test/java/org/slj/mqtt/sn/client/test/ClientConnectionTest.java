@@ -147,7 +147,7 @@ public class ClientConnectionTest {
                     final byte[] payload = "hello".getBytes();
                     try (MqttsnClient client = new MqttsnClient()) {
                         client.start(createClientRuntimeRegistry("testClientId"));
-                        client.registerPublishReceivedListener((context, topicName, data, message) -> {
+                        client.registerPublishReceivedListener((context, topicName, qos, retained, data, message) -> {
                             if(Objects.deepEquals(data, payload)){
                                 latch.countDown();
                                 localLatch.countDown();
@@ -157,7 +157,7 @@ public class ClientConnectionTest {
                         final String publishTopic = String.format(TOPIC, client.getClientId());
                         client.subscribe(publishTopic, 2);
                         assertClientSessionState(client, MqttsnClientState.CONNECTED);
-                        client.publish(publishTopic,2,
+                        client.publish(publishTopic,2, false,
                                 payload);
                         localLatch.await(MUTLI_CLIENT_LATCH_TIMEOUT, TimeUnit.SECONDS);
                     }

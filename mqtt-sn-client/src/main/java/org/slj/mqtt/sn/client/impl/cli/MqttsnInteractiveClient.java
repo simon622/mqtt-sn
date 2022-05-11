@@ -169,8 +169,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 case PUBLISH:
                     publish(
                             captureMandatoryString(input, output, "Which topic would you like to publish to?"),
-                            captureString(input, output, "What is the message you would like to publish?"),
-                            captureMandatoryInt(input, output, "At which QoS would you like to publish (-1,0,1,2)?", ALLOWED_QOS));
+                            captureMandatoryInt(input, output, "At which QoS would you like to publish (-1,0,1,2)?", ALLOWED_QOS),
+                            captureMandatoryBoolean(input, output, "Is this a retained publish?"),
+                            captureString(input, output, "What is the message you would like to publish?"));
                     break;
                 case SLEEP:
                     sleep(captureMandatoryInt(input, output, "How long would you like to sleep for (in seconds)?", null));
@@ -265,7 +266,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void loop(int count, String topicPath, int qos)
             throws IOException, MqttsnException {
         for (int i = 0; i < count; i++){
-            publish(topicPath, "message " + (i + 1), qos);
+            publish(topicPath, qos, false, "message " + (i + 1));
             try {
                 //the queue ordering is done using a natural order on
                 //timestamp so ensure we are always 1 ms between
@@ -274,12 +275,12 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         }
     }
 
-    protected void publish(String topicPath, String data, int qos)
+    protected void publish(String topicPath, int qos, boolean retained, String data)
             throws IOException, MqttsnException {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null && (client.isConnected() || qos == -1)){
             try {
-                client.publish(topicPath, qos, data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
+                client.publish(topicPath, qos, retained, data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
                 if(!client.isConnected()){
                     boolean stopAfterUse = false;
                     try {
@@ -486,9 +487,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 Thread.sleep(TEST_PAUSE);
                 subscribe(TEST_TOPIC, 2);
                 Thread.sleep(TEST_PAUSE);
-                publish(TEST_TOPIC, "test qos 0", 0);
-                publish(TEST_TOPIC, "test qos 1", 1);
-                publish(TEST_TOPIC, "test qos 2", 2);
+                publish(TEST_TOPIC, 0, false, "test qos 0");
+                publish(TEST_TOPIC, 1, false, "test qos 1");
+                publish(TEST_TOPIC, 2, false, "test qos 2");
                 Thread.sleep(20000);
                 disconnect();
                 message("Tests have finished");

@@ -69,12 +69,13 @@ public interface IMqttsnClient extends Closeable {
      *
      * @param topicName - The path to which you wish to send the data
      * @param QoS - Quality of Service of the method, one of -1, 0 , 1, 2
+     * @param retained - is this a retained publish type
      * @param data - The data you wish to send
      * @return token - a sending token that you can use to block on until the message has been sent
      * @throws MqttsnException - There was an internal error
      * @throws MqttsnQueueAcceptException - The queue could not accept the message, most likely full
      */
-    MqttsnWaitToken publish(String topicName, int QoS, byte[] data) throws MqttsnException, MqttsnQueueAcceptException;
+    MqttsnWaitToken publish(String topicName, int QoS, boolean retained, byte[] data) throws MqttsnException, MqttsnQueueAcceptException;
 
 
     /**

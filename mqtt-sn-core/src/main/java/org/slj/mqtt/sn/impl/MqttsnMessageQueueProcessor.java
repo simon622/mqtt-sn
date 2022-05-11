@@ -91,7 +91,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
     protected RESULT processNextMessage(IMqttsnContext context) throws MqttsnException {
 
         QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
-        String topicPath = queuedMessage.getTopicPath();
+        String topicPath = queuedMessage.getData().getTopicPath();
         TopicInfo info = registry.getTopicRegistry().lookup(context, topicPath, true);
         if(info == null){
             if(logger.isLoggable(Level.FINE)){
@@ -138,7 +138,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
                 }
 
                 RESULT res = ((registry.getMessageQueue().size(context) > 0) ||
-                        queuedMessage.getGrantedQoS() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
+                        queuedMessage.getData().getQos() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
                 if(logger.isLoggable(Level.FINE)){
                     logger.log(Level.FINE, String.format("sending complete returning [%s] for [%s]", res, context));
                 }

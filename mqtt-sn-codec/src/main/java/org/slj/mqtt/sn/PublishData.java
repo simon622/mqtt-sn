@@ -31,13 +31,19 @@ public class PublishData {
     int qos;
     byte[] data;
 
-    public PublishData(int qos, byte[] data, boolean retained) {
+    public PublishData(int qos, boolean retained, byte[] data) {
         this.qos = qos;
         this.data = data;
         this.retained = retained;
     }
 
-    public PublishData(String topicPath, int qos, byte[] data, boolean retained) {
+    public PublishData(String topicPath, int qos, boolean retained) {
+        this.qos = qos;
+        this.topicPath = topicPath;
+        this.retained = retained;
+    }
+
+    public PublishData(String topicPath, int qos, boolean retained, byte[] data) {
         this.topicPath = topicPath;
         this.qos = qos;
         this.data = data;
@@ -58,5 +64,31 @@ public class PublishData {
 
     public boolean isRetained() {
         return retained;
+    }
+
+    public void setRetained(boolean retained) {
+        this.retained = retained;
+    }
+
+    public void setTopicPath(String topicPath) {
+        this.topicPath = topicPath;
+    }
+
+    public void setQos(int qos) {
+        this.qos = qos;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "PublishData{" +
+                "retained=" + retained +
+                ", topicPath='" + topicPath + '\'' +
+                ", qos=" + qos +
+                ", size=" + (data == null ? "<null>" : data.length) +
+                '}';
     }
 }

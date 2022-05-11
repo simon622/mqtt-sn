@@ -86,12 +86,12 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topic, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         IMqttsnBackendConnection connection = getBrokerConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnBackendException("underlying broker connection was not connected");
         }
-        PublishResult result = connection.publish(context, topic, payload, message);
+        PublishResult result = connection.publish(context, topic, qos, retained, payload, message);
         if(!result.isError()){
             publishSentCount.incrementAndGet();
         }
@@ -129,11 +129,11 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public void receive(String topicPath, byte[] payload, int QoS) {
+    public void receive(String topicPath, int qos, boolean retained, byte[] payload) {
         registry.getRuntime().async(() -> {
             try {
                 publishReceivedCount.incrementAndGet();
-                registry.getGatewaySessionService().receiveToSessions(topicPath, payload, QoS);
+                registry.getGatewaySessionService().receiveToSessions(topicPath,qos, retained, payload);
             } catch(Exception e){
                 logger.log(Level.SEVERE, "error receiving to sessions;", e);
             }

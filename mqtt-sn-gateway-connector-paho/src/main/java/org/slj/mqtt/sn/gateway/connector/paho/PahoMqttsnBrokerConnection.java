@@ -185,13 +185,10 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         try {
            if(isConnected()){
-               int QoS = backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
-               boolean retained = backendService.getRuntimeRegistry().getCodec().isRetainedPublish(message);
-//               byte[] data = backendService.getRuntimeRegistry().getCodec().getData(message).getData();
-               client.publish(topicPath.toString(), payload, QoS, retained);
+               client.publish(topicPath.toString(), payload, qos, retained);
                return new PublishResult(Result.STATUS.SUCCESS);
            }
             return new PublishResult(Result.STATUS.NOOP);
@@ -216,7 +213,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
         try {
             byte[] data = mqttMessage.getPayload();
             logger.log(Level.INFO, String.format("recieved message from connection [%s] -> [%s] bytes", s, data.length));
-            receive(s, data, mqttMessage.getQos());
+            receive(s, mqttMessage.getQos(), mqttMessage.isRetained(), data);
         } catch(Exception e){
             logger.log(Level.SEVERE, "gateway reported issue receiving message from broker;", e);
         }

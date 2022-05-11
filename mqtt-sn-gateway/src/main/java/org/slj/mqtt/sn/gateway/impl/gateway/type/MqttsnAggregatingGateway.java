@@ -117,7 +117,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         try {
             if(isConnected(context)){
                 if(!connection.canAccept(context, topicPath, payload, message)){
@@ -133,6 +133,9 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             op.topicPath = topicPath;
             op.initialMessage = message;
             op.payload = payload;
+            op.retained = retained;
+            op.qos = qos;
+
             queue.add(op);
             logger.log(Level.INFO, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
             synchronized (monitor){
@@ -182,7 +185,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                             lastPublishAttempt = new Date();
                             if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
                                 logger.log(Level.INFO, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
-                                PublishResult res = super.publish(op.context, op.topicPath, op.payload, op.initialMessage);
+                                PublishResult res = super.publish(op.context, op.topicPath, op.qos, op.retained, op.payload, op.initialMessage);
                                 if(res.isError()){
                                     logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
                                     queue.offer(op);
@@ -292,6 +295,8 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
         public IMqttsnContext context;
         public TopicPath topicPath;
         public byte[] payload;
+        public boolean retained;
+        public int qos;
         public IMqttsnMessage initialMessage;
     }
 }

@@ -234,7 +234,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     length == 2 ? (byte) topicPath.charAt(1) : 0x00);
         }
 
-        IMqttsnMessage publish = registry.getMessageFactory().createPublish(queuedPublishMessage.getGrantedQoS(),
+        IMqttsnMessage publish = registry.getMessageFactory().createPublish(queuedPublishMessage.getData().getQos(),
                 queuedPublishMessage.getRetryCount() > 1, false, type, topicId,
                 payload);
         return sendMessageInternal(context, publish, queuedPublishMessage);
@@ -303,10 +303,11 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
             //-- the only publish that does not require an ack is QoS so send to app as delivered
             if(!requiresResponse && registry.getCodec().isPublish(message)){
-//                PublishData data = registry.getCodec().getData(message);
+
+                PublishData data = registry.getCodec().getData(message);
                 CommitOperation op = CommitOperation.outbound(context,
-                        queuedPublishMessage.getMessageId(),
-                        new TopicPath(queuedPublishMessage.getTopicPath()), message);
+                        queuedPublishMessage.getMessageId(), data, message);
+                op.data.setTopicPath(queuedPublishMessage.getData().getTopicPath());
                 confirmPublish(op);
             }
 
@@ -450,13 +451,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                         //received an error message in response, if its requeuable do so
 
                         if (inflight instanceof RequeueableInflightMessage) {
-
                             try {
                                 QueuedPublishMessage m = ((RequeueableInflightMessage) inflight).getQueuedPublishMessage();
                                 if(m.getRetryCount() >= registry.getOptions().getMaxErrorRetries()){
                                     logger.log(Level.WARNING, String.format("publish message [%s] exceeded max retries [%s], discard and notify application", registry.getOptions().getMaxErrorRetries(), m));
                                     PublishData data = registry.getCodec().getData(confirmedMessage);
-                                    registry.getRuntime().messageSendFailure(context, m.getMessageId(), new TopicPath(m.getTopicPath()),
+                                    registry.getRuntime().messageSendFailure(context, m.getMessageId(),
+                                            new TopicPath(m.getData().getTopicPath()), data.getQos(), data.isRetained(),
                                             data.getData(), confirmedMessage, m.getRetryCount());
                                 } else {
                                     logger.log(Level.INFO,
@@ -472,19 +473,18 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
                         //inbound qos 2 commit
                         if (registry.getCodec().isPubRel(message)) {
-//                            PublishData data = registry.getCodec().getData(confirmedMessage);
-                            CommitOperation op = CommitOperation.inbound(context,
-                                    new TopicPath(getTopicPathFromPublish(context, confirmedMessage)),
-                                    confirmedMessage);
+                            PublishData data = registry.getCodec().getData(confirmedMessage);
+                            CommitOperation op = CommitOperation.inbound(context, data, confirmedMessage);
+                            op.data.setTopicPath(getTopicPathFromPublish(context, confirmedMessage));
                             confirmPublish(op);
                         }
 
                         //outbound qos 1
                         if (registry.getCodec().isPuback(message)) {
                             RequeueableInflightMessage rim = (RequeueableInflightMessage) inflight;
-//                            PublishData data = registry.getCodec().getData(confirmedMessage);
-                            CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(),
-                                    new TopicPath(rim.getQueuedPublishMessage().getTopicPath()), confirmedMessage);
+                            PublishData data = registry.getCodec().getData(confirmedMessage);
+                            CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(), data, confirmedMessage);
+                            op.data.setTopicPath(rim.getQueuedPublishMessage().getData().getTopicPath());
                             confirmPublish(op);
                         }
                     }
@@ -497,11 +497,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 //none terminal matched message.. this is fine (PUBREC or PUBREL)
                 //outbound qos 2 commit point
                 if(inflight != null && registry.getCodec().isPubRec(message)){
-                    RequeueableInflightMessage rim = (RequeueableInflightMessage) inflight;
-//                    PublishData data = registry.getCodec().getData(inflight.getMessage());
-                    CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(),
-                            new TopicPath(rim.getQueuedPublishMessage().getTopicPath()),
-                            inflight.getMessage());
+                    PublishData data = registry.getCodec().getData(inflight.getMessage());
+                    CommitOperation op = CommitOperation.outbound(context,
+                            ((RequeueableInflightMessage) inflight).getQueuedPublishMessage().getMessageId(),
+                            data, inflight.getMessage());
+                    op.data.setTopicPath(((RequeueableInflightMessage) inflight).
+                            getQueuedPublishMessage().getData().getTopicPath());
                     confirmPublish(op);
                 }
 
@@ -525,9 +526,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 } else {
                     //-- Qos 0 & 1 are inbound are confirmed on receipt of message
 
-                    CommitOperation op = CommitOperation.inbound(context,
-                            new TopicPath(getTopicPathFromPublish(context, message)),
-                            message);
+                    CommitOperation op = CommitOperation.inbound(context, data, message);
+                    op.data.setTopicPath(getTopicPathFromPublish(context, message));
                     confirmPublish(op);
                 }
             }
@@ -539,9 +539,11 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
      * Confirmation delivery to the application takes place on the worker thread group
      */
     protected void confirmPublish(final CommitOperation operation) {
+
         getRegistry().getRuntime().async(() -> {
             IMqttsnContext context = operation.context;
-            byte[] payload = registry.getCodec().getData(operation.message).getData();
+            byte[] payload = operation.data.getData();
+logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
             if(registry.getSecurityService().payloadIntegrityEnabled()){
                 try {
                     payload = registry.getSecurityService().readVerified(payload);
@@ -552,9 +554,20 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             }
 
             if(operation.inbound){
-                registry.getRuntime().messageReceived(context, operation.topicPath, payload, operation.message);
+                registry.getRuntime().messageReceived(context,
+                        new TopicPath(operation.data.getTopicPath()),
+                        operation.data.getQos(),
+                        operation.data.isRetained(),
+                        payload,
+                        operation.message);
             } else {
-                registry.getRuntime().messageSent(context, operation.messageId, operation.topicPath, payload, operation.message);
+                registry.getRuntime().messageSent(context,
+                        operation.messageId,
+                        new TopicPath(operation.data.getTopicPath()),
+                        operation.data.getQos(),
+                        operation.data.isRetained(),
+                        payload,
+                        operation.message);
             }
         });
     }
@@ -700,14 +713,16 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     public int countInflight(IMqttsnContext context, InflightMessage.DIRECTION direction) throws MqttsnException {
         Map<Integer, InflightMessage> map = getInflightMessages(context);
-        Iterator<Integer> itr = map.keySet().iterator();
-        int count = 0;
-        while(itr.hasNext()){
-            Integer i = itr.next();
-            InflightMessage msg = map.get(i);
-            if(msg.getDirection() == direction) count++;
+        synchronized (map){
+            Iterator<Integer> itr = map.keySet().iterator();
+            int count = 0;
+            while(itr.hasNext()){
+                Integer i = itr.next();
+                InflightMessage msg = map.get(i);
+                if(msg.getDirection() == direction) count++;
+            }
+            return count;
         }
-        return count;
     }
 
     @Override
@@ -753,33 +768,41 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
     static class CommitOperation {
 
-        //        protected byte[] payload;
-//        protected boolean retained;
-//        protected int QoS;
-
+        protected PublishData data;
         protected IMqttsnMessage message;
-        protected TopicPath topicPath;
         protected IMqttsnContext context;
         protected long timestamp;
         protected UUID messageId;
-        protected boolean inbound = true;
+        protected boolean inbound;
 
-        public CommitOperation(IMqttsnContext context, long timestamp, TopicPath topicPath, IMqttsnMessage message, boolean inbound) {
+        public CommitOperation(IMqttsnContext context, PublishData data, IMqttsnMessage message, boolean inbound){
             this.context = context;
-            this.timestamp = timestamp;
-            this.inbound = inbound;
-            this.topicPath = topicPath;
+            this.data = data;
             this.message = message;
+            this.inbound = inbound;
+            this.timestamp = System.currentTimeMillis();
         }
 
-        public static CommitOperation inbound(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message){
-            return new CommitOperation(context, System.currentTimeMillis(), topicPath, message, true);
+        public static CommitOperation inbound(IMqttsnContext context, PublishData data, IMqttsnMessage message){
+            return new CommitOperation(context, data, message, true);
         }
 
-        public static CommitOperation outbound(IMqttsnContext context, UUID messageId, TopicPath topicPath, IMqttsnMessage message){
-            CommitOperation c = new CommitOperation(context, System.currentTimeMillis(), topicPath, message, false);
+        public static CommitOperation outbound(IMqttsnContext context, UUID messageId, PublishData data, IMqttsnMessage message){
+            CommitOperation c = new CommitOperation(context, data, message, false);
             c.messageId = messageId;
             return c;
+        }
+
+        @Override
+        public String toString() {
+            return "CommitOperation{" +
+                    "data=" + data +
+                    ", message=" + message +
+                    ", context=" + context +
+                    ", timestamp=" + timestamp +
+                    ", messageId=" + messageId +
+                    ", inbound=" + inbound +
+                    '}';
         }
     }
 

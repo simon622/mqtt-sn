@@ -94,7 +94,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
             String topicPath = String.format("/devices/%s/attach", context.getId());
             IMqttsnMessage publish =
                     factory.createPublish(1, false, false, topicPath, new byte[0]);
-            if(!super.publish(context, new TopicPath(topicPath), new byte[0], publish).isError()){
+            if(!super.publish(context, new TopicPath(topicPath), 1, false, new byte[0], publish).isError()){
                 logger.log(Level.INFO, String.format("device [%s] attached, subscribing or config changes", context.getId()));
                 topicPath = String.format("/devices/%s/config", context.getId());
                 IMqttsnMessage subscribe = factory.createSubscribe(0, topicPath);
@@ -113,15 +113,15 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
             String topicPath = String.format("/devices/%s/detach", context.getId());
             IMqttsnMessage publish =
                     factory.createPublish(1, false, false, topicPath, new byte[0]);
-            super.publish(context, new TopicPath(topicPath), new byte[0], publish);
+            super.publish(context, new TopicPath(topicPath), 1, false, new byte[0], publish);
             return new DisconnectResult(Result.STATUS.SUCCESS);
         }
         return new DisconnectResult(Result.STATUS.NOOP);
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message) throws MqttsnBackendException {
-        return super.publish(context, topicPath, data, message);
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) throws MqttsnBackendException {
+        return super.publish(context, topicPath, qos, retained, data, message);
     }
 
     @Override

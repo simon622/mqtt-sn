@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.model;
 
+import org.slj.mqtt.sn.PublishData;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,22 +39,28 @@ import java.util.UUID;
  */
 public class QueuedPublishMessage implements Serializable, Comparable {
 
+
+
+//    private String topicPath;
+//    private int grantedQoS;
+//    private boolean retained;
+
+    private PublishData data;
     private Date created;
-    private String topicPath;
-    private int grantedQoS;
     private int retryCount;
     private UUID messageId;
-    private boolean retained;
     private transient MqttsnWaitToken token;
 
     public QueuedPublishMessage() {
     }
 
-    public QueuedPublishMessage(UUID messageId, String topicPath, int grantedQoS) {
+    public QueuedPublishMessage(UUID messageId, PublishData data) {
         this.created = new Date();
         this.messageId = messageId;
-        this.topicPath = topicPath;
-        this.grantedQoS = grantedQoS;
+//        this.topicPath = topicPath;
+//        this.retained = retained;
+//        this.grantedQoS = grantedQoS;
+        this.data = data;
         this.retryCount = 0;
     }
 
@@ -64,14 +72,6 @@ public class QueuedPublishMessage implements Serializable, Comparable {
         this.messageId = messageId;
     }
 
-    public boolean getRetained() {
-        return retained;
-    }
-
-    public void setRetained(boolean retained) {
-        this.retained = retained;
-    }
-
     public int getRetryCount() {
         return retryCount;
     }
@@ -80,24 +80,16 @@ public class QueuedPublishMessage implements Serializable, Comparable {
         retryCount++;
     }
 
-    public String getTopicPath() {
-        return topicPath;
-    }
-
-    public void setTopicPath(String topicPath) {
-        this.topicPath = topicPath;
-    }
-
-    public int getGrantedQoS() {
-        return grantedQoS;
-    }
-
-    public void setGrantedQoS(int grantedQoS) {
-        this.grantedQoS = grantedQoS;
-    }
-
     public void setRetryCount(int retryCount) {
         this.retryCount = retryCount;
+    }
+
+    public PublishData getData() {
+        return data;
+    }
+
+    public void setData(PublishData data) {
+        this.data = data;
     }
 
     public MqttsnWaitToken getToken() {
@@ -111,12 +103,11 @@ public class QueuedPublishMessage implements Serializable, Comparable {
     @Override
     public String toString() {
         return "QueuedPublishMessage{" +
-                "created=" + created +
-                ", topicPath='" + topicPath + '\'' +
-                ", grantedQoS=" + grantedQoS +
+                "data=" + data +
+                ", created=" + created +
                 ", retryCount=" + retryCount +
                 ", messageId=" + messageId +
-                ", retained=" + retained +
+                ", token=" + token +
                 '}';
     }
 

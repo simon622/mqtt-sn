@@ -95,7 +95,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
     @Override
     public PublishData getData(IMqttsnMessage message) {
         MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message ;
-        return new PublishData(Math.max(publish.getQoS(), 0), publish.getData(), publish.isRetainedPublish());
+        return new PublishData(Math.max(publish.getQoS(), 0), publish.isRetainedPublish(), publish.getData());
     }
 
     @Override

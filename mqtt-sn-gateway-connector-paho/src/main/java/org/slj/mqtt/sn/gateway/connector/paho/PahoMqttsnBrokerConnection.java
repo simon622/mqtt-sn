@@ -185,13 +185,13 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         try {
            if(isConnected()){
                int QoS = backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
                boolean retained = backendService.getRuntimeRegistry().getCodec().isRetainedPublish(message);
-               byte[] data = backendService.getRuntimeRegistry().getCodec().getData(message).getData();
-               client.publish(topicPath.toString(), data, QoS, retained);
+//               byte[] data = backendService.getRuntimeRegistry().getCodec().getData(message).getData();
+               client.publish(topicPath.toString(), payload, QoS, retained);
                return new PublishResult(Result.STATUS.SUCCESS);
            }
             return new PublishResult(Result.STATUS.NOOP);

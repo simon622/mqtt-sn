@@ -52,7 +52,7 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
      * @param queuedPublishMessage - reference to the queues message who originated this send (when its of type Publish);
      * @throws MqttsnException
      */
-    MqttsnWaitToken sendMessage(IMqttsnContext context, TopicInfo info, QueuedPublishMessage queuedPublishMessage) throws MqttsnException;
+    MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, QueuedPublishMessage queuedPublishMessage) throws MqttsnException;
 
 
     /**

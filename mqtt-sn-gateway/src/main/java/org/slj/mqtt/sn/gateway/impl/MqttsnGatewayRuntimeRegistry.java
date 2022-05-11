@@ -50,7 +50,6 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     }
 
     public static MqttsnGatewayRuntimeRegistry defaultConfiguration(MqttsnOptions options){
-        MqttsnGatewaySessionService sessionService = new MqttsnGatewaySessionService();
         final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry) new MqttsnGatewayRuntimeRegistry(options).
                 withGatewaySessionService(new MqttsnGatewaySessionService()).
                 withGatewayAdvertiseService(new MqttsnGatewayAdvertiseService()).
@@ -60,6 +59,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withWillRegistry(new MqttsnInMemoryWillRegistry()).
                 withMessageQueue(new MqttsnInMemoryMessageQueue()).
                 withContextFactory(new MqttsnContextFactory()).
+                withSecurityService(new MqttsnSecurityService()).
                 withTopicRegistry(new MqttsnInMemoryTopicRegistry()).
                 withQueueProcessor(new MqttsnMessageQueueProcessor(false)).
                 withQueueProcessorStateCheck(new MqttsnGatewayQueueProcessorStateService()).
@@ -121,6 +121,8 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
 
     @Override
     protected void validateOnStartup() throws MqttsnRuntimeException {
+
+        super.validateOnStartup();
         if(brokerService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
         if(connectionFactory == null) throw new MqttsnRuntimeException("connection factory must be bound for valid runtime");
         if(sessionService == null) throw new MqttsnRuntimeException("session service must be bound for valid runtime");

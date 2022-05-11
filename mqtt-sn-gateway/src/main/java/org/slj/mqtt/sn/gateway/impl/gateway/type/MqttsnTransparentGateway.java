@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl.backend.type;
+package org.slj.mqtt.sn.gateway.impl.gateway.type;
 
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
@@ -33,9 +33,9 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 /**
  * TODO finish ME
  */
-public class MqttsnTransparentBroker extends AbstractMqttsnBackendService {
+public class MqttsnTransparentGateway extends AbstractMqttsnBackendService {
 
-    public MqttsnTransparentBroker(MqttsnBackendOptions options) {
+    public MqttsnTransparentGateway(MqttsnBackendOptions options) {
         super(options);
     }
 

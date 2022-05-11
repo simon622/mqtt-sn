@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl.backend.type;
+package org.slj.mqtt.sn.gateway.impl.gateway.type;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
@@ -50,19 +50,19 @@ import java.util.logging.Level;
  * A single broker connection is maintained and used for all connecting gateway side
  * devices
  */
-public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
+public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
 
     private volatile IMqttsnBackendConnection connection;
     private volatile boolean stopped = false;
     private Thread publishingThread = null;
     private final Object monitor = new Object();
-    private final Queue<PublishOp> queue = new LinkedBlockingQueue<>();
+    private final Queue<BrokerPublishOperation> queue = new LinkedBlockingQueue<>();
     private volatile Date lastPublishAttempt = null;
     private volatile RateLimiter rateLimiter = null;
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
 
-    public MqttsnAggregatingBroker(MqttsnBackendOptions options){
+    public MqttsnAggregatingGateway(MqttsnBackendOptions options){
         super(options);
     }
 
@@ -117,10 +117,10 @@ public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         try {
             if(isConnected(context)){
-                if(!connection.canAccept(context, topicPath, message)){
+                if(!connection.canAccept(context, topicPath, payload, message)){
                     logger.log(Level.WARNING, String.format("unable to accept publish [%s]", topicPath));
                     return new PublishResult(Result.STATUS.ERROR,
                             String.format("publisher unable to accept message on [%s]", topicPath));
@@ -128,10 +128,11 @@ public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
             }
 
             rateLimiter.acquire();
-            PublishOp op = new PublishOp();
+            BrokerPublishOperation op = new BrokerPublishOperation();
             op.context = context;
             op.topicPath = topicPath;
             op.initialMessage = message;
+            op.payload = payload;
             queue.add(op);
             logger.log(Level.INFO, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
             synchronized (monitor){
@@ -176,12 +177,12 @@ public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
             do {
                 try {
                     if(connection != null && connection.isConnected()) {
-                        PublishOp op = queue.poll();
+                        BrokerPublishOperation op = queue.poll();
                         if(op != null){
                             lastPublishAttempt = new Date();
-                            if(connection.canAccept(op.context, op.topicPath, op.initialMessage)){
+                            if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
                                 logger.log(Level.INFO, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
-                                PublishResult res = super.publish(op.context, op.topicPath, op.initialMessage);
+                                PublishResult res = super.publish(op.context, op.topicPath, op.payload, op.initialMessage);
                                 if(res.isError()){
                                     logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
                                     queue.offer(op);
@@ -287,9 +288,10 @@ public class MqttsnAggregatingBroker extends AbstractMqttsnBackendService {
         return "gateway-backend-managed-connection";
     }
 
-    static class PublishOp {
+    static class BrokerPublishOperation {
         public IMqttsnContext context;
         public TopicPath topicPath;
+        public byte[] payload;
         public IMqttsnMessage initialMessage;
     }
 }

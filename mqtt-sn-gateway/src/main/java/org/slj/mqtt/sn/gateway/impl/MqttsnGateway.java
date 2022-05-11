@@ -43,6 +43,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getMessageRegistry());
         callStartup(runtime.getTopicRegistry());
         callStartup(runtime.getWillRegistry());
+        callStartup(runtime.getSecurityService());
         callStartup(runtime.getSubscriptionRegistry());
         callStartup(runtime.getMessageStateService());
         callStartup(runtime.getQueueProcessorStateCheckService());
@@ -67,7 +68,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         registerPublishReceivedListener((context, topicPath, data, message) -> {
             try {
                 ((IMqttsnGatewayRuntimeRegistry) registry).
-                        getBackendService().publish(context, topicPath, message);
+                        getBackendService().publish(context, topicPath, data, message);
             } catch (MqttsnException e) {
                 logger.log(Level.SEVERE, "error publishing message to backend", e);
             }
@@ -82,6 +83,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         if (runtime.getOptions().isEnableDiscovery()) {
             callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewayAdvertiseService());
         }
+
+        callShutdown(runtime.getSecurityService());
 
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendConnectionFactory());

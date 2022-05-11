@@ -45,7 +45,7 @@ public interface IMqttsnBackendConnection extends Closeable {
 
     UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
 
-    PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+    PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException;
 
-    boolean canAccept(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+    boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException;
 }

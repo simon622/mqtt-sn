@@ -27,8 +27,8 @@ package org.slj.mqtt.sn.gateway.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
 import org.slj.mqtt.sn.gateway.impl.gateway.MqttsnGatewaySessionService;
+import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
@@ -216,7 +216,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         super.stats();
 
         message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).getExpansionCount()));
-        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingBroker)gatewayRuntimeRegistry.getBackendService()).getLastPublishAttempt()));
+        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingGateway)gatewayRuntimeRegistry.getBackendService()).getLastPublishAttempt()));
         message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBackendService().getQueuedCount()));
         message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishSentCount()));
         message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishReceiveCount()));

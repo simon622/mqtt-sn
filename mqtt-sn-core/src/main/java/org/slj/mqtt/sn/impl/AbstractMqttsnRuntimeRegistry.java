@@ -65,6 +65,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnAuthenticationService authenticationService;
     protected IMqttsnAuthorizationService authorizationService;
     protected IMqttsnWillRegistry willRegistry;
+    protected IMqttsnSecurityService securityService;
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
     public AbstractMqttsnRuntimeRegistry(MqttsnOptions options){
@@ -304,6 +305,17 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     /**
+     * Provide security services to the runtime
+     *
+     * @param securityService The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withSecurityService(IMqttsnSecurityService securityService){
+        this.securityService = securityService;
+        return this;
+    }
+
+    /**
      * Optional - when installed it will be consulted to determine whether a remote context can perform certain
      * operations;
      *
@@ -442,6 +454,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return queueProcessor;
     }
 
+    @Override
+    public IMqttsnSecurityService getSecurityService() {
+        return securityService;
+    }
+
     protected void validateOnStartup() throws MqttsnRuntimeException {
         if(networkAddressRegistry == null) throw new MqttsnRuntimeException("network-registry must be bound for valid runtime");
         if(messageStateService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
@@ -454,5 +471,6 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         if(queueProcessor == null) throw new MqttsnRuntimeException("queue processor must be bound for valid runtime");
         if(messageRegistry == null) throw new MqttsnRuntimeException("message registry must be bound for valid runtime");
         if(willRegistry == null) throw new MqttsnRuntimeException("will registry must be bound for valid runtime");
+        if(securityService == null) throw new MqttsnRuntimeException("security service must be bound for valid runtime");
     }
 }

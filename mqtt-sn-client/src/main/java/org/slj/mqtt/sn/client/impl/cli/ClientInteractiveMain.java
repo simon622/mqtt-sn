@@ -38,7 +38,8 @@ public class ClientInteractiveMain {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
 
-                /* comment this in for integrity checking
+
+                /*
                 MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
                         withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
                         withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);

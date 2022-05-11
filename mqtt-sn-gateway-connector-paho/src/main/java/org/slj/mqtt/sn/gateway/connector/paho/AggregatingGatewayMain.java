@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.gateway.connector.paho;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
+import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
@@ -74,7 +74,7 @@ public class AggregatingGatewayMain {
         //-- construct the registry of controllers and config
         AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(gatewayOptions).
                 withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                withBrokerService(new MqttsnAggregatingBroker(brokerOptions)).
+                withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

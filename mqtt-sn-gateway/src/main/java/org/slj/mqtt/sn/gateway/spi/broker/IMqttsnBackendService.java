@@ -41,7 +41,7 @@ public interface IMqttsnBackendService {
 
     DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
 
-    PublishResult publish(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException;
+    PublishResult publish(IMqttsnContext context, TopicPath topic, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException;
 
     SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnBackendException;
 

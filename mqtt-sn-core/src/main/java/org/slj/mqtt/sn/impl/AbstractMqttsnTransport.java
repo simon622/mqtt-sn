@@ -85,11 +85,14 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                         MqttsnWireUtils.toBinary(data)));
             }
 
-            data = readVerifiedProtocolMessage(networkContext, data);
+            if(registry.getSecurityService().protocolIntegrityEnabled()){
+                data = registry.getSecurityService().readVerified(data);
+            }
+
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
 
             if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, String.format("receiving [%s] bytes (%s) from [%s] on thread [%s]",
+                logger.log(Level.FINE, String.format("receiving [%s] protocol bytes (%s) from [%s] on thread [%s]",
                         data.length, message.getMessageName(), networkContext, Thread.currentThread().getName()));
             }
 
@@ -145,7 +148,9 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         try {
             byte[] data = registry.getCodec().encode(message);
 
-            data = writeVerifiedProtocolMessage(context, data);
+            if(registry.getSecurityService().protocolIntegrityEnabled()){
+                data = registry.getSecurityService().writeVerified(data);
+            }
 
             if(data.length > registry.getOptions().getMaxProtocolMessageSize()){
                 logger.log(Level.SEVERE, String.format("cannot send [%s] bytes - max allowed message size [%s]",
@@ -166,65 +171,8 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             writeToTransport(context, ByteBuffer.wrap(data, 0 , data.length));
             if(notifyListeners) notifyTrafficSent(context, data, message);
         } catch(Throwable e){
-            logger.log(Level.SEVERE, String.format("[%s] transport layer errord sending buffer", context), e);
+            logger.log(Level.SEVERE, String.format("[%s] transport layer error sending buffer", context), e);
         }
-    }
-
-    protected byte[] readVerifiedProtocolMessage(INetworkContext networkContext, byte[] data) throws MqttsnException {
-        MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
-        if(securityOptions != null) {
-            MqttsnSecurityOptions.INTEGRITY_TYPE type = securityOptions.getIntegrityType();
-            if (type != MqttsnSecurityOptions.INTEGRITY_TYPE.none) {
-                if (securityOptions.getIntegrityPoint() ==
-                        MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages) {
-                    if (logger.isLoggable(Level.FINE)) {
-                        logger.log(Level.FINE, String.format("message integrity enabled, verify bytes (%s) from [%s] on thread [%s]",
-                                data.length, networkContext, Thread.currentThread().getName()));
-                    }
-                    int length;
-                    boolean verified;
-                    if(securityOptions.getIntegrityType() == MqttsnSecurityOptions.INTEGRITY_TYPE.hmac){
-                        verified = Security.verifyHMac(securityOptions.getIntegrityHmacAlgorithm(),
-                                securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
-                        length = securityOptions.getIntegrityHmacAlgorithm().getSize();
-                    } else {
-                        verified = Security.verifyChecksum(securityOptions.getIntegrityChecksumAlgorithm(), data);
-                        length = securityOptions.getIntegrityHmacAlgorithm().getSize();
-                    }
-                    if(verified){
-                        return Security.readOriginalData(length, data);
-                    } else {
-                        logger.log(Level.WARNING, String.format("message integrity check failed (%s) bytes from [%s] on thread [%s]",
-                                data.length, networkContext, Thread.currentThread().getName()));
-                        throw new MqttsnSecurityException("message integrity check failed");
-                    }
-                }
-            }
-        }
-        return data;
-    }
-
-    protected byte[] writeVerifiedProtocolMessage(INetworkContext networkContext, byte[] data) throws MqttsnException {
-        MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
-        if(securityOptions != null) {
-            MqttsnSecurityOptions.INTEGRITY_TYPE type = securityOptions.getIntegrityType();
-            if (type != MqttsnSecurityOptions.INTEGRITY_TYPE.none) {
-                if (securityOptions.getIntegrityPoint() ==
-                        MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages) {
-                    if (logger.isLoggable(Level.FINE)) {
-                        logger.log(Level.FINE, String.format("message integrity enabled, write verified bytes (%s) from [%s] on thread [%s]",
-                                data.length, networkContext, Thread.currentThread().getName()));
-                    }
-                    if(securityOptions.getIntegrityType() == MqttsnSecurityOptions.INTEGRITY_TYPE.hmac){
-                        data = Security.createHmacdData(securityOptions.getIntegrityHmacAlgorithm(),
-                                securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
-                    } else {
-                        data = Security.createChecksumdData(securityOptions.getIntegrityChecksumAlgorithm(), data);
-                    }
-                }
-            }
-        }
-        return data;
     }
 
     private void notifyTrafficReceived(final INetworkContext context, byte[] data, IMqttsnMessage message) {

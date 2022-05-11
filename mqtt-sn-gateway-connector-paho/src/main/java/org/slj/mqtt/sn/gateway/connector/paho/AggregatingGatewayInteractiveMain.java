@@ -28,7 +28,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
+import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -46,16 +46,17 @@ public class AggregatingGatewayInteractiveMain {
                         withUsername(username).
                         withPassword(password);
 
-                /* comment this in for integrity checking
+
+/*
                 MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
                         withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
                         withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
                 options.withSecurityOptions(securityOptions);
-                */
+*/
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingBroker(brokerOptions)).
+                        withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }

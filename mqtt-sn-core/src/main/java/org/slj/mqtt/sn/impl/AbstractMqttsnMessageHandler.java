@@ -629,8 +629,6 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             topicDataAsInt = publish.readTopicDataAsInteger();
         }
 
-        logger.log(Level.WARNING, String.format("processing publish data from [%s]; QoS=%s, topicIdType=%s, topicData=%s, topicDataAsInt=%s", context, QoS, topicIdType, topicData.length, topicDataAsInt));
-
         IMqttsnMessage response = null;
 
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);

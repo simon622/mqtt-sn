@@ -28,7 +28,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayWithKeystore;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.backend.type.MqttsnAggregatingBroker;
+import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -52,7 +52,7 @@ public class AWSIoTCoreAggregatingGatewayInteractiveMain {
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new AWSIoTCoreMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingBroker(brokerOptions)).
+                        withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }

@@ -71,5 +71,7 @@ public interface IMqttsnRuntimeRegistry {
 
     IMqttsnAuthorizationService getAuthorizationService();
 
+    IMqttsnSecurityService getSecurityService();
+
     List<IMqttsnTrafficListener> getTrafficListeners();
 }

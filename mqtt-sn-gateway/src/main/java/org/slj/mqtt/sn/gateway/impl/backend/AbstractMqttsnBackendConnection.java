@@ -52,7 +52,7 @@ public abstract class AbstractMqttsnBackendConnection implements IMqttsnBackendC
     }
 
     @Override
-    public boolean canAccept(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) {
+    public boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) {
         return true;
     }
 
@@ -77,7 +77,7 @@ public abstract class AbstractMqttsnBackendConnection implements IMqttsnBackendC
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
         return new PublishResult(Result.STATUS.NOOP);
     }
 }

@@ -162,7 +162,7 @@ public class Security {
         return arr;
     }
 
-    public static byte[] readHeader(int len, byte[] data) throws MqttsnException {
+    public static byte[] readHeader(int len, byte[] data) {
         byte[] arr = new byte[len];
         System.arraycopy(data, 0, arr, 0, len);
         return arr;
@@ -174,11 +174,11 @@ public class Security {
         return arr;
     }
 
-    public static byte[] readOriginalData(HMAC algorithm, byte[] data) throws MqttsnException {
+    public static byte[] readOriginalData(HMAC algorithm, byte[] data) {
         return readOriginalData(algorithm.getSize(), data);
     }
 
-    public static byte[] readOriginalData(CHECKSUM algorithm, byte[] data) throws MqttsnException {
+    public static byte[] readOriginalData(CHECKSUM algorithm, byte[] data) {
         return readOriginalData(algorithm.getSize(), data);
     }
 

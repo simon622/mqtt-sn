@@ -107,7 +107,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             IMqttsnMessage willPublish = getRegistry().getCodec().createMessageFactory().createPublish(data.getQos(), false, data.isRetain(),
                     "ab", data.getData());
             try {
-                registry.getBackendService().publish(state.getContext(), data.getTopicPath(), willPublish);
+                registry.getBackendService().publish(state.getContext(), data.getTopicPath(), data.getData(), willPublish);
                 //per the MQTT spec, once published the will message should be discarded
                 getRegistry().getWillRegistry().clear(state.getContext());
             } catch(MqttsnException e){

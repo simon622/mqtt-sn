@@ -53,7 +53,7 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
     private DatagramSocket broadcastSocket;
     private Thread receiverThread;
     private Thread broadcastThread;
-    protected boolean running = false;
+    protected volatile boolean running = false;
 
     public MqttsnUdpTransport(MqttsnUdpOptions udpOptions){
         super(udpOptions);

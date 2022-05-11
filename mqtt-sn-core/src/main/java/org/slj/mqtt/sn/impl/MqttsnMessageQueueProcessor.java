@@ -126,7 +126,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
             queuedMessage.incrementRetry();
             //-- let the reaper check on delivery
             try {
-                MqttsnWaitToken token = registry.getMessageStateService().sendMessage(context, info, queuedMessage);
+                MqttsnWaitToken token = registry.getMessageStateService().sendPublishMessage(context, info, queuedMessage);
                 if (clientMode) {
                     if(token != null){
                         registry.getMessageStateService().waitForCompletion(context, token);

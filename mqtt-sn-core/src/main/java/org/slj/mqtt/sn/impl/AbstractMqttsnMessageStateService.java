@@ -214,9 +214,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
-    public MqttsnWaitToken sendMessage(IMqttsnContext context, TopicInfo info, QueuedPublishMessage queuedPublishMessage) throws MqttsnException {
+    public MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, QueuedPublishMessage queuedPublishMessage) throws MqttsnException {
 
         byte[] payload = registry.getMessageRegistry().get(queuedPublishMessage.getMessageId());
+
+        if(registry.getSecurityService().payloadIntegrityEnabled()){
+            payload = registry.getSecurityService().writeVerified(payload);
+        }
 
         MqttsnConstants.TOPIC_TYPE type = info.getType();
         int topicId = info.getTopicId();
@@ -279,7 +283,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         try {
 
             MqttsnWaitToken token = null;
-            boolean requiresResponse = false;
+            boolean requiresResponse;
             if((requiresResponse = registry.getMessageHandler().requiresResponse(message))){
                 token = markInflight(context, message, queuedPublishMessage);
             }
@@ -537,12 +541,20 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     protected void confirmPublish(final CommitOperation operation) {
         getRegistry().getRuntime().async(() -> {
             IMqttsnContext context = operation.context;
+            byte[] payload = registry.getCodec().getData(operation.message).getData();
+            if(registry.getSecurityService().payloadIntegrityEnabled()){
+                try {
+                    payload = registry.getSecurityService().readVerified(payload);
+                } catch(MqttsnSecurityException e){
+                    logger.log(Level.WARNING, "dropping received publish message which did not pass integrity checks", e);
+                    return;
+                }
+            }
+
             if(operation.inbound){
-                registry.getRuntime().messageReceived(context, operation.topicPath,
-                        registry.getCodec().getData(operation.message).getData(), operation.message);
+                registry.getRuntime().messageReceived(context, operation.topicPath, payload, operation.message);
             } else {
-                registry.getRuntime().messageSent(context, operation.messageId, operation.topicPath,
-                        registry.getCodec().getData(operation.message).getData(), operation.message);
+                registry.getRuntime().messageSent(context, operation.messageId, operation.topicPath, payload, operation.message);
             }
         });
     }
@@ -768,36 +780,6 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             CommitOperation c = new CommitOperation(context, System.currentTimeMillis(), topicPath, message, false);
             c.messageId = messageId;
             return c;
-        }
-    }
-
-    static class FlushQueueOperation {
-
-        protected final IMqttsnContext context;
-        protected long timestamp;
-        protected int count;
-
-        public FlushQueueOperation(IMqttsnContext context, long timestamp){
-            this.context = context;
-            this.timestamp = timestamp;
-        }
-
-        public void resetCount(){
-            timestamp = 0;
-            count = 0;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            FlushQueueOperation that = (FlushQueueOperation) o;
-            return Objects.equals(context, that.context);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(context);
         }
     }
 

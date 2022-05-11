@@ -204,15 +204,16 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message)
             throws MqttsnBackendException {
         try {
            if(isConnected()){
                try {
                    //TODO defer to codec
-                   int QoS = ((MqttsnPublish)message).getQoS();
-                   byte[] data = ((MqttsnPublish)message).getData();
-                   client.publish(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(QoS)), data, getOperationTimeout());
+                   int QoS = backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
+                   boolean retained = backendService.getRuntimeRegistry().getCodec().isRetainedPublish(message);
+
+                   client.publish(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(QoS)), payload, getOperationTimeout());
                    return new PublishResult(Result.STATUS.SUCCESS);
                } catch(AWSIotTimeoutException e){
                    logger.log(Level.WARNING, String.format("timedout sending message to broker [%s]", topicPath));

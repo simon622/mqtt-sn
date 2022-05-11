@@ -39,7 +39,7 @@ public class PublishAndWaitTestMain {
 //                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 1000, 100);
 
             ThreadPoolLoadTestRunner runner =
-                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 10000, 200);
+                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 100, 200);
             ConnectPublishWaitProfile.PublishAndWaitClientInput input =
                     new ConnectPublishWaitProfile.PublishAndWaitClientInput(3500, TimeUnit.SECONDS);
             input.host = "localhost";

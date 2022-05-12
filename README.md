@@ -248,9 +248,9 @@ UNSUBACK | MODIFIED
 ### Related people & projects
 Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments.
 
-Project | Author | Link | Description
------------- | ------------- | ------------- | -------------
-Paho Mqtt C Client | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.c) |Fully featured MQTT C client library
-Paho Mqtt C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.embedded-c) | Fully featured embedded MQTT C client library
-Paho Mqtt-Sn C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt-sn.embedded-c) | C implementation of a transparent MQTT-SN gateway, client and codecs
-Mqtt-sn Transparent Java Gateway | Ian Craggs & jsaak | [GitHub Repository](https://github.com/jsaak/mqtt-sn-gateway) | Java implementation of a transparent MQTT-SN gateway, c
+Project | Author | Link | Description | Client | Gateway | Version 1.2 | Version 2.0
+------------ | ------------- | ------------- | ------------- | ------------ | ------------- | ------------- | -------------
+Paho Mqtt C Client | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.c) | Fully featured MQTT C client library | :heavy_check_mark: | :x: | :heavy_check_mark: | :x:
+Paho Mqtt C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.embedded-c) | Fully featured embedded MQTT C client library | :heavy_check_mark: | :x: | :heavy_check_mark: | :x:
+Paho Mqtt-Sn C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt-sn.embedded-c) | C implementation of a transparent MQTT-SN gateway, client and codecs | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x: :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
+Mqtt-sn Transparent Java Gateway | Ian Craggs & jsaak | [GitHub Repository](https://github.com/jsaak/mqtt-sn-gateway) | Java implementation of a transparent MQTT-SN gateway | :heavy_check_mark: | :x: | :heavy_check_mark: | :x:

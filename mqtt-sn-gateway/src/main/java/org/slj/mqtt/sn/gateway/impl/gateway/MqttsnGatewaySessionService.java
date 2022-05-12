@@ -61,36 +61,51 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     @Override
     protected long doWork() {
-        synchronized (sessionLookup){
-            Iterator<IMqttsnContext> itr = new HashSet(sessionLookup.keySet()).iterator();
-            while(itr.hasNext()){
-                IMqttsnContext context = itr.next();
-                IMqttsnSessionState state = sessionLookup.get(context);
+        Iterator<IMqttsnContext> itr = null;
+        synchronized (sessionLookup) {
+            itr = new HashSet(sessionLookup.keySet()).iterator();
+        }
+        while(itr.hasNext()){
+            IMqttsnContext context = itr.next();
+            IMqttsnSessionState state = sessionLookup.get(context);
+            if(state == null) continue;
 
-                //check keep alive timing
-                if(state.getClientState() == MqttsnClientState.CONNECTED ||
-                        state.getClientState() == MqttsnClientState.ASLEEP){
-                    long time = System.currentTimeMillis();
-                    if(state != null && state.getKeepAlive() > 0){
-                        long lastSeen = state.getLastSeen().getTime();
-                        long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
-                        if(expires < time){
-                            markSessionDisconnected(state);
+            //check keep alive timing
+            if(state.getClientState() == MqttsnClientState.CONNECTED ||
+                    state.getClientState() == MqttsnClientState.ASLEEP){
+                long time = System.currentTimeMillis();
+                if(state != null && state.getKeepAlive() > 0){
+                    long lastSeen = state.getLastSeen().getTime();
+                    long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
+                    if(expires < time){
+                        markSessionDisconnected(state);
+                    }
+                } else {
+                    //This is a condition in case the sender was blocked when it attempted to send a message,
+                    //we need something to ensure devices dont get stuck in the stale state (ie. ready to receive with messages
+                    //in the queue but noone doing the work - this wont be needed 99% of the time
+                    if(state.getClientState() == MqttsnClientState.CONNECTED){
+                        try {
+                            if(getRegistry().getMessageQueue().size(context) > 0){
+                                getRegistry().getMessageStateService().scheduleFlush(context);
+                            }
+                        } catch(MqttsnException e){
+                            logger.log(Level.WARNING, "error scheduling flush", e);
                         }
                     }
                 }
-                else if(state.getClientState() == MqttsnClientState.DISCONNECTED){
-                    // check last seen time
-                    long time = System.currentTimeMillis();
-                    Date lastSeen = state.getLastSeen();
-                    long expires;
-                    if(state.getSessionExpiryInterval() < MqttsnConstants.UNSIGNED_MAX_32){
-                        expires = lastSeen.getTime() + (state.getSessionExpiryInterval() * 1000);
-                        //only expire sessions set to less than the max which means forever
-                        if(expires < time){
-                            logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
-                            clear(context);
-                        }
+            }
+            else if(state.getClientState() == MqttsnClientState.DISCONNECTED){
+                // check last seen time
+                long time = System.currentTimeMillis();
+                Date lastSeen = state.getLastSeen();
+                long expires;
+                if(state.getSessionExpiryInterval() < MqttsnConstants.UNSIGNED_MAX_32){
+                    expires = lastSeen.getTime() + (state.getSessionExpiryInterval() * 1000);
+                    //only expire sessions set to less than the max which means forever
+                    if(expires < time){
+                        logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
+                        clear(context);
                     }
                 }
             }

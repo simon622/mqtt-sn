@@ -250,6 +250,7 @@ Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committ
 
 Project | Author | Link | Description | Client | Gateway | Version 1.2 | Version 2.0
 ------------ | ------------- | ------------- | ------------- | ------------ | ------------- | ------------- | -------------
+Org SLJ Mqtt-Sn Java Gateway & Client  | Simon Johnson | [GitHub Repository](https://github.com/simon622/mqtt-sn) | This repository. Contains client and gateway implementations with both 1.2 and 2.0 support | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:
 Paho Mqtt-Sn C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt-sn.embedded-c) | C implementation of a transparent MQTT-SN gateway, client and codecs | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_multiplication_x:
 Mqtt-sn Transparent Java Gateway | Ian Craggs & jsaak | [GitHub Repository](https://github.com/jsaak/mqtt-sn-gateway) | Java implementation of a transparent MQTT-SN gateway | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_check_mark: | :heavy_multiplication_x:
 Paho Mqtt Java Client | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.java) | Fully featured MQTT Java client library | N/A | N/A | N/A | N/A

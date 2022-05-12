@@ -192,7 +192,7 @@ public abstract class AbstractInteractiveCli {
 
         port = captureMandatoryInt(input, output, "Please enter a port", null);
         do{
-            clientId = captureMandatoryString(input, output,  "Please enter a valid clientId");
+            clientId = captureString(input, output,  "Please enter a valid clientId");
         } while(!validClientId(MAX_ALLOWED_CLIENTID_LENGTH));
     }
 
@@ -213,7 +213,7 @@ public abstract class AbstractInteractiveCli {
     }
 
     protected boolean configOk(){
-        return hostName != null && port != 0 && clientId != null;
+        return hostName != null && port != 0 ;
     }
 
     protected void loadConfigHistory(Properties props) throws IOException {
@@ -225,7 +225,9 @@ public abstract class AbstractInteractiveCli {
     protected void saveConfigHistory(Properties props) {
         props.setProperty(HOSTNAME, hostName);
         props.setProperty(PORT, String.valueOf(port));
-        props.setProperty(CLIENTID, clientId);
+        if(clientId != null){
+            props.setProperty(CLIENTID, clientId);
+        }
     }
 
     protected boolean loadConfig() throws IOException {
@@ -350,8 +352,8 @@ public abstract class AbstractInteractiveCli {
     }
 
     protected boolean validClientId(int maxLength){
-        if(clientId == null) return false;
-        if(clientId.trim().length() == 0) return false;
+        if(clientId == null) return true;
+//        if(clientId.trim().length() == 0) return false;
         if(clientId.trim().length() > maxLength) return false;
         Pattern p = Pattern.compile("[a-zA-Z0-9\\-]{1,65528}");
         return p.matcher(clientId).find();

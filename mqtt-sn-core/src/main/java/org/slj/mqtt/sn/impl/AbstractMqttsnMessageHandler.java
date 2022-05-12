@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
@@ -59,14 +60,21 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
 
     public boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion) {
         try {
-            registry.getNetworkRegistry().removeExistingClientId(clientId);
-            IMqttsnContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
-            if(mqttsnContext != null){
-                registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
-                return true;
+            boolean authorized = false;
+            if(!MqttsnSpecificationValidator.validClientId(clientId, protocolVersion == MqttsnConstants.PROTOCOL_VERSION_2_0)){
+                authorized = false;
+                logger.log(Level.WARNING, String.format("clientId format not valid for protocolVersion, refuse auth"));
+            } else {
+                registry.getNetworkRegistry().removeExistingClientId(clientId);
+                IMqttsnContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
+                if(mqttsnContext != null){
+                    registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
+                    authorized = true;
+                } else {
+                    logger.log(Level.WARNING, String.format("context factory did not provide secured context, refuse auth"));
+                }
             }
-            logger.log(Level.WARNING, String.format("context factory did not provide secured context, refuse auth"));
-            return false;
+            return authorized;
         }
         catch(MqttsnSecurityException e){
             logger.log(Level.WARNING, String.format("security exception detected, refuse auth"), e);

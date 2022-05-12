@@ -38,6 +38,9 @@ public class MqttsnSpecificationValidator {
         if(data == null && !allowNull){
             return false;
         }
+        if(data == null && allowNull){
+            return true;
+        }
         if(data.length() > MqttsnConstants.UNSIGNED_MAX_16){
             return false;
         }
@@ -69,8 +72,11 @@ public class MqttsnSpecificationValidator {
     }
 
     public static boolean validClientId(String clientId, boolean allowNull, int maxLength) {
-        return MqttsnSpecificationValidator.validStringData(clientId, allowNull) &&
-                (clientId != null && clientId.length() <= maxLength);
+        if(clientId == null){
+            if(!allowNull) return false;
+            else return true;
+        }
+        return MqttsnSpecificationValidator.validStringData(clientId, allowNull) && (clientId.length() <= maxLength);
     }
 
     public static boolean validUInt8(int field) {
@@ -108,7 +114,7 @@ public class MqttsnSpecificationValidator {
     }
 
     public static void validateClientId(String clientId) {
-        if(!validClientId(clientId, false, MqttsnConstants.MAX_CLIENT_ID_LENGTH))
+        if(!validClientId(clientId, true, MqttsnConstants.MAX_CLIENT_ID_LENGTH))
             throw new MqttsnCodecException("invalid clientId - " + clientId);
     }
 

@@ -41,6 +41,7 @@ public class MqttsnInteractiveClientLauncher {
             interactiveClient.command();
             interactiveClient.exit();
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("A fatal error was encountered: " + e.getMessage());
         } finally {
             interactiveClient.stop();

@@ -246,7 +246,7 @@ UNSUBSCRIBE | MODIFIED
 UNSUBACK | MODIFIED
 
 ### Related people & projects
-Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments.
+Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments. If you would like me to include your repository below, please issue a Pull Request and add it.
 
 Project | Author | Link | Description | Client | Gateway | Version 1.2 | Version 2.0
 ------------ | ------------- | ------------- | ------------- | ------------ | ------------- | ------------- | -------------

@@ -207,7 +207,7 @@ Ref | Title | Description | Change Type | Implemented
 542 | Allow zero length clientId in CONNECT | The client should be able to pass a zero length clientId in the CONNECT packet. This indicates it should be assigned a clientId by the gateway. This **assignedClientId** should be sent back by the gateway as part of the CONNACK packet | Functional & Packet | :heavy_check_mark:
 543 | Allow long topic names in PUBLISH for all QoS | The client should be able to pass a full topic name into the PUBLISH packet. Add a new **topicIdType** 0b11 to identify it. | Functional & Packet  | 
 544 | Add **returnCode** to UNSUBACK | Specify **returnCode** on the UNSUBACK packet | Functional & Packet | :heavy_check_mark:
-545 | Ensure zero byte retained PUBLISH clears RETAINED messages | Align functional description of zero byte retained PUBLISH messages with MQTT 5.0. | Functional & Descriptive |
+545 | Ensure zero byte retained PUBLISH clears RETAINED messages | Align functional description of zero byte retained PUBLISH messages with MQTT 5.0. | Functional & Descriptive | :heavy_check_mark:
 546 | Improve description of sleeping client packet workflow | Clarity added to sleeping client description and sequence diagrams. | Descriptive | :heavy_check_mark:
 550 | Mandate the use of separate namespaces for device normal topic alias | Each device should have its own normal topicId space, distinct from other device's normal topicId space. | Functional & Descriptive | :heavy_check_mark:
 552 | Clarify that gateways should accept QoS -1 messages from sleeping clients | A device should be able to publish at QoS -1 from any state, including sleeping. This should be made clearer in the specification. | Descriptive | :heavy_check_mark:

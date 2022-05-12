@@ -58,17 +58,18 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         }
     }
 
-    public boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion) {
+    public boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion, boolean assignedClientId) {
         try {
             boolean authorized = false;
-            if(!MqttsnSpecificationValidator.validClientId(clientId, protocolVersion == MqttsnConstants.PROTOCOL_VERSION_2_0)){
+            if(!MqttsnSpecificationValidator.validClientId(clientId, false)){
                 authorized = false;
-                logger.log(Level.WARNING, String.format("clientId format not valid for protocolVersion, refuse auth"));
+                logger.log(Level.WARNING, String.format("clientId format not valid, refuse auth"));
             } else {
                 registry.getNetworkRegistry().removeExistingClientId(clientId);
                 IMqttsnContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
                 if(mqttsnContext != null){
                     registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
+                    mqttsnContext.setAssignedClientId(assignedClientId);
                     authorized = true;
                 } else {
                     logger.log(Level.WARNING, String.format("context factory did not provide secured context, refuse auth"));

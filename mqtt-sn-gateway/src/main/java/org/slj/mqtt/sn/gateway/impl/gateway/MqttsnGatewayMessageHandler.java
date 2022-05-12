@@ -163,6 +163,8 @@ public class MqttsnGatewayMessageHandler
             }
         }
 
+        String assignedClientId = context.isAssignedClientId() ? context.getId() : null;
+
         IMqttsnSessionState state = getSessionState(context, true);
         ConnectResult result = registry.getGatewaySessionService().connect(state, connect);
 
@@ -174,21 +176,18 @@ public class MqttsnGatewayMessageHandler
             if(will){
                 return registry.getMessageFactory().createWillTopicReq();
             } else {
-
                 boolean stateExisted = hasSessionState(context);
-
                 long sessionExpiryIntervalRequested = sessionExpiryInterval;
                 if(sessionExpiryInterval >
                         registry.getOptions().getRemoveDisconnectedSessionsSeconds()){
                     sessionExpiryInterval = Math.min(sessionExpiryInterval,
                             registry.getOptions().getRemoveDisconnectedSessionsSeconds());
                 }
-
                 boolean changedFromRequested = sessionExpiryIntervalRequested != sessionExpiryInterval;
                 state.setSessionExpiryInterval(sessionExpiryInterval);
                 state.setMaxPacketSize(maxPacketSize);
                 return registry.getMessageFactory().createConnack(
-                        result.getReturnCode(), stateExisted, clientId, changedFromRequested ? sessionExpiryInterval : 0);
+                        result.getReturnCode(), stateExisted, assignedClientId, changedFromRequested ? sessionExpiryInterval : 0);
             }
         }
     }

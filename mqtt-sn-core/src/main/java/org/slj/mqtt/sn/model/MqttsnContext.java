@@ -30,6 +30,7 @@ public class MqttsnContext extends AbstractContextObject implements IMqttsnConte
 
     private String id;
     private int protocolVersion;
+    private boolean assignedClientId;
 
     public MqttsnContext(){
 
@@ -55,6 +56,15 @@ public class MqttsnContext extends AbstractContextObject implements IMqttsnConte
 
     public void setProtocolVersion(int protocolVersion) {
         this.protocolVersion = protocolVersion;
+    }
+
+    @Override
+    public boolean isAssignedClientId() {
+        return assignedClientId;
+    }
+
+    public void setAssignedClientId(boolean assignedClientId) {
+        this.assignedClientId = assignedClientId;
     }
 
     @Override

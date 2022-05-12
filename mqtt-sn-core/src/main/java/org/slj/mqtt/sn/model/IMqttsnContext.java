@@ -29,4 +29,8 @@ public interface IMqttsnContext extends IContextObject {
     String getId();
 
     int getProtocolVersion();
+
+    boolean isAssignedClientId();
+
+    void setAssignedClientId(boolean clientId);
 }

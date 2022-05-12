@@ -51,10 +51,11 @@ public interface IMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry> extends
      * Determine if a network location and clientId are considered authorised
      * @param context - the network context from where a message originated
      * @param clientId - the clientId passed in during a CONNECT procedure
+     * @param assignedClientId - was the clientId assigned by the gateway
      * @return - true if we consider the context authorised, false otherwise
      * @throws MqttsnException - an error occurred
      */
-    boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion)
+    boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion, boolean assignedClientId)
             throws MqttsnException;
 
     void receiveMessage(IMqttsnContext context, IMqttsnMessage message)

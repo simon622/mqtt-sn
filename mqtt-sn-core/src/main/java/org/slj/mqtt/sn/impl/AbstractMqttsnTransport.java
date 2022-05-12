@@ -35,6 +35,7 @@ import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /**
@@ -106,10 +107,17 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                     throw new MqttsnCodecException("unsupported codec version");
                 }
             }
+
+            boolean assignedClientId = false;
             if (message instanceof IMqttsnIdentificationPacket) {
+                String clientId = ((IMqttsnIdentificationPacket) message).getClientId();
+                if(clientId == null){
+                    if(protocolVersion == MqttsnConstants.PROTOCOL_VERSION_2_0){
+                        clientId = generateAssignedClientId();
+                    }
+                }
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
-                    authd = registry.getMessageHandler().authorizeContext(networkContext,
-                            ((IMqttsnIdentificationPacket) message).getClientId(), protocolVersion);
+                    authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
                 }
             } else {
                 //-- sort the case where publish -1 can be recieved without an authd context from the
@@ -142,6 +150,12 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         catch(Throwable t){
             logger.log(Level.SEVERE, "unknown error;", t);
         }
+    }
+
+    protected String generateAssignedClientId(){
+        String assignedClientId = UUID.randomUUID().toString();
+        logger.log(Level.INFO, String.format("detected <null> clientId, creating an assignedClient [%s]", assignedClientId));
+        return assignedClientId;
     }
 
     protected void writeToTransportInternal(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){

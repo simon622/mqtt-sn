@@ -204,7 +204,7 @@ Ref | Title | Description | Change Type | Implemented
 539 | Remove topicId from PUBACK packet | **topicId** being named and present in PUBACK was causing confusion and was not needed. | Packet | :heavy_check_mark:
 540 | Clarify max size of small message types | Wording change to indicate that the size of small messages is 0-255 (< 256) octets inclusive. | Descriptive | :heavy_check_mark: 
 541 | Clean session should act like MQTT 5.0 | **cleanSession** changed to **cleanStart** and **sessionExpiryInterval** introduced to CONNECT packet. | Functional | :heavy_check_mark:
-542 | Allow zero length clientId in CONNECT | The client should be able to pass a zero length clientId in the CONNECT packet. This indicates it should be assigned a clientId by the gateway. This **assignedClientId** should be sent back by the gateway as part of the CONNACK packet | Functional & Packet |
+542 | Allow zero length clientId in CONNECT | The client should be able to pass a zero length clientId in the CONNECT packet. This indicates it should be assigned a clientId by the gateway. This **assignedClientId** should be sent back by the gateway as part of the CONNACK packet | Functional & Packet | :heavy_check_mark:
 543 | Allow long topic names in PUBLISH for all QoS | The client should be able to pass a full topic name into the PUBLISH packet. Add a new **topicIdType** 0b11 to identify it. | Functional & Packet  | 
 544 | Add **returnCode** to UNSUBACK | Specify **returnCode** on the UNSUBACK packet | Functional & Packet | :heavy_check_mark:
 545 | Ensure zero byte retained PUBLISH clears RETAINED messages | Align functional description of zero byte retained PUBLISH messages with MQTT 5.0. | Functional & Descriptive |

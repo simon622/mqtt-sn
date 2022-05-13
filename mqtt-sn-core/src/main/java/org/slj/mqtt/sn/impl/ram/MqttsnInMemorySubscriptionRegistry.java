@@ -47,28 +47,30 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     @Override
     public List<IMqttsnContext> matches(String topicPath) throws MqttsnException {
         List<IMqttsnContext> matchingClients = new ArrayList<>();
-        synchronized (subscriptionsLookups){
-            Iterator<IMqttsnContext> clientItr = subscriptionsLookups.keySet().iterator();
-            while(clientItr.hasNext()){
-                IMqttsnContext client = clientItr.next();
-                Set<Subscription> paths = subscriptionsLookups.get(client);
-                if(paths != null && !paths.isEmpty()){
-                    Iterator<Subscription> pathItr = paths.iterator();
-                    client : while(pathItr.hasNext()) {
-                        try {
-                            Subscription sub = pathItr.next();
-                            TopicPath path = sub.getTopicPath();
-                            if(path.matches(topicPath)){
-                                matchingClients.add(client);
-                                break client;
-                            }
-                        } catch(Exception e){
-                            throw new MqttsnException(e);
+        Iterator<IMqttsnContext> clientItr = null;
+        synchronized (subscriptionsLookups) {
+            clientItr = new HashSet(subscriptionsLookups.keySet()).iterator();
+        }
+        while(clientItr.hasNext()){
+            IMqttsnContext client = clientItr.next();
+            Set<Subscription> paths = subscriptionsLookups.get(client);
+            if(paths != null && !paths.isEmpty()){
+                Iterator<Subscription> pathItr = paths.iterator();
+                client : while(pathItr.hasNext()) {
+                    try {
+                        Subscription sub = pathItr.next();
+                        TopicPath path = sub.getTopicPath();
+                        if(path.matches(topicPath)){
+                            matchingClients.add(client);
+                            break client;
                         }
+                    } catch(Exception e){
+                        throw new MqttsnException(e);
                     }
                 }
             }
         }
+
         return matchingClients;
     }
 

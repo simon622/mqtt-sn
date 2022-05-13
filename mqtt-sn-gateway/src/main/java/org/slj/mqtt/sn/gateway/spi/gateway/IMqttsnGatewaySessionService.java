@@ -51,6 +51,8 @@ public interface IMqttsnGatewaySessionService extends IMqttsnRegistry<IMqttsnGat
 
     void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException ;
 
+    void markSessionDisconnectedOrStale(IMqttsnSessionState state) throws MqttsnException;
+
     Iterator<IMqttsnContext> iterator();
 
     //-- methods that deletegate to the backend

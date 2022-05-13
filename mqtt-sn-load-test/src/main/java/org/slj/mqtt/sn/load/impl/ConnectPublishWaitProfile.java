@@ -65,8 +65,8 @@ public class ConnectPublishWaitProfile extends MqttsnClientProfile {
             //subscribe
             client.subscribe("foo", 2);
             progress.incrementProgress(1);
-            client.subscribe(topicPath, 2);
 
+            client.subscribe(topicPath, 2);
             progress.incrementProgress(1);
 
             String prefix = clientId + " msg ";

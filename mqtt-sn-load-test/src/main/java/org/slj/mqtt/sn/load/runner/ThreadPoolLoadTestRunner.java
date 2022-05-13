@@ -46,7 +46,11 @@ public class ThreadPoolLoadTestRunner extends AbstractLoadTestRunner {
         try {
             init();
             super.start(input);
-        } finally {
+        }
+        catch(Exception e){
+            logger.log(Level.SEVERE, "error running tests;", e);
+        }
+        finally {
             try {
                 if(executorService != null){
                     executorService.shutdown();

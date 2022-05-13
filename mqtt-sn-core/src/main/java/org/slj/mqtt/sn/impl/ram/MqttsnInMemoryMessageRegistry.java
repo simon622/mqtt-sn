@@ -66,6 +66,11 @@ public class MqttsnInMemoryMessageRegistry<T extends IMqttsnRuntimeRegistry>
     }
 
     @Override
+    public long size() throws MqttsnException {
+        return messageLookup.size();
+    }
+
+    @Override
     public void tidy() throws MqttsnException {
         Date d = new Date();
         synchronized (messageLookup){

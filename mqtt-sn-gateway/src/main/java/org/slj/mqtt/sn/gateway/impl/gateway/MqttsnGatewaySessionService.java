@@ -78,7 +78,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     long lastSeen = state.getLastSeen().getTime();
                     long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
                     if(expires < time){
-                        markSessionDisconnected(state);
+                        markSessionDisconnectedOrStale(state);
                     }
                 } else {
                     //This is a condition in case the sender was blocked when it attempted to send a message,
@@ -113,13 +113,13 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         return MIN_SESSION_MONITOR_CHECK;
     }
 
-    protected void markSessionDisconnected(IMqttsnSessionState state) {
-        logger.log(Level.WARNING, String.format("session expired [%s], disconnected", state.getContext()));
+    public void markSessionDisconnectedOrStale(IMqttsnSessionState state) {
+        logger.log(Level.WARNING, String.format("session expired or stale [%s], disconnected", state.getContext()));
         state.setClientState(MqttsnClientState.DISCONNECTED);
 
         if(getRegistry().getWillRegistry().hasWillMessage(state.getContext())){
             MqttsnWillData data = getRegistry().getWillRegistry().getWillMessage(state.getContext());
-            logger.log(Level.INFO, String.format("session expired has will data to publish[%s]", data));
+            logger.log(Level.INFO, String.format("session expired or stale has will data to publish [%s]", data));
             IMqttsnMessage willPublish = getRegistry().getCodec().createMessageFactory().createPublish(data.getQos(), false, data.isRetain(),
                     "ab", data.getData());
             try {

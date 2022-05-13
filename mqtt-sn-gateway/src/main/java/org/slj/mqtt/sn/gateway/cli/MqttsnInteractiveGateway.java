@@ -42,6 +42,7 @@ import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.NetworkRegistryException;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -311,7 +312,11 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             while(i.hasNext()){
                 Integer id = i.next();
                 InflightMessage message = msgs.get(id);
-                tabmessage(String.format("%s -> %s { %s }", c.getId(), id, message.getDirection() + " " + message.getMessage().getMessageName()));
+                long sent = message.getTime();
+                tabmessage(String.format("%s -> %s (%s retries) { %s (%s old)}", c.getId(), id,
+                        message instanceof RequeueableInflightMessage ? ((RequeueableInflightMessage) message).getQueuedPublishMessage().getRetryCount() : 1,
+                        message.getDirection() + " " + message.getMessage().getMessageName(),
+                        MqttsnUtils.getDurationString(System.currentTimeMillis() - sent)));
             }
         }
     }
@@ -357,6 +362,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
             message(String.format("Max message size: %s", getOptions().getMaxProtocolMessageSize()));
             message(String.format("Max connected clients: %s", maxClients));
+            message(String.format("Message registry size: %s", getRuntimeRegistry().getMessageRegistry().size()));
 
             if (getOptions() != null) {
                 Map<String, Integer> pTopics = getOptions().getPredefinedTopics();

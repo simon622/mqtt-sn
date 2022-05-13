@@ -29,6 +29,7 @@ import org.slj.mqtt.sn.spi.*;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRegistry>
         extends MqttsnService<T> implements IMqttsnMessageRegistry<T> {
@@ -59,9 +60,7 @@ public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRe
             }
         }
         if(impl == null) throw new MqttsnExpectationFailedException("unable to read message by id, message not found in registry");
-        if(impl.isRemoveAfterRead()){
-            remove(messageId);
-        }
+
         return impl.getData();
     }
 
@@ -73,6 +72,20 @@ public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRe
     }
 
     protected abstract boolean remove(UUID messageId) throws MqttsnException;
+
+    @Override
+    public boolean removeWhenCommitted(UUID messageId) throws MqttsnException{
+        MessageImpl msg = readInternal(messageId);
+        boolean val = false;
+        if(msg != null){
+            if(msg.isRemoveAfterRead()){
+                val = remove(messageId);
+            }
+        }
+
+        if(val) logger.log(Level.INFO, String.format("removed committed message [%s]", messageId));
+        return val;
+    }
 
     protected abstract UUID storeInternal(MessageImpl message) throws MqttsnException;
 

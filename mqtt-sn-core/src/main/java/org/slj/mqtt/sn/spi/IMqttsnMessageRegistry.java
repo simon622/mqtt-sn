@@ -45,5 +45,9 @@ public interface IMqttsnMessageRegistry <T extends IMqttsnRuntimeRegistry> exten
 
     UUID add(byte[] data, Date expires) throws MqttsnException;
 
+    boolean removeWhenCommitted(UUID messageId) throws MqttsnException;
+
     byte[] get(UUID messageId) throws MqttsnException;
+
+    long size() throws MqttsnException;
 }

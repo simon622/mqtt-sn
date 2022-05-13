@@ -76,7 +76,7 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
                             withTransport(new MqttsnUdpTransport(udpOptions)).
                             withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 
-                    client = new MqttsnClient(true, false);
+                    client = new MqttsnClient(false, false);
                     client.start(registry);
                 }
             }

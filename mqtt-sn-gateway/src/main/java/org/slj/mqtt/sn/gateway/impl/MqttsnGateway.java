@@ -27,6 +27,9 @@ package org.slj.mqtt.sn.gateway.impl;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IMqttsnSessionState;
+import org.slj.mqtt.sn.spi.IMqttsnConnectionStateListener;
+import org.slj.mqtt.sn.spi.IMqttsnMessageRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
@@ -71,6 +74,47 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                         getBackendService().publish(context, topicPath, qos, retained, data, message);
             } catch (MqttsnException e) {
                 logger.log(Level.SEVERE, "error publishing message to backend", e);
+            }
+        });
+
+        //-- notify the backend of confirmed message
+        registerPublishSentListener((context, messageId, topicPath, qos, retained, data, message) ->  {
+            try {
+                registry.getMessageRegistry().removeWhenCommitted(messageId);
+            } catch (MqttsnException e) {
+                logger.log(Level.SEVERE, "error publishing message to backend", e);
+            }
+        });
+
+        registerConnectionListener(new IMqttsnConnectionStateListener() {
+            @Override
+            public void notifyConnected(IMqttsnContext context) {
+            }
+
+            @Override
+            public void notifyRemoteDisconnect(IMqttsnContext context) {
+            }
+
+            @Override
+            public void notifyActiveTimeout(IMqttsnContext context) {
+            }
+
+            @Override
+            public void notifyLocalDisconnect(IMqttsnContext context, Throwable t) {
+            }
+
+            @Override
+            public void notifyConnectionLost(IMqttsnContext context, Throwable t) {
+                try {
+                    IMqttsnSessionState state = ((IMqttsnGatewayRuntimeRegistry) registry).
+                            getGatewaySessionService().getSessionState(context, false);
+                    if(state != null){
+                        ((IMqttsnGatewayRuntimeRegistry) registry).
+                                getGatewaySessionService().markSessionDisconnectedOrStale(state);
+                    }
+                } catch (MqttsnException e) {
+                    logger.log(Level.SEVERE, "error publishing message to backend", e);
+                }
             }
         });
     }

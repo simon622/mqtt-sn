@@ -48,11 +48,12 @@ public class OpenConnectionTestMain {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             int port = 2442;
             String host = "localhost";
-            for(int i = 0; i < 9000; i++){
+            for(int i = 0; i < 1000; i++){
                 MqttsnClient client = createClient(host, port);
-                client.connect(240, true);
+                client.connect(60, true);
                 client.subscribe("foo", 2);
                 client.stop();
+                Thread.sleep(10);
             }
 
         } catch(Exception e){

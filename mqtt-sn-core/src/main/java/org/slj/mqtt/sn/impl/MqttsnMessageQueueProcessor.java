@@ -57,7 +57,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
 
             if(count == 0){
                 if(stateCheckService != null){
-                    logger.log(Level.INFO,
+                    logger.log(Level.FINE,
                             String.format("notifying state service of queue empty thread [%s] for [%s]", Thread.currentThread().getName(), context));
                     //-- this checks on the state of any session and if its AWAKE will lead to a PINGRESP being sent
                     stateCheckService.queueEmpty(context);

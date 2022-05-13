@@ -76,6 +76,11 @@ public interface IMqttsnCodec {
     long getDuration(IMqttsnMessage message);
 
     /**
+     * @return - Does the message represent a CONNECT
+     */
+    boolean isConnect(IMqttsnMessage message);
+
+    /**
      * @return - Does the message represent a PUBLISH
      */
     boolean isPublish(IMqttsnMessage message);

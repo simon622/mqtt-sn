@@ -108,6 +108,14 @@ public class MqttsnGatewayMessageHandler
     protected void afterResponse(IMqttsnContext context, IMqttsnMessage messageIn, IMqttsnMessage messageOut) throws MqttsnException {
 
         try {
+
+            if(messageOut != null && messageOut.isErrorMessage() &&
+                    registry.getCodec().isConnect(messageIn)){
+                //-- this is an error in CONNECT - remove from network registry so we dont leak
+                logger.log(Level.WARNING, String.format("connect for [%s] was rejected, tidy up network layer after response is sent", context));
+                registry.getNetworkRegistry().removeExistingClientId(context.getId());
+            }
+
             IMqttsnSessionState sessionState = getSessionState(context);
             if(sessionState != null){
                 //active session means we can try and see if there is anything to flush here if its a terminal message
@@ -115,7 +123,6 @@ public class MqttsnGatewayMessageHandler
                         messageOut != null && isTerminalMessage(messageOut) && !messageOut.isErrorMessage() ){
                     if(MqttsnUtils.in(sessionState.getClientState(),
                             MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)) {
-
                         if(logger.isLoggable(Level.FINE)){
                             logger.log(Level.FINE, String.format("scheduling flush based on outbound message [%s] -> inflight [%s]", messageOut == null ? messageIn : messageOut, getRegistry().getMessageStateService().countInflight(context, InflightMessage.DIRECTION.SENDING)));
                         }
@@ -164,10 +171,8 @@ public class MqttsnGatewayMessageHandler
         }
 
         String assignedClientId = context.isAssignedClientId() ? context.getId() : null;
-
         IMqttsnSessionState state = getSessionState(context, true);
         ConnectResult result = registry.getGatewaySessionService().connect(state, connect);
-
         processSessionResult(result);
         if(result.isError()){
             return registry.getMessageFactory().createConnack(result.getReturnCode());

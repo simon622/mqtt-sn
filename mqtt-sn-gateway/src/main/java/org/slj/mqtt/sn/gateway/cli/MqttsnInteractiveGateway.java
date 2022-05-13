@@ -267,7 +267,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
             message(String.format("Client session: %s", clientId));
             message(String.format("Session started: %s", format(state.getSessionStarted())));
-            message(String.format("Last seen:  %s", format(state.getLastSeen())));
+            message(String.format("Last seen:  %s", state.getLastSeen() == null ? "<null>" : format(state.getLastSeen())));
             message(String.format("Keep alive (seconds):  %s", state.getKeepAlive()));
             message(String.format("Session expiry interval (seconds):  %s", state.getSessionExpiryInterval()));
             message(String.format("Time since connect (seconds):  %s", ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000)));
@@ -389,6 +389,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             }
 
 
+            message(String.format("Network registry count: %s", getRuntimeRegistry().getNetworkRegistry().size()));
             message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()));
             message(String.format("Current sleeping sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.ASLEEP).count()));
             message(String.format("Current disconnected sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.DISCONNECTED).count()));

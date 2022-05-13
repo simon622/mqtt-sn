@@ -137,7 +137,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             op.qos = qos;
 
             queue.add(op);
-            logger.log(Level.INFO, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
+            logger.log(Level.FINE, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
             synchronized (monitor){
                 monitor.notifyAll();
             }
@@ -185,7 +185,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                             lastPublishAttempt = new Date();
                             if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
                                 if(rateLimiter != null) rateLimiter.acquire();
-                                logger.log(Level.INFO, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
+                                logger.log(Level.FINE, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
                                 PublishResult res = super.publish(op.context, op.topicPath, op.qos, op.retained, op.payload, op.initialMessage);
                                 if(res.isError()){
                                     logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));

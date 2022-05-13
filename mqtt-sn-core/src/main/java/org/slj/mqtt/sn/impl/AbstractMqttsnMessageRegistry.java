@@ -79,7 +79,7 @@ public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRe
             }
         }
 
-        if(val) logger.log(Level.INFO, String.format("removed committed message [%s]", messageId));
+        if(val) logger.log(Level.FINE, String.format("removed committed message [%s]", messageId));
         return val;
     }
 

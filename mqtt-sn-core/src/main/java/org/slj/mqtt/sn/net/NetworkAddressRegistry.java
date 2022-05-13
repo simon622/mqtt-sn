@@ -151,6 +151,11 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
         return false;
     }
 
+    @Override
+    public long size() {
+        return networkRegistry.size();
+    }
+
     public Optional<INetworkContext> waitForContext(int time, TimeUnit unit) throws NetworkRegistryException, InterruptedException {
         synchronized(mutex){
             try {

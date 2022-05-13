@@ -36,7 +36,7 @@ public class PublishAndWaitTestMain {
         try {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 400, 10);
+                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 400, 15);
 
 //            ThreadPoolLoadTestRunner runner =
 //                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 1000, 20);

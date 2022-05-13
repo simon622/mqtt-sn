@@ -111,6 +111,11 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
     }
 
     @Override
+    public boolean isConnect(IMqttsnMessage message) {
+        return message instanceof MqttsnConnect_V2_0;
+    }
+
+    @Override
     protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
 
         MqttsnSpecificationValidator.validatePacketLength(data);

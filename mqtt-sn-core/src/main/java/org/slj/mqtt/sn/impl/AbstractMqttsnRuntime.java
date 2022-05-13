@@ -136,7 +136,9 @@ public abstract class AbstractMqttsnRuntime {
         if(service instanceof IMqttsnService){
             IMqttsnService snService =  (IMqttsnService) service;
             if(!snService.running()){
-                logger.log(Level.INFO, String.format("starting [%s]", service.getClass().getName()));
+                if(logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("starting [%s]", service.getClass().getName()));
+                }
                 snService.start(registry);
                 activeServices.add(snService);
             }
@@ -147,7 +149,9 @@ public abstract class AbstractMqttsnRuntime {
         if(service instanceof IMqttsnService){
             IMqttsnService snService =  (IMqttsnService) service;
             if(snService.running()){
-                logger.log(Level.INFO, String.format("stopping [%s]", service.getClass().getName()));
+                if(logger.isLoggable(Level.FINE)) {
+                    logger.log(Level.FINE, String.format("stopping [%s]", service.getClass().getName()));
+                }
                 snService.stop();
                 activeServices.remove(snService);
             }
@@ -233,7 +237,7 @@ public abstract class AbstractMqttsnRuntime {
      * @return should the local runtime send a DISCONNECT in reponse
      */
     public boolean handleRemoteDisconnect(IMqttsnContext context){
-        logger.log(Level.INFO, String.format("notified of remote disconnect [%s <- %s]", registry.getOptions().getContextId(), context));
+        logger.log(Level.FINE, String.format("notified of remote disconnect [%s <- %s]", registry.getOptions().getContextId(), context));
         connectionListeners.forEach(p -> p.notifyRemoteDisconnect(context));
         return true;
     }
@@ -248,7 +252,7 @@ public abstract class AbstractMqttsnRuntime {
      * if not, the exception is reported into the transport layer
      */
     public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
-        logger.log(Level.INFO, String.format("notified of local disconnect [%s !- %s]", registry.getOptions().getContextId(), context), t);
+        logger.log(Level.FINE, String.format("notified of local disconnect [%s !- %s]", registry.getOptions().getContextId(), context), t);
         connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
     }
@@ -260,7 +264,7 @@ public abstract class AbstractMqttsnRuntime {
      * @param t - the exception that was encountered
      */
     public void handleConnectionLost(IMqttsnContext context, Throwable t){
-        logger.log(Level.INFO, String.format("notified of connection lost [%s !- %s]", registry.getOptions().getContextId(), context), t);
+        logger.log(Level.FINE, String.format("notified of connection lost [%s !- %s]", registry.getOptions().getContextId(), context), t);
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
 
@@ -269,7 +273,7 @@ public abstract class AbstractMqttsnRuntime {
      * @param context
      */
     public void handleConnected(IMqttsnContext context){
-        logger.log(Level.INFO, String.format("notified of new connection [%s <- %s]", registry.getOptions().getContextId(), context));
+        logger.log(Level.FINE, String.format("notified of new connection [%s <- %s]", registry.getOptions().getContextId(), context));
         connectionListeners.forEach(p -> p.notifyConnected(context));
     }
 
@@ -281,7 +285,7 @@ public abstract class AbstractMqttsnRuntime {
      * @param context - the context who hasnt been heard of since the timeout
      */
     public void handleActiveTimeout(IMqttsnContext context){
-        logger.log(Level.INFO, String.format("notified of active timeout [%s <- %s]", registry.getOptions().getContextId(), context));
+        logger.log(Level.FINE, String.format("notified of active timeout [%s <- %s]", registry.getOptions().getContextId(), context));
         connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
     }
 

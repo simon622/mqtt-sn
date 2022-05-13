@@ -167,8 +167,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     public void scheduleFlush(IMqttsnContext context)  {
         if(!flushOperations.containsKey(context) ||
                 flushOperations.get(context).isDone()){
-            if(logger.isLoggable(Level.INFO)){
-                logger.log(Level.INFO, String.format("scheduling outbound work for [%s]", context));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("scheduling outbound work for [%s]", context));
             }
             if(executorService != null &&
                     !executorService.isTerminated() && !executorService.isShutdown()){
@@ -299,7 +299,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
             registry.getTransport().writeToTransport(registry.getNetworkRegistry().getContext(context), message);
             long time = System.currentTimeMillis();
-            if(registry.getCodec().isActiveMessage(message)){
+            if(registry.getCodec().isActiveMessage(message) &&
+                    !message.isErrorMessage()){
                 lastActiveMessage.put(context, time);
             }
             lastMessageSent.put(context, time);
@@ -384,7 +385,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     public IMqttsnMessage notifyMessageReceived(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
-        if(registry.getCodec().isActiveMessage(message)){
+        if(registry.getCodec().isActiveMessage(message) && !message.isErrorMessage()){
             lastActiveMessage.put(context, System.currentTimeMillis());
         }
         lastMessageReceived.put(context, System.currentTimeMillis());
@@ -546,7 +547,6 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         getRegistry().getRuntime().async(() -> {
             IMqttsnContext context = operation.context;
             byte[] payload = operation.data.getData();
-logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
             if(registry.getSecurityService().payloadIntegrityEnabled()){
                 try {
                     payload = registry.getSecurityService().readVerified(payload);
@@ -637,8 +637,8 @@ logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
         if(set.contains(new Integer(startAt)))
             throw new MqttsnRuntimeException("cannot assign msg id " + startAt);
 
-        if(logger.isLoggable(Level.INFO)){
-            logger.log(Level.INFO, String.format("next id available for context [%s] is [%s]", context, startAt));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("next id available for context [%s] is [%s]", context, startAt));
         }
 
         return startAt;
@@ -646,11 +646,23 @@ logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
 
     public void clearInflight(IMqttsnContext context) throws MqttsnException {
         clearInflightInternal(context, 0);
-        clear(context);
+    }
+
+    @Override
+    public void clear(IMqttsnContext context) throws MqttsnException {
+        logger.log(Level.INFO, String.format("clearing down message state for context [%s]", context));
+        unscheduleFlush(context);
+        lastActiveMessage.remove(context);
+        lastMessageReceived.remove(context);
+        lastMessageSent.remove(context);
+        lastUsedMsgIds.remove(LastIdContext.from(context, InflightMessage.DIRECTION.SENDING));
+        lastUsedMsgIds.remove(LastIdContext.from(context, InflightMessage.DIRECTION.RECEIVING));
     }
 
     protected void clearInflightInternal(IMqttsnContext context, long evictionTime) throws MqttsnException {
-        logger.log(Level.FINE, String.format("clearing all inflight messages for context [%s], forced = [%s]", context, evictionTime == 0));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("clearing all inflight messages for context [%s], forced = [%s]", context, evictionTime == 0));
+        }
         Map<Integer, InflightMessage> messages = getInflightMessages(context);
         if(messages != null && !messages.isEmpty()){
             synchronized (messages){
@@ -811,7 +823,7 @@ logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
         }
     }
 
-    static class LastIdContext {
+    protected static class LastIdContext {
 
         protected final IMqttsnContext context;
         protected final InflightMessage.DIRECTION direction;

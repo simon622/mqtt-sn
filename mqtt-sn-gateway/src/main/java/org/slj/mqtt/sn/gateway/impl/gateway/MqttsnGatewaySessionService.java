@@ -62,60 +62,73 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     @Override
     protected long doWork() {
-        Iterator<IMqttsnContext> itr = null;
-        synchronized (sessionLookup) {
-            itr = new HashSet(sessionLookup.keySet()).iterator();
-        }
-        while(itr.hasNext()){
-            IMqttsnContext context = itr.next();
-            IMqttsnSessionState state = sessionLookup.get(context);
-            if(state == null) continue;
 
-            //check keep alive timing
-            if(state.getClientState() == MqttsnClientState.CONNECTED ||
-                    state.getClientState() == MqttsnClientState.ASLEEP){
-                long time = System.currentTimeMillis();
-                if(state != null && state.getKeepAlive() > 0){
-                    long lastSeen = state.getLastSeen().getTime();
-                    long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
-                    if(expires < time){
-                        markSessionLost(state);
-                    }
-                } else {
-                    //This is a condition in case the sender was blocked when it attempted to send a message,
-                    //we need something to ensure devices dont get stuck in the stale state (ie. ready to receive with messages
-                    //in the queue but noone doing the work - this wont be needed 99% of the time
-                    if(state.getClientState() == MqttsnClientState.CONNECTED){
-                        try {
-                            if(getRegistry().getMessageQueue().size(context) > 0){
-                                getRegistry().getMessageStateService().scheduleFlush(context);
+        try {
+            Iterator<IMqttsnContext> itr = null;
+            synchronized (sessionLookup) {
+                itr = new HashSet(sessionLookup.keySet()).iterator();
+            }
+            while(itr.hasNext()){
+                IMqttsnContext context = itr.next();
+                IMqttsnSessionState state = sessionLookup.get(context);
+                if(state == null) continue;
+
+                //check keep alive timing
+                if(state.getClientState() == MqttsnClientState.CONNECTED ||
+                        state.getClientState() == MqttsnClientState.ASLEEP){
+                    long time = System.currentTimeMillis();
+                    if(state.getKeepAlive() > 0){
+                        Date lastSeen = getLastSeen(state);
+                        long expires = lastSeen.getTime() + (int) ((state.getKeepAlive() * 1000) * 1.5);
+                        if(expires < time){
+                            markSessionLost(state);
+                        }
+                    } else {
+                        //This is a condition in case the sender was blocked when it attempted to send a message,
+                        //we need something to ensure devices dont get stuck in the stale state (ie. ready to receive with messages
+                        //in the queue but noone doing the work - this wont be needed 99% of the time
+                        if(state.getClientState() == MqttsnClientState.CONNECTED){
+                            try {
+                                if(getRegistry().getMessageQueue().size(context) > 0){
+                                    getRegistry().getMessageStateService().scheduleFlush(context);
+                                }
+                            } catch(MqttsnException e){
+                                logger.log(Level.WARNING, "error scheduling flush", e);
                             }
-                        } catch(MqttsnException e){
-                            logger.log(Level.WARNING, "error scheduling flush", e);
                         }
                     }
                 }
-            }
-            else if(MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED, MqttsnClientState.LOST)){
-                // check last seen time
-                long time = System.currentTimeMillis();
-                Date lastSeen = state.getLastSeen();
-                long expires;
-                if(state.getSessionExpiryInterval() < MqttsnConstants.UNSIGNED_MAX_32){
-                    expires = lastSeen.getTime() + (state.getSessionExpiryInterval() * 1000);
-                    //only expire sessions set to less than the max which means forever
-                    if(expires < time){
-                        logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed disconnected session time", state.getContext(), lastSeen));
-                        clear(context);
+                else if(MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED, MqttsnClientState.LOST)){
+                    // check last seen time
+                    long time = System.currentTimeMillis();
+                    if(state.getSessionExpiryInterval() > 0 && //-- it may have literally just been initialised so if 0 ignore
+                            state.getSessionExpiryInterval() < MqttsnConstants.UNSIGNED_MAX_32){
+                        Date lastSeen = getLastSeen(state);
+                        long expires = lastSeen.getTime() + (state.getSessionExpiryInterval() * 1000);
+                        //only expire sessions set to less than the max which means forever
+                        if(expires < time){
+                            logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed [%s] seconds ago", state.getContext(), lastSeen, state.getSessionExpiryInterval()));
+                            clear(context);
+                        }
+                    } else if(state.getSessionExpiryInterval() == 0){
+                        logger.log(Level.WARNING, String.format("detected session [%s] with expiry interval 0", state.getContext()));
                     }
                 }
             }
+        } catch(Exception e){
+            logger.log(Level.SEVERE, String.format("error monitoring ongoing session state - handled;"), e);
         }
         return MIN_SESSION_MONITOR_CHECK;
     }
 
+    protected static Date getLastSeen(IMqttsnSessionState state){
+        Date lastSeen = state.getLastSeen();
+        lastSeen = lastSeen == null ? state.getSessionStarted() : lastSeen;
+        return lastSeen;
+    }
+
     public void markSessionLost(IMqttsnSessionState state) {
-        logger.log(Level.WARNING, String.format("session expired or stale [%s], disconnected", state.getContext()));
+        logger.log(Level.WARNING, String.format("session timeout or stale [%s], mark lost", state.getContext()));
         state.setClientState(MqttsnClientState.LOST);
 
         if(getRegistry().getWillRegistry().hasWillMessage(state.getContext())){
@@ -167,16 +180,16 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         cleanSession(state.getContext(), cleanSession);
                         state.setKeepAlive((int) keepAlive);
                         state.setClientState(MqttsnClientState.CONNECTED);
-                    } else {
-                        //-- connect was not successful ensure we
-                        //-- do not hold a reference to any session
-                        clear(state.getContext());
                     }
                 }
             }
         }
-
-        logger.log(Level.INFO, String.format("handled connection request for [%s] with cleanSession [%s] -> [%s], [%s]", state.getContext(), cleanSession, result.getStatus(), result.getMessage()));
+        if(result.isError()){
+            //-- connect was not successful ensure we
+            //-- do not hold a reference to any session (but leave network to enable the CONNACK to go back - clean up the network after the response)
+            clear(state.getContext(), false);
+        }
+        logger.log(result.isError() ? Level.WARNING : Level.INFO, String.format("handled connection request for [%s] with cleanSession [%s] -> [%s], [%s]", state.getContext(), cleanSession, result.getStatus(), result.getMessage()));
         return result;
     }
 
@@ -372,21 +385,29 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     @Override
     public void clear(IMqttsnContext context) {
-        logger.log(Level.INFO, String.format(String.format("removing session reference [%s]", context)));
+        clear(context, true);
+    }
+
+    @Override
+    public void clear(IMqttsnContext context, boolean networkLayer) {
+        logger.log(Level.INFO, String.format(String.format("removing session reference [%s], networking ? [%s]", context, networkLayer)));
         sessionLookup.remove(context);
         try {
+            if(networkLayer) getRegistry().getNetworkRegistry().removeExistingClientId(context.getId());
             cleanSession(context, true);
         } catch(MqttsnException e){
-            logger.log(Level.SEVERE, String.format(String.format("error cleaning up session [%s]", context)), e);
+            logger.log(Level.SEVERE, String.format(String.format("error clearing up session [%s]", context)), e);
         }
     }
 
     protected ConnectResult checkSessionSize(String clientId){
         int maxConnectedClients = ((MqttsnGatewayOptions) registry.getOptions()).getMaxConnectedClients();
-        if(sessionLookup.values().stream().filter(s ->
-                MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()
-                >= maxConnectedClients){
-            return new ConnectResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION, "gateway has reached capacity");
+        synchronized (sessionLookup){
+            if(sessionLookup.values().stream().filter(s ->
+                    MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()
+                    >= maxConnectedClients){
+                return new ConnectResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION, "gateway has reached capacity");
+            }
         }
         return null;
     }
@@ -395,7 +416,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     public void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {
         //-- expand the message onto the gateway connected device queues
         List<IMqttsnContext> recipients = registry.getSubscriptionRegistry().matches(topicPath);
-        logger.log(Level.INFO, String.format("receiving broker side message into [%s] sessions", recipients.size()));
+        logger.log(Level.FINE, String.format("receiving broker side message into [%s] sessions", recipients.size()));
 
         //if we only have 1 receiver remove message after read
         UUID messageId = recipients.size() > 1 ?

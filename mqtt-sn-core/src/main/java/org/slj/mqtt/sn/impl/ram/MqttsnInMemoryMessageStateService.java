@@ -66,7 +66,8 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public void clear(IMqttsnContext context) {
+    public void clear(IMqttsnContext context) throws MqttsnException{
+        super.clear(context);
         inflightMessages.remove(context);
     }
 

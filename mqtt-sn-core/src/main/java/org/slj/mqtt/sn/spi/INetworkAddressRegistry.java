@@ -49,6 +49,8 @@ public interface INetworkAddressRegistry {
 
     Optional<INetworkContext> first() throws NetworkRegistryException ;
 
+    long size();
+
     void putContext(INetworkContext context) throws NetworkRegistryException ;
 
     void bindContexts(INetworkContext context, IMqttsnContext sessionContext);

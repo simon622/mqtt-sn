@@ -100,6 +100,11 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     }
 
     @Override
+    public boolean isConnect(IMqttsnMessage message) {
+        return message instanceof MqttsnConnect;
+    }
+
+    @Override
     public boolean isPublish(IMqttsnMessage message) {
         return message instanceof MqttsnPublish;
     }

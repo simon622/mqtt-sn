@@ -69,8 +69,9 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     @Override
     public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        rateLimiter = RateLimiter.create(((MqttsnGatewayOptions)runtime.getOptions()).
-                getMaxBrokerPublishesPerSecond());
+        double limiter = ((MqttsnGatewayOptions)runtime.getOptions()).
+                getMaxBrokerPublishesPerSecond();
+        rateLimiter = limiter == 0d ? null : RateLimiter.create(limiter);
         connectOnStartup();
         initPublisher();
     }
@@ -127,7 +128,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 }
             }
 
-            rateLimiter.acquire();
+            if(rateLimiter != null) rateLimiter.acquire();
             BrokerPublishOperation op = new BrokerPublishOperation();
             op.context = context;
             op.topicPath = topicPath;

@@ -52,9 +52,9 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public static final int DEFAULT_GATEWAY_ADVERTISE_TIME = 60;
 
     /**
-     * The maximum number of publish operations per second that the gateway will send to the gateway
+     * The maximum number of publish operations per second that the gateway will send to the gateway - by default this is disabled and unlimited
      */
-    public static final double MAX_BROKER_PUBLISHES_PER_SECOND = 5.0d;
+    public static final double DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND = 0d;
 
     private Set<String> allowedClientIds = new HashSet();
     {
@@ -62,7 +62,7 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     }
 
     private int maxConnectedClients = DEFAULT_MAX_CONNECTED_CLIENTS;
-    private double maxBrokerPublishesPerSecond = MAX_BROKER_PUBLISHES_PER_SECOND;
+    private double maxBrokerPublishesPerSecond = DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND;
     private int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
     private int gatewayId = DEFAULT_GATEWAY_ID;
 

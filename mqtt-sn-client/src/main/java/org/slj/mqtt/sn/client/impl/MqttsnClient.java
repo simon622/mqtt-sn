@@ -594,7 +594,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                                 registry.getNetworkRegistry().waitForContext(registry.getOptions().getDiscoveryTime(), TimeUnit.SECONDS);
                         if(optionalMqttsnContext.isPresent()){
                             INetworkContext gatewayContext = optionalMqttsnContext.get();
-                            state = new MqttsnSessionState(registry.getNetworkRegistry().getSessionContext(gatewayContext), MqttsnClientState.PENDING);
+                            state = new MqttsnSessionState(registry.getNetworkRegistry().getSessionContext(gatewayContext), MqttsnClientState.DISCONNECTED);
                             logger.log(Level.INFO, String.format("discovery located a gateway for use [%s]", gatewayContext));
                         } else {
                             throw new MqttsnException("unable to discovery gateway within specified timeout");

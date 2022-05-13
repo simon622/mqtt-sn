@@ -389,9 +389,10 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             }
 
 
-            message(String.format("Current active sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.CONNECTED).count()));
+            message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()));
             message(String.format("Current sleeping sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.ASLEEP).count()));
             message(String.format("Current disconnected sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.DISCONNECTED).count()));
+            message(String.format("Current lost sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.LOST).count()));
             message(String.format("All queued session messages: %s", queuedMessages));
 
             //-- broker stuff
@@ -411,7 +412,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 withMaxMessagesInQueue(10).
                 withRemoveDisconnectedSessionsSeconds(60 * 60).
                 withTransportHandoffThreadCount(4).
-                withQueueProcessorThreadCount(4).
+                withQueueProcessorThreadCount(2).
                 withSleepClearsRegistrations(false);
     }
 
@@ -479,7 +480,6 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             case AWAKE:
             case CONNECTED: return cli_green(state.toString());
             case ASLEEP: return cli_blue(state.toString());
-            case PENDING: return cli_reset(state.toString());
             default: return cli_red(state.toString());
         }
     }

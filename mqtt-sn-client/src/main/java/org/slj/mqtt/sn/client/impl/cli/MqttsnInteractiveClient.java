@@ -544,8 +544,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
             case ASLEEP:
                 return cli_blue(state.toString());
             case DISCONNECTED:
+            case LOST:
                 return cli_red(state.toString());
-            case PENDING:
             default:
                 return cli_reset(state.toString());
         }

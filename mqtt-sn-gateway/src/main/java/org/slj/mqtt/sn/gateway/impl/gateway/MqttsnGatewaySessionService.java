@@ -36,6 +36,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
@@ -78,7 +79,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     long lastSeen = state.getLastSeen().getTime();
                     long expires = lastSeen + (int) ((state.getKeepAlive() * 1000) * 1.5);
                     if(expires < time){
-                        markSessionDisconnectedOrStale(state);
+                        markSessionLost(state);
                     }
                 } else {
                     //This is a condition in case the sender was blocked when it attempted to send a message,
@@ -95,7 +96,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     }
                 }
             }
-            else if(state.getClientState() == MqttsnClientState.DISCONNECTED){
+            else if(MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED, MqttsnClientState.LOST)){
                 // check last seen time
                 long time = System.currentTimeMillis();
                 Date lastSeen = state.getLastSeen();
@@ -113,9 +114,9 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         return MIN_SESSION_MONITOR_CHECK;
     }
 
-    public void markSessionDisconnectedOrStale(IMqttsnSessionState state) {
+    public void markSessionLost(IMqttsnSessionState state) {
         logger.log(Level.WARNING, String.format("session expired or stale [%s], disconnected", state.getContext()));
-        state.setClientState(MqttsnClientState.DISCONNECTED);
+        state.setClientState(MqttsnClientState.LOST);
 
         if(getRegistry().getWillRegistry().hasWillMessage(state.getContext())){
             MqttsnWillData data = getRegistry().getWillRegistry().getWillMessage(state.getContext());
@@ -138,7 +139,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         if(state == null && createIfNotExists){
             synchronized (this){
                 if((state = sessionLookup.get(context)) == null){
-                    state = new MqttsnSessionState(context, MqttsnClientState.PENDING);
+                    state = new MqttsnSessionState(context, MqttsnClientState.DISCONNECTED);
                     sessionLookup.put(context, state);
                 }
             }
@@ -381,9 +382,10 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     protected ConnectResult checkSessionSize(String clientId){
-
         int maxConnectedClients = ((MqttsnGatewayOptions) registry.getOptions()).getMaxConnectedClients();
-        if(sessionLookup.size() >= maxConnectedClients){
+        if(sessionLookup.values().stream().filter(s ->
+                MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()
+                >= maxConnectedClients){
             return new ConnectResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION, "gateway has reached capacity");
         }
         return null;

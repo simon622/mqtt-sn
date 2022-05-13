@@ -128,7 +128,6 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 }
             }
 
-            if(rateLimiter != null) rateLimiter.acquire();
             BrokerPublishOperation op = new BrokerPublishOperation();
             op.context = context;
             op.topicPath = topicPath;
@@ -185,6 +184,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                         if(op != null){
                             lastPublishAttempt = new Date();
                             if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
+                                if(rateLimiter != null) rateLimiter.acquire();
                                 logger.log(Level.INFO, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
                                 PublishResult res = super.publish(op.context, op.topicPath, op.qos, op.retained, op.payload, op.initialMessage);
                                 if(res.isError()){

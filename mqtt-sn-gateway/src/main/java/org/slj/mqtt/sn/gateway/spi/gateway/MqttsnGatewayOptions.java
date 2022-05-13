@@ -52,7 +52,8 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public static final int DEFAULT_GATEWAY_ADVERTISE_TIME = 60;
 
     /**
-     * The maximum number of publish operations per second that the gateway will send to the gateway - by default this is disabled and unlimited
+     * The maximum number of publish operations per second that the gateway will send to the gateway -
+     * By default this is disabled and unlimited (0)
      */
     public static final double DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND = 0d;
 

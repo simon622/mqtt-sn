@@ -92,7 +92,7 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
                         String.format("worker [%s] waited for [%s] in the end", Thread.currentThread().getName(), System.currentTimeMillis() - waitStart));
             }
         }
-        logger.log(Level.WARNING, String.format("stopped %s thread", Thread.currentThread().getName()));
+        logger.log(Level.INFO, String.format("stopped %s thread", Thread.currentThread().getName()));
     }
 
     /**

@@ -116,7 +116,7 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                 }
             }
 
-            logger.log(Level.WARNING, String.format("mqtt-sn udp [%s] stopping udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]",
+            logger.log(Level.INFO, String.format("mqtt-sn udp [%s] stopping udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]",
                     registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running));
 
         }, threadName);

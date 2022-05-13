@@ -110,10 +110,10 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                             getGatewaySessionService().getSessionState(context, false);
                     if(state != null){
                         ((IMqttsnGatewayRuntimeRegistry) registry).
-                                getGatewaySessionService().markSessionDisconnectedOrStale(state);
+                                getGatewaySessionService().markSessionLost(state);
                     }
                 } catch (MqttsnException e) {
-                    logger.log(Level.SEVERE, "error publishing message to backend", e);
+                    logger.log(Level.SEVERE, "error marking session lost;", e);
                 }
             }
         });

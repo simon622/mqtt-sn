@@ -411,7 +411,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 withMaxBrokerPublishesPerSecond(50d).
                 withGatewayId(101).
                 withContextId(clientId).
-                withMaxMessagesInQueue(100000).
+                withMaxMessagesInQueue(10).
                 withRemoveDisconnectedSessionsSeconds(60 * 60).
                 withTransportHandoffThreadCount(2).
                 withQueueProcessorThreadCount(4).

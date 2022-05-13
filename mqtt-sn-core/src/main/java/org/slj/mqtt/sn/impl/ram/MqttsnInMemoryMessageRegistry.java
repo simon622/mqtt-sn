@@ -45,7 +45,7 @@ public class MqttsnInMemoryMessageRegistry<T extends IMqttsnRuntimeRegistry>
     }
 
     @Override
-    protected boolean remove(UUID messageId) throws MqttsnException {
+    public boolean remove(UUID messageId) throws MqttsnException {
         return messageLookup.remove(messageId) != null;
     }
 

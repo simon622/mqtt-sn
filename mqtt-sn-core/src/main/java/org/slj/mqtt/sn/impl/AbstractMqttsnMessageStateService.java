@@ -696,19 +696,20 @@ logger.log(Level.INFO, String.format("confirming publish [%s]", operation));
                         ((RequeueableInflightMessage) inflight).getQueuedPublishMessage()));
                 QueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
                 queuedPublishMessage.setToken(null);
+                boolean maxRetries = queuedPublishMessage.getRetryCount() >= registry.getOptions().getMaxErrorRetries();
                 try {
-                    boolean maxRetries = queuedPublishMessage.getRetryCount() >= registry.getOptions().getMaxErrorRetries();
                     if(maxRetries){
                         //-- we're disconnecting the runtime, so reset counter for next active session and put payload back in
                         //-- registry as we'll need it again on next connection
                         queuedPublishMessage.setRetryCount(0);
                     }
                     registry.getMessageQueue().offer(context, queuedPublishMessage);
+                } catch(MqttsnQueueAcceptException e){
+                    //queue is full cant put it there
+                } finally {
                     if(maxRetries){
                         registry.getRuntime().handleConnectionLost(context, null);
                     }
-                } catch(MqttsnQueueAcceptException e){
-                    throw new MqttsnException(e);
                 }
             }
         }

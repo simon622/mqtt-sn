@@ -400,26 +400,32 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 registry.getMessageRegistry().add(payload, calculateExpiry()) :
                 registry.getMessageRegistry().add(payload, true) ;
 
+        int successfulExpansion = 0;
         for (IMqttsnContext client : recipients){
             int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
             int q = Math.min(grantedQos,qos);
-            try {
-                IMqttsnSessionState sessionState = getSessionState(client, false);
-                if(sessionState != null){
-                    if(payload.length > sessionState.getMaxPacketSize()){
-                        logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
-                    } else {
-                        PublishData data = new PublishData(topicPath, q, retained);
+            IMqttsnSessionState sessionState = getSessionState(client, false);
+            if(sessionState != null){
+                if(payload.length > sessionState.getMaxPacketSize()){
+                    logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
+                } else {
+                    PublishData data = new PublishData(topicPath, q, retained);
+                    try {
                         registry.getMessageQueue().offer(client, new QueuedPublishMessage(
                                 messageId, data));
-                        expansionCount.incrementAndGet();
+                        successfulExpansion++;
+                    } catch(MqttsnQueueAcceptException e){
+                        //-- the queue was full nothing to be done here
                     }
-                } else {
-                    logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", client));
                 }
-            } catch(MqttsnQueueAcceptException e){
-                throw new MqttsnException(e);
+            } else {
+                logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", client));
             }
+        }
+
+        expansionCount.addAndGet(successfulExpansion);
+        if(successfulExpansion == 0){
+            registry.getMessageRegistry().remove(messageId);
         }
     }
 

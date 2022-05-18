@@ -76,17 +76,6 @@ public class MqttsnOptions {
     public static final boolean DEFAULT_DISCOVERY_ENABLED = false;
 
     /**
-     * When thread hand off is enabled, the default number of processing threads is 1
-     */
-    public static final int DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT = 1;
-
-    /**
-     * Used to handle the outbound queue processing layer, when running as a gateway this should
-     * scale with the number of expected connected clients
-     */
-    public static final int DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT = 2;
-
-    /**
      * By default, 128 topics can reside in any 1 client registry
      */
     public static final int DEFAULT_MAX_TOPICS_IN_REGISTRY = 128;
@@ -172,9 +161,35 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS = 60 * 60 * 24 * 7;
 
+    /**
+     * How many threads will process general protocol messages (from inbound and outbound lifecycle)
+     */
+    public static final int DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT = 1;
+
+    /**
+     * How many threads will process outbound PUBLISH messages
+     */
+    public static final int DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT = 1;
+
+    /**
+     * Used to handle the outbound queue processing layer, when running as a gateway this should
+     * scale with the number of expected connected clients
+     */
+    public static final int DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT = 1;
+
+    /**
+     * General purpose thead pool which should not be blocked by traffic
+     */
+    public static final int DEFAULT_PURPOSE_THREAD_COUNT = 1;
+
+
     private String contextId;
-    private int transportHandoffThreadCount = DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT;
+
+    private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
+    private int transportSendHandoffThreadCount = DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
+    private int generalPurposeThreadCount = DEFAULT_PURPOSE_THREAD_COUNT;
+
 
     private boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;
     private boolean sleepClearsRegistrations = DEFAULT_SLEEP_CLEARS_REGISTRATIONS;
@@ -216,21 +231,6 @@ public class MqttsnOptions {
      */
     public MqttsnOptions withRemoveDisconnectedSessionsSeconds(int removeDisconnectedSessionsSeconds){
         this.removeDisconnectedSessionsSeconds = removeDisconnectedSessionsSeconds;
-        return this;
-    }
-
-    /**
-     * How many threads should be used to process connected context message queues
-     * (should scale with the number of expected connected clients and the level
-     * of concurrency)
-     *
-     * @param queueProcessorThreadCount - Number of threads to use to service outbound queue processing
-     *
-     * @see {@link MqttsnOptions#DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT}
-     * @return this configuration
-     */
-    public MqttsnOptions withQueueProcessorThreadCount(int queueProcessorThreadCount){
-        this.queueProcessorThreadCount = queueProcessorThreadCount;
         return this;
     }
 
@@ -315,18 +315,64 @@ public class MqttsnOptions {
         return this;
     }
 
+
+    /**
+     * How many threads should be used to process connected context message queues
+     * (should scale with the number of expected connected clients and the level
+     * of concurrency)
+     *
+     * @param queueProcessorThreadCount - Number of threads to use to service outbound queue processing
+     *
+     * @see {@link MqttsnOptions#DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT}
+     * @return this configuration
+     */
+    public MqttsnOptions withQueueProcessorThreadCount(int queueProcessorThreadCount){
+        this.queueProcessorThreadCount = queueProcessorThreadCount;
+        return this;
+    }
+
     /**
      * When threadHandoffFromTransport is set to true, how many threads should be made available in the
      * managed pool to handle processing.
      *
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_HANDOFF_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT}
      *
-     * @param transportHandoffThreadCount - When threadHandoffFromTransport is set to true, how many threads should be made available in the
+     * @param transportProtocolHandoffThreadCount - When transportProtocolHandoffThreadCount is set to true, how many threads should be made available in the
      * managed pool to handle processing
      * @return this configuration
      */
-    public MqttsnOptions withTransportHandoffThreadCount(int transportHandoffThreadCount){
-        this.transportHandoffThreadCount = transportHandoffThreadCount;
+    public MqttsnOptions withTransportProtocolHandoffThreadCount(int transportProtocolHandoffThreadCount){
+        this.transportProtocolHandoffThreadCount = transportProtocolHandoffThreadCount;
+        return this;
+    }
+
+    /**
+     * When threadHandoffFromTransport is set to true, how many threads should be made available in the
+     * managed pool to handle processing.
+     *
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
+     *
+     * @param transportSendHandoffThreadCount - When transportSendHandoffThreadCount is set to true, how many threads should be made available in the
+     * managed pool to handle processing
+     * @return this configuration
+     */
+    public MqttsnOptions withTransportSendHandoffThreadCount(int transportSendHandoffThreadCount){
+        this.transportSendHandoffThreadCount = transportSendHandoffThreadCount;
+        return this;
+    }
+
+    /**
+     * When generalPurposeThreadCount is set to true, how many threads should be made available in the
+     * managed pool to handle processing.
+     *
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
+     *
+     * @param generalPurposeThreadCount - When generalPurposeThreadCount is set to true, how many threads should be made available in the
+     * managed pool to handle processing
+     * @return this configuration
+     */
+    public MqttsnOptions withGeneralPurposeThreadCount(int generalPurposeThreadCount){
+        this.generalPurposeThreadCount = generalPurposeThreadCount;
         return this;
     }
 
@@ -737,8 +783,16 @@ public class MqttsnOptions {
 
     public int getQueueProcessorThreadCount() { return queueProcessorThreadCount; }
 
-    public int getTransportHandoffThreadCount() {
-        return transportHandoffThreadCount;
+    public int getTransportProtocolHandoffThreadCount() {
+        return transportProtocolHandoffThreadCount;
+    }
+
+    public int getTransportSendHandoffThreadCount() {
+        return transportSendHandoffThreadCount;
+    }
+
+    public int getGeneralPurposeThreadCount() {
+        return generalPurposeThreadCount;
     }
 
     public int getCongestionWait() {

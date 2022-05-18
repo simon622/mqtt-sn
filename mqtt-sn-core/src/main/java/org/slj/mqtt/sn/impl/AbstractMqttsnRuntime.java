@@ -56,7 +56,8 @@ public abstract class AbstractMqttsnRuntime {
             = Collections.synchronizedList(new ArrayList<>());
 
     private volatile ThreadGroup threadGroup;
-    private ExecutorService executorService;
+    private ExecutorService generalUseExecutorService;
+    private List<ExecutorService> managedExecutorServices;
     private CountDownLatch startupLatch;
     private long startedAt;
     private final Object monitor = new Object();
@@ -68,7 +69,7 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void start(IMqttsnRuntimeRegistry reg, boolean join) throws MqttsnException {
         if(!running){
-            executorService = createExecutorService(reg.getOptions());
+            generalUseExecutorService = createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
             startedAt = System.currentTimeMillis();
             setupEnvironment(reg.getOptions());
             registry = reg;
@@ -104,20 +105,24 @@ public abstract class AbstractMqttsnRuntime {
             receivedListeners.clear();
             sentListeners.clear();
             sendFailureListeners.clear();
-            try {
-                if(!executorService.isShutdown()){
-                    executorService.shutdown();
-                }
-                executorService.awaitTermination(30, TimeUnit.SECONDS);
-            } catch(InterruptedException e){
-                Thread.currentThread().interrupt();
-            } finally {
-                if (!executorService.isTerminated()) {
-                    executorService.shutdownNow();
-                }
-            }
+            managedExecutorServices.stream().forEach(e -> closeManagedExecutorService(e));
             synchronized (monitor){
                 monitor.notifyAll();
+            }
+        }
+    }
+
+    private void closeManagedExecutorService(ExecutorService executorService){
+        try {
+            if(!executorService.isShutdown()){
+                executorService.shutdown();
+            }
+            executorService.awaitTermination(30, TimeUnit.SECONDS);
+        } catch(InterruptedException e){
+            Thread.currentThread().interrupt();
+        } finally {
+            if (!executorService.isTerminated()) {
+                executorService.shutdownNow();
             }
         }
     }
@@ -293,18 +298,28 @@ public abstract class AbstractMqttsnRuntime {
      * Hook method, create the intial async executor service which will be used for handoff from the
      * transport layer into the application
      */
-    protected ExecutorService createExecutorService(MqttsnOptions options){
-        int threadCount = options.getTransportHandoffThreadCount();
-        return Executors.newFixedThreadPool(threadCount, new ThreadFactory() {
+    public synchronized ExecutorService createManagedExecutorService(String name, int threadCount){
+
+        if(managedExecutorServices == null){
+            managedExecutorServices = new ArrayList<>();
+        }
+
+        ExecutorService service = Executors.newFixedThreadPool(threadCount, new ThreadFactory() {
             int count = 0;
             @Override
             public Thread newThread(Runnable r) {
-                Thread t = new Thread(getThreadGroup(), r, "mqtt-sn-transport-handoff-thread-" + ++count);
+                Thread t = new Thread(getThreadGroup(), r, name + ++count);
                 t.setPriority(Thread.MIN_PRIORITY + 1);
                 t.setDaemon(true);
                 return t;
             }
         });
+        managedExecutorServices.add(service);
+        return service;
+    }
+
+    public Future<?> async(ExecutorService executorService,  Runnable r){
+        return running ? executorService.submit(r) : null;
     }
 
     /**
@@ -312,7 +327,7 @@ public abstract class AbstractMqttsnRuntime {
      * transport operations or confirmations etc.
      */
     public Future<?> async(Runnable r){
-        return running ? executorService.submit(r) : null;
+        return async(generalUseExecutorService,  r);
     }
 
     /**

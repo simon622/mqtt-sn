@@ -57,7 +57,7 @@ public class LoopbackGatewayInteractiveMain {
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport()).
-                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0);
+                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
         });
     }

@@ -38,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 
 /**
@@ -48,10 +49,22 @@ import java.util.logging.Level;
 public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         extends MqttsnService<U> implements IMqttsnTransport {
 
+    protected ExecutorService protocolProcessor;
+    protected ExecutorService sendProcessor;
+
     public void connectionLost(INetworkContext context, Throwable t){
         if(registry != null && context != null){
             registry.getRuntime().handleConnectionLost(registry.getNetworkRegistry().getSessionContext(context), t);
         }
+    }
+
+    @Override
+    public void start(U runtime) throws MqttsnException {
+        super.start(runtime);
+        protocolProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-protocol-",
+                runtime.getOptions().getTransportProtocolHandoffThreadCount());
+        sendProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-outbound-publish-",
+                runtime.getOptions().getTransportSendHandoffThreadCount());
     }
 
     public boolean restartOnLoss(){
@@ -60,14 +73,19 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
 
     @Override
     public void receiveFromTransport(INetworkContext context, ByteBuffer buffer) {
-        getRegistry().getRuntime().async(
-                () -> receiveFromTransportInternal(context, buffer));
+        if(protocolProcessor != null){
+            getRegistry().getRuntime().async(protocolProcessor,
+                    () -> receiveFromTransportInternal(context, buffer));
+        }
     }
 
     @Override
     public void writeToTransport(INetworkContext context, IMqttsnMessage message) {
-        getRegistry().getRuntime().async(
-                () -> writeToTransportInternal(context, message, true));
+        if(sendProcessor != null && protocolProcessor != null){
+            getRegistry().getRuntime().async(getRegistry().getCodec().isPublish(message) ?
+                            sendProcessor : protocolProcessor,
+                    () -> writeToTransportInternal(context, message, true));
+        }
     }
 
     protected void receiveFromTransportInternal(INetworkContext networkContext, ByteBuffer buffer) {

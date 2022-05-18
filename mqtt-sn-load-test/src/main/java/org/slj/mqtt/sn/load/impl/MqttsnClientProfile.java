@@ -71,6 +71,7 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
                             withContextId(clientId).
                             withMaxMessagesInQueue(10000).
                             withMaxWait(20000).
+                            withMinFlushTime(5).
                             withPredefinedTopic("my/predefined/example/topic/1", 1);
                     AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
                             withTransport(new MqttsnUdpTransport(udpOptions)).

@@ -181,7 +181,7 @@ Use the following code to change the configuration on your runtime options.
 
 ### Benchmarking
 
-I have run a limited set of benchmarks using the [mqtt-sn-load-test] project. Benchmarking MQTT-SN is a little different than MQTT due to the constraint of only a single message
+I have run a limited set of benchmarks using the [mqtt-sn-load-test](/mqtt-sn-load-test) project. Benchmarking MQTT-SN is a little different than MQTT due to the constraint of only a single message
 being inflight for a given client at any point in time, therefore running some of the scenarios that are used to benchmark MQTT is not comparable since the message inflight rule provides
 an artificial bottleneck; further the round-trip latency is coupled to the latency of the backend broker. 
 

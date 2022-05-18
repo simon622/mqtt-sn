@@ -33,6 +33,7 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-gateway-connector-google-iotcore](/mqtt-sn-gateway-connector-google-iotcore) | Java 1.8, Maven | Optional | Connector to bind to a Google IoT Core Gateway using pkcs8 (RS256) 
 [mqtt-sn-gateway-connector-paho](/mqtt-sn-gateway-connector-paho) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
 [mqtt-sn-load-test](/mqtt-sn-load-test) | Java 1.8, Maven | Tools | Provides a runtime to spin up N clients and connect to a gateway instance and test concurrency and message throughput
+
 ### Quick Start Guide
 I have created simple interactive command lines for both client and gateway components to allow simple testing and use. The interactive client and gateway both use preconfigured default runtimes which
 can be used simple to evaluate the software. For more complex use, please refer to the source build and configuration.
@@ -54,7 +55,10 @@ java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 ![Gateway CLI](/images/gateway-cli.png)
 
-### Build Gateway
+### Build
+
+#### Gateway Build
+
 Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
 
 ```shell script
@@ -73,31 +77,29 @@ java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 You can then follow the on screen instructions to get a gateway up and running.
 
-### Build Client
+#### Client Build
+
+Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
+
 ```shell script
 mvn -f mqtt-sn-codec clean install
 mvn -f mqtt-sn-core clean install
 mvn -f mqtt-sn-client clean package
 ```
 
-See Example.java located in the project for example of using the client. You can see the configuration options for details
-on how to customise your installation.
+This will yield a file in your mqtt-sn-client/target directory that will be called mqtt-sn-gateway-<version>.jar. You can then start a broker
+from a command line using;
 
-Click into [mqtt-sn-client](/mqtt-sn-client) for more details on the client.
+```shell script
+java -jar <path-to>/mqtt-sn-client-VERSION.jar
+```
+You can then follow the on screen instructions to get a client up and running.
 
 ## Runtime Hooks (Gateway & Client)
 
-You can hook into the runtime and provide your own implementations of various components or bind in listeners to give you control or visibility onto aspects of the system.
+You can hook into the runtime and provide your own implementations of various components or bind in listeners to give you control or visibility onto different aspects of the system.
 
-#### Transport Implementations
-
-You can very easily plug transport implementations into the runtime by hooking the transport layer
-
-```java
-    MqttsnClientRuntimeRegistry.defaultConfiguration(options).
-        withTransport(new YourTransportLayerImplementation()).
-        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
-```
+### Listeners
 
 #### Publish Listeners
 
@@ -134,6 +136,16 @@ the wire.
                 System.err.println(String.format("message [%s]", message));
             }
         }).
+        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+```
+
+### Transport Implementations
+
+You can very easily plug transport implementations into the runtime by hooking the transport layer
+
+```java
+    MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+        withTransport(new YourTransportLayerImplementation()).
         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 ```
 

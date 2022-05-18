@@ -122,7 +122,15 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                     authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
                 } else {
                     //-- need to check the context from the network matches the supplied clientId in case of address reuse..
-
+                    IMqttsnContext mqttsnContext = registry.getNetworkRegistry().getSessionContext(networkContext);
+                    if(!mqttsnContext.getId().equals(clientId)){
+                        //-- the connecting device is presenting a different clientId to the previous one held against the
+                        //-- network address - we must ensure they dont interfere..
+                        logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] invalidate, and re-auth",
+                                networkContext.getNetworkAddress(), mqttsnContext, clientId));
+                        getRegistry().getRuntime().handleConnectionLost(mqttsnContext, null);
+                        authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
+                    }
                 }
             } else {
                 //-- sort the case where publish -1 can be recieved without an authd context from the

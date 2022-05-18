@@ -225,7 +225,7 @@ public interface IMqttsnMessageFactory {
      * @param topicAlias: the value that shall be used as topic id in the PUBLISH messages;
      * @param returnCode
      */
-    IMqttsnMessage createRegack(int topicAlias, int returnCode)
+    IMqttsnMessage createRegack(int topicAliasTypeId, int topicAlias, int returnCode)
             throws MqttsnCodecException;
 
 

@@ -192,14 +192,14 @@ public class Mqttsn1_2WireTests {
     @Test
     public void testMqttsnRegack() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createRegack(_alias, MqttsnConstants.RETURN_CODE_ACCEPTED);
+        IMqttsnMessage message = factory.createRegack(MqttsnConstants.TOPIC_NORMAL, _alias, MqttsnConstants.RETURN_CODE_ACCEPTED);
         testWireMessage(message);
     }
 
     @Test
     public void testMqttsnRegackError() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createRegack(_alias, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
+        IMqttsnMessage message = factory.createRegack(MqttsnConstants.TOPIC_NORMAL, _alias, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         testWireMessage(message);
     }
 

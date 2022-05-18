@@ -122,7 +122,7 @@ public class MqttsnRegack_V2_0 extends AbstractMqttsnMessage implements IMqttsnM
     public String toString() {
         final StringBuilder sb = new StringBuilder("MqttsnRegack{");
         sb.append("topicId=").append(topicId);
-        sb.append("topicIdType=").append(topicIdType);
+        sb.append(", topicIdType=").append(topicIdType);
         sb.append(", id=").append(id);
         if(returnCode != 0){
             sb.append(", errorReturnCode=").append(returnCode);

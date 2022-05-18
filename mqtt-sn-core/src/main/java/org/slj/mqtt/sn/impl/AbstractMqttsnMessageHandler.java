@@ -362,7 +362,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                 break;
             case MqttsnConstants.REGISTER:
                 if(errord){
-                    response = getRegistry().getMessageFactory().createRegack(0,
+                    response = getRegistry().getMessageFactory().createRegack(MqttsnConstants.TOPIC_NORMAL, 0,
                             MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
                 } else {
                     response = handleRegister(context, message);
@@ -588,29 +588,35 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     protected IMqttsnMessage handleRegister(IMqttsnContext context, IMqttsnMessage message)
             throws MqttsnException, MqttsnCodecException {
         MqttsnRegister register = (MqttsnRegister) message;
-        return registry.getMessageFactory().createRegack(register.getTopicId(), MqttsnConstants.RETURN_CODE_ACCEPTED);
+        return registry.getMessageFactory().createRegack(MqttsnConstants.TOPIC_NORMAL, register.getTopicId(), MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
-    protected void handleRegack(IMqttsnContext context, IMqttsnMessage register, IMqttsnMessage msg) throws MqttsnException {
+    protected void handleRegack(IMqttsnContext context, IMqttsnMessage register, IMqttsnMessage response) throws MqttsnException {
         String topicPath = ((MqttsnRegister)register).getTopicName();
         int topicId = 0;
+        int topicIdType = MqttsnConstants.TOPIC_NORMAL;
         boolean isError = false;
         if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
-            MqttsnRegack regack = (MqttsnRegack) msg;
+            MqttsnRegack regack = (MqttsnRegack) response;
             topicId = regack.getTopicId();
             isError = regack.isErrorMessage();
-
         }
         else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
-            MqttsnRegack_V2_0 regack = (MqttsnRegack_V2_0) msg;
+            MqttsnRegack_V2_0 regack = (MqttsnRegack_V2_0) response;
             topicId = regack.getTopicId();
             isError = regack.isErrorMessage();
+            topicIdType = regack.getTopicIdType();
         }
 
         if(!isError){
-            registry.getTopicRegistry().register(context, topicPath, topicId);
+            if(topicIdType == MqttsnConstants.TOPIC_PREDEFINED){
+                getRegistry().getOptions().getPredefinedTopics().put(topicPath, topicId);
+                logger.log(Level.WARNING, String.format("received PREDEFINED regack response (v2), registering [%s]; Msg=%s", context, response));
+            } else if(topicIdType == MqttsnConstants.TOPIC_NORMAL){
+                registry.getTopicRegistry().register(context, topicPath, topicId);
+            }
         } else {
-            logger.log(Level.WARNING, String.format("received error regack response [%s]; Msg=%s", context, msg));
+            logger.log(Level.WARNING, String.format("received error regack response [%s]; Msg=%s", context, response));
         }
     }
 

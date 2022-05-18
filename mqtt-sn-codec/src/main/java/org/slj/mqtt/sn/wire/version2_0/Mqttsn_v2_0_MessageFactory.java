@@ -93,12 +93,10 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createRegack(int topicAlias, int returnCode) throws MqttsnCodecException {
-
-        //TODO
+    public IMqttsnMessage createRegack(int topicAliasId, int topicAlias, int returnCode) throws MqttsnCodecException {
 
         MqttsnRegack_V2_0 msg = new MqttsnRegack_V2_0();
-        msg.setTopicIdType(MqttsnConstants.TOPIC_NORMAL);
+        msg.setTopicIdType(topicAliasId);
         msg.setTopicId(topicAlias);
         msg.setReturnCode(returnCode);
         msg.validate();

@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.client.impl;
 
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.client.spi.IMqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageHandler;

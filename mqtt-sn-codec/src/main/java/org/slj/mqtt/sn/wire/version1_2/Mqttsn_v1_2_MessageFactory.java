@@ -193,7 +193,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createRegack(int topicAlias, int returnCode) throws MqttsnCodecException {
+    public IMqttsnMessage createRegack(int topicAliasTypeId, int topicAlias, int returnCode) throws MqttsnCodecException {
 
         MqttsnRegack msg = new MqttsnRegack();
         msg.setTopicId(topicAlias);

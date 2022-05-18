@@ -348,12 +348,16 @@ public class MqttsnGatewayMessageHandler
         if(!MqttsnSpecificationValidator.validTopicPath(register.getTopicName())){
             logger.log(Level.WARNING,
                     String.format("invalid topic [%s] received during register, reply with error code", register.getTopicName()));
-            return registry.getMessageFactory().createRegack(0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
+            return registry.getMessageFactory().createRegack(MqttsnConstants.TOPIC_NORMAL, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         } else {
             IMqttsnSessionState state = getSessionState(context);
             RegisterResult result = registry.getGatewaySessionService().register(state, register.getTopicName());
             processSessionResult(result);
-            return registry.getMessageFactory().createRegack(result.getTopicInfo().getTopicId(), MqttsnConstants.RETURN_CODE_ACCEPTED);
+
+            //-- the codec will either support the return topicTypeId or not so pass it to the interface
+            return registry.getMessageFactory().createRegack(
+                    result.getTopicInfo().getType().getFlag(), result.getTopicInfo().getTopicId(),
+                    MqttsnConstants.RETURN_CODE_ACCEPTED);
         }
     }
 

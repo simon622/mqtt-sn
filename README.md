@@ -186,7 +186,7 @@ being inflight for a given client at any point in time, therefore running some o
 an artificial bottleneck; further the round-trip latency is coupled to the latency of the backend broker. 
 
 In a simple load-test environment on a single gateway instance running in loopback mode (no backend broker)[^1] on a local[^2] instance with 10,000 client connections I was able 
-to achieve (after a round of performance tuning) over 400,000 [^2] outbound publish messages being delivered per second (at the same time as 5,500 inbound publish operations). See the grab below for results.
+to achieve (after a round of performance tuning) over 400,000 [^3] outbound publish messages being delivered per second (at the same time as 5,500 inbound publish operations). See the grab below for results.
 
 This was an informal load test, and I would encourage anyone who would like to take this further to share their results.
 

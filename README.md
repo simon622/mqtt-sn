@@ -185,10 +185,13 @@ I have run a limited set of benchmarks using the [mqtt-sn-load-test] project. Be
 being inflight for a given client at any point in time, therefore running some of the scenarios that are used to benchmark MQTT is not comparable since the message inflight rule provides
 an artificial bottleneck; further the round-trip latency is coupled to the latency of the backend broker. 
 
-In a simple load-test environment on a single gateway instance running in loopback mode (no backend broker) on an AWS EC2 t2.medium instance with 10,000 client connections I was able 
-to achieve (after a round of performance tuning) over 400,000 outbound publish messages being delivered per second (at the same time as 5,500 inbound publish operations). See the grab below for results.
+In a simple load-test environment on a single gateway instance running in loopback mode (no backend broker)[^1] on an AWS EC2 t2.medium instance with 10,000 client connections I was able 
+to achieve (after a round of performance tuning) over 400,000 [^2] outbound publish messages being delivered per second (at the same time as 5,500 inbound publish operations). See the grab below for results.
 
 This was an informal load test, and I would encourage anyone who would like to take this further to share their results.
+
+[^1]: Setting the gateway into loopback mode will short-circuit delivery out to a broker on the backand and treat the inbound messages as if they came back from subscriptions on the broker (essentially acting like a broker).
+[^2]: Achieved using a tuned configuration (120 delivery threads, 60 protocol threads, 2 general purpose threads, 2 queue processing threads) to match the expectation of the test profile (that is a large degree of message expansion cause by many clients subscribing to a single topic).
 
 ![Load Test Results](/images/peak-message-count.png)
 

@@ -103,7 +103,9 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                         context.setReceivePort(socketIn.getLocalPort());
                         receiveDatagramInternal(context, p);
                     }
-
+                }
+                catch(SocketException e){
+                    logger.log(Level.WARNING, "socket error, i/o channels closed;", e);
                 }
                 catch(InterruptedException e){
                     Thread.currentThread().interrupt();

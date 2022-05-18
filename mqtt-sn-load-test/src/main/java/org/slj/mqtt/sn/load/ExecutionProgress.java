@@ -92,6 +92,10 @@ public class ExecutionProgress {
         markFinished();
     }
 
+    public ExecutionInput getInput() {
+        return input;
+    }
+
     public Date getCreated() {
         return new Date(created);
     }

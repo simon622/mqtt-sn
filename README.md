@@ -4,17 +4,25 @@ MQTT-SN is an optimized version of the MQTT specification designed for use on sm
 
 View the intial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf) specification written by **Andy Stanford-Clark** and **Hong Linh Truong** from **IBM**.
 
+## About
+
 ### MQTT-SN Evolved
 As of late 2020, the MQTT technical committee at OASIS (via a sub-committee led by **Ian Craggs** ([Ian's Blog](https://modelbasedtesting.co.uk))) are working on standardisation and changes to bring MQTT-SN more in line with MQTT version 5. 
 This is an ongoing piece of work which we hope to formalise and conclude in 2022.
 
-### Project Goals
-Notable open-source works already exists for various MQTT and MQTT-SN components, the main ones of note are listed below; many fall under the eclipse PAHO project. The work by **Ian Craggs** et al on the MQTT-SN Java gateway set out the wire transport implementation and a transparent gateway. That is a gateway which connects a client to a broker side socket and mediates the access. The goal of this project and its work are that it should provide an open-source **aggregating gateway** implementation to prove out **version 2** of the specification.
-
 ### MQTT / MQTT-SN differences
 The SN variant of MQTT is an expression of the protocol using smaller messages, and an optimised message lifecycle. All the features of a core MQTT broker are available to the SN clients, with the gateway implementation hiding the complexities of the protocol using various multiplexing techniques. An SN client has no need of a TCP/IP connection to a broker, and can choose to any transport layer; for example UDP, BLE, Zigbee etc.
 
-### Project modules
+### Project Goals
+Notable open-source works already exists for various MQTT and MQTT-SN components, the main ones of note are listed below; many fall under the eclipse PAHO project. The work by **Ian Craggs** et al on the MQTT-SN Java gateway set out the wire transport implementation and a transparent gateway. That is a gateway which connects a client to a broker side socket and mediates the access. The goal of this project and its work are that it should provide an open-source **aggregating gateway** implementation to prove out **version 2** of the specification.
+
+### Gateway system diagram
+The system was built to be pluggable, to allow implementations to provide their own functionality and implementations where needed. Some aspects of the system are mandatory, others (for example AAA, Backend broker implementation etc) can be plugged in as required by a deployment.
+![System Overview](/images/MQTT-SN-Aggregating-Gateway-Sys.png)
+
+## Project
+
+### Modules
 Module | Language & Build | Dependencies | Description
 ------------ | ------------- | ------------- | -------------
 [mqtt-sn-codec](/mqtt-sn-codec) | Java 1.8, Maven | **Mandatory** | Pure java message parsers and writers. Includes interfaces and abstractions to support future versions of the protocol.
@@ -24,12 +32,8 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-gateway-connector-aws-iotcore](/mqtt-sn-gateway-connector-aws-iotcore) | Java 1.8, Maven | Optional | Connector to bind into AWS IoT Core using X.509 certs
 [mqtt-sn-gateway-connector-google-iotcore](/mqtt-sn-gateway-connector-google-iotcore) | Java 1.8, Maven | Optional | Connector to bind to a Google IoT Core Gateway using pkcs8 (RS256) 
 [mqtt-sn-gateway-connector-paho](/mqtt-sn-gateway-connector-paho) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
-
-### Gateway system diagram
-The system was built to be pluggable, to allow implementations to provide their own functionality and implementations where needed. Some aspects of the system are mandatory, others (for example AAA, Backend broker implementation etc) can be plugged in as required by a deployment.
-![System Overview](/images/MQTT-SN-Aggregating-Gateway-Sys.png)
-
-### Quick start
+[mqtt-sn-load-test](/mqtt-sn-load-test) | Java 1.8, Maven | Tools | Provides a runtime to spin up N clients and connect to a gateway instance and test concurrency and message throughput
+### Quick Start Guide
 I have created simple interactive command lines for both client and gateway components to allow simple testing and use. The interactive client and gateway both use preconfigured default runtimes which
 can be used simple to evaluate the software. For more complex use, please refer to the source build and configuration.
 
@@ -50,8 +54,7 @@ java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 ![Gateway CLI](/images/gateway-cli.png)
 
-
-### From source
+### Build Gateway
 Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
 
 ```shell script
@@ -70,14 +73,19 @@ java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 You can then follow the on screen instructions to get a gateway up and running.
 
-### Client
+### Build Client
+```shell script
+mvn -f mqtt-sn-codec clean install
+mvn -f mqtt-sn-core clean install
+mvn -f mqtt-sn-client clean package
+```
 
-Ensure you have the requisite projects mounted per the table above. You can then run the main method for in the Example.java located in the project. You can see the configuration options for details
+See Example.java located in the project for example of using the client. You can see the configuration options for details
 on how to customise your installation.
 
 Click into [mqtt-sn-client](/mqtt-sn-client) for more details on the client.
 
-### Runtime Hooks
+## Runtime Hooks (Gateway & Client)
 
 You can hook into the runtime and provide your own implementations of various components or bind in listeners to give you control or visibility onto aspects of the system.
 
@@ -129,7 +137,6 @@ the wire.
         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 ```
 
-
 ### Message Integrity
 
 You can optionally configure the gateway and client to require and produce message verification on either all packets or payload data. If enabled you
@@ -160,11 +167,18 @@ Use the following code to change the configuration on your runtime options.
     options.withSecurityOptions(securityOptions);
 ```
 
+### Benchmarking
+
+I have run a limited set of benchmarks using the [mqtt-sn-load-test] project. Benchmarking MQTT-SN is a little different than MQTT due to the constraint of only a single message
+being inflight for a given client at any point in time, therefore running some of the scenarios that are used to benchmark MQTT is not comparable since the message inflight rule provides
+an artificial bottleneck; and the roundtrip latency is coupled to the latency of the backend broker. That being said, I have connected 10,000 devices to a single gateway instance in loopback mode (no broker) and maintained a steady state delivering upwards of 34,000 messages per second (out to the devices). I will endeavour to
+formalise this benchmark when time allows and publish the results.
+
 ### Clustering
 
 The gateway runtime can be clustered. During connection establishment; the clustering service is notified of the connecting device. At this point, the implementation
 is responsible for synchronising the state of previous sessions onto the local gateway. For more information about clustering support please contact me to discuss the
-available options as the environment onto which the gateway is deployed impacts how clustering is achieved.  
+available options as the environment onto which the gateway is deployed impacts how clustering is achieved.
 
 ### Configuration
 
@@ -192,8 +206,7 @@ discoveryTime  | 3600 | int | The time (in seconds) a client will wait for a bro
 pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
 maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
 
-
-### Version 2.0
+## Version 2.0
 There were a number of changes considered for the standardisation process into V2.0. It is also worth noting a number of issues were discussed but NOT included, a breakdown of these can be found in the OASIS ticket system. My intention is to support both version 1.2 and version 2.0 on both the gateway and the client side. Below lists the changes between versions and the status of each change relating to its function in this repository.
 
 #### Changelog ####

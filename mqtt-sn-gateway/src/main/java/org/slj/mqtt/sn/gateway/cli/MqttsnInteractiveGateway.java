@@ -218,6 +218,13 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         super.stats();
 
+        if(((MqttsnGatewayOptions)options).isRealtimeMessageCounters()){
+            message(String.format("Peak Send Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getPeakMessageSentPerSecond()));
+            message(String.format("Peak Receive Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getPeakMessageReceivePerSecond()));
+            message(String.format("Current Send Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getCurrentMessageSentPerSecond()));
+            message(String.format("Current Receive Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getCurrentMessageReceivePerSecond()));
+        }
+
         message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).getExpansionCount()));
         message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingGateway)gatewayRuntimeRegistry.getBackendService()).getLastPublishAttempt()));
         message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBackendService().getQueuedCount()));
@@ -407,12 +414,13 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected MqttsnOptions createOptions() {
         return new MqttsnGatewayOptions().
+                withRealtimeMessageCounters(true).
                 withMaxConnectedClients(10000).
                 withGatewayId(101).
                 withContextId(clientId).
                 withMaxMessagesInQueue(10).
                 withRemoveDisconnectedSessionsSeconds(60 * 60).
-                withTransportHandoffThreadCount(40).
+                withTransportHandoffThreadCount(120).
                 withQueueProcessorThreadCount(2).
                 withSleepClearsRegistrations(false);
     }

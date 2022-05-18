@@ -150,7 +150,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     public IMqttsnSessionState getSessionState(IMqttsnContext context, boolean createIfNotExists) {
         IMqttsnSessionState state = sessionLookup.get(context);
         if(state == null && createIfNotExists){
-            synchronized (this){
+            synchronized (sessionLookup){
                 if((state = sessionLookup.get(context)) == null){
                     state = new MqttsnSessionState(context, MqttsnClientState.DISCONNECTED);
                     sessionLookup.put(context, state);
@@ -187,7 +187,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         if(result.isError()){
             //-- connect was not successful ensure we
             //-- do not hold a reference to any session (but leave network to enable the CONNACK to go back - clean up the network after the response)
-            clear(state.getContext(), false);
+            clear(state.getContext(), true, false);
         }
         logger.log(result.isError() ? Level.WARNING : Level.INFO, String.format("handled connection request for [%s] with cleanSession [%s] -> [%s], [%s]", state.getContext(), cleanSession, result.getStatus(), result.getMessage()));
         return result;
@@ -385,16 +385,18 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     @Override
     public void clear(IMqttsnContext context) {
-        clear(context, true);
+        clear(context, true, true);
     }
 
     @Override
-    public void clear(IMqttsnContext context, boolean networkLayer) {
-        logger.log(Level.INFO, String.format(String.format("removing session reference [%s], networking ? [%s]", context, networkLayer)));
-        sessionLookup.remove(context);
+    public void clear(IMqttsnContext context, boolean cleanSession, boolean networkLayer) {
+        logger.log(Level.WARNING, String.format(String.format("removing session reference [%s], networking ? [%s]", context, networkLayer)));
+        synchronized (sessionLookup){
+            sessionLookup.remove(context);
+        }
         try {
             if(networkLayer) getRegistry().getNetworkRegistry().removeExistingClientId(context.getId());
-            cleanSession(context, true);
+            if(cleanSession) cleanSession(context, true);
         } catch(MqttsnException e){
             logger.log(Level.SEVERE, String.format(String.format("error clearing up session [%s]", context)), e);
         }

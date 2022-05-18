@@ -29,8 +29,6 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.load.impl.ConnectPublishWaitProfile;
-import org.slj.mqtt.sn.load.runner.ThreadPerProfileLoadTestRunner;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
@@ -39,25 +37,24 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.net.UnknownHostException;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class OpenConnectionTestMain {
 
     public static void main(String[] args) {
-        try {
-            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
-            int port = 2442;
-            String host = "localhost";
-            for(int i = 0; i < 1000; i++){
-                MqttsnClient client = createClient(host, port);
-                client.connect(60, true);
-                client.subscribe("foo", 2);
-                client.stop();
-                Thread.sleep(10);
-            }
 
-        } catch(Exception e){
-            e.printStackTrace();
+        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
+        int port = 2442;
+        String host = "localhost";
+        for(int i = 0; i < 500; i++){
+            try {
+                MqttsnClient client = createClient(host, port);
+                client.connect(2400, true);
+                client.subscribe("test", 2);
+                Thread.sleep(10);
+                client.stop();
+            } catch(Exception e){
+                e.printStackTrace();
+            }
         }
     }
 

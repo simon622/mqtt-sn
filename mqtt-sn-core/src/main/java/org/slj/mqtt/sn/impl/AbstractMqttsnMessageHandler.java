@@ -248,7 +248,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                 } catch(MqttsnException e){
                     errord = true;
                     logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] state service errord, allow message lifecycle to handle [%s] -> [%s]",
-                            registry.getOptions().getContextId(), context, e.getMessage()));
+                            registry.getOptions().getContextId(), context.getId(), message, e.getMessage()));
                 }
             }
 

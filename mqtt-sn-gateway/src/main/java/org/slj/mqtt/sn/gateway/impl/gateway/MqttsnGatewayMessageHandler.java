@@ -172,6 +172,13 @@ public class MqttsnGatewayMessageHandler
 
         String assignedClientId = context.isAssignedClientId() ? context.getId() : null;
         IMqttsnSessionState state = getSessionState(context, true);
+
+        if(clientId != null && !state.getContext().getId().equals(clientId)){
+            logger.log(Level.WARNING, String.format("client ID from network context does not match clientId (%s) !!!!! [%s] -> [%s]",
+                    clientId, state, context));
+            registry.getGatewaySessionService().clear(context, false, false);
+        }
+
         ConnectResult result = registry.getGatewaySessionService().connect(state, connect);
         processSessionResult(result);
         if(result.isError()){

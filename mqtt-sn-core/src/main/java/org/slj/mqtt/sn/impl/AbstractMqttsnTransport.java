@@ -26,6 +26,8 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IMqttsnSessionState;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.*;
@@ -118,6 +120,9 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                 }
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
                     authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
+                } else {
+                    //-- need to check the context from the network matches the supplied clientId in case of address reuse..
+
                 }
             } else {
                 //-- sort the case where publish -1 can be recieved without an authd context from the
@@ -132,7 +137,8 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
 
             if (authd && registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
                 notifyTrafficReceived(networkContext, data, message);
-                registry.getMessageHandler().receiveMessage(registry.getNetworkRegistry().getSessionContext(networkContext), message);
+                IMqttsnContext context = registry.getNetworkRegistry().getSessionContext(networkContext);
+                registry.getMessageHandler().receiveMessage(context, message);
             } else {
                 logger.log(Level.WARNING, "auth could not be established, send disconnect that is not processed by application");
                 writeToTransportInternal(networkContext,

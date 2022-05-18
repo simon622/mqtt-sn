@@ -61,7 +61,7 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
 
         try {
             Queue<QueuedPublishMessage> queue = getQueue(context);
-            if(size(context) >= getMaxQueueSize()){
+            if(queue.size() >= getMaxQueueSize()){
                 logger.log(Level.WARNING, String.format("max queue size reached for client [%s] >= [%s]", context, queue.size()));
                 throw new MqttsnQueueAcceptException("max queue size reached for client");
             }
@@ -132,7 +132,7 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
     protected Queue<QueuedPublishMessage> getQueue(IMqttsnContext context){
         Queue<QueuedPublishMessage> queue = queues.get(context);
         if(queue == null){
-            synchronized (this){
+            synchronized (queues){
                 if((queue = queues.get(context)) == null){
                     //-- queued message uses date for natural sort
                     queue = new PriorityBlockingQueue<>();

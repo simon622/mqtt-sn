@@ -52,6 +52,7 @@ public class LoopbackGatewayInteractiveMain {
                 options.withSecurityOptions(securityOptions);
 */
 
+                options.withMaxMessagesInQueue(10000);
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).

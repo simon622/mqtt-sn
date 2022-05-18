@@ -47,7 +47,7 @@ public interface IMqttsnGatewaySessionService extends IMqttsnRegistry<IMqttsnGat
 
     void updateLastSeen(IMqttsnSessionState state);
 
-    void clear(IMqttsnContext context, boolean networkLayer) throws MqttsnException;
+    void clear(IMqttsnContext context, boolean cleanSession, boolean networkLayer) throws MqttsnException;
 
     void cleanSession(IMqttsnContext state, boolean deepClean) throws MqttsnException;
 

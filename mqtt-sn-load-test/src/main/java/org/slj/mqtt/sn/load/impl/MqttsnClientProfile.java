@@ -69,7 +69,7 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
                     MqttsnOptions options = new MqttsnOptions().
                             withNetworkAddressEntry("gatewayId", NetworkAddress.from(port, host)).
                             withContextId(clientId).
-                            withMinFlushTime(200).
+                            withMaxMessagesInQueue(10000).
                             withMaxWait(20000).
                             withPredefinedTopic("my/predefined/example/topic/1", 1);
                     AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
@@ -136,10 +136,18 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
         });
     }
 
-    static class ClientInput extends AbstractExecutionInput {
+    public ClientInput getClientInput(){
+        return (ClientInput) getProgress().getInput();
+    }
+
+    public static class ClientInput extends AbstractExecutionInput {
 
         public String host;
         public int port;
+
+        public String topic;
+        public int qos;
+        public int messageCount;
 
         public ClientInput(long maxWait, TimeUnit maxWaitUnit) {
             super(maxWait, maxWaitUnit);

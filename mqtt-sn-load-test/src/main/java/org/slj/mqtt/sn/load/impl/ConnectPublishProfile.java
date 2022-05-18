@@ -32,18 +32,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ConnectPublishWaitProfile extends MqttsnClientProfile {
+public class ConnectPublishProfile extends MqttsnClientProfile {
 
-    static Logger logger = Logger.getLogger(ConnectPublishWaitProfile.class.getName());
+    static Logger logger = Logger.getLogger(ConnectPublishProfile.class.getName());
     static final int KEEP_ALIVE = 240;
-    private int messageCount;
 
     @Override
     public ExecutionProgress initializeProfile(ExecutionInput input) {
 
         super.initializeProfile(input);
-        this.messageCount = ((PublishAndWaitClientInput)input).messageCount;
-
         ExecutionProgress progress = new ExecutionProgress(input);
         return progress;
     }
@@ -53,47 +50,26 @@ public class ConnectPublishWaitProfile extends MqttsnClientProfile {
 
         try {
             MqttsnClient client = createOrGetClient();
-            progress.setTotalWork(1 + 1 + 1 +(messageCount * 2));
+            progress.setTotalWork(1 + getClientInput().messageCount);
             bindReceiveLatch();
             bindSendLatch();
             bindFailedLatch();
 
-            String topicPath = clientId;
+            String topicPath = getClientInput().topic;
             client.connect(KEEP_ALIVE, true);
             progress.incrementProgress(1);
 
-            //subscribe
-            client.subscribe("foo", 2);
-            progress.incrementProgress(1);
+            String message = "%s";
 
-            client.subscribe(topicPath, 2);
-            progress.incrementProgress(1);
-
-            String prefix = clientId + " msg ";
-            for (int i = 0; i < messageCount; i++){
-                client.publish(topicPath, 1, false, (prefix + (i + 1)).getBytes());
+            for (int i = 0; i < getClientInput().messageCount; i++){
+                client.publish(topicPath, Math.min(2, Math.max(getClientInput().qos, 0)), false,
+                        String.format(message, System.currentTimeMillis()).getBytes());
             }
-
-            client.registerPublishReceivedListener((context, topicPath1, qos, retained, data, message) -> {
-                if(!new String(data).startsWith(prefix)){
-                    progress.setError(new Exception("message mismatch detected!!"));
-                }
-            });
-
             progress.waitForCompletion();
 
         } catch(Exception e){
             logger.log(Level.SEVERE, "error detected", e);
             progress.setError(e);
-        }
-    }
-
-    public static class PublishAndWaitClientInput extends ClientInput {
-
-        public int messageCount;
-
-        public PublishAndWaitClientInput(long maxWait, TimeUnit maxWaitUnit) {
-            super(maxWait, maxWaitUnit);
         }
     }
 }

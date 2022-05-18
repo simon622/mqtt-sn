@@ -24,27 +24,28 @@
 
 package org.slj.mqtt.sn.load.tests;
 
-import org.slj.mqtt.sn.load.impl.ConnectPublishWaitProfile;
+import org.slj.mqtt.sn.load.impl.ConnectSubscribeWaitProfile;
+import org.slj.mqtt.sn.load.impl.MqttsnClientProfile;
 import org.slj.mqtt.sn.load.runner.ThreadPerProfileLoadTestRunner;
-import org.slj.mqtt.sn.load.runner.ThreadPoolLoadTestRunner;
 
 import java.util.concurrent.TimeUnit;
 
-public class PublishAndWaitTestMain {
+public class SubscribeAndWaitTestMain {
 
     public static void main(String[] args) {
         try {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishWaitProfile.class, 1000, 15);
+                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeWaitProfile.class, 250, 20);
 
-//            ThreadPoolLoadTestRunner runner =
-//                    new ThreadPoolLoadTestRunner(ConnectPublishWaitProfile.class, 1000, 20);
-            ConnectPublishWaitProfile.PublishAndWaitClientInput input =
-                    new ConnectPublishWaitProfile.PublishAndWaitClientInput(60, TimeUnit.SECONDS);
+            MqttsnClientProfile.ClientInput input =
+                    new MqttsnClientProfile.ClientInput(2400, TimeUnit.SECONDS);
+
             input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 10;
+            input.messageCount = 100000;
+            input.topic = "test";
+            input.qos = 2;
             runner.start(input);
 
         } catch(Exception e){

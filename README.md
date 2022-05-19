@@ -36,7 +36,7 @@ Module | Language & Build | Dependencies | Description
 
 ### Quick Start Guide
 I have created simple interactive command lines for both client and gateway components to allow simple testing and use. The interactive client and gateway both use preconfigured default runtimes which
-can be used simple to evaluate the software. For more complex use, please refer to the source build and configuration.
+can be used to evaluate / test the software. For more complex use, please refer to the source build and configuration.
 
 #### Client CLI
 The latest interactive client build can be obtained from the releases section. Download the mqtt-sn-client-VERSION.jar and run locally using;

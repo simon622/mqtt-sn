@@ -4,13 +4,15 @@ MQTT-SN is an optimized version of the MQTT specification designed for use on sm
 
 View the intial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf) specification written by **Andy Stanford-Clark** and **Hong Linh Truong** from **IBM**.
 
-# Table of Contents
+## Table of Contents
 1. [About](#about) 
 2. [Quick Start](#quick-start-guide)
 3. [Build](#build)
 4. [Runtime Hooks](#runtime-hooks-gateway--client)
 5. [Version 2](#version-20)
 6. [Configuration](#configuration)
+7. [Cloud Platform Deployments](#cloud-platform-deployments)
+8. [Related People & Projects](#related-people--projects)
 
 ## About
 
@@ -50,6 +52,8 @@ java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ![Gateway CLI](/images/gateway-cli.png)
 
 ## Build
+
+Presently I have used the maven build system to combine the modules in with their dependencies. All builds have been tested and can be shaded to create a simple release jar package. 
 
 ### Modules
 Module | Language & Build | Dependencies | Description
@@ -289,6 +293,10 @@ minFlushTime  | 25 | int | Minimum time in milliseconds between last interaction
 discoveryTime  | 3600 | int | The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
 pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
 maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
+
+## Cloud Platform Deployments
+It has become more common to want to deploy a gateway and combine it with IoT cloud support. There are a number of ways of achieving this, utilising the cloud SDKS for which examples are provided. Deployment of the gateway on the edge is normal; however it has also become more common to deploy a gateway as a cloud service in its own right. 
+There are a number of factors that need to be considered in this deployment scenario; not-least security and scaling. If you would like to cover this off in more detail, please ping me to discuss. 
 
 ## Related people & projects
 Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments. If you would like me to include your repository below, please issue a Pull Request and add it.

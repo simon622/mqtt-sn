@@ -8,7 +8,7 @@ View the intial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/uploads
 1. [About](#about) 
 2. [Quick Start](#quick-start-guide)
 3. [Build](#build)
-4. [Runtime Hooks](#runtime-hooks-gateway--client)
+4. [Runtime](#runtime-gateway--client)
 5. [Version 2](#version-20)
 6. [Configuration](#configuration)
 7. [Cloud Platform Deployments](#cloud-platform-deployments)
@@ -105,7 +105,7 @@ java -jar <path-to>/mqtt-sn-client-VERSION.jar
 ```
 You can then follow the on screen instructions to get a client up and running.
 
-## Runtime Hooks (Gateway & Client)
+## Runtime (Gateway & Client)
 
 You can hook into the runtime and provide your own implementations of various components or bind in listeners to give you control or visibility onto different aspects of the system.
 

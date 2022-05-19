@@ -44,8 +44,8 @@ public class PublishOnlyTestMain {
 
             input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 100;
-            input.qos = 1;
+            input.messageCount = 20;
+            input.qos = 0;
             input.topic = "test";
 
             runner.start(input);

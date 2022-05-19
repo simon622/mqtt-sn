@@ -267,20 +267,20 @@ Ref | Title | Description | Change Type | Implemented
 585 | Add **sessionPresent** indicator to CONNACK | The gateway should be able to communicate back to the client whether a session was held locally during non cleanStart | Functional & Packet | :heavy_check_mark:
 
 #### Packet Types Affected By v2.0 Changes ####
-Packet Name | Change Type
------------- | -------------
-AUTH | NEW
-CONNACK | MODIFIED
-CONNECT | MODIFIED
-PINGREQ | MODIFIED
-PINGRESP | MODIFIED
-PUBACK | MODIFIED
-PUBLISH | MODIFIED
-REGACK | MODIFIED
-SUBACK | MODIFIED
-SUBSCRIBE | MODIFIED
-UNSUBSCRIBE | MODIFIED
-UNSUBACK | MODIFIED
+Packet Name | Change Type | Updated In Codec?
+------------ | ------------- | -------------
+AUTH | NEW | :heavy_check_mark:
+CONNACK | MODIFIED | :heavy_check_mark:
+CONNECT | MODIFIED | :heavy_check_mark:
+PINGREQ | MODIFIED | :heavy_check_mark:
+PINGRESP | MODIFIED | :heavy_check_mark:
+PUBACK | MODIFIED | :heavy_check_mark:
+PUBLISH | MODIFIED | :heavy_check_mark:
+REGACK | MODIFIED | :heavy_check_mark:
+SUBACK | MODIFIED | :heavy_check_mark:
+SUBSCRIBE | MODIFIED | :heavy_check_mark:
+UNSUBSCRIBE | MODIFIED | :heavy_check_mark:
+UNSUBACK | MODIFIED | :heavy_check_mark:
 
 ### Related people & projects
 Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments. If you would like me to include your repository below, please issue a Pull Request and add it.

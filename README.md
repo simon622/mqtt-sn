@@ -192,7 +192,7 @@ This was an informal load test, and I would encourage anyone who would like to t
 
 [^1]: Setting the gateway into loopback mode will short-circuit delivery out to a broker on the backand and treat the inbound messages as if they came back from subscriptions on the broker (essentially acting like a broker).
 [^2]: Running the gateway on a local virtual machine would mean network latency is not a factor in these tests
-[^3]: Achieved using a tuned configuration (120 delivery threads, 60 protocol threads, 2 general purpose threads, 2 queue processing threads) to match the expectation of the test profile (that is a large degree of message expansion cause by many clients subscribing to a single topic).
+[^3]: Messages sent at QoS 0, achieved using a tuned configuration (120 delivery threads, 60 protocol threads, 2 general purpose threads, 2 queue processing threads) to match the expectation of the test profile (that is a large degree of message expansion cause by many clients subscribing to a single topic).
 
 ![Load Test Results](/images/peak-message-count.png)
 

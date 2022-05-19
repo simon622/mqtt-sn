@@ -17,7 +17,7 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
 ## About
 
 ### MQTT-SN Evolved
-As of late 2020, the MQTT technical committee at OASIS (via a sub-committee led by **Ian Craggs** ([Ian's Blog](https://modelbasedtesting.co.uk))) are working on standardisation and changes to bring MQTT-SN more in line with MQTT version 5. 
+As of late 2020, the MQTT technical committee at OASIS (via a sub-committee led by **Ian Craggs** ([Ian's Blog](https://modelbasedtesting.co.uk)) and myself **Simon Johnson** ([Simon's LinkedIn](https://www.linkedin.com/in/simonjohnson99/))) are working on standardisation and changes to bring MQTT-SN more in line with MQTT version 5. 
 This is an ongoing piece of work which we hope to formalise and conclude in 2022.
 
 ### MQTT / MQTT-SN differences

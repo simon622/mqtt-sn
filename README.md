@@ -9,6 +9,12 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
 2. [Quick Start](#quick-start-guide)
 3. [Build](#build)
 4. [Runtime](#runtime-gateway--client)
+   1. [Listeners](#listeners)
+   2. [Transport](#transport-implementations)
+   3. [Authentication & Authorization](#authentication-and-authoriszation)
+   4. [Message Integrity](#message-integrity)
+   5. [Clustering](#clustering)
+   6. [Benchmarking](#benchmarking)
 5. [Version 2](#version-20)
 6. [Configuration](#configuration)
 7. [Cloud Platform Deployments](#cloud-platform-deployments)
@@ -205,7 +211,6 @@ must choose from HMAC (suggested) or CHECKSUM integrity checks. When enabled, da
 according to the chosen specification which will then be validated by the receiver. The available integrity options are listed below with
 their respective lengths.
 
-
 Type | Name | Field Size
 ------------ | ------------- | -------------
 HMAC | MD5 | 16 Bytes
@@ -227,6 +232,11 @@ Use the following code to change the configuration on your runtime options.
 
     options.withSecurityOptions(securityOptions);
 ```
+### Clustering
+
+The gateway runtime can be clustered. During connection establishment; the clustering service is notified of the connecting device. At this point, the implementation
+is responsible for synchronising the state of previous sessions onto the local gateway. For more information about clustering support please contact me to discuss the
+available options as the environment onto which the gateway is deployed impacts how clustering is achieved.
 
 ### Benchmarking
 
@@ -246,12 +256,6 @@ This was an informal load test, and I would encourage anyone who would like to t
 ![Load Test Results](/images/peak-message-count.png)
 
 This test should be re-run when time allows against a remote EC2 host.
-
-### Clustering
-
-The gateway runtime can be clustered. During connection establishment; the clustering service is notified of the connecting device. At this point, the implementation
-is responsible for synchronising the state of previous sessions onto the local gateway. For more information about clustering support please contact me to discuss the
-available options as the environment onto which the gateway is deployed impacts how clustering is achieved.
 
 ## Version 2.0
 There were a number of changes considered for the standardisation process into V2.0. It is also worth noting a number of issues were discussed but NOT included, a breakdown of these can be found in the OASIS ticket system. My intention is to support both version 1.2 and version 2.0 on both the gateway and the client side. Below lists the changes between versions and the status of each change relating to its function in this repository.

@@ -151,12 +151,51 @@ the wire.
 
 ### Transport Implementations
 
-You can very easily plug transport implementations into the runtime by hooking the transport layer
+By default the gateway and client have been implemented with UDP, but you can very easily plug transport implementations into the runtime by hooking the transport layer. You transport implementation should extend AbstractMqttsnTransport.
 
 ```java
     MqttsnClientRuntimeRegistry.defaultConfiguration(options).
         withTransport(new YourTransportLayerImplementation()).
         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+```
+
+### Authentication and Authoris(z)ation
+
+To add your own checks to validate if a given clientId or networkAddress should be able to CONNECT to a gateway, you can bind in your own
+authentication provider to the runtime as follows;
+
+```java
+    MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
+        withAuthenticationService(new IMqttsnAuthenticationService() {
+            @Override
+            public boolean allowConnect(IMqttsnContext context, String clientId) throws MqttsnException {
+                return true;
+            }
+        }
+    });
+```
+
+To change the default behaviour of authorisation (what a client is allowed to access within the system) you can bind in your own
+authorization provider as follows;
+
+```java
+    MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
+        withAuthorizationService(new IMqttsnAuthorizationService() {
+            @Override
+            public boolean allowedToSubscribe(IMqttsnContext context, String topicPath) throws MqttsnException {
+                return false;
+            }
+
+            @Override
+            public int allowedMaximumQoS(IMqttsnContext context, String topicPath) throws MqttsnException {
+                return 0;
+            }
+
+            @Override
+            public boolean allowedToPublish(IMqttsnContext context, String topicPath, int size, int QoS) throws MqttsnException {
+                return false;
+            }
+    });
 ```
 
 ### Message Integrity

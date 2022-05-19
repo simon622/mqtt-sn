@@ -6,8 +6,17 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
 
 ## Table of Contents
 1. [About](#about) 
+   1. [MQTT-SN Evolved](#mqtt-sn-evolved)
+   2. [MQTT / MQTT-SN differences](#mqtt--mqtt-sn-differences)
+   3. [Project Goals](#project-goals)
+   4. [Gateway System Diagram](#gateway-system-diagram)
 2. [Quick Start](#quick-start-guide)
+   1. [Client CLI](#client-cli)
+   2. [Gateway CLI](#gateway-cli)
 3. [Build](#build)
+   1. [Maven Modules](#modules)
+   2. [Gateway Build](#gateway-build)
+   3. [Client Build](#client-build)
 4. [Runtime](#runtime-gateway--client)
    1. [Listeners](#listeners)
    2. [Transport](#transport-implementations)
@@ -73,7 +82,7 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-gateway-connector-paho](/mqtt-sn-gateway-connector-paho) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
 [mqtt-sn-load-test](/mqtt-sn-load-test) | Java 1.8, Maven | Tools | Provides a runtime to spin up N clients and connect to a gateway instance and test concurrency and message throughput
 
-#### Gateway Build
+### Gateway Build
 
 Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
 
@@ -93,7 +102,7 @@ java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
 ```
 You can then follow the on screen instructions to get a gateway up and running.
 
-#### Client Build
+### Client Build
 
 Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
 
@@ -132,7 +141,7 @@ the runtime.
     });
 ```
 
-#### Traffic Listeners
+### Traffic Listeners
 
 All traffic to and from the transport layer can be monitored by the application by registering traffic listeners. These will
 get called back after the traffic has been sent / received to the transport adapter top enable you to see what is going over

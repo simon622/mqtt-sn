@@ -68,7 +68,7 @@ java -jar <path-to>/mqtt-sn-gateway-loopback-VERSION.jar
 
 ## Build
 
-Presently I have used the maven build system to combine the modules in with their dependencies. All builds have been tested and can be shaded to create a simple release jar package. 
+I have used the maven build system to combine the modules in with their dependencies. All builds have been tested and can be shaded to create a simple release jar package. 
 
 ### Modules
 Module | Language & Build | Dependencies | Description

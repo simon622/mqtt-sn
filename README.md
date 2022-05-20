@@ -50,7 +50,7 @@ I have created simple interactive command lines for both client and gateway comp
 can be used to evaluate / test the software. For more complex use, please refer to the source build and configuration.
 
 #### Client CLI
-The latest interactive client build can be obtained from the releases section. Download the mqtt-sn-client-VERSION.jar and run locally using;
+The latest interactive client build can be obtained from the releases section. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.12-may-2022/mqtt-sn-client-0.1.12.jar) the mqtt-sn-client-VERSION.jar and run locally using;
 
 ```shell script
 java -jar <path-to>/mqtt-sn-client-VERSION.jar
@@ -59,10 +59,10 @@ java -jar <path-to>/mqtt-sn-client-VERSION.jar
 ![Client CLI](/images/client-cli.png)
 
 #### Gateway CLI
-The latest interactive gateway build can be obtained from the releases section. Download the mqtt-sn-gateway-VERSION.jar and run locally using;
+The latest interactive gateway build can be obtained from the releases section. This build is the loopback configuration which requires no backend broker. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.12-may-2022/mqtt-sn-gateway-loopback-0.1.12.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
+java -jar <path-to>/mqtt-sn-gateway-loopback-VERSION.jar
 ```
 ![Gateway CLI](/images/gateway-cli.png)
 

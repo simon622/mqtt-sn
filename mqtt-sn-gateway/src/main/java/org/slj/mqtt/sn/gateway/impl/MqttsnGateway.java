@@ -172,8 +172,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callShutdown(runtime.getMessageStateService());
 
         if(((MqttsnGatewayOptions)runtime.getOptions()).isRealtimeMessageCounters()){
-            sendCounter.stop();
-            receiveCounter.stop();
+            if(sendCounter != null) sendCounter.stop();
+            if(receiveCounter != null) receiveCounter.stop();
         }
     }
 

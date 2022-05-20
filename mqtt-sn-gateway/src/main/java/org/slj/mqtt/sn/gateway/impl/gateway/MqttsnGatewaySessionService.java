@@ -264,6 +264,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 if(registry.getSubscriptionRegistry().subscribe(state.getContext(), topicPath, QoS)){
                     SubscribeResult result = registry.getBackendService().subscribe(context, new TopicPath(topicPath), message);
                     result.setTopicInfo(info);
+                    result.setGrantedQoS(QoS);
                     return result;
                 } else {
                     SubscribeResult result = new SubscribeResult(Result.STATUS.NOOP);
@@ -431,7 +432,8 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             int q = Math.min(grantedQos,qos);
             IMqttsnSessionState sessionState = getSessionState(client, false);
             if(sessionState != null){
-                if(payload.length > sessionState.getMaxPacketSize()){
+                if(sessionState.getMaxPacketSize() != 0 &&
+                        payload.length + 9 > sessionState.getMaxPacketSize()){
                     logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
                 } else {
                     PublishData data = new PublishData(topicPath, q, retained);

@@ -201,7 +201,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 try {
                     IMqttsnMessage message = registry.getMessageFactory().createConnect(
                             registry.getOptions().getContextId(), keepAlive,
-                            registry.getWillRegistry().hasWillMessage(state.getContext()), cleanSession);
+                            registry.getWillRegistry().hasWillMessage(state.getContext()), cleanSession, registry.getOptions().getMaxProtocolMessageSize());
                     MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
                     Optional<IMqttsnMessage> response =
                             registry.getMessageStateService().waitForCompletion(state.getContext(), token);

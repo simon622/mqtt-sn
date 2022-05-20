@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.gateway.connector.google.iotcore;
 
-import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayWithKeystore;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -53,8 +52,7 @@ public class GoogleIoTCoreAggregatingGatewayInteractiveMain {
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new GoogleIoTCoreMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
-                        withTransport(createTransport()).
-                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+                        withTransport(createTransport());
             }
         }, true, "Welcome to the Google IoT Core version of the gateway. You will need to connect your gateway to your Google IoT via the credentials available in your Google console.");
     }

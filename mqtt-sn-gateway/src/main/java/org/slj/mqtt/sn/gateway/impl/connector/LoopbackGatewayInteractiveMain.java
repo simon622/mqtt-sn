@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.gateway.impl.connector;
 
-import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -38,8 +37,13 @@ public class LoopbackGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
-                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
-                        withHost(hostName).
+                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions(){
+                    @Override
+                    public boolean validConnectionDetails() {
+                        return true;
+                    }
+                };
+                brokerOptions.withHost(hostName).
                         withPort(port).
                         withUsername(username).
                         withPassword(password);
@@ -47,8 +51,7 @@ public class LoopbackGatewayInteractiveMain {
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
-                        withTransport(createTransport()).
-                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+                        withTransport(createTransport());
             }
         }, false, "Welcome to the loopback gateway. This version does NOT use a backend broker, instead brokering MQTT messages itself as a loopback to connected devices.");
     }

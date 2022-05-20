@@ -42,6 +42,7 @@ public class MqttsnInteractiveGatewayLauncher {
             interactiveGateway.exit();
         } catch (Exception e) {
             System.err.println("A fatal error was encountered: " + e.getMessage());
+            e.printStackTrace(System.err);
         } finally {
             interactiveGateway.stop();
         }

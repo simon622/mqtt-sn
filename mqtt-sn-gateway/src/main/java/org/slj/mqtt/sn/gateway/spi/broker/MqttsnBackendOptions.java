@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.gateway.spi.broker;
 
 import java.util.Objects;
 
-public final class MqttsnBackendOptions {
+public class MqttsnBackendOptions {
 
     public static final boolean DEFAULT_CONNECT_ON_STARTUP = true;
     public static final boolean DEFAULT_MANAGED_CONNECTIONS = true;

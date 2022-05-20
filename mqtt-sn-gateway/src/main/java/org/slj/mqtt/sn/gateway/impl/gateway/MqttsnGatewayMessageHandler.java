@@ -171,8 +171,8 @@ public class MqttsnGatewayMessageHandler
         }
 
         String assignedClientId = context.isAssignedClientId() ? context.getId() : null;
+        boolean stateExisted = hasSessionState(context);
         IMqttsnSessionState state = getSessionState(context, true);
-
         ConnectResult result = registry.getGatewaySessionService().connect(state, connect);
         processSessionResult(result);
         if(result.isError()){
@@ -182,7 +182,6 @@ public class MqttsnGatewayMessageHandler
             if(will){
                 return registry.getMessageFactory().createWillTopicReq();
             } else {
-                boolean stateExisted = hasSessionState(context);
                 long sessionExpiryIntervalRequested = sessionExpiryInterval;
                 if(sessionExpiryInterval >
                         registry.getOptions().getRemoveDisconnectedSessionsSeconds()){

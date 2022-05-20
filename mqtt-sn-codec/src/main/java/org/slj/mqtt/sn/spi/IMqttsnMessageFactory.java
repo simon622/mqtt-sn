@@ -81,7 +81,7 @@ public interface IMqttsnMessageFactory {
      * @param willPrompt:   if set, indicates that client is requesting for Will topic and Will message prompting.
      * @param cleanSession: same meaning as with MQTT, however extended for Will topic and Will message.
      */
-    IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession)
+    IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize)
             throws MqttsnCodecException;
 
     /**

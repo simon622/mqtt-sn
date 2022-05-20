@@ -24,16 +24,14 @@
 
 package org.slj.mqtt.sn.cli;
 
+import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
-import org.slj.mqtt.sn.spi.IMqttsnTransport;
-import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.ThreadDump;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -54,6 +52,8 @@ public abstract class AbstractInteractiveCli {
     static final String HOSTNAME = "hostName";
     static final String CLIENTID = "clientId";
     static final String PORT = "port";
+    static final String PROTOCOL_VERSION = "protocolVersion";
+
 
     protected final AtomicInteger sentByteCount = new AtomicInteger(0);
     protected final AtomicInteger receiveByteCount = new AtomicInteger(0);
@@ -67,6 +67,7 @@ public abstract class AbstractInteractiveCli {
     protected String hostName;
     protected int port;
     protected String clientId;
+    protected int protocolVersion = 1;
 
     protected MqttsnOptions options;
     protected AbstractMqttsnRuntimeRegistry runtimeRegistry;
@@ -86,7 +87,7 @@ public abstract class AbstractInteractiveCli {
 
     public void start() throws Exception {
         if(input == null || output == null) throw new IllegalStateException("no init");
-        message(String.format("Starting up interactive CLI with port=%s, clientId=%s", port, clientId));
+        message(String.format("Starting up interactive CLI with clientId=%s, protocolVersion=%s", clientId, protocolVersion));
         if(useHistory){
             saveConfig();
         }
@@ -95,6 +96,9 @@ public abstract class AbstractInteractiveCli {
         options = createOptions();
         message(String.format("Creating runtime registry.. DONE"));
         runtimeRegistry = createRuntimeRegistry(options, createTransport());
+        IMqttsnCodec codec = createCodec();
+        runtimeRegistry.withCodec(codec);
+        message(String.format("Creating runtime with codec version.. %s", codec.getProtocolVersion()));
         if(options.getSecurityOptions() != null){
             message(String.format("Creating security configuration.. DONE"));
             message(String.format("Integrity type: %s", options.getSecurityOptions().getIntegrityType()));
@@ -202,9 +206,13 @@ public abstract class AbstractInteractiveCli {
 
         if(needsClientId()){
             do{
-                clientId = captureString(input, output,  "Please enter a valid clientId");
+                clientId = captureString(input, output,  "Please enter a valid client or gateway Id");
             } while(!validClientId(MAX_ALLOWED_CLIENTID_LENGTH));
         }
+
+        do{
+            protocolVersion = captureMandatoryInt(input, output,  "Please enter a protocol version (1 for 1.2 or 2 for 2.0)", new int[] {1, 2});
+        } while(!validProtocolVersion());
     }
 
     public void configureWithHistory() throws IOException {
@@ -230,21 +238,29 @@ public abstract class AbstractInteractiveCli {
         if(needsPort()){
             if(port == 0) return false;
         }
-        return true;
+        return validProtocolVersion();
     }
 
     protected void loadConfigHistory(Properties props) throws IOException {
         hostName = props.getProperty(HOSTNAME);
-        port = Integer.valueOf(props.getProperty(PORT));
+        try {
+            port = Integer.valueOf(props.getProperty(PORT));
+        } catch(Exception e){
+        }
+        try {
+            protocolVersion = Integer.valueOf(props.getProperty(PROTOCOL_VERSION));
+        } catch(Exception e){
+        }
         clientId = props.getProperty(CLIENTID);
     }
 
     protected void saveConfigHistory(Properties props) {
-        props.setProperty(HOSTNAME, hostName);
-        props.setProperty(PORT, String.valueOf(port));
-        if(clientId != null){
+        if(needsHostname() && hostName != null) props.setProperty(HOSTNAME, hostName);
+        if(needsPort()) props.setProperty(PORT, String.valueOf(port));
+        if(needsClientId() && clientId != null){
             props.setProperty(CLIENTID, clientId);
         }
+        props.setProperty(PROTOCOL_VERSION, String.valueOf(protocolVersion));
     }
 
     protected boolean loadConfig() throws IOException {
@@ -368,9 +384,13 @@ public abstract class AbstractInteractiveCli {
         return !p.matcher(hostName).find();
     }
 
+    protected boolean validProtocolVersion(){
+        if(protocolVersion == 1 || protocolVersion == 2) return true;
+        return false;
+    }
+
     protected boolean validClientId(int maxLength){
         if(clientId == null) return true;
-//        if(clientId.trim().length() == 0) return false;
         if(clientId.trim().length() > maxLength) return false;
         Pattern p = Pattern.compile("[a-zA-Z0-9\\-]{1,65528}");
         return p.matcher(clientId).find();
@@ -545,6 +565,11 @@ public abstract class AbstractInteractiveCli {
     protected abstract AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport);
 
     protected abstract AbstractMqttsnRuntime createRuntime(AbstractMqttsnRuntimeRegistry registry, MqttsnOptions options);
+
+    protected IMqttsnCodec createCodec(){
+        return protocolVersion == 1 ? MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2 :
+                MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0;
+    }
 
     protected AbstractMqttsnRuntimeRegistry getRuntimeRegistry(){
         return runtimeRegistry;

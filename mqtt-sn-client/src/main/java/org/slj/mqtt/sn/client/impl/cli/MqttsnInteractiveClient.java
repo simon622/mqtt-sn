@@ -27,8 +27,6 @@ package org.slj.mqtt.sn.client.impl.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
-import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
-import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryTopicRegistry;
@@ -37,7 +35,6 @@ import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
-import org.slj.mqtt.sn.spi.IMqttsnWillRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -504,7 +501,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected IMqttsnTransport createTransport() {
         MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().withMtu(4096).withReceiveBuffer(4096).
                 withPort(MqttsnUdpOptions.DEFAULT_LOCAL_CLIENT_PORT);
-
         return new MqttsnUdpTransport(udpOptions);
     }
 
@@ -514,8 +510,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 withNetworkAddressEntry("remote-gateway",
                         NetworkAddress.from(port, hostName)).
                 withContextId(clientId).
-                withMaxProtocolMessageSize(4096).
-                withSleepClearsRegistrations(false);
+                withMaxProtocolMessageSize(4096);
     }
 
     @Override

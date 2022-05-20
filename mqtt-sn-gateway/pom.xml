@@ -65,7 +65,7 @@
     </dependencies>
 
     <build>
-        <finalName>mqtt-sn-gateway-v12-loopback-${project.version}</finalName>
+        <finalName>mqtt-sn-gateway-loopback-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

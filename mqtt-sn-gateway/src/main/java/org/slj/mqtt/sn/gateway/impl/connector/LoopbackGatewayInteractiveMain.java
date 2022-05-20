@@ -38,27 +38,18 @@ public class LoopbackGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
-
                 MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
                         withHost(hostName).
                         withPort(port).
                         withUsername(username).
                         withPassword(password);
 
-/*
-                MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
-                        withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
-                        withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
-                options.withSecurityOptions(securityOptions);
-*/
-
-                options.withMaxMessagesInQueue(10000);
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
-        });
+        }, false, "Welcome to the loopback gateway. This version does NOT use a backend broker, instead brokering MQTT messages itself as a loopback to connected devices.");
     }
 }

@@ -46,19 +46,12 @@ public class AggregatingGatewayInteractiveMain {
                         withUsername(username).
                         withPassword(password);
 
-/*
-                MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
-                        withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
-                        withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
-                options.withSecurityOptions(securityOptions);
-*/
-
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
-        });
+        }, true, "Welcome to the custom-broker version of the gateway. You will need to connect your gateway to your MQTT broker using a client connection host, port, username, password & clientId.");
     }
 }

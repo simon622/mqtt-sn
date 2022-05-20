@@ -56,6 +56,6 @@ public class AWSIoTCoreAggregatingGatewayInteractiveMain {
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
-        });
+        }, true, "Welcome to the AWS IoT Core version of the gateway. You will need to connect your gateway to your AWS IoT via the credentials available in your AWS console.");
     }
 }

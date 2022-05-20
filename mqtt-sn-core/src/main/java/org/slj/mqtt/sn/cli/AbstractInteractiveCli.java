@@ -169,11 +169,15 @@ public abstract class AbstractInteractiveCli {
         message("console messaging output disabled");
     }
 
-    public void welcome(){
+    public void welcome(String welcome){
         synchronized (output){
             output.println("===============================================");
             output.println(String.format("Welcome to %s", getCLIName()));
             output.println("===============================================");
+
+            if(welcome != null){
+                output.println(String.format("%s", welcome));
+            }
         }
     }
 
@@ -186,14 +190,21 @@ public abstract class AbstractInteractiveCli {
     }
 
     protected void configure() throws IOException {
-        do{
-            hostName = captureMandatoryString(input, output, "Please enter a valid host name or ip address");
-        } while(!validHost());
+        if(needsHostname()){
+            do{
+                hostName = captureMandatoryString(input, output, "Please enter a valid host name or ip address");
+            } while(!validHost());
+        }
 
-        port = captureMandatoryInt(input, output, "Please enter a port", null);
-        do{
-            clientId = captureString(input, output,  "Please enter a valid clientId");
-        } while(!validClientId(MAX_ALLOWED_CLIENTID_LENGTH));
+        if(needsPort()){
+            port = captureMandatoryInt(input, output, "Please enter a port", null);
+        }
+
+        if(needsClientId()){
+            do{
+                clientId = captureString(input, output,  "Please enter a valid clientId");
+            } while(!validClientId(MAX_ALLOWED_CLIENTID_LENGTH));
+        }
     }
 
     public void configureWithHistory() throws IOException {
@@ -213,7 +224,13 @@ public abstract class AbstractInteractiveCli {
     }
 
     protected boolean configOk(){
-        return hostName != null && port != 0 ;
+        if(needsHostname()){
+            if(hostName == null) return false;
+        }
+        if(needsPort()){
+            if(port == 0) return false;
+        }
+        return true;
     }
 
     protected void loadConfigHistory(Properties props) throws IOException {
@@ -503,6 +520,18 @@ public abstract class AbstractInteractiveCli {
             stop();
             message("stopped - bye :-)");
         }
+    }
+
+    protected boolean needsHostname(){
+        return true;
+    }
+
+    protected boolean needsClientId(){
+        return true;
+    }
+
+    protected boolean needsPort(){
+        return true;
     }
 
     protected abstract String getPropertyFileName();

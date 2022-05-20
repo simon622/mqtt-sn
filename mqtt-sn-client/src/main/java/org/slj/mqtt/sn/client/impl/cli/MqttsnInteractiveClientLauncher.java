@@ -35,7 +35,7 @@ public class MqttsnInteractiveClientLauncher {
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
             interactiveClient.init(input, output);
-            interactiveClient.welcome();
+            interactiveClient.welcome("Welcome to the mqtt-sn interactive client. You will need to give me the location of your MQTT-SN compliant gateway to continue..");
             interactiveClient.configureWithHistory();
             interactiveClient.start();
             interactiveClient.command();

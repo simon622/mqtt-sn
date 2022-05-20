@@ -30,12 +30,12 @@ import java.util.logging.LogManager;
 
 public class MqttsnInteractiveGatewayLauncher {
     static final String DEBUG = "debug";
-    public static void launch(MqttsnInteractiveGateway interactiveGateway) throws Exception {
+    public static void launch(MqttsnInteractiveGateway interactiveGateway, boolean needsBroker, String welcome) throws Exception {
         if(!Boolean.getBoolean(DEBUG)) LogManager.getLogManager().reset();
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
-            interactiveGateway.init(input, output);
-            interactiveGateway.welcome();
+            interactiveGateway.init(needsBroker, input, output);
+            interactiveGateway.welcome(welcome);
             interactiveGateway.configureWithHistory();
             interactiveGateway.start();
             interactiveGateway.command();

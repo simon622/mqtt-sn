@@ -61,6 +61,7 @@ public class LoopbackMqttsnBrokerConnection extends AbstractMqttsnBackendConnect
         return connected;
     }
 
+
     @Override
     public void close() {
         connected = false;

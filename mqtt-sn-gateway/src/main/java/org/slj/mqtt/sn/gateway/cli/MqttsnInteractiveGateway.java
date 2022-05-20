@@ -45,6 +45,7 @@ import org.slj.mqtt.sn.spi.NetworkRegistryException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -56,6 +57,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     protected String username;
     protected String password;
+
+    protected boolean needsBroker;
 
     enum COMMANDS {
         POKE("Poke the queue", new String[0], true),
@@ -103,6 +106,11 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         public String getDescription(){
             return description;
         }
+    }
+
+    public void init(boolean needsBroker, Scanner input, PrintStream output) {
+        this.needsBroker = needsBroker;
+        super.init(input, output);
     }
 
     @Override
@@ -415,16 +423,15 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     protected MqttsnOptions createOptions() {
         return new MqttsnGatewayOptions().
                 withRealtimeMessageCounters(true).
-                withMaxConnectedClients(10000).
+                withMaxConnectedClients(100).
                 withGatewayId(101).
                 withContextId(clientId).
                 withMaxMessagesInQueue(100).
                 withRemoveDisconnectedSessionsSeconds(60 * 60).
-                withTransportProtocolHandoffThreadCount(60).
-                withTransportSendHandoffThreadCount(120).
+                withTransportProtocolHandoffThreadCount(20).
+                withTransportSendHandoffThreadCount(20).
                 withQueueProcessorThreadCount(2).
-                withMinFlushTime(5).
-                withSleepClearsRegistrations(false);
+                withMinFlushTime(5);
     }
 
     @Override
@@ -443,10 +450,15 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     public void start() throws Exception {
         super.start();
-        message(String.format("Attempting to connect to backend broker at %s:%s...", hostName, port));
+        if(needsBroker){
+            message(String.format("Attempting to connect to backend broker at %s:%s...", hostName, port));
+        }
         try {
             getRuntime().start(getRuntimeRegistry(), false);
-            message("Successfully connected to broker, TCP/IP connection active.");
+            if(needsBroker){
+                message("Successfully connected to broker, TCP/IP connection active.");
+            }
+            message(String.format("Gateway listening for datagram traffic on %s", MqttsnUdpOptions.DEFAULT_LOCAL_PORT));
         } catch(Exception e){
             message(cli_red("Unable to connect to broker"));
             message("Please check the connection details supplied");
@@ -457,22 +469,28 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected void configure() throws IOException {
         super.configure();
-        username = captureString(input, output, "Please enter a valid username for you broker connection");
-        password = captureString(input, output,  "Please enter a valid password for you broker connection");
+        if(needsBroker){
+            username = captureString(input, output, "Please enter a valid username for you broker connection");
+            password = captureString(input, output,  "Please enter a valid password for you broker connection");
+        }
     }
 
     @Override
     protected void loadConfigHistory(Properties props) throws IOException {
         super.loadConfigHistory(props);
-        username = props.getProperty(USERNAME);
-        password = props.getProperty(PASSWORD);
+        if(needsBroker){
+            username = props.getProperty(USERNAME);
+            password = props.getProperty(PASSWORD);
+        }
     }
 
     @Override
     protected void saveConfigHistory(Properties props) {
         super.saveConfigHistory(props);
-        props.setProperty(USERNAME, username);
-        props.setProperty(PASSWORD, password);
+        if(needsBroker){
+            props.setProperty(USERNAME, username);
+            props.setProperty(PASSWORD, password);
+        }
     }
 
     @Override
@@ -493,5 +511,20 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             case ASLEEP: return cli_blue(state.toString());
             default: return cli_red(state.toString());
         }
+    }
+
+    @Override
+    protected boolean needsHostname() {
+        return needsBroker;
+    }
+
+    @Override
+    protected boolean needsClientId() {
+        return super.needsClientId();
+    }
+
+    @Override
+    protected boolean needsPort() {
+        return needsBroker;
     }
 }

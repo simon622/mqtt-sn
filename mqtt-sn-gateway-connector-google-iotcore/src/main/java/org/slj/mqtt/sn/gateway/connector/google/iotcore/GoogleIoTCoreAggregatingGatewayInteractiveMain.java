@@ -56,6 +56,6 @@ public class GoogleIoTCoreAggregatingGatewayInteractiveMain {
                         withTransport(createTransport()).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
-        });
+        }, true, "Welcome to the Google IoT Core version of the gateway. You will need to connect your gateway to your Google IoT via the credentials available in your Google console.");
     }
 }

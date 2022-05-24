@@ -278,7 +278,7 @@ This was an informal load test, and I would encourage anyone who would like to t
 
 ![Load Test Results](/images/peak-message-count.png)
 
-** This is a very expansive subject that can't really be covered here, and I would urge anyone looking to deploy this runtime in production to reach out to discuss performance optimisation.s**
+**This is a very expansive subject that can't really be covered here, and I would urge anyone looking to deploy this runtime in production to reach out to discuss performance optimisation.**
 
 ## Version 2.0
 There were a number of changes considered for the standardisation process into V2.0. It is also worth noting a number of issues were discussed but NOT included, a breakdown of these can be found in the OASIS ticket system. My intention is to support both version 1.2 and version 2.0 on both the gateway and the client side. Below lists the changes between versions and the status of each change relating to its function in this repository.

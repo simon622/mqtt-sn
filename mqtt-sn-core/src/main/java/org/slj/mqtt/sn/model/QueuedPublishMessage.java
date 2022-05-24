@@ -39,16 +39,11 @@ import java.util.UUID;
  */
 public class QueuedPublishMessage implements Serializable, Comparable {
 
-
-
-//    private String topicPath;
-//    private int grantedQoS;
-//    private boolean retained;
-
     private PublishData data;
     private Date created;
     private int retryCount;
     private UUID messageId;
+    private int msgId;
     private transient MqttsnWaitToken token;
 
     public QueuedPublishMessage() {
@@ -57,9 +52,6 @@ public class QueuedPublishMessage implements Serializable, Comparable {
     public QueuedPublishMessage(UUID messageId, PublishData data) {
         this.created = new Date();
         this.messageId = messageId;
-//        this.topicPath = topicPath;
-//        this.retained = retained;
-//        this.grantedQoS = grantedQoS;
         this.data = data;
         this.retryCount = 0;
     }
@@ -113,6 +105,14 @@ public class QueuedPublishMessage implements Serializable, Comparable {
 
     public Date getCreated() {
         return created;
+    }
+
+    public int getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(int msgId) {
+        this.msgId = msgId;
     }
 
     @Override

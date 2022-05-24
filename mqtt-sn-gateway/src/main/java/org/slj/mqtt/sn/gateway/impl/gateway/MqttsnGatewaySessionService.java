@@ -357,7 +357,6 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     public void cleanSession(IMqttsnContext context, boolean deepClean) throws MqttsnException {
 
-        logger.log(Level.INFO, String.format(String.format("cleaning session state [%s], deepClean ? [%s]", context, deepClean)));
         //clear down all prior session state
         synchronized (context){
             if(deepClean){
@@ -377,6 +376,9 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             //-- will data
             registry.getWillRegistry().clear(context);
         }
+
+        logger.log(Level.INFO, String.format(String.format("cleaning session state [%s], deepClean ? [%s], queueSize after clean [%s]",
+                context, deepClean, registry.getMessageQueue().size(context))));
     }
 
     public void clearAll() {

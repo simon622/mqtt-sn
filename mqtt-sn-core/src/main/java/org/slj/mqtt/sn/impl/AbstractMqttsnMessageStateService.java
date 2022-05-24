@@ -238,9 +238,18 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         }
 
         IMqttsnMessage publish = registry.getMessageFactory().createPublish(queuedPublishMessage.getData().getQos(),
-                queuedPublishMessage.getRetryCount() > 1, false, type, topicId,
+                isDUPDelivery(queuedPublishMessage),
+                queuedPublishMessage.getData().isRetained(), type, topicId,
                 payload);
+        if(queuedPublishMessage.getMsgId() != 0){
+            //-- ensure if we have sent a message before we use the same ID again
+            publish.setId(queuedPublishMessage.getMsgId());
+        }
         return sendMessageInternal(context, publish, queuedPublishMessage);
+    }
+
+    protected boolean isDUPDelivery(QueuedPublishMessage message){
+        return message.getRetryCount() > 1 || message.getMsgId() > 0;
     }
 
     protected MqttsnWaitToken sendMessageInternal(IMqttsnContext context, IMqttsnMessage message, QueuedPublishMessage queuedPublishMessage) throws MqttsnException {
@@ -606,6 +615,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 msgId = getNextMsgId(idContext);
                 message.setId(msgId);
             }
+
+            //-- ensure we update the queued version so if delivery fails we know what to redeliver with
+            if(queuedPublishMessage != null) queuedPublishMessage.setMsgId(msgId);
         }
 
         addInflightMessage(context, msgId, inflight);

@@ -30,12 +30,12 @@ import java.io.Serializable;
 
 public class InflightMessage implements Serializable {
 
-    public static enum DIRECTION {SENDING, RECEIVING}
+    public enum DIRECTION {SENDING, RECEIVING}
 
     transient MqttsnWaitToken token;
-    IMqttsnMessage message;
-    long time;
-    DIRECTION direction;
+    private IMqttsnMessage message;
+    private long time;
+    private DIRECTION direction;
 
     public InflightMessage(IMqttsnMessage message, DIRECTION direction, MqttsnWaitToken token) {
         this.time = System.currentTimeMillis();

@@ -37,7 +37,7 @@ public class SubscribeUnsubscribeTestMain {
         try {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 200, 20);
+                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 400, 20);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(2400, TimeUnit.SECONDS);

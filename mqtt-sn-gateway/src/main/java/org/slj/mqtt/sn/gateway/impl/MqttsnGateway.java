@@ -115,6 +115,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
             @Override
             public void notifyRemoteDisconnect(IMqttsnContext context) {
+                notifyCluster(context);
             }
 
             @Override
@@ -123,6 +124,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
             @Override
             public void notifyLocalDisconnect(IMqttsnContext context, Throwable t) {
+                notifyCluster(context);
             }
 
             @Override
@@ -136,6 +138,19 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                     }
                 } catch (MqttsnException e) {
                     logger.log(Level.SEVERE, "error marking session lost;", e);
+                } finally {
+                    notifyCluster(context);
+                }
+            }
+
+
+            private void notifyCluster(IMqttsnContext context){
+                if(((MqttsnGatewayRuntimeRegistry)registry).getGatewayClusterService() != null){
+                    try {
+                        ((MqttsnGatewayRuntimeRegistry)registry).getGatewayClusterService().notifyDisconnection(context);
+                    } catch (MqttsnException e) {
+                        logger.log(Level.WARNING, String.format("error notifying cluster of disconnection/connection loss"), e);
+                    }
                 }
             }
         });

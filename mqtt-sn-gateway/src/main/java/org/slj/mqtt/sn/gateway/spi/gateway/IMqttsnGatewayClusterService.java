@@ -36,4 +36,6 @@ public interface IMqttsnGatewayClusterService<T extends IMqttsnRuntimeRegistry> 
 
     boolean notifyConnection(IMqttsnContext context) throws MqttsnException;
 
+    boolean notifyDisconnection(IMqttsnContext context) throws MqttsnException;
+
 }

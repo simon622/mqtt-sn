@@ -23,7 +23,7 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
    3. [Authentication & Authorization](#authentication-and-authoriszation)
    4. [Message Integrity](#message-integrity)
    5. [Clustering](#clustering)
-   6. [Benchmarking](#benchmarking)
+   6. [Performance & Benchmarking](#performance-and-benchmarking)
 5. [Version 2](#version-20)
 6. [Configuration](#configuration)
 7. [Cloud Platform Deployments](#cloud-platform-deployments)
@@ -247,7 +247,21 @@ The gateway runtime can be clustered. During connection establishment; the clust
 is responsible for synchronising the state of previous sessions onto the local gateway. For more information about clustering support please contact me to discuss the
 available options as the environment onto which the gateway is deployed impacts how clustering is achieved.
 
-### Benchmarking
+### Performance & Benchmarking
+
+The single host deployment of the gateway will happily handle **tens of thousands** of connected devices processing **many thousand messages per second**. I have yet to undertake a formal benchmark. Of course there are many points of configuration which can be tuned to match specific traffic patterns. The runtime allows you to tune various settings that will impact performance including (but not limited to):
+
+1. Number of allowed connections
+2. Size of thread pool to handle protocol messages
+3. Size of thread pool to handle outbound messages
+4. Size of thread pool to handle message expansion (connector ingress)
+5. Max lost/sleeping/disconnected session retention time
+6. Max session queue size
+7. Max backend queue size
+8. Backend publishing rate limiter (connector egress)
+9. Min. flush time
+
+Some care has been taken to optimise for memory; for example message payloads are normalised, meaning where a message appears on more than 1 client message queue; only a reference is used so payload only appears in the message registry once regardless of the number of subscriptions.
 
 I have run a limited set of benchmarks using the [mqtt-sn-load-test](/mqtt-sn-load-test) project. Benchmarking MQTT-SN is a little different than MQTT due to the constraint of only a single message
 being inflight for a given client at any point in time, therefore running some of the scenarios that are used to benchmark MQTT is not comparable since the message inflight rule provides
@@ -264,7 +278,7 @@ This was an informal load test, and I would encourage anyone who would like to t
 
 ![Load Test Results](/images/peak-message-count.png)
 
-This test should be re-run when time allows against a remote EC2 host.
+** This is a very expansive subject that can't really be covered here, and I would urge anyone looking to deploy this runtime in production to reach out to discuss performance optimisation.s**
 
 ## Version 2.0
 There were a number of changes considered for the standardisation process into V2.0. It is also worth noting a number of issues were discussed but NOT included, a breakdown of these can be found in the OASIS ticket system. My intention is to support both version 1.2 and version 2.0 on both the gateway and the client side. Below lists the changes between versions and the status of each change relating to its function in this repository.

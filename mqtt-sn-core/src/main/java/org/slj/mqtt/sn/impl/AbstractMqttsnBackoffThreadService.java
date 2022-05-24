@@ -67,7 +67,6 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
 
     @Override
     public final void run() {
-        int count = 1;
         try {
             registry.getRuntime().joinStartup();
         } catch(Exception e){
@@ -106,10 +105,4 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
      * @return The name of your deamon process
      */
     protected abstract String getDaemonName();
-
-    protected void expedite(){
-        synchronized (monitor){
-            monitor.notifyAll();
-        }
-    }
 }

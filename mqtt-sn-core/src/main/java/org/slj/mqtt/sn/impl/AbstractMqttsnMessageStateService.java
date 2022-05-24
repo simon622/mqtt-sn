@@ -168,7 +168,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         if(!flushOperations.containsKey(context) ||
                 flushOperations.get(context).isDone()){
             if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("scheduling outbound work for [%s]", context));
+                logger.log(Level.FINE, String.format("scheduling flush for [%s]", context));
             }
             if(executorService != null &&
                     !executorService.isTerminated() && !executorService.isShutdown()){

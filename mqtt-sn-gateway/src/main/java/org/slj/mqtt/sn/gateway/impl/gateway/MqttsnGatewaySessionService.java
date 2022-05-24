@@ -50,7 +50,6 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         implements IMqttsnGatewaySessionService {
 
     protected Map<IMqttsnContext, IMqttsnSessionState> sessionLookup;
-
     private static final int MIN_SESSION_MONITOR_CHECK = 30000;
     private AtomicLong expansionCount = new AtomicLong(0);
 

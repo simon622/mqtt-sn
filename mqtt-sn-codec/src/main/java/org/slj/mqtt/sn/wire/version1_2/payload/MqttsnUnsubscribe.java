@@ -36,10 +36,10 @@ public class MqttsnUnsubscribe extends AbstractMqttsnSubscribeUnsubscribe {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnUnsubscribe{");
-        sb.append("topicData=").append(Arrays.toString(topicData));
-        sb.append(", topicIdType=").append(topicType);
-        sb.append('}');
-        return sb.toString();
+        return "MqttsnUnsubscribe{" +
+                "msgId=" + id +
+                ", topicData=" + Arrays.toString(topicData) +
+                ", topicType=" + topicType +
+                '}';
     }
 }

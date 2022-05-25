@@ -100,8 +100,6 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             if (!registry.getMessageHandler().running()) {
                 return;
             }
-//            byte[] data = drain(buffer);
-
             if (data.length > registry.getOptions().getMaxProtocolMessageSize()) {
                 logger.log(Level.SEVERE, String.format("receiving [%s] bytes - max allowed message size [%s] - error",
                         data.length, registry.getOptions().getMaxProtocolMessageSize()));

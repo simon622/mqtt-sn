@@ -180,7 +180,7 @@ public class MqttsnOptions {
     /**
      * General purpose thead pool which should not be blocked by traffic
      */
-    public static final int DEFAULT_PURPOSE_THREAD_COUNT = 1;
+    public static final int DEFAULT_GENERAL_PURPOSE_THREAD_COUNT = 1;
 
 
     private String contextId;
@@ -188,7 +188,7 @@ public class MqttsnOptions {
     private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
     private int transportSendHandoffThreadCount = DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
-    private int generalPurposeThreadCount = DEFAULT_PURPOSE_THREAD_COUNT;
+    private int generalPurposeThreadCount = DEFAULT_GENERAL_PURPOSE_THREAD_COUNT;
 
 
     private boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;

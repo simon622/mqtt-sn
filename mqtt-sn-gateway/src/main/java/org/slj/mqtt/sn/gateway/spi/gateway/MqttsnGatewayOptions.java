@@ -131,4 +131,14 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
         allowedClientIds.add(clientId);
         return this;
     }
+
+    public void withPerformanceProfile(MqttsnGatewayPerformanceProfile profile){
+        withMaxConnectedClients(profile.getMaxConnectedClients());
+        withMaxMessagesInQueue(profile.getMaxQueueSize());
+        withTransportProtocolHandoffThreadCount(getTransportProtocolHandoffThreadCount());
+        withTransportSendHandoffThreadCount(profile.getTransportSendHandoffThreadCount());
+        withGeneralPurposeThreadCount(profile.getGeneralPurposeThreadCount());
+        withQueueProcessorThreadCount(profile.getQueueProcessorThreadCount());
+        withMinFlushTime(profile.getMinFlushTime());
+    }
 }

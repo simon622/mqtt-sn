@@ -162,6 +162,11 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
     }
 
     protected void sendDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {
+
+        if(!running){
+            logger.log(Level.WARNING, String.format("transport is NOT RUNNING trying to send [%s] byte Datagram to [%s]",
+                    packet.getLength(), context));
+        }
         NetworkAddress address = context.getNetworkAddress();
         InetAddress inetAddress = InetAddress.getByName(address.getHostAddress());
         packet.setAddress(inetAddress);
@@ -170,7 +175,9 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
             logger.log(Level.FINE, String.format("sending [%s] byte Datagram to [%s] -> [%s]",
                     packet.getLength(), address, address.getPort()));
         }
-        socket.send(packet);
+        if(socket != null && !socket.isClosed()){
+            socket.send(packet);
+        }
     }
 
     @Override

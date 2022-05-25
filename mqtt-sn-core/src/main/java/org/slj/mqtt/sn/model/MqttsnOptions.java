@@ -182,15 +182,18 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_GENERAL_PURPOSE_THREAD_COUNT = 1;
 
+    /**
+     * Number of queues jobs allowed as backpressure in the workers
+     */
+    public static final int DEFAULT_WORK_QUEUE_BACKPRESSURE = 1000000;
 
     private String contextId;
-
     private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
     private int transportSendHandoffThreadCount = DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
     private int generalPurposeThreadCount = DEFAULT_GENERAL_PURPOSE_THREAD_COUNT;
 
-
+    private int queueBackPressure = DEFAULT_WORK_QUEUE_BACKPRESSURE;
     private boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;
     private boolean sleepClearsRegistrations = DEFAULT_SLEEP_CLEARS_REGISTRATIONS;
     private int minFlushTime = DEFAULT_MIN_FLUSH_TIME;
@@ -225,11 +228,10 @@ public class MqttsnOptions {
      * the session state service
      *
      * @param removeDisconnectedSessionsSeconds - Number of threads to use to service outbound queue processing
-     *
-     * @see {@link MqttsnOptions#DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS}
      */
-    public MqttsnOptions withRemoveDisconnectedSessionsSeconds(int removeDisconnectedSessionsSeconds){
+    public MqttsnOptions withRemoveDisconnectedSessionsSeconds(int removeDisconnectedSessionsSeconds) {
         this.removeDisconnectedSessionsSeconds = removeDisconnectedSessionsSeconds;
         return this;
     }
@@ -238,11 +240,10 @@ public class MqttsnOptions {
      * Should the state service reap messages being recieved?
      *
      * @param reapReceivingMessages - Reap inbound messages
-     *
-     * @see {@link MqttsnOptions#DEFAULT_REAP_RECEIVING_MESSAGES}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_REAP_RECEIVING_MESSAGES}
      */
-    public MqttsnOptions withReapReceivingMessages(boolean reapReceivingMessages){
+    public MqttsnOptions withReapReceivingMessages(boolean reapReceivingMessages) {
         this.reapReceivingMessages = reapReceivingMessages;
         return this;
     }
@@ -251,11 +252,10 @@ public class MqttsnOptions {
      * Configure the log pattern on the environment
      *
      * @param logPattern - the log pattern applied to the SIMPLE log formatter
-     *
-     * @see {@link MqttsnOptions#DEFAULT_SIMPLE_LOG_PATTERN}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_SIMPLE_LOG_PATTERN}
      */
-    public MqttsnOptions withLogPattern(String logPattern){
+    public MqttsnOptions withLogPattern(String logPattern) {
         this.logPattern = logPattern;
         return this;
     }
@@ -264,11 +264,10 @@ public class MqttsnOptions {
      * Configure the behaviour or error retransmissions
      *
      * @param maxErrorRetries - The max number of retries attempted without a valid response before disconnecting the context
-     *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_ERROR_RETRIES}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_ERROR_RETRIES}
      */
-    public MqttsnOptions withMaxErrorRetries(int maxErrorRetries){
+    public MqttsnOptions withMaxErrorRetries(int maxErrorRetries) {
         this.maxErrorRetries = maxErrorRetries;
         return this;
     }
@@ -277,11 +276,10 @@ public class MqttsnOptions {
      * Configure the behaviour or error retransmissions
      *
      * @param maxErrorRetryTime - The time between retries when a response is not received
-     *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_ERROR_RETRY_TIME}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_ERROR_RETRY_TIME}
      */
-    public MqttsnOptions withMaxErrorRetryTime(int maxErrorRetryTime){
+    public MqttsnOptions withMaxErrorRetryTime(int maxErrorRetryTime) {
         this.maxErrorRetryTime = maxErrorRetryTime;
         return this;
     }
@@ -292,11 +290,10 @@ public class MqttsnOptions {
      *
      * @param activeContextTimeout - the time allowed between last message SENT or RECEIVED from context before
      *                             notification to the connection listener
-     *
-     * @see {@link MqttsnOptions#DEFAULT_ACTIVE_CONTEXT_TIMEOUT}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_ACTIVE_CONTEXT_TIMEOUT}
      */
-    public MqttsnOptions withActiveContextTimeout(int activeContextTimeout){
+    public MqttsnOptions withActiveContextTimeout(int activeContextTimeout) {
         this.activeContextTimeout = activeContextTimeout;
         return this;
     }
@@ -306,11 +303,10 @@ public class MqttsnOptions {
      * from transport
      *
      * @param wireLoggingEnabled - output binary representation of all bytes sent and received from transport
-     *
-     * @see {@link MqttsnOptions#DEFAULT_WIRE_LOGGING_ENABLED}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_WIRE_LOGGING_ENABLED}
      */
-    public MqttsnOptions withWireLoggingEnabled(boolean wireLoggingEnabled){
+    public MqttsnOptions withWireLoggingEnabled(boolean wireLoggingEnabled) {
         this.wireLoggingEnabled = wireLoggingEnabled;
         return this;
     }
@@ -322,11 +318,10 @@ public class MqttsnOptions {
      * of concurrency)
      *
      * @param queueProcessorThreadCount - Number of threads to use to service outbound queue processing
-     *
-     * @see {@link MqttsnOptions#DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT}
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT}
      */
-    public MqttsnOptions withQueueProcessorThreadCount(int queueProcessorThreadCount){
+    public MqttsnOptions withQueueProcessorThreadCount(int queueProcessorThreadCount) {
         this.queueProcessorThreadCount = queueProcessorThreadCount;
         return this;
     }
@@ -335,13 +330,12 @@ public class MqttsnOptions {
      * When threadHandoffFromTransport is set to true, how many threads should be made available in the
      * managed pool to handle processing.
      *
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT}
-     *
      * @param transportProtocolHandoffThreadCount - When transportProtocolHandoffThreadCount is set to true, how many threads should be made available in the
-     * managed pool to handle processing
+     *                                            managed pool to handle processing
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT}
      */
-    public MqttsnOptions withTransportProtocolHandoffThreadCount(int transportProtocolHandoffThreadCount){
+    public MqttsnOptions withTransportProtocolHandoffThreadCount(int transportProtocolHandoffThreadCount) {
         this.transportProtocolHandoffThreadCount = transportProtocolHandoffThreadCount;
         return this;
     }
@@ -350,13 +344,12 @@ public class MqttsnOptions {
      * When threadHandoffFromTransport is set to true, how many threads should be made available in the
      * managed pool to handle processing.
      *
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
-     *
      * @param transportSendHandoffThreadCount - When transportSendHandoffThreadCount is set to true, how many threads should be made available in the
-     * managed pool to handle processing
+     *                                        managed pool to handle processing
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
      */
-    public MqttsnOptions withTransportSendHandoffThreadCount(int transportSendHandoffThreadCount){
+    public MqttsnOptions withTransportSendHandoffThreadCount(int transportSendHandoffThreadCount) {
         this.transportSendHandoffThreadCount = transportSendHandoffThreadCount;
         return this;
     }
@@ -365,26 +358,37 @@ public class MqttsnOptions {
      * When generalPurposeThreadCount is set to true, how many threads should be made available in the
      * managed pool to handle processing.
      *
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
-     *
      * @param generalPurposeThreadCount - When generalPurposeThreadCount is set to true, how many threads should be made available in the
-     * managed pool to handle processing
+     *                                  managed pool to handle processing
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
      */
-    public MqttsnOptions withGeneralPurposeThreadCount(int generalPurposeThreadCount){
+    public MqttsnOptions withGeneralPurposeThreadCount(int generalPurposeThreadCount) {
         this.generalPurposeThreadCount = generalPurposeThreadCount;
+        return this;
+    }
+
+    /**
+     * The max. size of the workers queues
+     *
+     * @param queueBackPressure - The size of the queues backing the workers
+     *                          managed pool to handle processing
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_WORK_QUEUE_BACKPRESSURE}
+     */
+    public MqttsnOptions withQueueBackPressure(int queueBackPressure) {
+        this.queueBackPressure = queueBackPressure;
         return this;
     }
 
     /**
      * The idle time between receiving a message and starting a new publish operation (where number of messages on a client queue > 0)
      *
-     * @see {@link MqttsnOptions#DEFAULT_MIN_FLUSH_TIME}
-     *
      * @param minFlushTime - The idle time between receiving a message and starting a new publish operation (where number of messages on a client queue > 0)
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MIN_FLUSH_TIME}
      */
-    public MqttsnOptions withMinFlushTime(int minFlushTime){
+    public MqttsnOptions withMinFlushTime(int minFlushTime) {
         this.minFlushTime = minFlushTime;
         return this;
     }
@@ -393,12 +397,11 @@ public class MqttsnOptions {
      * When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the
      * next AWAKE | ACTIVE states. Setting this to false, will mean the gateway will resend REGISTER messages during an AWAKE ping.
      *
-     * @see {@link MqttsnOptions#DEFAULT_SLEEP_CLEARS_REGISTRATIONS}
-     *
      * @param sleepClearsRegistrations - When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the next AWAKE | ACTIVE states.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_SLEEP_CLEARS_REGISTRATIONS}
      */
-    public MqttsnOptions withSleepClearsRegistrations(boolean sleepClearsRegistrations){
+    public MqttsnOptions withSleepClearsRegistrations(boolean sleepClearsRegistrations) {
         this.sleepClearsRegistrations = sleepClearsRegistrations;
         return this;
     }
@@ -406,12 +409,11 @@ public class MqttsnOptions {
     /**
      * Number of hops to allow broadcast messages
      *
-     * @see {@link MqttsnOptions#DEFAULT_SEARCH_GATEWAY_RADIUS}
-     *
      * @param searchGatewayRadius - Number of hops to allow broadcast messages
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_SEARCH_GATEWAY_RADIUS}
      */
-    public MqttsnOptions withSearchGatewayRadius(int searchGatewayRadius){
+    public MqttsnOptions withSearchGatewayRadius(int searchGatewayRadius) {
         this.searchGatewayRadius = searchGatewayRadius;
         return this;
     }
@@ -419,12 +421,11 @@ public class MqttsnOptions {
     /**
      * How many messages should be allowed in a client's queue (either to send or buffer from the gateway).
      *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_MESSAGE_IN_QUEUE}
-     *
      * @param maxMessagesInQueue - How many messages should be allowed in a client's queue.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_MESSAGE_IN_QUEUE}
      */
-    public MqttsnOptions withMaxMessagesInQueue(int maxMessagesInQueue){
+    public MqttsnOptions withMaxMessagesInQueue(int maxMessagesInQueue) {
         this.maxMessagesInQueue = maxMessagesInQueue;
         return this;
     }
@@ -432,17 +433,16 @@ public class MqttsnOptions {
     /**
      * When a PUBLISH QoS 1,2 message has been in an unconfirmed state for a period of time,
      * should it be requeued for a second DUP sending attempt or discarded.
-     *
+     * <p>
      * NB - The spec says that messages should be resent on next CONNECT clean false, this setting
      * allows the messages to be moved back to the queue immediately
      *
-     * @see {@link MqttsnOptions#DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT}
-     *
      * @param requeueOnInflightTimeout - When a PUBLISH QoS 1,2 message has been in an unconfirmed state for a period of time,
-     * should it be requeued for a second DUP sending attempt or discarded
+     *                                 should it be requeued for a second DUP sending attempt or discarded
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT}
      */
-    public MqttsnOptions withRequeueOnInflightTimeout(boolean requeueOnInflightTimeout){
+    public MqttsnOptions withRequeueOnInflightTimeout(boolean requeueOnInflightTimeout) {
         this.requeueOnInflightTimeout = requeueOnInflightTimeout;
         return this;
     }
@@ -450,12 +450,11 @@ public class MqttsnOptions {
     /**
      * Time in millis a PUBLISH message will reside in the INFLIGHT (unconfirmed) state before it is considered DUP (errord).
      *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_TIME_INFLIGHT}
-     *
      * @param maxTimeInflight - Time in millis a PUBLISH message will reside in the INFLIGHT (unconfirmed) state before it is considered DUP (errord).
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_TIME_INFLIGHT}
      */
-    public MqttsnOptions withMaxTimeInflight(int maxTimeInflight){
+    public MqttsnOptions withMaxTimeInflight(int maxTimeInflight) {
         this.maxTimeInflight = maxTimeInflight;
         return this;
     }
@@ -464,12 +463,11 @@ public class MqttsnOptions {
      * Maximum number of messages allowed INFLIGHT at any given point in time. NB: the specification allows for a single message in flight in either direction.
      * WARNING: changing this default value could lead to unpredictable behaviour depending on the gateway capability.
      *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_MESSAGES_IN_FLIGHT}
-     *
      * @param maxMessagesInflight - Maximum number of messages allowed INFLIGHT at any given point in time. NB: the specification allows for a single message in flight in either direction.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_MESSAGES_IN_FLIGHT}
      */
-    public MqttsnOptions withMaxMessagesInflight(int maxMessagesInflight){
+    public MqttsnOptions withMaxMessagesInflight(int maxMessagesInflight) {
         this.maxMessagesInflight = maxMessagesInflight;
         return this;
     }
@@ -478,12 +476,11 @@ public class MqttsnOptions {
      * The maximum time (in millis) that an acknowledged message will wait to be considered successfully confirmed
      * by the gateway.
      *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_WAIT}
-     *
      * @param maxWait - Time in millis acknowledged message will wait before an error is thrown
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_WAIT}
      */
-    public MqttsnOptions withMaxWait(int maxWait){
+    public MqttsnOptions withMaxWait(int maxWait) {
         this.maxWait = maxWait;
         return this;
     }
@@ -494,10 +491,10 @@ public class MqttsnOptions {
      * the PREDEFINED alias types.
      *
      * @param topicPath - The topic path to register e.g. "foo/bar"
-     * @param alias - The alias of the topic path to match
+     * @param alias     - The alias of the topic path to match
      * @return this configuration
      */
-    public MqttsnOptions withPredefinedTopic(String topicPath, int alias){
+    public MqttsnOptions withPredefinedTopic(String topicPath, int alias) {
 
         MqttsnSpecificationValidator.validateTopicPath(topicPath);
         MqttsnSpecificationValidator.validateTopicAlias(alias);
@@ -510,12 +507,11 @@ public class MqttsnOptions {
     /**
      * The number at which messageIds start, typically this should be 1.
      *
-     * @see {@link MqttsnOptions#DEFAULT_MSG_ID_STARTS_AT}
-     *
      * @param msgIdStartAt - The number at which messageIds start, typically this should be 1.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MSG_ID_STARTS_AT}
      */
-    public MqttsnOptions withMsgIdsStartAt(int msgIdStartAt){
+    public MqttsnOptions withMsgIdsStartAt(int msgIdStartAt) {
         this.msgIdStartAt = msgIdStartAt;
         return this;
     }
@@ -524,12 +520,11 @@ public class MqttsnOptions {
      * The maximum number of NORMAL topics allowed in the topic registry.
      * NB: Realistically an application should not need many hundreds of topics in their hierarchy
      *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_TOPICS_IN_REGISTRY}
-     *
      * @param maxTopicsInRegistry - The maximum number of NORMAL topics allowed in the topic registry.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_TOPICS_IN_REGISTRY}
      */
-    public MqttsnOptions withMaxTopicsInRegistry(int maxTopicsInRegistry){
+    public MqttsnOptions withMaxTopicsInRegistry(int maxTopicsInRegistry) {
         this.maxTopicsInRegistry = maxTopicsInRegistry;
         return this;
     }
@@ -538,12 +533,11 @@ public class MqttsnOptions {
      * Should discovery be enabled. When enabled the transport layer will run its broadcast threads and
      * allow dynamic gateway / client binding.
      *
-     * @see {@link MqttsnOptions#DEFAULT_DISCOVERY_ENABLED}
-     *
      * @param enableDiscovery - Should discovery be enabled.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_DISCOVERY_ENABLED}
      */
-    public MqttsnOptions withDiscoveryEnabled(boolean enableDiscovery){
+    public MqttsnOptions withDiscoveryEnabled(boolean enableDiscovery) {
         this.enableDiscovery = enableDiscovery;
         return this;
     }
@@ -552,12 +546,11 @@ public class MqttsnOptions {
      * The maximum number of addresses allowed in the network registry. An address is a network location mapped
      * to a clientId
      *
-     * @see {@link MqttsnOptions#DEFAULT_MAX_NETWORK_ADDRESS_ENTRIES}
-     *
      * @param maxNetworkAddressEntries - The maximum number of addresses allowed in the network registry
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_NETWORK_ADDRESS_ENTRIES}
      */
-    public MqttsnOptions withMaxNetworkAddressEntries(int maxNetworkAddressEntries){
+    public MqttsnOptions withMaxNetworkAddressEntries(int maxNetworkAddressEntries) {
         this.maxNetworkAddressEntries = maxNetworkAddressEntries;
         return this;
     }
@@ -565,12 +558,11 @@ public class MqttsnOptions {
     /**
      * The starting value of assigned NORMAL topic aliases that the gateway hands out.
      *
-     * @see {@link MqttsnOptions#DEFAULT_ALIAS_STARTS_AT}
-     *
      * @param aliasStartAt - The starting value of assigned NORMAL topic aliases that the gateway hands out.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_ALIAS_STARTS_AT}
      */
-    public MqttsnOptions withAliasStartAt(int aliasStartAt){
+    public MqttsnOptions withAliasStartAt(int aliasStartAt) {
         this.aliasStartAt = aliasStartAt;
         return this;
     }
@@ -579,30 +571,29 @@ public class MqttsnOptions {
      * The contextId is a general term for EITHER the clientId when running as a client or the gatewayId
      * when running as a gateway. It should conform to the specification. It is advised that it contains between
      * 1-23 alpha numeric characters from the ASCII character set.
-     *
+     * <p>
      * NB: When running in gateway mode, this is a mandatory item that should be set by the application.
      *
      * @param contextId - The contextId is a general term for EITHER the clientId when running as a client or the gatewayId
-     * when running as a gateway.
+     *                  when running as a gateway.
      * @return this configuration
      */
-    public MqttsnOptions withContextId(String contextId){
+    public MqttsnOptions withContextId(String contextId) {
         this.contextId = contextId;
         return this;
     }
 
     /**
      * The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
-     *
+     * <p>
      * NB: only applicable to client
      *
-     * @see {@link MqttsnOptions#DEFAULT_DISCOVERY_TIME_SECONDS}
-     *
      * @param discoveryTime - Time (in seconds) a client will wait for a broadcast during CONNECT before giving up
-     * when running as a client.
+     *                      when running as a client.
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_DISCOVERY_TIME_SECONDS}
      */
-    public MqttsnOptions withDiscoveryTime(int discoveryTime){
+    public MqttsnOptions withDiscoveryTime(int discoveryTime) {
         this.discoveryTime = discoveryTime;
         return this;
     }
@@ -610,18 +601,17 @@ public class MqttsnOptions {
     /**
      * The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting
      * in the quotient which is the time (since last sent message) each ping will be issued
-     *
+     * <p>
      * For example a 60 seconds session with a divisor of 4 will yield 15 second pings between
      * activity
-     *
+     * <p>
      * NB: only applicable to client
-     *
-     * @see {@link MqttsnOptions#DEFAULT_PING_DIVISOR}
      *
      * @param pingDivisor - The divisor to use for the ping window
      * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_PING_DIVISOR}
      */
-    public MqttsnOptions withPingDivisor(int pingDivisor){
+    public MqttsnOptions withPingDivisor(int pingDivisor) {
         this.pingDivisor = pingDivisor;
         return this;
     }
@@ -634,7 +624,7 @@ public class MqttsnOptions {
      * @param maxProtocolMessageSize - The max allowable size of protocol messages.
      * @return this configuration
      */
-    public MqttsnOptions withMaxProtocolMessageSize(int maxProtocolMessageSize){
+    public MqttsnOptions withMaxProtocolMessageSize(int maxProtocolMessageSize) {
         this.maxProtocolMessageSize = maxProtocolMessageSize;
         return this;
     }
@@ -646,7 +636,7 @@ public class MqttsnOptions {
      * @param congestionWait - The time (in seconds) clients should backoff when a congestion message is recieved
      * @return this configuration
      */
-    public MqttsnOptions withCongestionWait(int congestionWait){
+    public MqttsnOptions withCongestionWait(int congestionWait) {
         this.congestionWait = congestionWait;
         return this;
     }
@@ -655,12 +645,13 @@ public class MqttsnOptions {
      * Sets the locations of known clients or gateways on the network. When running as a client and discovery is not enabled,
      * it is mandatory that at least 1 gateway entry be supplied, which will be the gateway the client talks to. In gateway
      * mode, the registry is populated dynamically.
+     *
      * @param contextId - the contextId of the known remote location
-     * @param address - the network address of the known remote location
+     * @param address   - the network address of the known remote location
      * @return this config
      */
-    public MqttsnOptions withNetworkAddressEntry(String contextId, NetworkAddress address){
-        if(networkAddressEntries == null){
+    public MqttsnOptions withNetworkAddressEntry(String contextId, NetworkAddress address) {
+        if (networkAddressEntries == null) {
             synchronized (this) {
                 if (networkAddressEntries == null) {
                     networkAddressEntries = new HashMap();
@@ -673,10 +664,11 @@ public class MqttsnOptions {
 
     /**
      * Set the security options which will be considered by the various components of the system
+     *
      * @param securityOptions - the security options to use in the runtime
      * @return this config
      */
-    public MqttsnOptions withSecurityOptions(MqttsnSecurityOptions securityOptions){
+    public MqttsnOptions withSecurityOptions(MqttsnSecurityOptions securityOptions) {
         this.securityOptions = securityOptions;
         return this;
     }
@@ -781,7 +773,9 @@ public class MqttsnOptions {
         return reapReceivingMessages;
     }
 
-    public int getQueueProcessorThreadCount() { return queueProcessorThreadCount; }
+    public int getQueueProcessorThreadCount() {
+        return queueProcessorThreadCount;
+    }
 
     public int getTransportProtocolHandoffThreadCount() {
         return transportProtocolHandoffThreadCount;
@@ -809,5 +803,9 @@ public class MqttsnOptions {
 
     public void setSecurityOptions(MqttsnSecurityOptions securityOptions) {
         this.securityOptions = securityOptions;
+    }
+
+    public int getQueueBackPressure() {
+        return queueBackPressure;
     }
 }

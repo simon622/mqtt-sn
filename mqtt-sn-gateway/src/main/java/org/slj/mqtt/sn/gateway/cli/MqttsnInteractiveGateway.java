@@ -62,7 +62,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     enum COMMANDS {
         POKE("Poke the queue", new String[0], true),
-        INFLIGHT("List inlight messages", new String[0], false),
+        INFLIGHT("List inflight messages", new String[0], false),
         REINIT("Reinit the backend broker connection", new String[0]),
         FLUSH("Run inflight reaper on clientId", new String[0]),
         NETWORK("View network registry", new String[0]),
@@ -258,14 +258,19 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         }
     }
 
-    protected void sessions() {
+    protected void sessions() throws MqttsnException {
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         Iterator<IMqttsnContext> itr = gatewayRuntimeRegistry.getGatewaySessionService().iterator();
         message("Sessions(s): ");
         while(itr.hasNext()){
+
             IMqttsnContext c = itr.next();
             INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
-            tabmessage(String.format("%s -> %s", c.getId(), networkContext.getNetworkAddress()));
+            IMqttsnSessionState state = gatewayRuntimeRegistry.
+                    getGatewaySessionService().getSessionState(c, false);
+            tabmessage(String.format("%s (%s) [%s] -> %s", c.getId(),
+                    gatewayRuntimeRegistry.getMessageQueue().size(c),
+                    networkContext.getNetworkAddress(), getColorForState(state.getClientState())));
         }
     }
 

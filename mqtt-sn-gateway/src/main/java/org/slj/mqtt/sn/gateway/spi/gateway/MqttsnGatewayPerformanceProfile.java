@@ -33,25 +33,25 @@ public final class MqttsnGatewayPerformanceProfile {
      * For use in typical gateway deployments on site. Will limit CPU use while respecting incoming device traffic
      */
     public static MqttsnGatewayPerformanceProfile BALANCED_GATEWAY_GENERAL_PURPOSE =
-            new MqttsnGatewayPerformanceProfile(5, 2, 1, 1, 250, 100, 25);
+            new MqttsnGatewayPerformanceProfile(5, 2, 1, 1, 250, 100, 25, 100);
 
     /**
      * For use in typical cloud deployments. Balanced between protocol responsiveness and outbound messaging from backend
      */
     public static MqttsnGatewayPerformanceProfile BALANCED_CLOUD_GENERAL_PURPOSE =
-            new MqttsnGatewayPerformanceProfile(20, 10, 1, 2, 25, 5000, 50);
+            new MqttsnGatewayPerformanceProfile(20, 10, 1, 2, 25, 5000, 50, 1000);
 
     /**
      * For use in cloud deployments where number of connecting devices and publish messages is higher than egress traffic.
      */
     public static MqttsnGatewayPerformanceProfile INGRESS_CLOUD =
-            new MqttsnGatewayPerformanceProfile(40, 5, 1, 2, 50, 10000, 25);
+            new MqttsnGatewayPerformanceProfile(40, 5, 1, 2, 50, 10000, 25, 5000);
 
     /**
      * For use in cloud deployments where data going out to devices is of high importance
      */
     public static MqttsnGatewayPerformanceProfile EGRESS_CLOUD =
-            new MqttsnGatewayPerformanceProfile(20, 40, 1, 2, 5, 5000, 250);
+            new MqttsnGatewayPerformanceProfile(20, 40, 1, 2, 5, 5000, 250, 2500);
 
 
     private int transportProtocolHandoffThreadCount;
@@ -60,21 +60,27 @@ public final class MqttsnGatewayPerformanceProfile {
     private int generalPurposeThreadCount;
     private int minFlushTime;
     private int maxConnectedClients;
-    private int maxQueueSize;
+    private int maxSessionQueueSize;
+    private int maxBackendQueueSize;
 
 
-    private MqttsnGatewayPerformanceProfile(int transportProtocolHandoffThreadCount, int transportSendHandoffThreadCount, int queueProcessorThreadCount, int generalPurposeThreadCount, int minFlushTime, int maxConnectedClients, int maxQueueSize) {
+    private MqttsnGatewayPerformanceProfile(int transportProtocolHandoffThreadCount, int transportSendHandoffThreadCount, int queueProcessorThreadCount, int generalPurposeThreadCount, int minFlushTime, int maxConnectedClients, int maxSessionQueueSize, int maxBackendQueueSize) {
         this.transportProtocolHandoffThreadCount = transportProtocolHandoffThreadCount;
         this.transportSendHandoffThreadCount = transportSendHandoffThreadCount;
         this.queueProcessorThreadCount = queueProcessorThreadCount;
         this.generalPurposeThreadCount = generalPurposeThreadCount;
         this.minFlushTime = minFlushTime;
         this.maxConnectedClients = maxConnectedClients;
-        this.maxQueueSize = maxQueueSize;
+        this.maxSessionQueueSize = maxSessionQueueSize;
+        this.maxBackendQueueSize = maxBackendQueueSize;
     }
 
-    public int getMaxQueueSize() {
-        return maxQueueSize;
+    public int getMaxSessionQueueSize() {
+        return maxSessionQueueSize;
+    }
+
+    public int getMaxBackendQueueSize() {
+        return maxBackendQueueSize;
     }
 
     public int getTransportProtocolHandoffThreadCount() {

@@ -57,7 +57,7 @@ public abstract class AbstractMqttsnRuntime {
 
     private volatile ThreadGroup threadGroup;
     private ExecutorService generalUseExecutorService;
-    private List<ExecutorService> managedExecutorServices;
+    private List<ExecutorService> managedExecutorServices = new ArrayList<>();
     private CountDownLatch startupLatch;
     private long startedAt;
     private final Object monitor = new Object();
@@ -69,14 +69,14 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void start(IMqttsnRuntimeRegistry reg, boolean join) throws MqttsnException {
         if(!running){
-            generalUseExecutorService = createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
-            startedAt = System.currentTimeMillis();
             setupEnvironment(reg.getOptions());
+            startedAt = System.currentTimeMillis();
             registry = reg;
             startupLatch = new CountDownLatch(1);
             running = true;
             registry.setRuntime(this);
             registry.init();
+            generalUseExecutorService = createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
             bindShutdownHook();
             logger.log(Level.INFO, "starting mqttsn-environment..");
             startupServices(registry);
@@ -294,31 +294,45 @@ public abstract class AbstractMqttsnRuntime {
         connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
     }
 
-    /**
-     * Hook method, create the intial async executor service which will be used for handoff from the
-     * transport layer into the application
-     */
-    public synchronized ExecutorService createManagedExecutorService(String name, int threadCount){
-
-        if(managedExecutorServices == null){
-            managedExecutorServices = new ArrayList<>();
-        }
-
-        ExecutorService service = Executors.newFixedThreadPool(threadCount, new ThreadFactory() {
-            int count = 0;
+    protected ThreadFactory createManagedThreadFactory(String name, int threadPriority){
+        return new ThreadFactory() {
+            volatile int count = 0;
             @Override
             public Thread newThread(Runnable r) {
                 Thread t = new Thread(getThreadGroup(), r, name + ++count);
-                t.setPriority(Thread.MIN_PRIORITY + 1);
+                t.setPriority(Math.max(1, Math.min(threadPriority, 10)));
                 t.setDaemon(true);
                 return t;
             }
-        });
-        managedExecutorServices.add(service);
-        return service;
+        };
     }
 
-    public Future<?> async(ExecutorService executorService,  Runnable r){
+    /**
+     * Create a centrally managed executor service with managed groups and backpressure
+     */
+    public synchronized ExecutorService createManagedExecutorService(String name, int threadCount){
+
+        BlockingQueue<Runnable> linkedBlockingDeque
+                = new LinkedBlockingDeque<>(registry.getOptions().getQueueBackPressure());
+        ExecutorService executorService = new ThreadPoolExecutor(1, Math.max(1, threadCount), 30,
+                TimeUnit.SECONDS, linkedBlockingDeque, createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1), new ThreadPoolExecutor.DiscardPolicy());
+        managedExecutorServices.add(executorService);
+        return executorService;
+    }
+
+    /**
+     * Create a centrally managed scheduled executor service with managed group
+     */
+    public synchronized ScheduledExecutorService createManagedScheduledExecutorService(String name, int threadCount){
+
+        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(Math.max(1, threadCount),
+                createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1),
+                new ThreadPoolExecutor.DiscardPolicy());
+        managedExecutorServices.add(executorService);
+        return executorService;
+    }
+
+    public Future<?> async(ExecutorService executorService, Runnable r){
         return running ? executorService.submit(r) : null;
     }
 

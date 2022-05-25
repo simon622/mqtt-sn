@@ -62,6 +62,11 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
      */
     public static final double DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND = 0d;
 
+    /**
+     * The maximum number of publish operations queued up to send to backend
+     */
+    public static final int DEFAULT_MAX_BACKEND_QUEUE_SIZE = 10000;
+
     private Set<String> allowedClientIds = new HashSet();
     {
         allowedClientIds.add(DEFAULT_CLIENT_ALLOWED_ALL);
@@ -69,6 +74,9 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
 
     private int maxConnectedClients = DEFAULT_MAX_CONNECTED_CLIENTS;
     private double maxBrokerPublishesPerSecond = DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND;
+
+    private int maxBackendQueueSize = DEFAULT_MAX_BACKEND_QUEUE_SIZE;
+
     private int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
     private int gatewayId = DEFAULT_GATEWAY_ID;
     private boolean realtimeMessageCounters = DEFAULT_REALTIME_MESSAGE_COUNTERS;
@@ -122,6 +130,10 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
         return maxBrokerPublishesPerSecond;
     }
 
+    public int getMaxBackendQueueSize() {
+        return maxBackendQueueSize;
+    }
+
     public MqttsnGatewayOptions withAllowedClientId(String clientId){
 
         //-- if the application specifies custom allow list, remove wildcard
@@ -132,13 +144,19 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
         return this;
     }
 
+    public MqttsnGatewayOptions withMaxBackendQueueSize(int maxBackendQueueSize){
+        this.maxBackendQueueSize = maxBackendQueueSize;
+        return this;
+    }
+
     public void withPerformanceProfile(MqttsnGatewayPerformanceProfile profile){
         withMaxConnectedClients(profile.getMaxConnectedClients());
-        withMaxMessagesInQueue(profile.getMaxQueueSize());
-        withTransportProtocolHandoffThreadCount(getTransportProtocolHandoffThreadCount());
+        withMaxMessagesInQueue(profile.getMaxSessionQueueSize());
+        withTransportProtocolHandoffThreadCount(profile.getTransportProtocolHandoffThreadCount());
         withTransportSendHandoffThreadCount(profile.getTransportSendHandoffThreadCount());
         withGeneralPurposeThreadCount(profile.getGeneralPurposeThreadCount());
         withQueueProcessorThreadCount(profile.getQueueProcessorThreadCount());
         withMinFlushTime(profile.getMinFlushTime());
+        withMaxBackendQueueSize(profile.getMaxBackendQueueSize());
     }
 }

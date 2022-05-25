@@ -68,7 +68,9 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
         INetworkContext context = mqttsnContextRegistry.get(sessionContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get network route for session " + sessionContext);
-        logger.log(Level.FINE, String.format("getting network context from RAM registry by session [%s] -> [%s]", sessionContext, context));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("getting network context from RAM registry by session [%s] -> [%s]", sessionContext, context));
+        }
         return context;
     }
 
@@ -77,7 +79,9 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
         IMqttsnContext context = networkContextRegistry.get(networkContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get session context for network route " + networkContext);
-        logger.log(Level.FINE, String.format("getting session context from RAM registry network route [%s] -> [%s]", networkContext, context));
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE, String.format("getting session context from RAM registry network route [%s] -> [%s]", networkContext, context));
+        }
         return context;
     }
 

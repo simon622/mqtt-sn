@@ -37,14 +37,14 @@ public class PublishOnlyTestMain {
         try {
             System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 150, 30);
+                    new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 100, 30);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(60, TimeUnit.SECONDS);
 
             input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 20;
+            input.messageCount = 100;
             input.qos = 0;
             input.topic = "test";
 

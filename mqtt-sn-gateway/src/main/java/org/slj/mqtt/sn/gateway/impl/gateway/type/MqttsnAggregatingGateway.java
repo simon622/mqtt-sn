@@ -128,20 +128,28 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 }
             }
 
-            BrokerPublishOperation op = new BrokerPublishOperation();
-            op.context = context;
-            op.topicPath = topicPath;
-            op.initialMessage = message;
-            op.payload = payload;
-            op.retained = retained;
-            op.qos = qos;
+            if(queue.size() >= ((MqttsnGatewayOptions) registry.getOptions()).getMaxBackendQueueSize()){
+                logger.log(Level.WARNING, String.format("queuing message for publish [%s] failed, backend queue at capacity [%s]", topicPath, queue.size()));
+                return new PublishResult(Result.STATUS.ERROR,"backend queue is full.");
+            } else {
+                BrokerPublishOperation op = new BrokerPublishOperation();
+                op.context = context;
+                op.topicPath = topicPath;
+                op.initialMessage = message;
+                op.payload = payload;
+                op.retained = retained;
+                op.qos = qos;
+                queue.add(op);
 
-            queue.add(op);
-            logger.log(Level.FINE, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
-            synchronized (monitor){
-                monitor.notifyAll();
+                if(logger.isLoggable(Level.FINE)){
+                    logger.log(Level.FINE, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
+                }
+                synchronized (monitor){
+                    monitor.notifyAll();
+                }
+                return new PublishResult(Result.STATUS.SUCCESS,"queued for sending on publishing thread");
             }
-            return new PublishResult(Result.STATUS.SUCCESS,"queued for sending on publishing thread");
+
         } catch(Exception e){
             throw new MqttsnBackendException(e);
         }

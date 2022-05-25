@@ -60,31 +60,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     public synchronized void start(T runtime) throws MqttsnException {
         flushOperations = new HashMap();
-        executorService = Executors.newScheduledThreadPool(
+        executorService = runtime.getRuntime().createManagedScheduledExecutorService("mqtt-sn-scheduled-queue-flush-",
                 runtime.getOptions().getQueueProcessorThreadCount());
-
         lastUsedMsgIds = Collections.synchronizedMap(new HashMap());
         lastMessageReceived = Collections.synchronizedMap(new HashMap());
         lastMessageSent = Collections.synchronizedMap(new HashMap());
         lastActiveMessage = Collections.synchronizedMap(new HashMap());
         super.start(runtime);
-    }
-
-    @Override
-    public void stop() throws MqttsnException {
-        super.stop();
-        try {
-            if(!executorService.isShutdown()){
-                executorService.shutdown();
-            }
-            executorService.awaitTermination(10, TimeUnit.SECONDS);
-        } catch(InterruptedException e){
-            Thread.currentThread().interrupt();
-        } finally {
-            if (!executorService.isTerminated()) {
-                executorService.shutdownNow();
-            }
-        }
     }
 
     protected void scheduleWork(IMqttsnContext context, int time, TimeUnit unit){

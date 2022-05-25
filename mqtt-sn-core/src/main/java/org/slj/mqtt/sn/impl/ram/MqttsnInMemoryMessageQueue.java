@@ -62,7 +62,9 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
         try {
             Queue<QueuedPublishMessage> queue = getQueue(context);
             if(queue.size() >= getMaxQueueSize()){
-                logger.log(Level.WARNING, String.format("max queue size reached for client [%s] >= [%s]", context, queue.size()));
+                if(logger.isLoggable(Level.FINE)){
+                    logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", context, queue.size()));
+                }
                 throw new MqttsnQueueAcceptException("max queue size reached for client");
             }
             boolean b;
@@ -70,9 +72,9 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
                 b = queue.offer(message);
             }
 
-            int size = size(context);
-
-            logger.log(MqttsnUtils.percentOf(size, getMaxQueueSize()) > 80 ? Level.WARNING : Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, context, queue.size()));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, context, queue.size()));
+            }
             MqttsnWaitToken token = MqttsnWaitToken.from(message);
             message.setToken(token);
             return token;

@@ -34,8 +34,10 @@ import org.slj.mqtt.sn.spi.MqttsnException;
  */
 public interface IMqttsnGatewayClusterService<T extends IMqttsnRuntimeRegistry> extends IMqttsnService<T> {
 
-    boolean notifyConnection(IMqttsnContext context) throws MqttsnException;
+    void notifyConnection(IMqttsnContext context) throws MqttsnException;
 
-    boolean notifyDisconnection(IMqttsnContext context) throws MqttsnException;
+    void notifyAwake(IMqttsnContext context) throws MqttsnException;
+
+    void notifyDisconnection(IMqttsnContext context) throws MqttsnException;
 
 }

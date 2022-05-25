@@ -51,7 +51,7 @@ public final class MqttsnGatewayPerformanceProfile {
      * For use in cloud deployments where data going out to devices is of high importance
      */
     public static MqttsnGatewayPerformanceProfile EGRESS_CLOUD =
-            new MqttsnGatewayPerformanceProfile(10, 80, 5, 2, 1, 5000, 2500, 25000);
+            new MqttsnGatewayPerformanceProfile(10, 5, 5, 2, 25, 5000, 2500, 25000);
 
 
     private int transportProtocolHandoffThreadCount;

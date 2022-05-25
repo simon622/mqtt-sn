@@ -29,6 +29,7 @@ import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -150,7 +151,6 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
     @Override
     public void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException {
         try {
-//            byte[] payload = drain(buffer);
             DatagramPacket packet = new DatagramPacket(data, data.length);
             sendDatagramInternal(context, packet);
         } catch(Exception e){
@@ -164,7 +164,6 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
     }
 
     protected void sendDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {
-
         if(!running){
             logger.log(Level.WARNING, String.format("transport is NOT RUNNING trying to send [%s] byte Datagram to [%s]",
                     packet.getLength(), context));
@@ -177,6 +176,10 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
             logger.log(Level.FINE, String.format("sending [%s] byte Datagram to [%s] -> [%s]",
                     packet.getLength(), address, address.getPort()));
         }
+        send(packet);
+    }
+
+    protected void send(DatagramPacket packet) throws IOException {
         if(socket != null && !socket.isClosed()){
             socket.send(packet);
         }

@@ -37,6 +37,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
@@ -442,7 +443,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     protected IMqttsnTransport createTransport() {
         MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().
                 withPort(MqttsnUdpOptions.DEFAULT_LOCAL_PORT);
-        return new MqttsnUdpTransport(udpOptions);
+        return new MqttsnUdpBatchTransport(udpOptions, 2048);
     }
 
     @Override

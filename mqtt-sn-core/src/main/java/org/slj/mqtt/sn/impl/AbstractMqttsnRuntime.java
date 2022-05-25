@@ -301,7 +301,6 @@ public abstract class AbstractMqttsnRuntime {
             public Thread newThread(Runnable r) {
                 Thread t = new Thread(getThreadGroup(), r, name + ++count);
                 t.setPriority(Math.max(1, Math.min(threadPriority, 10)));
-                t.setDaemon(true);
                 return t;
             }
         };
@@ -315,7 +314,8 @@ public abstract class AbstractMqttsnRuntime {
         BlockingQueue<Runnable> linkedBlockingDeque
                 = new LinkedBlockingDeque<>(registry.getOptions().getQueueBackPressure());
         ExecutorService executorService = new ThreadPoolExecutor(1, Math.max(1, threadCount), 30,
-                TimeUnit.SECONDS, linkedBlockingDeque, createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1), new ThreadPoolExecutor.DiscardPolicy());
+                TimeUnit.SECONDS, linkedBlockingDeque, createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1),
+                new ThreadPoolExecutor.CallerRunsPolicy());
         managedExecutorServices.add(executorService);
         return executorService;
     }
@@ -326,22 +326,40 @@ public abstract class AbstractMqttsnRuntime {
     public synchronized ScheduledExecutorService createManagedScheduledExecutorService(String name, int threadCount){
 
         ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(Math.max(1, threadCount),
-                createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1),
-                new ThreadPoolExecutor.DiscardPolicy());
+                createManagedThreadFactory(name, Thread.MIN_PRIORITY + 4),
+                new ThreadPoolExecutor.CallerRunsPolicy());//DiscardPolicy());
         managedExecutorServices.add(executorService);
         return executorService;
     }
 
-    public Future<?> async(ExecutorService executorService, Runnable r){
-        return running ? executorService.submit(r) : null;
+    public <T> Future<T> async(ExecutorService executorService, Runnable r, T result){
+        return running ? executorService.submit(r, result) : null;
+    }
+
+    public void async(ExecutorService executorService, Runnable r){
+        if(running) executorService.submit(r);
+    }
+
+    public void asyncWithCallback(ExecutorService executorService, Runnable r, Runnable callback){
+        executorService.submit(() -> {
+            try {
+                r.run();
+            } finally {
+                callback.run();
+            }
+        });
     }
 
     /**
      * Submit work for the main worker thread group, this could be
      * transport operations or confirmations etc.
      */
-    public Future<?> async(Runnable r){
-        return async(generalUseExecutorService,  r);
+    public <T> Future<T> async(Runnable r, T result){
+        return async(generalUseExecutorService, r, result);
+    }
+
+    public void async(Runnable r){
+        async(generalUseExecutorService, r);
     }
 
     /**

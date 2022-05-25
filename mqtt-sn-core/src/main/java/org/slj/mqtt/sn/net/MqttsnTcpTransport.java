@@ -112,7 +112,7 @@ public class MqttsnTcpTransport
     }
 
     @Override
-    protected void writeToTransport(INetworkContext context, ByteBuffer data) throws MqttsnException {
+    protected void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException {
         try {
             if(clientMode){
                 if(clientHandler == null){
@@ -124,12 +124,12 @@ public class MqttsnTcpTransport
                     }
                 }
                 if(clientHandler != null){
-                    clientHandler.write(drain(data));
+                    clientHandler.write(data);
                 }
 
             } else {
                 if(server != null){
-                    server.write(context, drain(data));
+                    server.write(context, data);
                 }
             }
         } catch(IOException | InterruptedException e){
@@ -463,7 +463,7 @@ public class MqttsnTcpTransport
                                 if(logger.isLoggable(Level.FINE)){
                                     logger.log(Level.FINE, String.format("received [%s] bytes from socket for [%s], reset buffer", messageLength, descriptor));
                                 }
-                                receiveFromTransport(descriptor.context, wrap(baos.toByteArray()));
+                                receiveFromTransport(descriptor.context, baos.toByteArray());
                                 messageLength = 0;
                                 messageLengthRemaining = 0;
                                 baos.reset();

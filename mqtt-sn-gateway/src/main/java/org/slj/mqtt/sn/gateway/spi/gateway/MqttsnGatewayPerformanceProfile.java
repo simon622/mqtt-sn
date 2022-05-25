@@ -51,11 +51,11 @@ public final class MqttsnGatewayPerformanceProfile {
      * For use in cloud deployments where data going out to devices is of high importance
      */
     public static MqttsnGatewayPerformanceProfile EGRESS_CLOUD =
-            new MqttsnGatewayPerformanceProfile(20, 40, 1, 2, 5, 5000, 250, 2500);
+            new MqttsnGatewayPerformanceProfile(10, 180, 8, 2, 5, 5000, 2500, 25000);
 
 
     private int transportProtocolHandoffThreadCount;
-    private int transportSendHandoffThreadCount;
+    private int transportPublishHandoffThreadCount;
     private int queueProcessorThreadCount;
     private int generalPurposeThreadCount;
     private int minFlushTime;
@@ -64,9 +64,9 @@ public final class MqttsnGatewayPerformanceProfile {
     private int maxBackendQueueSize;
 
 
-    private MqttsnGatewayPerformanceProfile(int transportProtocolHandoffThreadCount, int transportSendHandoffThreadCount, int queueProcessorThreadCount, int generalPurposeThreadCount, int minFlushTime, int maxConnectedClients, int maxSessionQueueSize, int maxBackendQueueSize) {
+    private MqttsnGatewayPerformanceProfile(int transportProtocolHandoffThreadCount, int transportPublishHandoffThreadCount, int queueProcessorThreadCount, int generalPurposeThreadCount, int minFlushTime, int maxConnectedClients, int maxSessionQueueSize, int maxBackendQueueSize) {
         this.transportProtocolHandoffThreadCount = transportProtocolHandoffThreadCount;
-        this.transportSendHandoffThreadCount = transportSendHandoffThreadCount;
+        this.transportPublishHandoffThreadCount = transportPublishHandoffThreadCount;
         this.queueProcessorThreadCount = queueProcessorThreadCount;
         this.generalPurposeThreadCount = generalPurposeThreadCount;
         this.minFlushTime = minFlushTime;
@@ -87,8 +87,8 @@ public final class MqttsnGatewayPerformanceProfile {
         return transportProtocolHandoffThreadCount;
     }
 
-    public int getTransportSendHandoffThreadCount() {
-        return transportSendHandoffThreadCount;
+    public int getTransportPublishHandoffThreadCount() {
+        return transportPublishHandoffThreadCount;
     }
 
     public int getQueueProcessorThreadCount() {

@@ -253,13 +253,14 @@ The single host deployment of the gateway will happily handle **tens of thousand
 
 1. Number of allowed connections
 2. Size of thread pool to handle protocol messages
-3. Size of thread pool to handle outbound messages
+3. Size of thread pool to handle outbound publish messages
 4. Size of thread pool to handle message expansion (connector ingress)
-5. Max lost/sleeping/disconnected session retention time
-6. Max session queue size
-7. Max backend queue size
+5. Max. lost/sleeping/disconnected session retention time
+6. Max. session queue size
+7. Max. backend queue size
 8. Backend publishing rate limiter (connector egress)
 9. Min. flush time
+10. Max. back pressure queue size (defaults to caller runs strategy)
 
 I have provided some pre-configured **performance profiles** which have been optimised for slightly different deployment models.
 
@@ -275,21 +276,9 @@ options.withPerformanceProfile(
                         MqttsnGatewayPerformanceProfile.BALANCED_CLOUD_GENERAL_PURPOSE);
 ```
 
-
 I have run a limited set of benchmarks using the [mqtt-sn-load-test](/mqtt-sn-load-test) project. Benchmarking MQTT-SN is a little different than MQTT due to the constraint of only a single message
 being inflight for a given client at any point in time, therefore running some of the scenarios that are used to benchmark MQTT is not comparable since the message inflight rule provides
 an artificial bottleneck; further the round-trip latency is coupled to the latency of the backend broker. 
-
-In a simple load-test environment on a single gateway instance running in loopback mode (no backend broker)[^1] on a local[^2] instance with 10,000 client connections I was able 
-to achieve (after a round of performance tuning) over 400,000 [^3] outbound publish messages being delivered per second (at the same time as 5,500 inbound publish operations). See the grab below for results.
-
-This was an informal load test, and I would encourage anyone who would like to take this further to share their results.
-
-[^1]: Setting the gateway into loopback mode will short-circuit delivery out to a broker on the backand and treat the inbound messages as if they came back from subscriptions on the broker (essentially acting like a broker).
-[^2]: Running the gateway on a local virtual machine would mean network latency is not a factor in these tests
-[^3]: Messages sent at QoS 0, achieved using a tuned configuration (120 delivery threads, 60 protocol threads, 2 general purpose threads, 2 queue processing threads) to match the expectation of the test profile (that is a large degree of message expansion cause by many clients subscribing to a single topic).
-
-![Load Test Results](/images/peak-message-count.png)
 
 **This is a very expansive subject that can't really be covered here, and I would urge anyone looking to deploy this runtime in production to reach out to discuss performance optimisation.**
 

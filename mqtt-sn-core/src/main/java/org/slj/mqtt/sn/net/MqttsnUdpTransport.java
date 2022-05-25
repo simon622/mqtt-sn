@@ -143,14 +143,15 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
             receiverThread.interrupt();
         }
 
+        logger.log(Level.INFO, String.format("stopped udp transport"));
         broadcastThread = null;
     }
 
     @Override
-    public void writeToTransport(INetworkContext context, ByteBuffer buffer) throws MqttsnException {
+    public void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException {
         try {
-            byte[] payload = drain(buffer);
-            DatagramPacket packet = new DatagramPacket(payload, payload.length);
+//            byte[] payload = drain(buffer);
+            DatagramPacket packet = new DatagramPacket(data, data.length);
             sendDatagramInternal(context, packet);
         } catch(Exception e){
             throw new MqttsnException(e);
@@ -158,7 +159,8 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
     }
 
     protected void receiveDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {
-        receiveFromTransport(context, wrap(packet.getData(), packet.getLength()));
+        ByteBuffer bb = wrap(packet.getData(), packet.getLength());
+        receiveFromTransport(context, drain(bb));
     }
 
     protected void sendDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {

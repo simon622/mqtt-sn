@@ -51,8 +51,8 @@ public class LoopbackGatewayInteractiveMain {
                         withPassword(password);
 
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(
-                        MqttsnGatewayPerformanceProfile.BALANCED_CLOUD_GENERAL_PURPOSE);
-                ((MqttsnGatewayOptions)options).withMaxConnectedClients(100000);
+                        MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
+                ((MqttsnGatewayOptions)options).withMaxConnectedClients(10000);
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).

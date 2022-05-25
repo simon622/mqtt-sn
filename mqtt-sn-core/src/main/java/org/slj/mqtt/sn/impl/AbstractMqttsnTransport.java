@@ -38,8 +38,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
 
 /**
@@ -51,7 +53,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         extends MqttsnService<U> implements IMqttsnTransport {
 
     protected ExecutorService protocolProcessor;
-    protected ExecutorService sendProcessor;
+    protected ExecutorService egressPublishProcessor;
 
     public void connectionLost(INetworkContext context, Throwable t){
         if(registry != null && context != null){
@@ -64,8 +66,8 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         super.start(runtime);
         protocolProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-protocol-",
                 runtime.getOptions().getTransportProtocolHandoffThreadCount());
-        sendProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-outbound-publish-",
-                runtime.getOptions().getTransportSendHandoffThreadCount());
+        egressPublishProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-publish-",
+                runtime.getOptions().getTransportPublishHandoffThreadCount());
     }
 
     public boolean restartOnLoss(){
@@ -73,28 +75,32 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
     }
 
     @Override
-    public void receiveFromTransport(INetworkContext context, ByteBuffer buffer) {
+    public void receiveFromTransport(INetworkContext context, byte[] data) {
         if(protocolProcessor != null){
             getRegistry().getRuntime().async(protocolProcessor,
-                    () -> receiveFromTransportInternal(context, buffer));
+                    () -> receiveFromTransportInternal(context, data));
         }
     }
 
     @Override
-    public void writeToTransport(INetworkContext context, IMqttsnMessage message) {
-        if(sendProcessor != null && protocolProcessor != null){
-            getRegistry().getRuntime().async(getRegistry().getCodec().isPublish(message) ?
-                            sendProcessor : protocolProcessor,
-                    () -> writeToTransportInternal(context, message, true));
-        }
+    public Future<INetworkContext> writeToTransport(INetworkContext context, IMqttsnMessage message) {
+        return getRegistry().getRuntime().async(getRegistry().getCodec().isPublish(message) ?
+                        egressPublishProcessor : protocolProcessor,
+                    () -> writeToTransportInternal(context, message, true), context);
     }
 
-    protected void receiveFromTransportInternal(INetworkContext networkContext, ByteBuffer buffer) {
+    public void writeToTransportWithWork(INetworkContext context, IMqttsnMessage message, Runnable callback) {
+        getRegistry().getRuntime().asyncWithCallback(getRegistry().getCodec().isPublish(message) ?
+                egressPublishProcessor : protocolProcessor,
+                () -> writeToTransportInternal(context, message, true), callback);
+    }
+
+    protected void receiveFromTransportInternal(INetworkContext networkContext, byte[] data) {
         try {
             if (!registry.getMessageHandler().running()) {
                 return;
             }
-            byte[] data = drain(buffer);
+//            byte[] data = drain(buffer);
 
             if (data.length > registry.getOptions().getMaxProtocolMessageSize()) {
                 logger.log(Level.SEVERE, String.format("receiving [%s] bytes - max allowed message size [%s] - error",
@@ -191,7 +197,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         return assignedClientId;
     }
 
-    protected void writeToTransportInternal(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){
+    protected boolean writeToTransportInternal(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){
         try {
             byte[] data = registry.getCodec().encode(message);
 
@@ -215,10 +221,12 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                         MqttsnWireUtils.toBinary(data)));
             }
 
-            writeToTransport(context, ByteBuffer.wrap(data, 0 , data.length));
+            writeToTransport(context, data);
             if(notifyListeners) notifyTrafficSent(context, data, message);
+            return true;
         } catch(Throwable e){
             logger.log(Level.SEVERE, String.format("[%s] transport layer error sending buffer", context), e);
+            return false;
         }
     }
 
@@ -236,7 +244,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
         }
     }
 
-    protected abstract void writeToTransport(INetworkContext context, ByteBuffer data) throws MqttsnException ;
+    protected abstract void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException ;
 
     protected static ByteBuffer wrap(byte[] arr){
         return wrap(arr, arr.length);

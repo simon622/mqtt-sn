@@ -169,7 +169,7 @@ public class MqttsnOptions {
     /**
      * How many threads will process outbound PUBLISH messages
      */
-    public static final int DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT = 1;
+    public static final int DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT = 1;
 
     /**
      * Used to handle the outbound queue processing layer, when running as a gateway this should
@@ -185,11 +185,11 @@ public class MqttsnOptions {
     /**
      * Number of queues jobs allowed as backpressure in the workers
      */
-    public static final int DEFAULT_WORK_QUEUE_BACKPRESSURE = 1000000;
+    public static final int DEFAULT_WORK_QUEUE_BACKPRESSURE = 50000;
 
     private String contextId;
     private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
-    private int transportSendHandoffThreadCount = DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT;
+    private int transportPublishHandoffThreadCount = DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
     private int generalPurposeThreadCount = DEFAULT_GENERAL_PURPOSE_THREAD_COUNT;
 
@@ -341,16 +341,15 @@ public class MqttsnOptions {
     }
 
     /**
-     * When threadHandoffFromTransport is set to true, how many threads should be made available in the
-     * managed pool to handle processing.
+     * How many threads should be made available in the managed pool to handle egress publish processing.
      *
-     * @param transportSendHandoffThreadCount - When transportSendHandoffThreadCount is set to true, how many threads should be made available in the
+     * @param transportPublishHandoffThreadCount - How many threads should be made available in the
      *                                        managed pool to handle processing
      * @return this configuration
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT}
      */
-    public MqttsnOptions withTransportSendHandoffThreadCount(int transportSendHandoffThreadCount) {
-        this.transportSendHandoffThreadCount = transportSendHandoffThreadCount;
+    public MqttsnOptions withTransportPublishHandoffThreadCount(int transportPublishHandoffThreadCount) {
+        this.transportPublishHandoffThreadCount = transportPublishHandoffThreadCount;
         return this;
     }
 
@@ -361,7 +360,7 @@ public class MqttsnOptions {
      * @param generalPurposeThreadCount - When generalPurposeThreadCount is set to true, how many threads should be made available in the
      *                                  managed pool to handle processing
      * @return this configuration
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_SEND_HANDOFF_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_GENERAL_PURPOSE_THREAD_COUNT}
      */
     public MqttsnOptions withGeneralPurposeThreadCount(int generalPurposeThreadCount) {
         this.generalPurposeThreadCount = generalPurposeThreadCount;
@@ -781,8 +780,8 @@ public class MqttsnOptions {
         return transportProtocolHandoffThreadCount;
     }
 
-    public int getTransportSendHandoffThreadCount() {
-        return transportSendHandoffThreadCount;
+    public int getTransportPublishHandoffThreadCount() {
+        return transportPublishHandoffThreadCount;
     }
 
     public int getGeneralPurposeThreadCount() {

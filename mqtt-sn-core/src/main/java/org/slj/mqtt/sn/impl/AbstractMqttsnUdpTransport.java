@@ -60,5 +60,5 @@ public abstract class AbstractMqttsnUdpTransport<U extends IMqttsnRuntimeRegistr
 
     protected abstract void bind() throws Exception;
 
-    public abstract void writeToTransport(INetworkContext context, ByteBuffer buffer) throws MqttsnException ;
+    public abstract void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException ;
 }

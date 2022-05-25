@@ -27,6 +27,8 @@ package org.slj.mqtt.sn.spi;
 import org.slj.mqtt.sn.model.INetworkContext;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 /**
  * The transport layer is responsible for managing the receiving and sending of messages over some connection.
@@ -41,9 +43,11 @@ import java.nio.ByteBuffer;
  */
 public interface IMqttsnTransport {
 
-    void receiveFromTransport(INetworkContext context, ByteBuffer buffer);
+    void receiveFromTransport(INetworkContext context, byte[] data);
 
-    void writeToTransport(INetworkContext context, IMqttsnMessage message) throws MqttsnException ;
+    Future<INetworkContext> writeToTransport(INetworkContext context, IMqttsnMessage message) throws MqttsnException ;
+
+    void writeToTransportWithWork(INetworkContext context, IMqttsnMessage message, Runnable runnable) throws MqttsnException ;
 
     void broadcast(IMqttsnMessage message) throws MqttsnException ;
 

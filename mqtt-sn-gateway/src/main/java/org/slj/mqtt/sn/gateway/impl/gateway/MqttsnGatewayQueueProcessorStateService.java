@@ -50,7 +50,9 @@ public class MqttsnGatewayQueueProcessorStateService extends MqttsnService<IMqtt
 
         IMqttsnSessionState state = getRegistry().getGatewaySessionService().getSessionState(context, false);
         if(state != null){
-            logger.log(Level.FINE, String.format("notified that the queue is empty, post process state is - [%s]", state));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("notified that the queue is empty, post process state is - [%s]", state));
+            }
             if(MqttsnUtils.in(state.getClientState() , MqttsnClientState.AWAKE)){
                 logger.log(Level.INFO, String.format("notified that the queue is empty, putting device back to sleep and sending ping-resp - [%s]", context));
                 //-- need to transition the device back to sleep

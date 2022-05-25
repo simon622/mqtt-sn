@@ -167,16 +167,18 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         //-- monitor active context timeouts
         int activeMessageTimeout = registry.getOptions().getActiveContextTimeout();
         if(activeMessageTimeout > 0){
+            Set<IMqttsnContext> copy = null;
             synchronized (lastActiveMessage){
-                Iterator<IMqttsnContext> itr = lastActiveMessage.keySet().iterator();
-                while(itr.hasNext()){
-                    IMqttsnContext context = itr.next();
-                    Long time = lastActiveMessage.get(context);
-                    if((time + activeMessageTimeout) < System.currentTimeMillis()){
-                        //-- context is timedout
-                        registry.getRuntime().handleActiveTimeout(context);
-                        itr.remove();
-                    }
+                copy = new HashSet<>(lastActiveMessage.keySet());
+            }
+            Iterator<IMqttsnContext> itr = copy.iterator();
+            while(itr.hasNext()){
+                IMqttsnContext context = itr.next();
+                Long time = lastActiveMessage.get(context);
+                if((time + activeMessageTimeout) < System.currentTimeMillis()){
+                    //-- context is timedout
+                    registry.getRuntime().handleActiveTimeout(context);
+                    lastActiveMessage.remove(context);
                 }
             }
         }
@@ -288,24 +290,28 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                                 registry.getOptions().getContextId(), context, message, requiresResponse));
             }
 
-            registry.getTransport().writeToTransport(registry.getNetworkRegistry().getContext(context), message);
+            Runnable callback = null;
+            if(!requiresResponse && registry.getCodec().isPublish(message)){
+                PublishData data = registry.getCodec().getData(message);
+                CommitOperation op = CommitOperation.outbound(context,
+                        queuedPublishMessage.getMessageId(), data, message);
+                op.data.setTopicPath(queuedPublishMessage.getData().getTopicPath());
+
+                //-- wait until the transport confirms the send else the confirm could happen before the backpressure is relieved
+                callback = () -> confirmPublish(op);
+            }
+
+            if(callback == null){
+                registry.getTransport().writeToTransport(registry.getNetworkRegistry().getContext(context), message);
+            } else {
+                registry.getTransport().writeToTransportWithWork(registry.getNetworkRegistry().getContext(context), message, callback);
+            }
             long time = System.currentTimeMillis();
             if(registry.getCodec().isActiveMessage(message) &&
                     !message.isErrorMessage()){
                 lastActiveMessage.put(context, time);
             }
             lastMessageSent.put(context, time);
-
-            //-- the only publish that does not require an ack is QoS so send to app as delivered
-            if(!requiresResponse && registry.getCodec().isPublish(message)){
-
-                PublishData data = registry.getCodec().getData(message);
-                CommitOperation op = CommitOperation.outbound(context,
-                        queuedPublishMessage.getMessageId(), data, message);
-                op.data.setTopicPath(queuedPublishMessage.getData().getTopicPath());
-                confirmPublish(op);
-            }
-
             return token;
 
         } catch(Exception e){

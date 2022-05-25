@@ -153,7 +153,7 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
         withMaxConnectedClients(profile.getMaxConnectedClients());
         withMaxMessagesInQueue(profile.getMaxSessionQueueSize());
         withTransportProtocolHandoffThreadCount(profile.getTransportProtocolHandoffThreadCount());
-        withTransportSendHandoffThreadCount(profile.getTransportSendHandoffThreadCount());
+        withTransportPublishHandoffThreadCount(profile.getTransportPublishHandoffThreadCount());
         withGeneralPurposeThreadCount(profile.getGeneralPurposeThreadCount());
         withQueueProcessorThreadCount(profile.getQueueProcessorThreadCount());
         withMinFlushTime(profile.getMinFlushTime());

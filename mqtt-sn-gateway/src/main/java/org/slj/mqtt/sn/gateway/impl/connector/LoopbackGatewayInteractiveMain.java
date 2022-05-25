@@ -30,6 +30,7 @@ import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayPerformanceProfile;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
@@ -49,7 +50,9 @@ public class LoopbackGatewayInteractiveMain {
                         withUsername(username).
                         withPassword(password);
 
-                ((MqttsnGatewayOptions)options).withMaxConnectedClients(1000);
+                ((MqttsnGatewayOptions)options).withPerformanceProfile(
+                        MqttsnGatewayPerformanceProfile.BALANCED_GATEWAY_GENERAL_PURPOSE);
+
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).

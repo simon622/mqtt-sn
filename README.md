@@ -261,7 +261,20 @@ The single host deployment of the gateway will happily handle **tens of thousand
 8. Backend publishing rate limiter (connector egress)
 9. Min. flush time
 
-Some care has been taken to optimise for memory; for example message payloads are normalised, meaning where a message appears on more than 1 client message queue; only a reference is used so payload only appears in the message registry once regardless of the number of subscriptions.
+I have provided some pre-configured **performance profiles** which have been optimised for slightly different deployment models.
+
+Performance Profile | Description
+------------ | -------------
+BALANCED_GATEWAY_GENERAL_PURPOSE | For use on more limited hardware on local networks. Optimised for low memory, low CPU.
+BALANCED_CLOUD_GENERAL_PURPOSE | General purpose cloud infrastructure deployment. Recommended for most scenarios.
+INGRESS_CLOUD | For use on cloud infrastruture where the traffic pattern services many devices sending inbound PUBLISH messages
+EGRESS_CLOUD | For use on cloud infrastruture where the traffic pattern services devices with many matching SUBSCRIPTIONS yeilding egress PUBLISH messages
+
+```java
+options.withPerformanceProfile(
+                        MqttsnGatewayPerformanceProfile.BALANCED_CLOUD_GENERAL_PURPOSE);
+```
+
 
 I have run a limited set of benchmarks using the [mqtt-sn-load-test](/mqtt-sn-load-test) project. Benchmarking MQTT-SN is a little different than MQTT due to the constraint of only a single message
 being inflight for a given client at any point in time, therefore running some of the scenarios that are used to benchmark MQTT is not comparable since the message inflight rule provides

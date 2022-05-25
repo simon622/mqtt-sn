@@ -298,20 +298,26 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 op.data.setTopicPath(queuedPublishMessage.getData().getTopicPath());
 
                 //-- wait until the transport confirms the send else the confirm could happen before the backpressure is relieved
-                callback = () -> confirmPublish(op);
-            }
-
-            if(callback == null){
-                registry.getTransport().writeToTransport(registry.getNetworkRegistry().getContext(context), message);
+                callback = () -> {
+                    long time = System.currentTimeMillis();
+                    if(registry.getCodec().isActiveMessage(message) &&
+                            !message.isErrorMessage()){
+                        lastActiveMessage.put(context, time);
+                    }
+                    lastMessageSent.put(context, time);
+                    confirmPublish(op);
+                };
             } else {
-                registry.getTransport().writeToTransportWithWork(registry.getNetworkRegistry().getContext(context), message, callback);
+                callback = () -> {
+                    long time = System.currentTimeMillis();
+                    if(registry.getCodec().isActiveMessage(message) &&
+                            !message.isErrorMessage()){
+                        lastActiveMessage.put(context, time);
+                    }
+                    lastMessageSent.put(context, time);
+                };
             }
-            long time = System.currentTimeMillis();
-            if(registry.getCodec().isActiveMessage(message) &&
-                    !message.isErrorMessage()){
-                lastActiveMessage.put(context, time);
-            }
-            lastMessageSent.put(context, time);
+            registry.getTransport().writeToTransportWithWork(registry.getNetworkRegistry().getContext(context), message, callback);
             return token;
 
         } catch(Exception e){

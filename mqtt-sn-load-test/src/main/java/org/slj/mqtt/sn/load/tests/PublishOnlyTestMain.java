@@ -42,7 +42,7 @@ public class PublishOnlyTestMain {
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(60, TimeUnit.SECONDS);
 
-            input.host = "localhost";
+            input.host = "34.248.60.25";
             input.port = 2442;
             input.messageCount = 10;
             input.qos = 0;

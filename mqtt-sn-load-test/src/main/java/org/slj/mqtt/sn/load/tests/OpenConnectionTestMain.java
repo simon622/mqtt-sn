@@ -44,7 +44,7 @@ public class OpenConnectionTestMain {
 
         System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
         int port = 2442;
-        String host = "localhost";
+        String host = "34.248.60.25";
         for(int i = 0; i < 1500; i++){
             try {
                 MqttsnClient client = createClient(host, port);

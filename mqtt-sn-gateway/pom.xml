@@ -30,7 +30,7 @@
 
     <groupId>org.slj</groupId>
     <artifactId>mqtt-sn-gateway</artifactId>
-    <version>0.1.12</version>
+    <version>0.1.13-alpha</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

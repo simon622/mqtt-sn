@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.codec.MqttsnUnsupportedVersionException;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 
 /**
@@ -125,7 +126,7 @@ public interface IMqttsnCodec {
      *
      * @throws MqttsnCodecException - something went wrong when decoding the data
      */
-    IMqttsnMessage decode(byte[] data) throws MqttsnCodecException;
+    IMqttsnMessage decode(byte[] data) throws MqttsnCodecException, MqttsnUnsupportedVersionException;
 
     /**
      * When supplied with messages constructed from an associated message factory,

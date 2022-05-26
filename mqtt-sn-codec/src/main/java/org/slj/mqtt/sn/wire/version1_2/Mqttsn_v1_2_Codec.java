@@ -29,10 +29,12 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.AbstractMqttsnCodec;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.codec.MqttsnUnsupportedVersionException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 
 public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
@@ -138,7 +140,8 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
 
 
-    protected AbstractMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException {
+    protected AbstractMqttsnMessage createInstance(byte[] data)
+            throws MqttsnCodecException, MqttsnUnsupportedVersionException {
 
         MqttsnSpecificationValidator.validatePacketLength(data);
 
@@ -159,8 +162,14 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
                 msg = new MqttsnGwInfo();
                 break;
             case MqttsnConstants.CONNECT:
-                validateLengthGreaterThanOrEquals(data, 6);
-                msg = new MqttsnConnect();
+
+                //-- check version
+                if(data[3] != MqttsnConstants.PROTOCOL_VERSION_1_2){
+                    throw new MqttsnUnsupportedVersionException("codec cannot parse ["+data[3]+"] non 2.0 message");
+                } else {
+                    validateLengthGreaterThanOrEquals(data, 6);
+                    msg = new MqttsnConnect();
+                }
                 break;
             case MqttsnConstants.CONNACK:
                 validateLengthEquals(data, 3);

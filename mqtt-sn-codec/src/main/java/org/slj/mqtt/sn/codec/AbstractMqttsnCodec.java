@@ -40,7 +40,8 @@ import org.slj.mqtt.sn.wire.version1_2.payload.AbstractMqttsnMessageWithFlagsFie
 public abstract class AbstractMqttsnCodec implements IMqttsnCodec {
 
     @Override
-    public IMqttsnMessage decode(byte[] data) throws MqttsnCodecException {
+    public IMqttsnMessage decode(byte[] data)
+            throws MqttsnCodecException, MqttsnUnsupportedVersionException {
         IMqttsnMessage msg = createInstance(data);
         validate(msg);
         return msg;
@@ -77,7 +78,7 @@ public abstract class AbstractMqttsnCodec implements IMqttsnCodec {
         return MqttsnWireUtils.toBinary(encode(message));
     }
 
-    protected abstract IMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException;
+    protected abstract IMqttsnMessage createInstance(byte[] data) throws MqttsnCodecException, MqttsnUnsupportedVersionException;
 
     protected abstract int getQoS(IMqttsnMessage message);
 }

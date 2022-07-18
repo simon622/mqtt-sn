@@ -52,12 +52,15 @@ public class LoopbackGatewayInteractiveMain {
 
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(
                         MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
+
                 ((MqttsnGatewayOptions)options).withMaxConnectedClients(10000);
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport());
+
+
             }
         }, false, "Welcome to the loopback gateway. This version does NOT use a backend broker, instead brokering MQTT messages itself as a loopback to connected devices.");
     }

@@ -207,8 +207,8 @@ public class MqttsnTcpTransport
         logger.log(Level.INFO, String.format("ssl initialised with JCSE provider [%s]", ctx.getProvider()));
         logger.log(Level.INFO, String.format("ssl initialised with [%s] key manager(s)", keyManagers == null ? null : keyManagers.length));
         logger.log(Level.INFO, String.format("ssl initialised with [%s] trust manager(s)", trustManagers == null ? null : trustManagers.length));
-        ctx.init(keyManagers, trustManagers,
-                SecureRandom.getInstanceStrong());
+        ctx.init(keyManagers, trustManagers, new SecureRandom());
+//                SecureRandom.getInstanceStrong());
         return ctx;
 
     }
@@ -491,10 +491,13 @@ public class MqttsnTcpTransport
                 }
             }
             catch(IOException e){
-                throw new RuntimeException("error accepting data from client stream;",e);
+                if(running && descriptor != null && descriptor.isOpen()){
+                    connectionLost(descriptor.context, e);
+                    throw new RuntimeException("error accepting data from client stream;",e);
+                }
             } finally {
                 try {
-                    descriptor.close();
+                    if(descriptor != null && descriptor.isOpen()) descriptor.close();
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "error closing socket descriptor;", e);
                 }

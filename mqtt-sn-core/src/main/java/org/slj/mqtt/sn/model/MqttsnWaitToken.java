@@ -36,6 +36,8 @@ public class MqttsnWaitToken {
     private volatile IMqttsnMessage message;
     private volatile IMqttsnMessage responseMessage;
 
+    private volatile String detail;
+
     public MqttsnWaitToken(QueuedPublishMessage queuedPublishMessage){
         this.queuedPublishMessage = queuedPublishMessage;
     }
@@ -76,14 +78,19 @@ public class MqttsnWaitToken {
         return error;
     }
 
-    public void markError() {
+    public void markError(String detail) {
+        this.detail = detail;
         complete = true;
         error = true;
     }
 
     public void markComplete() {
         this.complete = true;
-        error = false;
+        this.error = false;
+    }
+
+    public String getDetail() {
+        return detail;
     }
 
     @Override
@@ -91,6 +98,7 @@ public class MqttsnWaitToken {
         return "MqttsnWaitToken{" +
                 "error=" + error +
                 ", complete=" + complete +
+                ", detail=" + detail +
                 ", message=" + message +
                 ", responseMessage=" + responseMessage +
                 '}';

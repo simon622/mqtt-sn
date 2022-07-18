@@ -101,6 +101,7 @@ public abstract class AbstractMqttsnRuntime {
         if(running){
             logger.log(Level.INFO, "stopping mqttsn-environment..");
             stopServices(registry);
+            if(generalUseExecutorService != null) closeManagedExecutorService(generalUseExecutorService);
             running = false;
             receivedListeners.clear();
             sentListeners.clear();
@@ -141,8 +142,8 @@ public abstract class AbstractMqttsnRuntime {
         if(service instanceof IMqttsnService){
             IMqttsnService snService =  (IMqttsnService) service;
             if(!snService.running()){
-                if(logger.isLoggable(Level.FINE)) {
-                    logger.log(Level.FINE, String.format("starting [%s]", service.getClass().getName()));
+                if(logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("starting [%s]", service.getClass().getName()));
                 }
                 snService.start(registry);
                 activeServices.add(snService);
@@ -154,8 +155,8 @@ public abstract class AbstractMqttsnRuntime {
         if(service instanceof IMqttsnService){
             IMqttsnService snService =  (IMqttsnService) service;
             if(snService.running()){
-                if(logger.isLoggable(Level.FINE)) {
-                    logger.log(Level.FINE, String.format("stopping [%s]", service.getClass().getName()));
+                if(logger.isLoggable(Level.INFO)) {
+                    logger.log(Level.INFO, String.format("stopping [%s]", service.getClass().getName()));
                 }
                 snService.stop();
                 activeServices.remove(snService);

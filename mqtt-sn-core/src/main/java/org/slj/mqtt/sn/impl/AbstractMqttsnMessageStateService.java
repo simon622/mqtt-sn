@@ -366,7 +366,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 logger.log(Level.WARNING, String.format("mqtt-sn state [%s <- %s] timed out waiting [%s]ms for response to [%s] in [%s] on thread [%s]",
                         registry.getOptions().getContextId(), context, waitTime,
                         message, MqttsnUtils.getDurationString(time), Thread.currentThread().getName()));
-                token.markError();
+                token.markError("timed out waiting for response");
 
                 //a timeout should unblock the sender UNLESS its a PUBLISH in which case this is the jod of the
                 //reaper (should it be? - surely the sender should monitor..)
@@ -425,7 +425,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                             synchronized (token) {
                                 //-- release any waits
                                 token.setResponseMessage(message);
-                                token.markError();
+                                token.markError("unexpected disconnect received whilst awaiting response");
                                 token.notifyAll();
                             }
                         }
@@ -443,7 +443,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                         synchronized (token) {
                             //-- release any waits
                             token.setResponseMessage(message);
-                            if (message.isErrorMessage()) token.markError();
+                            if (message.isErrorMessage()) token.markError("protocol error message received - " + message.getReturnCode());
                             else token.markComplete();
                             token.notifyAll();
                         }
@@ -700,7 +700,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
         MqttsnWaitToken token = inflight.getToken();
         synchronized (token){
-            token.markError();
+            if(!token.isComplete()){
+                token.markError("timed out waiting for reply");
+            }
             token.notifyAll();
         }
 

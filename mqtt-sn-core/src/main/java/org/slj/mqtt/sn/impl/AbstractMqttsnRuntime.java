@@ -143,7 +143,7 @@ public abstract class AbstractMqttsnRuntime {
             IMqttsnService snService =  (IMqttsnService) service;
             if(!snService.running()){
                 if(logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, String.format("starting [%s]", service.getClass().getName()));
+                    logger.log(Level.INFO, String.format("starting [%s] for runtime (%s)", service.getClass().getName(), System.identityHashCode(this)));
                 }
                 snService.start(registry);
                 activeServices.add(snService);
@@ -156,7 +156,7 @@ public abstract class AbstractMqttsnRuntime {
             IMqttsnService snService =  (IMqttsnService) service;
             if(snService.running()){
                 if(logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, String.format("stopping [%s]", service.getClass().getName()));
+                    logger.log(Level.INFO, String.format("stopping [%s] for runtime (%s)", service.getClass().getName(), System.identityHashCode(this)));
                 }
                 snService.stop();
                 activeServices.remove(snService);

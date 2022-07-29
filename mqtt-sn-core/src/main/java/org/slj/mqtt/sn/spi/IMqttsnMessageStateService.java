@@ -149,4 +149,6 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
      * @throws MqttsnException
      */
     Long getMessageLastReceivedFromContext(IMqttsnContext context) throws MqttsnException ;
+
+    Long getLastActiveMessage(IMqttsnContext context) throws MqttsnException;
 }

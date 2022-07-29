@@ -164,10 +164,13 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     @Override
     public boolean isConnected() {
         try {
-            IMqttsnSessionState state = checkSession(false);
-            if(state == null) return false;
-            return state.getClientState() == MqttsnClientState.CONNECTED;
+            synchronized(this){
+                IMqttsnSessionState state = checkSession(false);
+                if(state == null) return false;
+                return state.getClientState() == MqttsnClientState.CONNECTED;
+            }
         } catch(MqttsnException e){
+            logger.log(Level.WARNING, "error checking connection state", e);
             return false;
         }
     }
@@ -734,6 +737,23 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         }
     }
 
+    public long getQueueSize() throws MqttsnException {
+        if(state != null){
+            return registry.getMessageQueue().size(state.getContext());
+        }
+        return 0;
+    }
+
+    public long getIdleTime() throws MqttsnException {
+        if(state != null){
+            Long l = registry.getMessageStateService().getLastActiveMessage(state.getContext());
+            if(l != null){
+                return System.currentTimeMillis() - l;
+            }
+        }
+        return 0;
+    }
+
     private Date getMessageExpiry(){
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
@@ -769,7 +789,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         @Override
         public void notifyConnectionLost(IMqttsnContext context, Throwable t) {
-            resetConnection(context, t, true);
+            resetConnection(context, t, autoReconnect);
         }
     };
 }

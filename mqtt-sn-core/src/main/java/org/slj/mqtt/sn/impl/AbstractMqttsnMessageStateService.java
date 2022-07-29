@@ -765,6 +765,10 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         return lastMessageReceived.get(context);
     }
 
+    public Long getLastActiveMessage(IMqttsnContext context){
+        return lastActiveMessage.get(context);
+    }
+
     protected String getTopicPathFromPublish(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
         int topicIdType = 0;

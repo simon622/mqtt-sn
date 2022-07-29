@@ -405,7 +405,8 @@ public class MqttsnTcpTransport
         public Handler(INetworkContext context, Socket socket, ClosedListener listener) throws IOException {
             this.descriptor = new SocketDescriptor(context, socket);
             this.listener = listener;
-            setName("mqtt-sn-tcp-connection-" + connectionCount.incrementAndGet());
+            setName("mqtt-sn-tcp-" + context.getNetworkAddress().toSimpleString() + "@" + System.identityHashCode(getRegistry().getRuntime()));
+            connectionCount.incrementAndGet();
             setDaemon(false);
             setPriority(Thread.NORM_PRIORITY);
         }
@@ -472,7 +473,7 @@ public class MqttsnTcpTransport
                     }
 
                     if(count == 0 || count == -1) {
-                        logger.log(Level.INFO, String.format("received [%s] bytes from socket handler (end of stream - EOF), ", count, descriptor));
+                        logger.log(Level.INFO, String.format("received [%s] bytes from socket handler (end of stream - EOF) on thread [%s], descriptor [%s]", count, Thread.currentThread().getName(), descriptor));
                         //throw here will cascade the error up to the runtime
                         throw new SocketException("EOF received");
                     }
@@ -500,6 +501,8 @@ public class MqttsnTcpTransport
                     if(descriptor != null && descriptor.isOpen()) descriptor.close();
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "error closing socket descriptor;", e);
+                } finally {
+                    running = false;
                 }
             }
         }

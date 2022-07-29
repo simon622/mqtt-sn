@@ -29,7 +29,7 @@ import java.util.Date;
 public class MqttsnSessionState implements IMqttsnSessionState {
 
     private IMqttsnContext context;
-    private MqttsnClientState state;
+    private volatile MqttsnClientState state;
     private Date lastSeen;
     private int keepAlive;
     private long sessionExpiryInterval;

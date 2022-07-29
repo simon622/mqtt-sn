@@ -120,4 +120,11 @@ public class NetworkAddress implements Serializable {
         sb.append(']');
         return sb.toString();
     }
+
+    public String toSimpleString(){
+        final StringBuilder sb = new StringBuilder(getHostAddress());
+        sb.append(":");
+        sb.append(port);
+        return sb.toString();
+    }
 }

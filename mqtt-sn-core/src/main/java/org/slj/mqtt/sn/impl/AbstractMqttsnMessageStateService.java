@@ -603,11 +603,16 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         LastIdContext idContext = LastIdContext.from(context, direction);
         int msgId = WEAK_ATTACH_ID;
         if (message.needsId()) {
-            if (message.getId() > 0) {
-                msgId = message.getId();
-            } else {
-                msgId = getNextMsgId(idContext);
-                message.setId(msgId);
+            synchronized (context){
+                if (message.getId() > 0) {
+                    msgId = message.getId();
+                } else {
+                    msgId = getNextMsgId(idContext);
+                    message.setId(msgId);
+                }
+                //-- SLJ Edit - move this to tighen the synchronisation of assigned packetIdentifier
+                //NB: this code used to be below the addInflightMethod below (in case this has a knock on)
+                if(msgId != WEAK_ATTACH_ID) lastUsedMsgIds.put(idContext, msgId);
             }
 
             //-- ensure we update the queued version so if delivery fails we know what to redeliver with
@@ -621,10 +626,12 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     registry.getOptions().getContextId(), context, direction, message, idContext));
         }
 
-        if(msgId != WEAK_ATTACH_ID) lastUsedMsgIds.put(idContext, msgId);
         return inflight.getToken();
     }
 
+    /**
+     * This requires external synchronisation since it uses session based data structures
+     */
     protected Integer getNextMsgId(LastIdContext context) throws MqttsnException {
 
         Map<Integer, InflightMessage> map = getInflightMessages(context.context);

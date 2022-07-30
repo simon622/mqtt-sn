@@ -100,16 +100,23 @@ public abstract class AbstractMqttsnRuntime {
     public final void stop() throws MqttsnException {
         if(running){
             logger.log(Level.INFO, String.format("stopping mqttsn-environment [%s]", System.identityHashCode(this)));
-            stopServices(registry);
-            if(generalUseExecutorService != null) closeManagedExecutorService(generalUseExecutorService);
-            running = false;
-            receivedListeners.clear();
-            sentListeners.clear();
-            sendFailureListeners.clear();
-            managedExecutorServices.stream().forEach(e -> closeManagedExecutorService(e));
-            managedExecutorServices.clear();
-            synchronized (monitor){
-                monitor.notifyAll();
+            try {
+                stopServices(registry);
+            } finally {
+                running = false;
+                try {
+                    managedExecutorServices.stream().forEach(e -> closeManagedExecutorService(e));
+                    if(generalUseExecutorService != null)
+                        closeManagedExecutorService(generalUseExecutorService);
+                } finally {
+                    receivedListeners.clear();
+                    sentListeners.clear();
+                    sendFailureListeners.clear();
+                    managedExecutorServices.clear();
+                    synchronized (monitor){
+                        monitor.notifyAll();
+                    }
+                }
             }
         }
     }

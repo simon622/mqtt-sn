@@ -57,17 +57,32 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
 
     public void connectionLost(INetworkContext context, Throwable t){
         if(registry != null && context != null){
-            registry.getRuntime().handleConnectionLost(registry.getNetworkRegistry().getSessionContext(context), t);
+            registry.getRuntime().handleConnectionLost(
+                    registry.getNetworkRegistry().getSessionContext(context), t);
         }
     }
 
     @Override
     public void start(U runtime) throws MqttsnException {
         super.start(runtime);
-        protocolProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-protocol-",
+        protocolProcessor = runtime.getRuntime().createManagedExecutorService(String.format("mqtt-sn-transport-%s-", System.identityHashCode(runtime)),
                 runtime.getOptions().getTransportProtocolHandoffThreadCount());
-        egressPublishProcessor = runtime.getRuntime().createManagedExecutorService("mqtt-sn-transport-publish-",
+        egressPublishProcessor = runtime.getRuntime().createManagedExecutorService(String.format("mqtt-sn-transport-egress-%s-", System.identityHashCode(runtime)),
                 runtime.getOptions().getTransportPublishHandoffThreadCount());
+    }
+
+    @Override
+    public void stop() throws MqttsnException {
+        super.stop();
+        try {
+            if(protocolProcessor != null){
+                registry.getRuntime().closeManagedExecutorService(protocolProcessor);
+            }
+        } finally {
+            if(egressPublishProcessor != null){
+                registry.getRuntime().closeManagedExecutorService(egressPublishProcessor);
+            }
+        }
     }
 
     public boolean restartOnLoss(){

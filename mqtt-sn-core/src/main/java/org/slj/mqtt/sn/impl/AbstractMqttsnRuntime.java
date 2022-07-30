@@ -78,7 +78,7 @@ public abstract class AbstractMqttsnRuntime {
             registry.init();
             generalUseExecutorService = createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
             bindShutdownHook();
-            logger.log(Level.INFO, "starting mqttsn-environment..");
+            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s]", System.identityHashCode(this)));
             startupServices(registry);
             startupLatch.countDown();
             logger.log(Level.INFO, String.format("mqttsn-environment started successfully in [%s]", System.currentTimeMillis() - startedAt));
@@ -99,7 +99,7 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void stop() throws MqttsnException {
         if(running){
-            logger.log(Level.INFO, "stopping mqttsn-environment..");
+            logger.log(Level.INFO, String.format("stopping mqttsn-environment [%s]", System.identityHashCode(this)));
             stopServices(registry);
             if(generalUseExecutorService != null) closeManagedExecutorService(generalUseExecutorService);
             running = false;
@@ -113,7 +113,7 @@ public abstract class AbstractMqttsnRuntime {
         }
     }
 
-    private void closeManagedExecutorService(ExecutorService executorService){
+    public void closeManagedExecutorService(ExecutorService executorService){
         try {
             if(!executorService.isShutdown()){
                 executorService.shutdown();
@@ -125,6 +125,7 @@ public abstract class AbstractMqttsnRuntime {
             if (!executorService.isTerminated()) {
                 executorService.shutdownNow();
             }
+            managedExecutorServices.remove(executorService);
         }
     }
 

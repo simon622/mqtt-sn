@@ -46,7 +46,7 @@ public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntim
         if(t == null){
             String name = getDaemonName();
             name = name == null ? getClass().getSimpleName().toLowerCase() : name;
-            String threadName = String.format("mqtt-sn-deamon-%s", name);
+            String threadName = String.format("mqtt-sn-deamon-%s-%s", name, System.identityHashCode(registry.getRuntime()));
             t = new Thread(registry.getRuntime().getThreadGroup(), this, threadName);
             t.setPriority(Thread.MIN_PRIORITY);
             t.setDaemon(true);

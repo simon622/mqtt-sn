@@ -107,6 +107,7 @@ public abstract class AbstractMqttsnRuntime {
             sentListeners.clear();
             sendFailureListeners.clear();
             managedExecutorServices.stream().forEach(e -> closeManagedExecutorService(e));
+            managedExecutorServices.clear();
             synchronized (monitor){
                 monitor.notifyAll();
             }
@@ -125,7 +126,6 @@ public abstract class AbstractMqttsnRuntime {
             if (!executorService.isTerminated()) {
                 executorService.shutdownNow();
             }
-            managedExecutorServices.remove(executorService);
         }
     }
 

@@ -309,7 +309,7 @@ public abstract class AbstractMqttsnRuntime {
             @Override
             public Thread newThread(Runnable r) {
                 Thread t = new Thread(getThreadGroup(), r, name + ++count);
-                t.setPriority(Math.max(1, Math.min(threadPriority, 10)));
+                t.setPriority(Math.max(1, Math.min(threadPriority, Thread.MAX_PRIORITY)));
                 return t;
             }
         };

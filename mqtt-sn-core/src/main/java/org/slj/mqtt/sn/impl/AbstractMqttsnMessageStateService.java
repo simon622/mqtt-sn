@@ -249,7 +249,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 InflightMessage.DIRECTION.SENDING : InflightMessage.DIRECTION.RECEIVING;
 
         int count = countInflight(context, direction);
-        if(count > 0){
+        if(count >= registry.getOptions().getMaxMessagesInflight()){
             logger.log(Level.WARNING,
                     String.format("presently unable to send [%s],[%s] to [%s], max inflight reached for direction [%s] [%s] -> [%s]",
                             message, queuedPublishMessage, context, direction, count,
@@ -759,7 +759,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
     @Override
     public boolean canSend(IMqttsnContext context) throws MqttsnException {
-        return countInflight(context, InflightMessage.DIRECTION.SENDING) == 0;
+        int inflight = countInflight(context, InflightMessage.DIRECTION.SENDING);
+        boolean canSend = inflight <
+                registry.getOptions().getMaxMessagesInflight();
+        if(!canSend){
+            logger.log(Level.WARNING, String.format("number of inflight messages [%s] reached the configured max. [%s]", inflight, registry.getOptions().getMaxMessagesInflight()));
+        }
+        return canSend;
     }
 
     @Override

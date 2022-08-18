@@ -172,7 +172,7 @@ public class MqttsnUtils {
         if(topicIdType == MqttsnConstants.TOPIC_PREDEFINED){
             return topicBytes.length == 2;
         } else if(topicIdType == MqttsnConstants.TOPIC_NORMAL){
-            return topicDataAsString ? MqttsnSpecificationValidator.validTopicPath(new String(topicBytes, MqttsnConstants.CHARSET),
+            return topicDataAsString ? MqttsnSpecificationValidator.isValidSubscriptionTopic(new String(topicBytes, MqttsnConstants.CHARSET),
                     MqttsnConstants.MAX_TOPIC_LENGTH) : topicBytes.length == 2;
         } else if(topicIdType == MqttsnConstants.TOPIC_SHORT){
             return topicBytes.length == 2;

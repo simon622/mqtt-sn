@@ -495,7 +495,7 @@ public class MqttsnOptions {
      */
     public MqttsnOptions withPredefinedTopic(String topicPath, int alias) {
 
-        MqttsnSpecificationValidator.validateTopicPath(topicPath);
+        MqttsnSpecificationValidator.validatePublishPath(topicPath);
         MqttsnSpecificationValidator.validateTopicAlias(alias);
 
         predefinedTopics.put(topicPath, alias);

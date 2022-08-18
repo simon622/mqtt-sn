@@ -134,6 +134,8 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     @Override
     public IMqttsnMessage createPublish(int QoS, boolean DUP, boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException {
 
+        MqttsnSpecificationValidator.validatePublishPath(topicPath);
+
         MqttsnPublish_V2_0 msg = new MqttsnPublish_V2_0();
         msg.setQoS(QoS);
         msg.setDupRedelivery(DUP);
@@ -179,7 +181,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     @Override
     public IMqttsnMessage createSubscribe(int QoS, String topicName) throws MqttsnCodecException {
 
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validateSubscribePath(topicName);
         MqttsnSubscribe_V2_0 msg = new MqttsnSubscribe_V2_0();
         msg.setQoS(QoS);
         msg.setTopicName(topicName);
@@ -221,7 +223,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
 
     @Override
     public IMqttsnMessage createUnsubscribe(String topicName) throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validateSubscribePath(topicName);
         MqttsnUnsubscribe_V2_0 msg = new MqttsnUnsubscribe_V2_0();
         msg.setTopicName(topicName);
         return msg;

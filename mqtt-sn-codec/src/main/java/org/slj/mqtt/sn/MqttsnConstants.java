@@ -44,17 +44,21 @@ public interface MqttsnConstants {
 
     char MIN_CONTROL2_UTF = '\u007F';
     char MAX_CONTROL2_UTF = '\u009F';
+    char UNICODE_ZERO = '\u0000';
 
     long UNSIGNED_MAX_32 = 4294967295L;
     int UNSIGNED_MAX_16 = 65535;
     int UNSIGNED_MAX_8 = 255;
 
     int MAX_CLIENT_ID_LENGTH = 1024;
-    int MAX_TOPIC_LENGTH = 2048;
+    int MAX_TOPIC_LENGTH = UNSIGNED_MAX_16;
     int MAX_PUBLISH_LENGTH = UNSIGNED_MAX_16 - (9 + 2); //9 for the normal fields, + 2 for large message type
     int MAX_ENCAPSULATED_LENGTH = UNSIGNED_MAX_16 - 7;
 
     Charset CHARSET = StandardCharsets.UTF_8;
+
+    String SINGLE_LEVEL_WILDCARD = "+"; //U+002B
+    String MULTI_LEVEL_WILDCARD = "#"; //U+0023
 
     byte TOPIC_NORMAL = 0b00,
             TOPIC_PREDEFINED = 0b01,

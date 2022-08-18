@@ -299,12 +299,11 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     @Override
     public IMqttsnMessage createSubscribe(int QoS, String topicName) throws MqttsnCodecException {
 
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validateSubscribePath(topicName);
 
         MqttsnSubscribe msg = new MqttsnSubscribe();
         msg.setQoS(QoS);
         msg.setTopicName(topicName);
-
         msg.validate();
         return msg;
     }
@@ -342,8 +341,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     @Override
     public IMqttsnMessage createUnsubscribe(String topicName) throws MqttsnCodecException {
 
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
-
+        MqttsnSpecificationValidator.validateSubscribePath(topicName);
         MqttsnUnsubscribe msg = new MqttsnUnsubscribe();
         msg.setTopicName(topicName);
         return msg;

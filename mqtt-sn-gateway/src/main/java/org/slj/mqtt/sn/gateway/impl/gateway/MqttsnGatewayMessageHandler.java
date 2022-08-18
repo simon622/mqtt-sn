@@ -344,7 +344,7 @@ public class MqttsnGatewayMessageHandler
 
         MqttsnRegister register = (MqttsnRegister) message;
 
-        if(!MqttsnSpecificationValidator.validTopicPath(register.getTopicName())){
+        if(!MqttsnSpecificationValidator.isValidPublishTopic(register.getTopicName())){
             logger.log(Level.WARNING,
                     String.format("invalid topic [%s] received during register, reply with error code", register.getTopicName()));
             return registry.getMessageFactory().createRegack(MqttsnConstants.TOPIC_NORMAL, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);

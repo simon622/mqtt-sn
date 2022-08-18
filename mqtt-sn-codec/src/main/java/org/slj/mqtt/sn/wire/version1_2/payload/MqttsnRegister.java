@@ -127,7 +127,7 @@ public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMess
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validatePublishPath(topicName);
         MqttsnSpecificationValidator.validateTopicAlias(topicId);
     }
 }

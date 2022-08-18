@@ -26,14 +26,20 @@ package org.slj.mqtt.sn.utils;
 
 import java.io.Serializable;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+
+/**
+ * All Topic Names and Topic Filters MUST be at least one character long [MQTT-4.7.3-1] Topic Names and Topic Filters are case sensitive
+ * Topic Names and Topic Filters can include the space character
+ * A leading or trailing ‘/’ creates a distinct Topic Name or Topic Filter
+ * A Topic Name or Topic Filter consisting only of the ‘/’ character is valid
+ * Topic Names and Topic Filters MUST NOT include the null character (Unicode U+0000)
+ * [Unicode] [MQTT-4.7.3-2]
+ * [MQTT-4.7.3-3]. See Section 1.5.3
+ */
 
 public class TopicPath {
 
-//    static final String TOPIC_REGX = "^((^\\/?|\\/)([A-Za-z0-9\\.\\-\\$\\:_]+|$)?)*$";
-    static final String SUBCRIPTION_REGX = "^((^\\/?|\\/)([A-Za-z0-9\\.\\-\\$\\:_]+|\\+|#$)?)*$";
     static final String WILDCARD = "#";
     static final String WILDSEG = "+";
     static final String PATHSEP = "/";
@@ -71,17 +77,9 @@ public class TopicPath {
     }
 
     public static boolean isWild(String topicPath){
-        return topicPath != null && topicPath.contains(WILDCARD) ||topicPath.contains(WILDSEG) ;
-    }
-
-    public static boolean isValidTopic(String topicPath, int maxLength){
-        return topicPath != null && topicPath.trim().length() > 0 && topicPath.trim().length() < maxLength;
-//                TOPIC_REGX.matches(topicPath);
-    }
-
-    public static boolean isValidSubscription(String topicPath, int maxLength){
-        return topicPath != null && topicPath.trim().length() > 0 && topicPath.trim().length() < maxLength;
-//            && SUBCRIPTION_REGX.matches(topicPath);
+        return topicPath != null &&
+                topicPath.contains(WILDCARD) ||
+                topicPath.contains(WILDSEG);
     }
 
     public String toString(){
@@ -190,9 +188,24 @@ public class TopicPath {
             return res;
         }
 
-        @Override
         public String toString() {
             return topicPath;
+        }
+
+        public String toStringDebug() {
+
+            try {
+                StringBuilder sb = new StringBuilder(String.format("\'%s\'", topicPath));
+                sb.append(" = ");
+                sb.append("\'");
+                sb.append((getTokens()));
+                sb.append("\'");
+                return sb.toString();
+
+            } catch(Exception e){
+                //handle
+                return "Error parsing topic";
+            }
         }
 
         @Override
@@ -213,6 +226,28 @@ public class TopicPath {
         }
     }
 
-    public static final void main(String[] args){
-    }
+//    public static final void main(String[] args){
+//
+//        Topic[] t = new Topic[] {
+//                new Topic(""),
+//                new Topic("/"),
+//                new Topic("#"),
+//                new Topic("/#"),
+//                new Topic("/#/foo"),
+//                new Topic("#/foo"),
+//                new Topic("//"),
+//                new Topic("/+"),
+//                new Topic("/+/"),
+//                new Topic("/+/#"),
+//                new Topic("some/topic"),
+//                new Topic("/some/topic"),
+//                new Topic("/some/topic/"),
+//                new Topic("/some/+/topic/blah"),
+//                new Topic("/some/#"),
+//                new Topic("some/#"),
+//        };
+//        for (int i =0; i<t.length;i++){
+//            System.err.println(t[i] + " = Publish: " + isValidPublishTopic(t[i].toString(), 512) + ", Subscribe: "+isValidSubscriptionTopic(t[i].toString(), 512)+" = " + t[i].toStringDebug());
+//        }
+//    }
 }

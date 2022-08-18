@@ -58,17 +58,51 @@ public class MqttsnSpecificationValidator {
         return true;
     }
 
-    public static boolean validTopicPath(String topicPath) {
-        return validTopicPath(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH);
-    }
-
     public static boolean validClientId(String clientId, boolean allowNull) {
         return validClientId(clientId, allowNull, MqttsnConstants.MAX_CLIENT_ID_LENGTH);
     }
 
-    public static boolean validTopicPath(String topicPath, int maxLength) {
-        return MqttsnSpecificationValidator.validStringData(topicPath, false) &&
-                topicPath.length() > 0 && topicPath.length() <= maxLength;
+    public static void validateSubscribePath(String topicPath) throws MqttsnCodecException {
+        if(!isValidSubscriptionTopic(topicPath))
+            throw new MqttsnCodecException("invalid subscribe topic - " + topicPath);
+    }
+
+    public static void validatePublishPath(String topicPath) throws MqttsnCodecException {
+        if(!isValidPublishTopic(topicPath))
+            throw new MqttsnCodecException("invalid publish topic - " + topicPath);
+    }
+
+    public static boolean isValidPublishTopic(String topicPath){
+        return isValidTopicInternal(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH, false);
+    }
+
+    public static boolean isValidPublishTopic(String topicPath, int maxLength){
+        return isValidTopicInternal(topicPath, maxLength, false);
+    }
+
+    public static boolean isValidSubscriptionTopic(String topicPath, int maxLength){
+        boolean value = isValidTopicInternal(topicPath, maxLength, true);
+        if(topicPath.contains(MqttsnConstants.MULTI_LEVEL_WILDCARD)) {
+            value &= topicPath.endsWith(MqttsnConstants.MULTI_LEVEL_WILDCARD);
+        }
+        return value;
+    }
+    public static boolean isValidSubscriptionTopic(String topicPath){
+        return isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH);
+    }
+
+    private static boolean isValidTopicInternal(String topicPath, int maxLength, boolean allowWild){
+        boolean value = topicPath != null && topicPath.length() > 0 &&
+                topicPath.length() < Math.min(maxLength, MqttsnConstants.MAX_TOPIC_LENGTH) &&
+                topicPath.indexOf(MqttsnConstants.UNICODE_ZERO) == -1;
+
+        value &= MqttsnSpecificationValidator.validStringData(topicPath, false);
+
+        if(!allowWild){
+            value &= !topicPath.contains(MqttsnConstants.SINGLE_LEVEL_WILDCARD) &&
+                    !topicPath.contains(MqttsnConstants.MULTI_LEVEL_WILDCARD);
+        }
+        return value;
     }
 
     public static boolean validClientId(String clientId, boolean allowNull, int maxLength) {
@@ -116,11 +150,6 @@ public class MqttsnSpecificationValidator {
     public static void validateClientId(String clientId) {
         if(!validClientId(clientId, true, MqttsnConstants.MAX_CLIENT_ID_LENGTH))
             throw new MqttsnCodecException("invalid clientId - " + clientId);
-    }
-
-    public static void validateTopicPath(String topicPath) {
-        if(!validTopicPath(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH))
-            throw new MqttsnCodecException("invalid topicPath - " + topicPath);
     }
 
     public static void validateProtocolId(int protocolId){

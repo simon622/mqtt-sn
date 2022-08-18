@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.gateway.spi.*;
@@ -231,7 +232,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, info.getTopicId());
             } else {
                 topicPath = info.getTopicPath();
-                if(!TopicPath.isValidSubscription(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
+                if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
                     return new SubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID,
                             "invalid topic format");
                 }
@@ -286,7 +287,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, info.getTopicId());
             } else {
                 topicPath = info.getTopicPath();
-                if(!TopicPath.isValidSubscription(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
+                if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
                     return new UnsubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID,
                             "invalid topic format");
                 }
@@ -318,7 +319,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     public RegisterResult register(IMqttsnSessionState state, String topicPath) throws MqttsnException {
 
-        if(!TopicPath.isValidSubscription(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
+        if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
             return new RegisterResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, "invalid topic format");
         }
         synchronized (state.getContext()){

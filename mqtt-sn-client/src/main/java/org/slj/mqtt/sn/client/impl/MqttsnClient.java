@@ -288,7 +288,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public MqttsnWaitToken publish(String topicName, int QoS, boolean retained, byte[] data) throws MqttsnException, MqttsnQueueAcceptException{
 
         MqttsnSpecificationValidator.validateQoS(QoS);
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validatePublishPath(topicName);
         MqttsnSpecificationValidator.validatePublishData(data);
 
 
@@ -317,7 +317,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public void subscribe(String topicName, int QoS) throws MqttsnException{
 
         MqttsnSpecificationValidator.validateQoS(QoS);
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validateSubscribePath(topicName);
 
         IMqttsnSessionState state = checkSession(true);
 
@@ -347,7 +347,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      */
     public void unsubscribe(String topicName) throws MqttsnException{
 
-        MqttsnSpecificationValidator.validateTopicPath(topicName);
+        MqttsnSpecificationValidator.validateSubscribePath(topicName);
 
         IMqttsnSessionState state = checkSession(true);
 

@@ -48,7 +48,7 @@ public class MqttsnWilltopic extends AbstractMqttsnWillTopicMessage implements I
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateTopicPath(getWillTopicData());
+        MqttsnSpecificationValidator.validatePublishPath(getWillTopicData());
         MqttsnSpecificationValidator.validateQoS(QoS);
     }
 }

@@ -232,7 +232,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, info.getTopicId());
             } else {
                 topicPath = info.getTopicPath();
-                if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
+                if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath)){
                     return new SubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID,
                             "invalid topic format");
                 }
@@ -287,7 +287,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, info.getTopicId());
             } else {
                 topicPath = info.getTopicPath();
-                if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
+                if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath)){
                     return new UnsubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID,
                             "invalid topic format");
                 }
@@ -319,7 +319,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     public RegisterResult register(IMqttsnSessionState state, String topicPath) throws MqttsnException {
 
-        if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH)){
+        if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath)){
             return new RegisterResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, "invalid topic format");
         }
         synchronized (state.getContext()){
@@ -430,25 +430,29 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
         int successfulExpansion = 0;
         for (IMqttsnContext client : recipients){
-            int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
-            int q = Math.min(grantedQos,qos);
-            IMqttsnSessionState sessionState = getSessionState(client, false);
-            if(sessionState != null){
-                if(sessionState.getMaxPacketSize() != 0 &&
-                        payload.length + 9 > sessionState.getMaxPacketSize()){
-                    logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
-                } else {
-                    PublishData data = new PublishData(topicPath, q, retained);
-                    try {
-                        registry.getMessageQueue().offer(client, new QueuedPublishMessage(
-                                messageId, data));
-                        successfulExpansion++;
-                    } catch(MqttsnQueueAcceptException e){
-                        //-- the queue was full nothing to be done here
+            try {
+                int grantedQos = registry.getSubscriptionRegistry().getQos(client, topicPath);
+                int q = Math.min(grantedQos,qos);
+                IMqttsnSessionState sessionState = getSessionState(client, false);
+                if(sessionState != null){
+                    if(sessionState.getMaxPacketSize() != 0 &&
+                            payload.length + 9 > sessionState.getMaxPacketSize()){
+                        logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, client));
+                    } else {
+                        PublishData data = new PublishData(topicPath, q, retained);
+                        try {
+                            registry.getMessageQueue().offer(client, new QueuedPublishMessage(
+                                    messageId, data));
+                            successfulExpansion++;
+                        } catch(MqttsnQueueAcceptException e){
+                            //-- the queue was full nothing to be done here
+                        }
                     }
+                } else {
+                    logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", client));
                 }
-            } else {
-                logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", client));
+            } catch(MqttsnException e){
+                logger.log(Level.WARNING, String.format("detected subscription issue for session receipt.. ignore client (%s)", client));
             }
         }
 

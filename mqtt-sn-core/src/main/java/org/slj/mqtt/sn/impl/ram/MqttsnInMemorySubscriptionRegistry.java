@@ -55,17 +55,19 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
             IMqttsnContext client = clientItr.next();
             Set<Subscription> paths = subscriptionsLookups.get(client);
             if(paths != null && !paths.isEmpty()){
-                Iterator<Subscription> pathItr = paths.iterator();
-                client : while(pathItr.hasNext()) {
-                    try {
-                        Subscription sub = pathItr.next();
-                        TopicPath path = sub.getTopicPath();
-                        if(path.matches(topicPath)){
-                            matchingClients.add(client);
-                            break client;
+                synchronized (paths){
+                    Iterator<Subscription> pathItr = paths.iterator();
+                    client : while(pathItr.hasNext()) {
+                        try {
+                            Subscription sub = pathItr.next();
+                            TopicPath path = sub.getTopicPath();
+                            if(path.matches(topicPath)){
+                                matchingClients.add(client);
+                                break client;
+                            }
+                        } catch(Exception e){
+                            throw new MqttsnException(e);
                         }
-                    } catch(Exception e){
-                        throw new MqttsnException(e);
                     }
                 }
             }
@@ -78,7 +80,7 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     public Set<Subscription> readSubscriptions(IMqttsnContext context){
         Set<Subscription> set = subscriptionsLookups.get(context);
         if(set == null){
-            synchronized (this){
+            synchronized (subscriptionsLookups){
                 if((set = subscriptionsLookups.get(context)) == null){
                     set = new HashSet<>();
                     subscriptionsLookups.put(context, set);
@@ -91,13 +93,17 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     @Override
     protected boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException {
         Set<Subscription> set = readSubscriptions(context);
-        return set.add(subscription);
+        synchronized (set){
+            return set.add(subscription);
+        }
     }
 
     @Override
     protected boolean removeSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException {
         Set<Subscription> set = readSubscriptions(context);
-        return set.remove(subscription);
+        synchronized (set){
+            return set.remove(subscription);
+        }
     }
 
     @Override
@@ -119,7 +125,9 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
                 IMqttsnContext client = clientItr.next();
                 Set<Subscription> paths = subscriptionsLookups.get(client);
                 if(paths != null){
-                    paths.stream().map(Subscription::getTopicPath).forEach(topicPaths::add);
+                    synchronized (paths){
+                        paths.stream().map(Subscription::getTopicPath).forEach(topicPaths::add);
+                    }
                 }
             }
         }

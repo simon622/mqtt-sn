@@ -73,7 +73,7 @@ public class MqttsnSpecificationValidator {
     }
 
     public static boolean isValidPublishTopic(String topicPath){
-        return isValidTopicInternal(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH, false);
+        return isValidPublishTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH);
     }
 
     public static boolean isValidPublishTopic(String topicPath, int maxLength){
@@ -81,28 +81,28 @@ public class MqttsnSpecificationValidator {
     }
 
     public static boolean isValidSubscriptionTopic(String topicPath, int maxLength){
-        boolean value = isValidTopicInternal(topicPath, maxLength, true);
-        if(topicPath.contains(MqttsnConstants.MULTI_LEVEL_WILDCARD)) {
-            value &= topicPath.endsWith(MqttsnConstants.MULTI_LEVEL_WILDCARD);
+        boolean valid = isValidTopicInternal(topicPath, maxLength, true);
+        if(valid && topicPath.contains(MqttsnConstants.MULTI_LEVEL_WILDCARD)) {
+            valid &= topicPath.endsWith(MqttsnConstants.MULTI_LEVEL_WILDCARD);
         }
-        return value;
+        return valid;
     }
     public static boolean isValidSubscriptionTopic(String topicPath){
         return isValidSubscriptionTopic(topicPath, MqttsnConstants.MAX_TOPIC_LENGTH);
     }
 
     private static boolean isValidTopicInternal(String topicPath, int maxLength, boolean allowWild){
-        boolean value = topicPath != null && topicPath.length() > 0 &&
+        boolean valid = topicPath != null && topicPath.length() > 0 &&
                 topicPath.length() < Math.min(maxLength, MqttsnConstants.MAX_TOPIC_LENGTH) &&
                 topicPath.indexOf(MqttsnConstants.UNICODE_ZERO) == -1;
-
-        value &= MqttsnSpecificationValidator.validStringData(topicPath, false);
-
-        if(!allowWild){
-            value &= !topicPath.contains(MqttsnConstants.SINGLE_LEVEL_WILDCARD) &&
+        if(valid){
+            valid &= MqttsnSpecificationValidator.validStringData(topicPath, false);
+        }
+        if(valid && !allowWild){
+            valid &= !topicPath.contains(MqttsnConstants.SINGLE_LEVEL_WILDCARD) &&
                     !topicPath.contains(MqttsnConstants.MULTI_LEVEL_WILDCARD);
         }
-        return value;
+        return valid;
     }
 
     public static boolean validClientId(String clientId, boolean allowNull, int maxLength) {

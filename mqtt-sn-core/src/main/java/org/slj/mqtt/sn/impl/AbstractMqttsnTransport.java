@@ -161,7 +161,11 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                 } else {
                     //-- need to check the context from the network matches the supplied clientId in case of address reuse..
                     IMqttsnContext mqttsnContext = registry.getNetworkRegistry().getSessionContext(networkContext);
-                    if(!mqttsnContext.getId().equals(clientId)){
+                    if(clientId == null || "".equals(clientId.trim()) && message.getMessageType() == MqttsnConstants.PINGREQ){
+                        logger.log(Level.INFO, String.format("%s received with no clientId, continue with previous clientId on network address [%s]",
+                                message, mqttsnContext));
+                    }
+                    else if(!mqttsnContext.getId().equals(clientId)){
                         //-- the connecting device is presenting a different clientId to the previous one held against the
                         //-- network address - we must ensure they dont interfere..
                         logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] invalidate, and re-auth",

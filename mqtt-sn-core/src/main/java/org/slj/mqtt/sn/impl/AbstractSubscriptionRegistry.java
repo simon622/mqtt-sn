@@ -26,10 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.Subscription;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.IMqttsnSubscriptionRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Iterator;
@@ -40,7 +37,7 @@ public abstract class AbstractSubscriptionRegistry <T extends IMqttsnRuntimeRegi
         implements IMqttsnSubscriptionRegistry<T> {
 
     @Override
-    public boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnException {
+    public boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException {
         TopicPath path = new TopicPath(rationalizeTopic(context, topicPath));
         return addSubscription(context, new Subscription(path, QoS));
     }
@@ -81,7 +78,7 @@ public abstract class AbstractSubscriptionRegistry <T extends IMqttsnRuntimeRegi
 
     public abstract Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException ;
 
-    protected abstract boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException ;
+    protected abstract boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException, MqttsnIllegalFormatException;
 
     protected abstract boolean removeSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException ;
 }

@@ -84,7 +84,30 @@ public class MqttsnSpecificationValidator {
         boolean valid = isValidTopicInternal(topicPath, maxLength, true);
         if(valid && topicPath.contains(MqttsnConstants.MULTI_LEVEL_WILDCARD)) {
             valid &= topicPath.endsWith(MqttsnConstants.MULTI_LEVEL_WILDCARD);
+            if(topicPath.length() > 1){
+                valid &= topicPath.charAt(topicPath.indexOf(MqttsnConstants.MULTI_LEVEL_WILDCARD) - 1)
+                        == MqttsnConstants.PATH_SEP;
+            }
         }
+
+        if(valid && topicPath.contains(MqttsnConstants.SINGLE_LEVEL_WILDCARD)) {
+            if(topicPath.length() > 1){
+                char[] c = topicPath.toCharArray();
+                for(int i = 0; i < c.length; i++){
+                    if(c[i] == MqttsnConstants.SINGLE_WILDCARD_CHAR){
+                        //check the preceeding char
+                        if(i > 0){
+                            valid &= c[i - 1] == MqttsnConstants.PATH_SEP;
+                        }
+                        //check the next char
+                        if(c.length > (i + 1)){
+                            valid &= c[i + 1] == MqttsnConstants.PATH_SEP;
+                        }
+                    }
+                }
+            }
+        }
+
         return valid;
     }
     public static boolean isValidSubscriptionTopic(String topicPath){

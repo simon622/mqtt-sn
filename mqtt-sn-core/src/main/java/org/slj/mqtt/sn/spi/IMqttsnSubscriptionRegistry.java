@@ -52,11 +52,10 @@ public interface IMqttsnSubscriptionRegistry<T extends IMqttsnRuntimeRegistry> e
      * existed
      * @param context - the remote context who owns the subscription
      * @param topicPath - the full clear text topicPath for the subscription e.g. foo/bar
-     * @return the QoS at which the subscription is to be held (0,1,2)
      * @return true if a NEW subscription or was created, false if one already existed (and was updated)
      * @throws MqttsnException - an error occurred
      */
-    boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnException;
+    boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException;
 
     /**
      * Remove and existing subscription for the context
@@ -75,7 +74,7 @@ public interface IMqttsnSubscriptionRegistry<T extends IMqttsnRuntimeRegistry> e
      * @return a list of context which hold valid subscriptions for the supplied topic (including wildcard matching)
      * @throws MqttsnException
      */
-    List<IMqttsnContext> matches(String topicPath) throws MqttsnException ;
+    List<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException ;
 
 
     /**

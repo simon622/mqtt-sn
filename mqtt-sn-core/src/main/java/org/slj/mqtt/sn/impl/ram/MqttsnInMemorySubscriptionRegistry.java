@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.impl.ram;
 
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.impl.AbstractSubscriptionRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -45,7 +46,13 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public List<IMqttsnContext> matches(String topicPath) throws MqttsnException {
+    public List<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException {
+
+        if(!MqttsnSpecificationValidator.isValidPublishTopic(
+                topicPath)){
+            throw new MqttsnIllegalFormatException("invalid topic format detected");
+        }
+
         List<IMqttsnContext> matchingClients = new ArrayList<>();
         Iterator<IMqttsnContext> clientItr = null;
         synchronized (subscriptionsLookups) {
@@ -91,15 +98,23 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    protected boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException {
+    protected boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnIllegalFormatException {
+        if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(
+                subscription.getTopicPath().toString())){
+            throw new MqttsnIllegalFormatException("invalid topic format detected");
+        }
+
         Set<Subscription> set = readSubscriptions(context);
         synchronized (set){
-            return set.add(subscription);
+            //-- the equals method does not include the QoS so need to modify on change
+            boolean existed = set.remove(subscription);
+            set.add(subscription);
+            return !existed;
         }
     }
 
     @Override
-    protected boolean removeSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException {
+    protected boolean removeSubscription(IMqttsnContext context, Subscription subscription){
         Set<Subscription> set = readSubscriptions(context);
         synchronized (set){
             return set.remove(subscription);

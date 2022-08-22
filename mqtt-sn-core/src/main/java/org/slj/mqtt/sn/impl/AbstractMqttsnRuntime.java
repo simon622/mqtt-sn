@@ -389,6 +389,12 @@ public abstract class AbstractMqttsnRuntime {
         return getClass().getCanonicalName();
     }
 
+    public IMqttsnRuntimeRegistry getRegistry(){
+        if(registry == null)
+            throw new NullPointerException("registry is <null> on runtime");
+        return registry;
+    }
+
     public abstract void close() throws IOException ;
 
     protected abstract void startupServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException;

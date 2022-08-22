@@ -576,7 +576,12 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
                         registry.getTopicRegistry().normalize(
                                 (byte) topicIdType, topicData, false), false);
             }
-            registry.getSubscriptionRegistry().subscribe(context, topicPath, grantedQoS);
+            try {
+                //-- add the subscription to the local engine
+                registry.getSubscriptionRegistry().subscribe(context, topicPath, grantedQoS);
+            } catch(MqttsnIllegalFormatException e){
+                throw new MqttsnException("format error encountered in local runtime", e);
+            }
         }
     }
 

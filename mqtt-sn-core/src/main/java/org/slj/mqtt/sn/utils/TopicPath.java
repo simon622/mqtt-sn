@@ -51,9 +51,9 @@ public class TopicPath {
     }
 
     public boolean matches(String topicPath) throws ParseException {
+        List<Token> subscriptionTokens = topic.getTokens();
         Topic matchTopic = new Topic(topicPath);
-        List<Token> msgTokens = topic.getTokens();
-        List<Token> subscriptionTokens = matchTopic.getTokens();
+        List<Token> msgTokens = matchTopic.getTokens();
         int i = 0;
         for (; i < subscriptionTokens.size(); i++) {
             Token subToken = subscriptionTokens.get(i);

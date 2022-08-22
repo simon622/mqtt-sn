@@ -310,7 +310,9 @@ public class MqttsnGatewayMessageHandler
         SubscribeResult result = registry.getGatewaySessionService().subscribe(state, info, message);
         logger.log(Level.INFO, "subscribe message yielded info " + info + " and result " + result);
         processSessionResult(result);
+
         if(result.isError()){
+            //-- send back an error return code
             return registry.getMessageFactory().createSuback(0, 0, result.getReturnCode());
         } else {
             //-- this is a flaw in the current spec, you should be able to send back the topicIdType in the response

@@ -37,6 +37,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
@@ -220,7 +221,8 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException {
+    public SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message)
+            throws MqttsnException {
 
         IMqttsnContext context = state.getContext();
         synchronized (context){
@@ -261,17 +263,23 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     QoS = Math.min(registry.getAuthorizationService().allowedMaximumQoS(context, topicPath), QoS);
                 }
 
-                if(registry.getSubscriptionRegistry().subscribe(state.getContext(), topicPath, QoS)){
-                    SubscribeResult result = registry.getBackendService().subscribe(context, new TopicPath(topicPath), message);
-                    result.setTopicInfo(info);
-                    result.setGrantedQoS(QoS);
-                    return result;
-                } else {
-                    SubscribeResult result = new SubscribeResult(Result.STATUS.NOOP);
-                    result.setTopicInfo(info);
-                    result.setGrantedQoS(QoS);
-                    return result;
+                SubscribeResult result = null;
+
+                try {
+                    if(registry.getSubscriptionRegistry().subscribe(state.getContext(), topicPath, QoS)){
+                        result = registry.getBackendService().subscribe(context, new TopicPath(topicPath), message);
+                        result.setTopicInfo(info);
+                        result.setGrantedQoS(QoS);
+                    } else {
+                        result = new SubscribeResult(Result.STATUS.NOOP);
+                        result.setTopicInfo(info);
+                        result.setGrantedQoS(QoS);
+                    }
+                } catch(MqttsnIllegalFormatException e){
+                    logger.log(Level.WARNING, String.format("error in topic format"), e);
+                    result = new SubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, "invalid topic format");
                 }
+                return result;
             }
         }
     }
@@ -420,7 +428,13 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     public void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {
         //-- expand the message onto the gateway connected device queues
-        List<IMqttsnContext> recipients = registry.getSubscriptionRegistry().matches(topicPath);
+        List<IMqttsnContext> recipients = null;
+        try {
+            recipients = registry.getSubscriptionRegistry().matches(topicPath);
+        } catch(MqttsnIllegalFormatException e){
+            throw new MqttsnException("illegal format supplied", e);
+        }
+
         logger.log(Level.FINE, String.format("receiving broker side message into [%s] sessions", recipients.size()));
 
         //if we only have 1 receiver remove message after read

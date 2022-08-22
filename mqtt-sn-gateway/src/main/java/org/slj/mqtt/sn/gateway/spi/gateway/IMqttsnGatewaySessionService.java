@@ -31,6 +31,7 @@ import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 
 import java.util.Iterator;
 import java.util.Optional;

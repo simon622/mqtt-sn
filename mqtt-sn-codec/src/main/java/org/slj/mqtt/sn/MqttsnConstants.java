@@ -60,6 +60,9 @@ public interface MqttsnConstants {
     String SINGLE_LEVEL_WILDCARD = "+"; //U+002B
     String MULTI_LEVEL_WILDCARD = "#"; //U+0023
 
+    char PATH_SEP = '/';
+    char SINGLE_WILDCARD_CHAR = '+';
+
     byte TOPIC_NORMAL = 0b00,
             TOPIC_PREDEFINED = 0b01,
             TOPIC_SHORT = 0b10,

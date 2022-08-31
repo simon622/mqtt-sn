@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.security;
+package org.slj.mqtt.sn.test.cases;
 
 import org.junit.Assert;
 import org.junit.Before;

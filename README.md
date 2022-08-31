@@ -78,7 +78,6 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-client](/mqtt-sn-client) | Java 1.8, Maven | Client | A lightweight client with example transport implementations. Exposes both a simple blocking API and an aysnc publish API to the application and hides the complexities of topic registrations and connection management.
 [mqtt-sn-gateway](/mqtt-sn-gateway) | Java 1.8, Maven | Gateway | The core gateway runtime. The end goal is to provide all 3 variants of the gateway (Aggregating, Transparent & Forwarder) where possible. I have started with the aggregating gateway, since this is the most complex, and the most suitable for larger scale deployment.
 [mqtt-sn-gateway-connector-aws-iotcore](/mqtt-sn-gateway-connector-aws-iotcore) | Java 1.8, Maven | Optional | Connector to bind into AWS IoT Core using X.509 certs
-[mqtt-sn-gateway-connector-google-iotcore](/mqtt-sn-gateway-connector-google-iotcore) | Java 1.8, Maven | Optional | Connector to bind to a Google IoT Core Gateway using pkcs8 (RS256)
 [mqtt-sn-gateway-connector-paho](/mqtt-sn-gateway-connector-paho) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
 [mqtt-sn-load-test](/mqtt-sn-load-test) | Java 1.8, Maven | Tools | Provides a runtime to spin up N clients and connect to a gateway instance and test concurrency and message throughput
 

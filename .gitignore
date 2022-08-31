@@ -32,3 +32,7 @@ mqtt-sn-client-sec/
 /gateway-keystore.properties
 /gateway-keystore-aws.properties
 /mqtt-sn-gateway-cluster/
+/mqtt-sn-gateway-dtls/
+/mqtt-sn-client/src/main/rust/
+/mqtt-sn-gateway-dtls/
+/mqtt-sn-gateway-connector-hivemq/

@@ -89,9 +89,8 @@ Git checkout the repository. For a simple standalone jar execution, run the foll
 ```shell script
 mvn -f mqtt-sn-codec clean install
 mvn -f mqtt-sn-core clean install
-mvn -f mqtt-sn-gateway clean install
+mvn -f mqtt-sn-gateway clean package
 mvn -f mqtt-sn-client clean install
-mvn -f mqtt-sn-gateway-connector-paho clean package
 ```
 
 This will yield a file in your mqtt-sn-gateway-connector-paho/target directory that will be called mqtt-sn-gateway-<version>.jar. You can then start a broker
@@ -363,8 +362,10 @@ pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend be
 maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
 
 ## Cloud Platform Deployments
-It has become more common to want to deploy a gateway and combine it with IoT cloud support. There are a number of ways of achieving this, utilising the cloud SDKS for which examples are provided. Deployment of the gateway on the edge is normal; however it has also become more common to deploy a gateway as a cloud service in its own right. 
-There are a number of factors that need to be considered in this deployment scenario; not-least security and scaling. If you would like to cover this off in more detail, please ping me to discuss. 
+It has become more common to want to deploy a gateway and combine it with IoT cloud support. There are a number of ways of achieving this, utilising the cloud SDKS for which examples are provided. Deployment of the gateway on the edge is normal; however it has also become more common to deploy a gateway as a cloud service in its own right.
+There are a number of factors that need to be considered in this deployment scenario; not-least security and scaling. If you would like to cover this off in more detail, please ping me to discuss.
+
+**NOTE - Google IoT Core has been discontinued as of August 2022, and will switch off in 2023. The connector is now officially end of life.**
 
 ## Related people & projects
 Our goal on the [MQTT-SN technical committee](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=mqtt) is to drive and foster a thriving open-source community. Listed here are some related open-source projects with some comments. If you would like me to include your repository below, please issue a Pull Request and add it.

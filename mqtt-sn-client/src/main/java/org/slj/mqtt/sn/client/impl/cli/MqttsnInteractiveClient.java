@@ -404,6 +404,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void status()
             throws IOException, MqttsnException {
         MqttsnClient client = (MqttsnClient) getRuntime();
+        message(String.format("Remote Host: %s", hostName));
+        message(String.format("Remote Port: %s", port));
         message(String.format("Client Id: %s", clientId));
         if(client != null){
             if(runtime != null) {

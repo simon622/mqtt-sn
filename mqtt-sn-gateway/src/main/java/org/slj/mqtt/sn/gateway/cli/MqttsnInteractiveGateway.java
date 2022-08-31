@@ -53,11 +53,14 @@ import java.util.*;
 
 public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
+    static final String LISTEN_PORT = "listenPort";
     static final String USERNAME = "username";
     static final String PASSWORD = "password";
 
     protected String username;
     protected String password;
+
+    protected int listenPort = MqttsnUdpOptions.DEFAULT_LOCAL_PORT;
 
     protected boolean needsBroker;
 
@@ -442,7 +445,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected IMqttsnTransport createTransport() {
         MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().
-                withPort(MqttsnUdpOptions.DEFAULT_LOCAL_PORT);
+                withPort(listenPort);
         return new MqttsnUdpBatchTransport(udpOptions, 2048);
     }
 
@@ -463,7 +466,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             if(needsBroker){
                 message("Successfully connected to broker, TCP/IP connection active.");
             }
-            message(String.format("Gateway listening for datagram traffic on %s", MqttsnUdpOptions.DEFAULT_LOCAL_PORT));
+            message(String.format("Gateway listening for datagram traffic on port %s", listenPort));
         } catch(Exception e){
             message(cli_red("Unable to connect to broker"));
             message("Please check the connection details supplied");
@@ -474,6 +477,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected void configure() throws IOException {
         super.configure();
+        listenPort = captureMandatoryInt(input, output, "Please enter the local listen port", null);
         if(needsBroker){
             username = captureString(input, output, "Please enter a valid username for you broker connection");
             password = captureString(input, output,  "Please enter a valid password for you broker connection");
@@ -487,6 +491,13 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             username = props.getProperty(USERNAME);
             password = props.getProperty(PASSWORD);
         }
+        String listenPortStr = props.getProperty(LISTEN_PORT);
+        if(listenPortStr != null){
+            try {
+                listenPort = Integer.valueOf(listenPortStr);
+            } catch(Exception e){
+            }
+        }
     }
 
     @Override
@@ -496,6 +507,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             props.setProperty(USERNAME, username);
             props.setProperty(PASSWORD, password);
         }
+        props.setProperty(LISTEN_PORT, String.valueOf(listenPort));
     }
 
     @Override

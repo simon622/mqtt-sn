@@ -201,7 +201,7 @@ public abstract class AbstractInteractiveCli {
         }
 
         if(needsPort()){
-            port = captureMandatoryInt(input, output, "Please enter a port", null);
+            port = captureMandatoryInt(input, output, "Please enter a remote port", null);
         }
 
         if(needsClientId()){
@@ -221,8 +221,8 @@ public abstract class AbstractInteractiveCli {
         if(loadConfig()){
             if(configOk()){
                 useConfig = captureMandatoryBoolean(input, output,
-                        String.format("I managed to load port=%s, clientId=%s from history, would you like to use it?",
-                                port, clientId));
+                        String.format("I managed to load clientId=%s profile from history, would you like to use it?",
+                                clientId));
             }
         }
 

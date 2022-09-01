@@ -58,7 +58,6 @@ public class LoopbackGatewayInteractiveMain {
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport());
 
-
             }
         }, false, "Welcome to the loopback gateway. This version does NOT use a backend broker, instead brokering MQTT messages itself as a loopback to connected devices.");
     }

@@ -53,8 +53,6 @@ public class LoopbackGatewayInteractiveMain {
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(
                         MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
 
-                ((MqttsnGatewayOptions)options).withMaxConnectedClients(10000);
-
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).

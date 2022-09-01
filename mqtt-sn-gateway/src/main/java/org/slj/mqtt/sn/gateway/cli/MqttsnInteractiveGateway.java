@@ -40,6 +40,7 @@ import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
+import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.NetworkRegistryException;
@@ -298,8 +299,10 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message(String.format("State:  %s", getColorForState(state.getClientState())));
             message(String.format("Queue size:  %s", gatewayRuntimeRegistry.getMessageQueue().size(c)));
 
-            message(String.format("Inflight (Egress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(state.getContext(), InflightMessage.DIRECTION.SENDING)));
-            message(String.format("Inflight (Ingress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(state.getContext(), InflightMessage.DIRECTION.RECEIVING)));
+            message(String.format("Inflight (Egress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(
+                    state.getContext(), IMqttsnOriginatingMessageSource.LOCAL)));
+            message(String.format("Inflight (Ingress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(
+                    state.getContext(), IMqttsnOriginatingMessageSource.REMOTE)));
 
             Set<Subscription> subs = gatewayRuntimeRegistry.getSubscriptionRegistry().readSubscriptions(c);
             message("Subscription(s): ");
@@ -331,17 +334,23 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         Iterator<IMqttsnContext> itr = m.iterator();
         while (itr.hasNext()){
             IMqttsnContext c = itr.next();
-            Map<Integer, InflightMessage> msgs = ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getInflightMessages(c);
-            Iterator<Integer> i = msgs.keySet().iterator();
-            while(i.hasNext()){
-                Integer id = i.next();
-                InflightMessage message = msgs.get(id);
-                long sent = message.getTime();
-                tabmessage(String.format("%s -> %s (%s retries) { %s (%s old)}", c.getId(), id,
-                        message instanceof RequeueableInflightMessage ? ((RequeueableInflightMessage) message).getQueuedPublishMessage().getRetryCount() : 1,
-                        message.getDirection() + " " + message.getMessage().getMessageName(),
-                        MqttsnUtils.getDurationString(System.currentTimeMillis() - sent)));
-            }
+            renderInflight(c,
+                ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getInflightMessages(c, IMqttsnOriginatingMessageSource.LOCAL));
+            renderInflight(c,
+                    ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getInflightMessages(c, IMqttsnOriginatingMessageSource.REMOTE));
+        }
+    }
+
+    private void renderInflight(IMqttsnContext context, Map<Integer, InflightMessage> msgs){
+        Iterator<Integer> i = msgs.keySet().iterator();
+        while(i.hasNext()){
+            Integer id = i.next();
+            InflightMessage message = msgs.get(id);
+            long sent = message.getTime();
+            tabmessage(String.format("%s -> %s (%s retries) { %s (%s old)}", context.getId(), id,
+                    message instanceof RequeueableInflightMessage ? ((RequeueableInflightMessage) message).getQueuedPublishMessage().getRetryCount() : 1,
+                    message.getOriginatingMessageSource() + " " + message.getMessage().getMessageName(),
+                    MqttsnUtils.getDurationString(System.currentTimeMillis() - sent)));
         }
     }
 

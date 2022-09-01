@@ -245,18 +245,21 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             throw new MqttsnExpectationFailedException("allowed to send check failed");
         }
 
-        InflightMessage.DIRECTION direction = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-                InflightMessage.DIRECTION.SENDING : InflightMessage.DIRECTION.RECEIVING;
+        IMqttsnOriginatingMessageSource source = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
+                IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
 
-        int count = countInflight(context, direction);
+//        InflightMessage.DIRECTION direction = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
+//                InflightMessage.DIRECTION.SENDING : InflightMessage.DIRECTION.RECEIVING;
+
+        int count = countInflight(context, source);
         if(count >= registry.getOptions().getMaxMessagesInflight()){
             logger.log(Level.WARNING,
                     String.format("presently unable to send [%s],[%s] to [%s], max inflight reached for direction [%s] [%s] -> [%s]",
-                            message, queuedPublishMessage, context, direction, count,
-                            Objects.toString(getInflightMessages(context))));
+                            message, queuedPublishMessage, context, source, count,
+                            Objects.toString(getInflightMessages(context, source))));
 
             Optional<InflightMessage> blockingMessage =
-                    getInflightMessages(context).values().stream().filter(i -> i.getDirection() == direction).findFirst();
+                    getInflightMessages(context, source).values().stream().findFirst();
             if(blockingMessage.isPresent() && clientMode){
                 //-- if we are in client mode, attempt to wait for the ongoing outbound message to complete before we issue next message
                 MqttsnWaitToken token = blockingMessage.get().getToken();
@@ -393,18 +396,21 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         }
         lastMessageReceived.put(context, System.currentTimeMillis());
 
+        IMqttsnOriginatingMessageSource source = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
+                IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL;
+
         Integer msgId = message.needsId() ? message.getId() : WEAK_ATTACH_ID;
-        boolean matchedMessage = inflightExists(context, msgId);
+        boolean matchedMessage = inflightExists(context, source, msgId);
         boolean terminalMessage = registry.getMessageHandler().isTerminalMessage(message);
 
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("matched message by id [%s]->[%s], terminalMessage [%s], messageIn [%s]",
-                    msgId, matchedMessage, terminalMessage, message));
+        if(logger.isLoggable(Level.INFO)){
+            logger.log(Level.INFO, String.format("matched message by id [%s]->[%s] in [%s] space, terminalMessage [%s], messageIn [%s]",
+                    msgId, matchedMessage, source, terminalMessage, message));
         }
 
         if (matchedMessage) {
             if (terminalMessage) {
-                InflightMessage inflight = removeInflight(context, msgId);
+                InflightMessage inflight = removeInflight(context, source, msgId);
                 if(inflight == null){
                     logger.log(Level.WARNING,
                             String.format("inflight message was cleared during notifyReceive for [%s] -> [%s]", context, msgId));
@@ -499,7 +505,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 }
             } else {
 
-                InflightMessage inflight = getInflightMessage(context, msgId);
+                InflightMessage inflight = getInflightMessage(context, source, msgId);
 
                 //none terminal matched message.. this is fine (PUBREC or PUBREL)
                 //outbound qos 2 commit point
@@ -581,26 +587,24 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     protected MqttsnWaitToken markInflight(IMqttsnContext context, IMqttsnMessage message, QueuedPublishMessage queuedPublishMessage)
             throws MqttsnException {
 
-        InflightMessage.DIRECTION direction =
-                message instanceof MqttsnPublish ?
-                        queuedPublishMessage == null ?
-                                InflightMessage.DIRECTION.RECEIVING : InflightMessage.DIRECTION.SENDING :
+        IMqttsnOriginatingMessageSource source = message instanceof MqttsnPublish ?
+                                        queuedPublishMessage == null ? IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL :
                                     registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-                                            InflightMessage.DIRECTION.SENDING : InflightMessage.DIRECTION.RECEIVING;
+                                            IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
 
         //may have old inbound messages kicking around depending on reap settings, to just allow these to come in
-        if(countInflight(context, direction) >=
+        if(countInflight(context, source) >=
                 registry.getOptions().getMaxMessagesInflight()){
-            logger.log(Level.WARNING, String.format("[%s] max inflight message number reached, fail-fast for sending, allow for receiving [%s] - [%s]", context, direction, message));
-            if(direction == InflightMessage.DIRECTION.SENDING){
+            logger.log(Level.WARNING, String.format("[%s] max inflight message number reached, fail-fast for sending, allow for receiving [%s] - [%s]", context, source, message));
+            if(source == IMqttsnOriginatingMessageSource.LOCAL){
                 throw new MqttsnExpectationFailedException("max number of inflight messages reached");
             }
         }
 
-        InflightMessage inflight = queuedPublishMessage == null ? new InflightMessage(message, direction, MqttsnWaitToken.from(message)) :
+        InflightMessage inflight = queuedPublishMessage == null ? new InflightMessage(message, source, MqttsnWaitToken.from(message)) :
                 new RequeueableInflightMessage(queuedPublishMessage, message);
 
-        LastIdContext idContext = LastIdContext.from(context, direction);
+        LastIdContext idContext = LastIdContext.from(context, source);
         int msgId = WEAK_ATTACH_ID;
         if (message.needsId()) {
             synchronized (context){
@@ -623,7 +627,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
         if(logger.isLoggable(Level.FINE)){
             logger.log(Level.FINE, String.format("[%s - %s] marking [%s] message [%s] inflight id context [%s]",
-                    registry.getOptions().getContextId(), context, direction, message, idContext));
+                    registry.getOptions().getContextId(), context, source, message, idContext));
         }
 
         return inflight.getToken();
@@ -634,7 +638,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
      */
     protected Integer getNextMsgId(LastIdContext context) throws MqttsnException {
 
-        Map<Integer, InflightMessage> map = getInflightMessages(context.context);
+        Map<Integer, InflightMessage> map = getInflightMessages(context.context, context.source);
         int startAt = Math.max(lastUsedMsgIds.get(context) == null ? 1 : lastUsedMsgIds.get(context) + 1,
                 registry.getOptions().getMsgIdStartAt());
 
@@ -668,15 +672,21 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         lastActiveMessage.remove(context);
         lastMessageReceived.remove(context);
         lastMessageSent.remove(context);
-        lastUsedMsgIds.remove(LastIdContext.from(context, InflightMessage.DIRECTION.SENDING));
-        lastUsedMsgIds.remove(LastIdContext.from(context, InflightMessage.DIRECTION.RECEIVING));
+        lastUsedMsgIds.remove(LastIdContext.from(context, IMqttsnOriginatingMessageSource.REMOTE));
+        lastUsedMsgIds.remove(LastIdContext.from(context, IMqttsnOriginatingMessageSource.LOCAL));
     }
 
     protected void clearInflightInternal(IMqttsnContext context, long evictionTime) throws MqttsnException {
         if(logger.isLoggable(Level.FINE)){
             logger.log(Level.FINE, String.format("clearing all inflight messages for context [%s], forced = [%s]", context, evictionTime == 0));
         }
-        Map<Integer, InflightMessage> messages = getInflightMessages(context);
+        if(registry.getOptions().isReapReceivingMessages()){
+            clearInternal(context, getInflightMessages(context, IMqttsnOriginatingMessageSource.REMOTE), evictionTime);
+        }
+        clearInternal(context, getInflightMessages(context, IMqttsnOriginatingMessageSource.LOCAL), evictionTime);
+    }
+
+    private final void clearInternal(IMqttsnContext context, Map<Integer, InflightMessage> messages, long evictionTime) throws MqttsnException {
         if(messages != null && !messages.isEmpty()){
             synchronized (messages){
                 Iterator<Integer> messageItr = messages.keySet().iterator();
@@ -686,10 +696,6 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     if(f != null){
                         if(evictionTime == 0 ||
                                 f.getTime() + registry.getOptions().getMaxTimeInflight() < evictionTime){
-                            if(!registry.getOptions().isReapReceivingMessages() &&
-                                    f.getDirection() == InflightMessage.DIRECTION.RECEIVING){
-                                continue;
-                            }
                             messageItr.remove();
                             reapInflight(context, f);
                         }
@@ -743,23 +749,17 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
-    public int countInflight(IMqttsnContext context, InflightMessage.DIRECTION direction) throws MqttsnException {
-        Map<Integer, InflightMessage> map = getInflightMessages(context);
-        synchronized (map){
-            Iterator<Integer> itr = map.keySet().iterator();
-            int count = 0;
-            while(itr.hasNext()){
-                Integer i = itr.next();
-                InflightMessage msg = map.get(i);
-                if(msg != null && msg.getDirection() == direction) count++;
-            }
-            return count;
+    public int countInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException {
+        Map<Integer, InflightMessage> map = getInflightMessages(context, source);
+        if(map.size() == 1){
+            logger.log(Level.WARNING, Objects.toString(map));
         }
+        return map.size();
     }
 
     @Override
     public boolean canSend(IMqttsnContext context) throws MqttsnException {
-        int inflight = countInflight(context, InflightMessage.DIRECTION.SENDING);
+        int inflight = countInflight(context, IMqttsnOriginatingMessageSource.LOCAL);
         boolean canSend = inflight <
                 registry.getOptions().getMaxMessagesInflight();
         if(!canSend){
@@ -800,13 +800,15 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         return topicPath;
     }
 
-    protected abstract void addInflightMessage(IMqttsnContext context, Integer messageId, InflightMessage message) throws MqttsnException ;
+    public abstract InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException;
 
-    protected abstract InflightMessage getInflightMessage(IMqttsnContext context, Integer messageId) throws MqttsnException ;
+    protected abstract void addInflightMessage(IMqttsnContext context, Integer packetId, InflightMessage message) throws MqttsnException ;
 
-    protected abstract Map<Integer, InflightMessage>  getInflightMessages(IMqttsnContext context) throws MqttsnException;
+    protected abstract InflightMessage getInflightMessage(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException ;
 
-    protected abstract boolean inflightExists(IMqttsnContext context, Integer messageId) throws MqttsnException;
+    protected abstract Map<Integer, InflightMessage>  getInflightMessages(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException;
+
+    protected abstract boolean inflightExists(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException;
 
     static class CommitOperation {
 
@@ -815,6 +817,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         protected IMqttsnContext context;
         protected long timestamp;
         protected UUID messageId;
+        //-- TODO this should encapsulate the source enum for consistency
         protected boolean inbound;
 
         public CommitOperation(IMqttsnContext context, PublishData data, IMqttsnMessage message, boolean inbound){
@@ -851,11 +854,11 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     protected static class LastIdContext {
 
         protected final IMqttsnContext context;
-        protected final InflightMessage.DIRECTION direction;
+        protected final IMqttsnOriginatingMessageSource source;
 
-        public LastIdContext(IMqttsnContext context, InflightMessage.DIRECTION direction) {
+        public LastIdContext(IMqttsnContext context, IMqttsnOriginatingMessageSource source) {
             this.context = context;
-            this.direction = direction;
+            this.source = source;
         }
 
         @Override
@@ -863,24 +866,24 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             LastIdContext that = (LastIdContext) o;
-            return context.equals(that.context) && direction == that.direction;
+            return context.equals(that.context) && source == that.source;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(context, direction);
+            return Objects.hash(context, source);
         }
 
         @Override
         public String toString() {
             return "LastIdContext{" +
                     "context=" + context +
-                    ", direction=" + direction +
+                    ", source=" + source +
                     '}';
         }
 
-        public static LastIdContext from(IMqttsnContext context, InflightMessage.DIRECTION direction){
-            return new LastIdContext(context, direction);
+        public static LastIdContext from(IMqttsnContext context, IMqttsnOriginatingMessageSource source){
+            return new LastIdContext(context, source);
         }
     }
 }

@@ -124,7 +124,8 @@ public class MqttsnGatewayMessageHandler
                     if(MqttsnUtils.in(sessionState.getClientState(),
                             MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)) {
                         if(logger.isLoggable(Level.FINE)){
-                            logger.log(Level.FINE, String.format("scheduling flush based on outbound message [%s] -> inflight [%s]", messageOut == null ? messageIn : messageOut, getRegistry().getMessageStateService().countInflight(context, InflightMessage.DIRECTION.SENDING)));
+                            logger.log(Level.FINE, String.format("scheduling flush based on outbound message [%s] -> inflight [%s]", messageOut == null ? messageIn : messageOut,
+                                    getRegistry().getMessageStateService().countInflight(context, IMqttsnOriginatingMessageSource.LOCAL)));
                         }
                         registry.getMessageStateService().scheduleFlush(context);
                     }

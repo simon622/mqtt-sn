@@ -27,8 +27,10 @@ package org.slj.mqtt.sn.impl.ram;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageStateService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.InflightMessage;
+import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.Pair;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -36,7 +38,7 @@ import java.util.logging.Level;
 public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry>
         extends AbstractMqttsnMessageStateService<T> {
 
-    protected Map<IMqttsnContext, Map<Integer, InflightMessage>> inflightMessages;
+    protected Map<IMqttsnContext, Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>>> inflightMessages;
 
     public MqttsnInMemoryMessageStateService(boolean clientMode) {
         super(clientMode);
@@ -77,48 +79,51 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public InflightMessage removeInflight(IMqttsnContext context, int msgId) throws MqttsnException {
-        Map<Integer, InflightMessage> map = getInflightMessages(context);
-        return map.remove(msgId);
+    public InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
+        Map<Integer, InflightMessage> map = getInflightMessages(context, source);
+        return map.remove(packetId);
     }
 
     @Override
-    protected void addInflightMessage(IMqttsnContext context, Integer messageId, InflightMessage message) throws MqttsnException {
-        Map<Integer, InflightMessage> map = getInflightMessages(context);
+    protected void addInflightMessage(IMqttsnContext context, Integer messageId, InflightMessage message) {
+        Map<Integer, InflightMessage> map = getInflightMessages(context, message.getOriginatingMessageSource());
         synchronized (map){
             map.put(messageId, message);
         }
     }
 
     @Override
-    protected InflightMessage getInflightMessage(IMqttsnContext context, Integer messageId) throws MqttsnException {
-        return getInflightMessages(context).get(messageId);
+    protected InflightMessage getInflightMessage(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
+        return getInflightMessages(context, source).get(packetId);
     }
 
     @Override
-    protected boolean inflightExists(IMqttsnContext context, Integer messageId) throws MqttsnException {
-        boolean exists = getInflightMessages(context).containsKey(messageId);
+    protected boolean inflightExists(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
+        boolean exists = getInflightMessages(context, source).containsKey(packetId);
         if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("context [%s] -> inflight exists for id [%s] ? [%s]", context, messageId, exists));
+            logger.log(Level.FINE, String.format("context [%s] -> inflight exists for id [%s] ? [%s]", context, packetId, exists));
         }
         return exists;
     }
 
     @Override
-    public Map<Integer, InflightMessage> getInflightMessages(IMqttsnContext context) {
-        Map<Integer, InflightMessage> map = inflightMessages.get(context);
-        if(map == null){
+    public Map<Integer, InflightMessage> getInflightMessages(IMqttsnContext context, IMqttsnOriginatingMessageSource source) {
+        Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair = inflightMessages.get(context);
+        if(pair == null){
             synchronized (this){
-                if((map = inflightMessages.get(context)) == null){
-                    map = Collections.synchronizedMap(new HashMap<>());
-                    inflightMessages.put(context, map);
+                if((pair = inflightMessages.get(context)) == null){
+                    pair = Pair.of(Collections.synchronizedMap(new HashMap<>()),
+                            Collections.synchronizedMap(new HashMap<>()));
+                    inflightMessages.put(context, pair);
                 }
             }
         }
         if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("inflight for [%s] is [%s]", context, Objects.toString(map)));
+            logger.log(Level.FINE, String.format("inflight for [%s] is [%s]", context, pair));
         }
-        return map;
+
+        //left is sending right is receiving
+        return source == IMqttsnOriginatingMessageSource.LOCAL ? pair.getLeft() : pair.getRight();
     }
 
     public List<IMqttsnContext> getActiveInflights(){

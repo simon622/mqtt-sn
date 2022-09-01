@@ -196,6 +196,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     public boolean isPartOfOriginatingMessage(IMqttsnMessage message) {
         switch(message.getMessageType()){
             case MqttsnConstants.PUBLISH:
+            case MqttsnConstants.PUBREL:
             case MqttsnConstants.CONNECT:
             case MqttsnConstants.SUBSCRIBE:
             case MqttsnConstants.UNSUBSCRIBE:
@@ -438,7 +439,7 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         if(response != null && response.isErrorMessage()){
             //we need to remove any message that was marked inflight
             if(message.needsId()){
-                if(registry.getMessageStateService().removeInflight(context, message.getId()) != null){
+                if(registry.getMessageStateService().removeInflight(context, IMqttsnOriginatingMessageSource.REMOTE, message.getId()) != null){
                     logger.log(Level.WARNING, "tidied up bad message that was marked inflight and yeilded error response");
                 }
             }

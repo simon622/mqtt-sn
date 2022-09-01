@@ -22,28 +22,17 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
+/**
+ * Some messages maybe sent in either direction from a given context, and so we should be able to establish the direction of
+ * transit;
+ *
+ * Consider MO (Mobile originated) or MT (mobile terminated) network traffic.
+ */
+public enum IMqttsnOriginatingMessageSource {
 
-public class RequeueableInflightMessage extends InflightMessage {
+    LOCAL,
+    REMOTE
 
-    QueuedPublishMessage queuedPublishMessage;
-
-    public RequeueableInflightMessage(QueuedPublishMessage queuedPublishMessage, IMqttsnMessage message) {
-        super(message, IMqttsnOriginatingMessageSource.LOCAL, queuedPublishMessage.getToken());
-        if(queuedPublishMessage.getToken() != null)
-            queuedPublishMessage.getToken().setMessage(message);
-
-        this.queuedPublishMessage = queuedPublishMessage;
-    }
-
-    public QueuedPublishMessage getQueuedPublishMessage() {
-        return queuedPublishMessage;
-    }
-
-    public void setQueuedPublishMessage(QueuedPublishMessage queuedPublishMessage) {
-        this.queuedPublishMessage = queuedPublishMessage;
-    }
 }

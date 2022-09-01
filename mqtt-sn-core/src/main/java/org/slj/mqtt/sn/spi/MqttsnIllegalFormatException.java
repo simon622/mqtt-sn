@@ -22,28 +22,25 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
-
-public class RequeueableInflightMessage extends InflightMessage {
-
-    QueuedPublishMessage queuedPublishMessage;
-
-    public RequeueableInflightMessage(QueuedPublishMessage queuedPublishMessage, IMqttsnMessage message) {
-        super(message, IMqttsnOriginatingMessageSource.LOCAL, queuedPublishMessage.getToken());
-        if(queuedPublishMessage.getToken() != null)
-            queuedPublishMessage.getToken().setMessage(message);
-
-        this.queuedPublishMessage = queuedPublishMessage;
+/**
+ * Denotes an error in the format of an object or primitive passed into an SPI
+ */
+public class MqttsnIllegalFormatException extends Exception {
+    public MqttsnIllegalFormatException() {
+        super();
     }
 
-    public QueuedPublishMessage getQueuedPublishMessage() {
-        return queuedPublishMessage;
+    public MqttsnIllegalFormatException(String message) {
+        super(message);
     }
 
-    public void setQueuedPublishMessage(QueuedPublishMessage queuedPublishMessage) {
-        this.queuedPublishMessage = queuedPublishMessage;
+    public MqttsnIllegalFormatException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MqttsnIllegalFormatException(Throwable cause) {
+        super(cause);
     }
 }

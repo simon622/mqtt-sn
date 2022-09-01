@@ -25,21 +25,20 @@
 package org.slj.mqtt.sn.model;
 
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 
 import java.io.Serializable;
 
 public class InflightMessage implements Serializable {
 
-    public enum DIRECTION {SENDING, RECEIVING}
-
     transient MqttsnWaitToken token;
     private IMqttsnMessage message;
     private long time;
-    private DIRECTION direction;
+    private IMqttsnOriginatingMessageSource source;
 
-    public InflightMessage(IMqttsnMessage message, DIRECTION direction, MqttsnWaitToken token) {
+    public InflightMessage(IMqttsnMessage message, IMqttsnOriginatingMessageSource source, MqttsnWaitToken token) {
         this.time = System.currentTimeMillis();
-        this.direction = direction;
+        this.source = source;
         this.message = message;
         this.token = token;
     }
@@ -56,8 +55,8 @@ public class InflightMessage implements Serializable {
         return token;
     }
 
-    public DIRECTION getDirection() {
-        return direction;
+    public IMqttsnOriginatingMessageSource getOriginatingMessageSource() {
+        return source;
     }
 
     public void setTime(long time) {
@@ -70,7 +69,7 @@ public class InflightMessage implements Serializable {
                 "token=" + token +
                 ", message=" + message +
                 ", time=" + time +
-                ", direction=" + direction +
+                ", source=" + source +
                 '}';
     }
 }

@@ -45,48 +45,46 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
 
         IMqttsnQueueProcessorStateService stateCheckService = getRegistry().getQueueProcessorStateCheckService();
 
-        synchronized (context){
-            //-- if the queue is empty, then something will happen to retrigger this process, ie. message in or out
-            //-- so safe to remove
-            int count = registry.getMessageQueue().size(context);
+        //-- if the queue is empty, then something will happen to retrigger this process, ie. message in or out
+        //-- so safe to remove
+        int count = registry.getMessageQueue().size(context);
 
-            if(logger.isLoggable(Level.FINE)){
+        if(logger.isLoggable(Level.FINE)){
+            logger.log(Level.FINE,
+                    String.format("processing queue size [%s] on thread [%s] in client-mode [%s] for [%s]", count, Thread.currentThread().getName(), clientMode, context));
+        }
+
+        if(count == 0){
+            if(stateCheckService != null){
                 logger.log(Level.FINE,
-                        String.format("processing queue size [%s] on thread [%s] in client-mode [%s] for [%s]", count, Thread.currentThread().getName(), clientMode, context));
+                        String.format("notifying state service of queue empty thread [%s] for [%s]", Thread.currentThread().getName(), context));
+                //-- this checks on the state of any session and if its AWAKE will lead to a PINGRESP being sent
+                stateCheckService.queueEmpty(context);
             }
+            return RESULT.REMOVE_PROCESS;
+        }
 
-            if(count == 0){
-                if(stateCheckService != null){
-                    logger.log(Level.FINE,
-                            String.format("notifying state service of queue empty thread [%s] for [%s]", Thread.currentThread().getName(), context));
-                    //-- this checks on the state of any session and if its AWAKE will lead to a PINGRESP being sent
-                    stateCheckService.queueEmpty(context);
-                }
-                return RESULT.REMOVE_PROCESS;
-            }
+        //-- this call checks session state to ensure the client has an active or awake session
+        if(stateCheckService != null && !stateCheckService.canReceive(context)) {
+            return RESULT.REMOVE_PROCESS;
+        }
 
-            //-- this call checks session state to ensure the client has an active or awake session
-            if(stateCheckService != null && !stateCheckService.canReceive(context)) {
-                return RESULT.REMOVE_PROCESS;
-            }
+        //-- this checks the inflight if its > 0 we cannot send
+        if(!registry.getMessageStateService().canSend(context)) {
+            logger.log(Level.INFO, String.format("state service determined cant send at the moment [%s], remove process and allow protocol processor to schedule new check", context));
+            return RESULT.BACKOFF_PROCESS;
+        }
 
-            //-- this checks the inflight if its > 0 we cannot send
-            if(!registry.getMessageStateService().canSend(context)) {
-                logger.log(Level.INFO, String.format("state service determined cant send at the moment [%s], remove process and allow protocol processor to schedule new check", context));
-                return RESULT.BACKOFF_PROCESS;
-            }
-
-            QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
-            if(queuedMessage != null){
-                return processNextMessage(context);
-            } else {
-                return clientMode ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
-            }
+        QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
+        if(queuedMessage != null){
+            return processNextMessage(context);
+        } else {
+            return clientMode ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
         }
     }
 
     /**
-     * Uses the next message and establshes a register if no support topic alias's exist
+     * Uses the next message and establishes a register if no support topic alias's exist
      */
     protected RESULT processNextMessage(IMqttsnContext context) throws MqttsnException {
 

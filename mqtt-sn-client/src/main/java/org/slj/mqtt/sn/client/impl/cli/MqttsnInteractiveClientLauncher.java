@@ -31,11 +31,12 @@ import java.util.logging.LogManager;
 public class MqttsnInteractiveClientLauncher {
     static final String DEBUG = "debug";
     public static void launch(MqttsnInteractiveClient interactiveClient) throws Exception {
-        if(!Boolean.getBoolean(DEBUG)) LogManager.getLogManager().reset();
+        boolean debug = Boolean.getBoolean(DEBUG);
+        if(!debug) LogManager.getLogManager().reset();
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
             interactiveClient.init(input, output);
-            interactiveClient.welcome("Welcome to the mqtt-sn interactive client. You will need to give me the location of your MQTT-SN compliant gateway to continue..");
+            interactiveClient.welcome("Welcome to the mqtt-sn interactive client. You will need to give me the location of your MQTT-SN compliant gateway to continue.. ");
             interactiveClient.configureWithHistory();
             interactiveClient.start();
             interactiveClient.command();

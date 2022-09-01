@@ -96,21 +96,21 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
     /**
      * Ccount the number of message inflight for a given direction and context
      * @param context - The context to whom you are speaking
-     * @param direction - Inflight has 2 channels, inbound and outbound per the spec. Count in which direction.
+     * @param source - Inflight has 2 channels, inbound and outbound per the spec. Count in which direction.
      * @return The number of messages inflight in a given direction
      * @throws MqttsnException - an error has occurred
      */
-    int countInflight(IMqttsnContext context, InflightMessage.DIRECTION direction) throws MqttsnException ;
+    int countInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException ;
 
     /**
      * Remove a specific message from inflight using its messageId, returning the message.
      * If no message exists inflight with the corresponding ID, null will be returned.
      * @param context - The context to whom you are speaking
-     * @param msgId - The message id to return
+     * @param packetId - The message id to return
      * @return - the corresponding message or NULL if not found
      * @throws MqttsnException - an error has occurred
      */
-    InflightMessage removeInflight(IMqttsnContext context, int msgId) throws MqttsnException ;
+    InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException ;
 
     /**
      * According to the state rules, are we in a position to send PUBLISH messages to the given context

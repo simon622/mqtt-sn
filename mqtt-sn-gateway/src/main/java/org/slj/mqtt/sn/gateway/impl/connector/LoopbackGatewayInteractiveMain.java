@@ -49,7 +49,7 @@ public class LoopbackGatewayInteractiveMain {
                         withPort(port).
                         withUsername(username).
                         withPassword(password);
-
+                options.withMaxMessagesInflight(1000);
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(
                         MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
 

@@ -35,7 +35,7 @@ import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 
-public class AggregatingGatewayMain {
+public class PahoGatewayMain {
     public static void main(String[] args) throws Exception {
         if(args.length < 6)
             throw new IllegalArgumentException("you must specify 6 arguments; <localPort>, <clientId>, <host>, <port>, <username> and <password>");

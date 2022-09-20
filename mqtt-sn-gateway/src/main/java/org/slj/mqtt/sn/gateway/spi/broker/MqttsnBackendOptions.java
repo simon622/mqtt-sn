@@ -33,7 +33,9 @@ public class MqttsnBackendOptions {
     public static final int DEFAULT_KEEPALIVE = 30 * 10;
     public static final int DEFAULT_CONNECTION_TIMEOUT = 30;
     public static final int DEFAULT_MQTT_PORT = 1883;
+    public static final int DEFAULT_MQTT_TLS_PORT = 8883;
     public static final String DEFAULT_MQTT_PROTOCOL = "tcp";
+    public static final String DEFAULT_MQTT_TLS_PROTOCOL = "ssl";
 
     private boolean connectOnStartup = DEFAULT_CONNECT_ON_STARTUP;
     private boolean managedConnections = DEFAULT_MANAGED_CONNECTIONS;

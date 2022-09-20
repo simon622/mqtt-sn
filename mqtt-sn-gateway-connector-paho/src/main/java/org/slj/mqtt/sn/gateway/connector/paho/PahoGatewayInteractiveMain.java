@@ -33,7 +33,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
-public class AggregatingGatewayInteractiveMain {
+public class PahoGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
@@ -44,11 +44,16 @@ public class AggregatingGatewayInteractiveMain {
                         withUsername(username).
                         withPassword(password);
 
+                if(port == MqttsnBackendOptions.DEFAULT_MQTT_TLS_PORT){
+                    brokerOptions.withProtocol(MqttsnBackendOptions.DEFAULT_MQTT_TLS_PROTOCOL);
+                }
+
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport());
+
             }
-        }, true, "Welcome to the custom-broker version of the gateway. You will need to connect your gateway to your MQTT broker using a client connection host, port, username, password & clientId.");
+        }, true, "Welcome to the PAHO custom-broker version of the gateway. You will need to connect your gateway to your MQTT broker using a client connection host, port, username, password & clientId.");
     }
 }

@@ -46,6 +46,7 @@ public class ClientInteractiveMain {
                 options.withSecurityOptions(securityOptions);
                 */
                 options.withMaxMessagesInQueue(100000);
+                options.withMaxMessagesInflight(1000);
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
                         withTransport(transport).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);

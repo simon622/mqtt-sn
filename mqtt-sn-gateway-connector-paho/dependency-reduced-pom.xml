@@ -19,7 +19,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>org.slj.mqtt.sn.gateway.connector.paho.AggregatingGatewayInteractiveMain</mainClass>
+                  <mainClass>org.slj.mqtt.sn.gateway.connector.paho.PahoGatewayInteractiveMain</mainClass>
                 </transformer>
               </transformers>
               <filters>

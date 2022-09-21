@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.gateway.connector.paho;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
@@ -158,7 +159,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     @Override
     public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
         try {
-            int QoS = backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
+            int QoS = message == null ? MqttsnConstants.QoS2 : backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
             if(isConnected()) {
                 logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
                 client.subscribe(topicPath.toString(), QoS);

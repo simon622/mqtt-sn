@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.spi;
 
+import org.slj.mqtt.sn.model.INetworkContext;
+
 /**
  * Used to verify message integrity and provide other security services;
  */
@@ -44,12 +46,12 @@ public interface IMqttsnSecurityService {
      * in the process
      * @throws MqttsnSecurityException - Payload failed integrity checks
      */
-    byte[] readVerified(byte[] data) throws MqttsnSecurityException;
+    byte[] readVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException;
 
     /**
      * Given content to protect, return payload with integrity field applied
      * @throws MqttsnSecurityException - Unable to apply integrity field to given payload
      */
-    byte[] writeVerified(byte[] data) throws MqttsnSecurityException;
+    byte[] writeVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException;
 
 }

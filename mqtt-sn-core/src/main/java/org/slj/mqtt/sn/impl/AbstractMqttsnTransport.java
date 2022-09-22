@@ -127,7 +127,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             }
 
             if(registry.getSecurityService().protocolIntegrityEnabled()){
-                data = registry.getSecurityService().readVerified(data);
+                data = registry.getSecurityService().readVerified(networkContext, data);
             }
 
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
@@ -219,7 +219,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
             byte[] data = registry.getCodec().encode(message);
 
             if(registry.getSecurityService().protocolIntegrityEnabled()){
-                data = registry.getSecurityService().writeVerified(data);
+                data = registry.getSecurityService().writeVerified(context, data);
             }
 
             if(data.length > registry.getOptions().getMaxProtocolMessageSize()){

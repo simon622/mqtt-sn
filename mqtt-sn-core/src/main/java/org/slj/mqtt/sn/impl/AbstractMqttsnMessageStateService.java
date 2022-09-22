@@ -43,15 +43,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
     protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.UNSIGNED_MAX_16 + 1);
     protected boolean clientMode;
-
     protected Map<IMqttsnContext, Long> lastActiveMessage;
     protected Map<IMqttsnContext, Long> lastMessageSent;
     protected Map<IMqttsnContext, Long> lastMessageReceived;
-
     protected Map<LastIdContext, Integer> lastUsedMsgIds;
     protected Map<IMqttsnContext, ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT>> flushOperations;
     protected ScheduledExecutorService executorService = null;
-    private static final int TIMEOUT_BACKOFF = 15000;
+    protected int loopTimeout;
 
     public AbstractMqttsnMessageStateService(boolean clientMode) {
         this.clientMode = clientMode;
@@ -66,6 +64,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         lastMessageReceived = Collections.synchronizedMap(new HashMap());
         lastMessageSent = Collections.synchronizedMap(new HashMap());
         lastActiveMessage = Collections.synchronizedMap(new HashMap());
+        loopTimeout  = runtime.getOptions().getStateLoopTimeout();
         super.start(runtime);
     }
 
@@ -188,7 +187,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         } catch(Exception e){
             logger.log(Level.SEVERE, "error tidying message registry on state thread;", e);
         }
-        return TIMEOUT_BACKOFF;
+        return Math.max(loopTimeout, 1);
     }
 
     protected boolean allowedToSend(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
@@ -206,9 +205,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         byte[] payload = registry.getMessageRegistry().get(queuedPublishMessage.getMessageId());
 
         if(registry.getSecurityService().payloadIntegrityEnabled()){
-            payload = registry.getSecurityService().writeVerified(payload);
+            INetworkContext networkContext = registry.getNetworkRegistry().getContext(context);
+            payload = registry.getSecurityService().writeVerified(networkContext, payload);
         }
-
         MqttsnConstants.TOPIC_TYPE type = info.getType();
         int topicId = info.getTopicId();
         if(type == MqttsnConstants.TOPIC_TYPE.SHORT && topicId == 0){
@@ -558,7 +557,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             byte[] payload = operation.data.getData();
             if(registry.getSecurityService().payloadIntegrityEnabled()){
                 try {
-                    payload = registry.getSecurityService().readVerified(payload);
+                    INetworkContext networkContext = registry.getNetworkRegistry().getContext(operation.context);
+                    payload = registry.getSecurityService().readVerified(networkContext, payload);
                 } catch(MqttsnSecurityException e){
                     logger.log(Level.WARNING, "dropping received publish message which did not pass integrity checks", e);
                     return;

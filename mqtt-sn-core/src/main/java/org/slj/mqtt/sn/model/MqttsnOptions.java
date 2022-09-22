@@ -66,6 +66,11 @@ public class MqttsnOptions {
     public static final int DEFAULT_ACTIVE_CONTEXT_TIMEOUT = 20000;
 
     /**
+     * By default, the maximum time the state loop will sleep (unless notified)
+     */
+    public static final int DEFAULT_STATE_LOOP_TIMEOUT = 15000;
+
+    /**
      * Wire logging can be stopped entirely
      */
     public static final boolean DEFAULT_WIRE_LOGGING_ENABLED = false;
@@ -192,7 +197,6 @@ public class MqttsnOptions {
     private int transportPublishHandoffThreadCount = DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
     private int generalPurposeThreadCount = DEFAULT_GENERAL_PURPOSE_THREAD_COUNT;
-
     private int queueBackPressure = DEFAULT_WORK_QUEUE_BACKPRESSURE;
     private boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;
     private boolean sleepClearsRegistrations = DEFAULT_SLEEP_CLEARS_REGISTRATIONS;
@@ -212,6 +216,7 @@ public class MqttsnOptions {
     private int maxProtocolMessageSize = DEFAULT_MAX_PROTOCOL_SIZE;
     private boolean wireLoggingEnabled = DEFAULT_WIRE_LOGGING_ENABLED;
     private int activeContextTimeout = DEFAULT_ACTIVE_CONTEXT_TIMEOUT;
+    private int stateLoopTimeout = DEFAULT_STATE_LOOP_TIMEOUT;
     private String logPattern = DEFAULT_SIMPLE_LOG_PATTERN;
     private int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
     private int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
@@ -295,6 +300,18 @@ public class MqttsnOptions {
      */
     public MqttsnOptions withActiveContextTimeout(int activeContextTimeout) {
         this.activeContextTimeout = activeContextTimeout;
+        return this;
+    }
+
+    /**
+     * The max time between invocations of the state loop which monitors activity timeout
+     *
+     * @param stateLoopTimeout - the max time between invocations of the state loop which monitors activity timeout
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_STATE_LOOP_TIMEOUT}
+     */
+    public MqttsnOptions withStateLoopTimeout(int stateLoopTimeout) {
+        this.stateLoopTimeout = stateLoopTimeout;
         return this;
     }
 
@@ -806,5 +823,9 @@ public class MqttsnOptions {
 
     public int getQueueBackPressure() {
         return queueBackPressure;
+    }
+
+    public int getStateLoopTimeout() {
+        return stateLoopTimeout;
     }
 }

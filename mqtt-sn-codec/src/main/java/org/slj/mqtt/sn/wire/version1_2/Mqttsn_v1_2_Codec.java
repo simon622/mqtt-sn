@@ -163,8 +163,8 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
                 break;
             case MqttsnConstants.CONNECT:
 
-                //-- check version
-                if(data[3] != MqttsnConstants.PROTOCOL_VERSION_1_2){
+                //-- check version - version 1.2 should allow 0 in as it seems most clients send 0
+                if(data[3] != MqttsnConstants.PROTOCOL_VERSION_1_2 && data[3] != 0){
                     throw new MqttsnUnsupportedVersionException("codec cannot parse ["+data[3]+"] non 2.0 message");
                 } else {
                     validateLengthGreaterThanOrEquals(data, 6);
@@ -309,7 +309,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
     @Override
     public boolean supportsVersion(int protocolVersion) throws MqttsnCodecException {
-        return protocolVersion == MqttsnConstants.PROTOCOL_VERSION_1_2;
+        return protocolVersion == MqttsnConstants.PROTOCOL_VERSION_1_2 || protocolVersion == 0;
     }
 
     @Override

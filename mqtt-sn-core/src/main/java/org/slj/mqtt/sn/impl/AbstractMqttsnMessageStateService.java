@@ -57,13 +57,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
     @Override
     public synchronized void start(T runtime) throws MqttsnException {
-        flushOperations = new HashMap();
+        flushOperations = new HashMap<>();
         executorService = runtime.getRuntime().createManagedScheduledExecutorService("mqtt-sn-scheduled-queue-flush-",
                 runtime.getOptions().getQueueProcessorThreadCount());
-        lastUsedMsgIds = Collections.synchronizedMap(new HashMap());
-        lastMessageReceived = Collections.synchronizedMap(new HashMap());
-        lastMessageSent = Collections.synchronizedMap(new HashMap());
-        lastActiveMessage = Collections.synchronizedMap(new HashMap());
+        lastUsedMsgIds = Collections.synchronizedMap(new HashMap<>());
+        lastMessageReceived = Collections.synchronizedMap(new HashMap<>());
+        lastMessageSent = Collections.synchronizedMap(new HashMap<>());
+        lastActiveMessage = Collections.synchronizedMap(new HashMap<>());
         loopTimeout  = runtime.getOptions().getStateLoopTimeout();
         super.start(runtime);
     }
@@ -784,17 +784,19 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
     protected String getTopicPathFromPublish(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
 
-        int topicIdType = 0;
-        byte[] topicData = null;
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2) {
-            MqttsnPublish publish = (MqttsnPublish) message;
-            topicIdType = publish.getTopicType();
-            topicData = publish.getTopicData();
-        } else  if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0) {
+        int topicIdType;
+        byte[] topicData;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0) {
             MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message;
             topicIdType = publish.getTopicIdType();
             topicData = publish.getTopicData();
         }
+        else {
+            MqttsnPublish publish = (MqttsnPublish) message;
+            topicIdType = publish.getTopicType();
+            topicData = publish.getTopicData();
+        }
+
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);
         String topicPath = registry.getTopicRegistry().topicPath(context, info, true);
         return topicPath;

@@ -472,11 +472,12 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     protected IMqttsnMessage handleConnect(IMqttsnContext context, IMqttsnMessage connect) throws MqttsnException {
 
         boolean will = false;
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
-            MqttsnConnect connectMessage = (MqttsnConnect) connect ;
-            will = connectMessage.isWill();
-        } else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnConnect_V2_0 connectMessage = (MqttsnConnect_V2_0) connect ;
+            will = connectMessage.isWill();
+        } else {
+            MqttsnConnect connectMessage = (MqttsnConnect) connect ;
             will = connectMessage.isWill();
         }
 
@@ -514,11 +515,12 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
     protected IMqttsnMessage handleSubscribe(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException, MqttsnCodecException {
 
         int QoS = 0;
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
-            MqttsnSubscribe subscribe = (MqttsnSubscribe) message;
-            QoS = subscribe.getQoS();
-        } else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnSubscribe_V2_0 subscribe = (MqttsnSubscribe_V2_0) message;
+            QoS = subscribe.getQoS();
+        } else {
+            MqttsnSubscribe subscribe = (MqttsnSubscribe) message;
             QoS = subscribe.getQoS();
         }
         return registry.getMessageFactory().createSuback(QoS, 0x00, MqttsnConstants.RETURN_CODE_ACCEPTED);
@@ -545,7 +547,17 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         String topicPath = null;
         byte[] topicData = null;
 
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnSuback_V2_0 suback = (MqttsnSuback_V2_0) message;
+            MqttsnSubscribe_V2_0 subscribe = (MqttsnSubscribe_V2_0) initial;
+
+            isError = suback.isErrorMessage();
+            topicId = suback.getTopicId();
+            topicIdType = suback.getTopicIdType();
+            grantedQoS = suback.getQoS();
+            topicData = subscribe.getTopicData();
+            topicPath = topicIdType == MqttsnConstants.TOPIC_PREDEFINED ? null : subscribe.getTopicName();
+        } else {
             MqttsnSuback suback = (MqttsnSuback) message;
             MqttsnSubscribe subscribe = (MqttsnSubscribe) initial;
 
@@ -554,17 +566,6 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
             grantedQoS = suback.getQoS();
             //NB: note the type is derived from the subscribe as v1.2 doesnt allow for the transmission on the suback
             topicIdType = subscribe.getTopicType();
-            topicData = subscribe.getTopicData();
-            topicPath = topicIdType == MqttsnConstants.TOPIC_PREDEFINED ? null : subscribe.getTopicName();
-
-        } else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
-            MqttsnSuback_V2_0 suback = (MqttsnSuback_V2_0) message;
-            MqttsnSubscribe_V2_0 subscribe = (MqttsnSubscribe_V2_0) initial;
-
-            isError = suback.isErrorMessage();
-            topicId = suback.getTopicId();
-            topicIdType = suback.getTopicIdType();
-            grantedQoS = suback.getQoS();
             topicData = subscribe.getTopicData();
             topicPath = topicIdType == MqttsnConstants.TOPIC_PREDEFINED ? null : subscribe.getTopicName();
         }
@@ -602,16 +603,16 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         int topicId = 0;
         int topicIdType = MqttsnConstants.TOPIC_NORMAL;
         boolean isError = false;
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
-            MqttsnRegack regack = (MqttsnRegack) response;
-            topicId = regack.getTopicId();
-            isError = regack.isErrorMessage();
-        }
-        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnRegack_V2_0 regack = (MqttsnRegack_V2_0) response;
             topicId = regack.getTopicId();
             isError = regack.isErrorMessage();
             topicIdType = regack.getTopicIdType();
+        } else {
+            MqttsnRegack regack = (MqttsnRegack) response;
+            topicId = regack.getTopicId();
+            isError = regack.isErrorMessage();
         }
 
         if(!isError){
@@ -634,17 +635,18 @@ public abstract class AbstractMqttsnMessageHandler<U extends IMqttsnRuntimeRegis
         int topicDataAsInt = 0;
         byte[] topicData = null;
         byte[] data = null;
-        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
-            MqttsnPublish publish = (MqttsnPublish) message;
-            QoS = publish.getQoS();
-            topicIdType = publish.getTopicType();
-            topicData = publish.getTopicData();
-            data = publish.getData();
-            topicDataAsInt = publish.readTopicDataAsInteger();
-        } else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnPublish_V2_0 publish = (MqttsnPublish_V2_0) message;
             QoS = publish.getQoS();
             topicIdType = publish.getTopicIdType();
+            topicData = publish.getTopicData();
+            data = publish.getData();
+            topicDataAsInt = publish.readTopicDataAsInteger();
+        } else {
+            MqttsnPublish publish = (MqttsnPublish) message;
+            QoS = publish.getQoS();
+            topicIdType = publish.getTopicType();
             topicData = publish.getTopicData();
             data = publish.getData();
             topicDataAsInt = publish.readTopicDataAsInteger();

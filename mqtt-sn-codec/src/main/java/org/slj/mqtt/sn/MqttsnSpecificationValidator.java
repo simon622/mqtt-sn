@@ -177,7 +177,7 @@ public class MqttsnSpecificationValidator {
 
     public static void validateProtocolId(int protocolId){
         if(protocolId != MqttsnConstants.PROTOCOL_VERSION_1_2 &&
-                 protocolId != MqttsnConstants.PROTOCOL_VERSION_2_0){
+                 protocolId != MqttsnConstants.PROTOCOL_VERSION_2_0 && protocolId != 0){
             throw new MqttsnCodecException("invalid protocol version - " + protocolId);
         }
     }

@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnSecurityService;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -55,7 +56,7 @@ public class MqttsnSecurityService
         return false;
     }
 
-    public byte[] readVerified(byte[] data) throws MqttsnSecurityException {
+    public byte[] readVerified(INetworkContext context, byte[] data) throws MqttsnSecurityException {
         MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
         int beforeSize = data.length;
         if(securityOptions != null) {
@@ -87,7 +88,7 @@ public class MqttsnSecurityService
         return data;
     }
 
-    public byte[] writeVerified(byte[] data) throws MqttsnSecurityException {
+    public byte[] writeVerified(INetworkContext context, byte[] data) throws MqttsnSecurityException {
         MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
         int beforeSize = data.length;
         if(securityOptions != null) {

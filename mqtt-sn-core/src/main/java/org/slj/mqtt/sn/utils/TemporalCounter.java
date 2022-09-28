@@ -40,11 +40,12 @@ public class TemporalCounter {
     private final long frequencyMillis;
     private volatile boolean running = false;
 
+    private final Object lock = new Object();
+
     public TemporalCounter(String name, long frequencyMillis) {
         this.name = name;
-        this.timer = new Timer();
         this.currentCount = new AtomicLong();
-        this.frequencyMillis = frequencyMillis;
+        this.frequencyMillis = Math.max(frequencyMillis, 1);
     }
 
     public void increment(long by){
@@ -67,18 +68,23 @@ public class TemporalCounter {
         return runningSince;
     }
 
-    public void start(){
+    public synchronized void start(){
         if(!running){
+            timer = new Timer();
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    if(runningSince == null) runningSince = new Date();
-                    long value = currentCount.get();
-                    currentCount.set(0);
-                    lastValue = value;
-                    maxValue = Math.max(maxValue, lastValue);
+                    if(running){
+                        synchronized (lock){ //in theory slow running operations could overlap
+                            if(runningSince == null) runningSince = new Date();
+                            long value = currentCount.get();
+                            currentCount.set(0);
+                            lastValue = value;
+                            maxValue = Math.max(maxValue, lastValue);
+                        }
+                    }
                 }
-            }, 0, 1000);
+            }, 0, frequencyMillis);
             running = true;
         }
          else {
@@ -86,13 +92,16 @@ public class TemporalCounter {
         }
     }
 
-    public void stop(){
+    public synchronized void stop(){
         try {
             running = false;
-            timer.cancel();
+            if(timer != null) timer.cancel();
         } finally {
             runningSince = null;
             timer = null;
+            maxValue = 0;
+            lastValue = 0;
+            currentCount.set(0);
         }
     }
 

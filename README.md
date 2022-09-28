@@ -24,10 +24,11 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
    4. [Message Integrity](#message-integrity)
    5. [Clustering](#clustering)
    6. [Performance & Benchmarking](#performance--benchmarking)
-5. [Version 2](#version-20)
-6. [Configuration](#configuration)
-7. [Cloud Platform Deployments](#cloud-platform-deployments)
-8. [Related People & Projects](#related-people--projects)
+5. [Security](#security)
+6. [Version 2](#version-20)
+7. [Configuration](#configuration)
+8. [Cloud Platform Deployments](#cloud-platform-deployments)
+9. [Related People & Projects](#related-people--projects)
 
 ## About
 

@@ -281,7 +281,7 @@ an artificial bottleneck; further the round-trip latency is coupled to the laten
 **This is a very expansive subject that can't really be covered here, and I would urge anyone looking to deploy this runtime in production to reach out to discuss performance optimisation.**
 
 ## Security
-MQTT and MQTT-SN so not impose any normative restrictions or rules for security since they are a transport procotol and therefore security sits outside the standard's purview. However, it should be incumbent upon any implementor to ensure their systems are secure in order to mitigate some common attack vectors. I have highlighted some topics below that are of interest to any deployment, taken from the security section of the respective specifications along with other items gleaned myself over the years. ***Adopt a secure by design*** principle!  
+MQTT and MQTT-SN do not impose any normative restrictions or rules for security since they are a transport procotol and therefore security sits outside the standard's purview. However, it should be incumbent upon any implementor to ensure their systems are secure in order to mitigate some common attack vectors. I have highlighted some topics below that are of interest to any deployment, taken from the security section of the respective specifications along with other items gleaned myself over the years. ***Adopt a secure by design*** principle!  
 
 ![Security](/images/security.png)
 

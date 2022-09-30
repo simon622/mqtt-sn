@@ -31,6 +31,11 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryTopicRegistry;
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
+import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
+import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;
+import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
@@ -68,6 +73,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         PUBLISH("Publish a new message", new String[]{"String* topicName", "String* data", "int QoS"}),
         UNSUBSCRIBE("Unsubscribe an existing topic subscription", new String[]{"String* topicName"}),
         STATUS("Obtain the status of the client", new String[0]),
+        SESSION("Obtain the local session details", new String[0]),
+        NETWORK("Get network details", new String[0]),
         HELO("Send a HELO message to gateway", new String[0]),
         TEST("Execute an built in test suite", new String[0]),
         PREDEFINE("Add a predefined topic alias", new String[]{"String* topicName",  "int16 topicAlias"}),
@@ -182,11 +189,21 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 case STATS:
                     stats();
                     break;
+                case NETWORK:
+                    network();
+                    break;
                 case RESET:
                     resetMetrics();
                     break;
                 case STATUS:
                     status();
+                    break;
+                case SESSION:
+                    String sessionId = clientId;
+                    if(sessionId == null){
+                        sessionId = captureMandatoryString(input, output, "Could not determine clientId from runtime, please supply to view session?");
+                    }
+                    session(sessionId);
                     break;
                 case TEST:
                     test();
@@ -255,7 +272,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void will(boolean retained, String topic, String data, int QoS) throws MqttsnException {
 
         MqttsnClient client = (MqttsnClient) getRuntime();
-        MqttsnWillData willData = new MqttsnWillData(new TopicPath(topic), data.getBytes(StandardCharsets.UTF_8), QoS, retained);
+        MqttsnWillDataImpl willData = new MqttsnWillDataImpl(new TopicPath(topic), data.getBytes(StandardCharsets.UTF_8), QoS, retained);
         client.setWillData(willData);
         message("DONE - successfully set will message data on runtime");
     }
@@ -394,42 +411,20 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         if(runtime != null && runtimeRegistry != null){
             try {
                 MqttsnClient client = (MqttsnClient) getRuntime();
-                runtimeRegistry.getMessageQueue().clear(client.getSessionState().getContext());
+                runtimeRegistry.getMessageQueue().clear(client.getSessionState());
             } catch(Exception e){
                 error("error clearing queue;", e);
             }
         }
     }
 
-    protected void status()
-            throws IOException, MqttsnException {
+    protected void status() {
         MqttsnClient client = (MqttsnClient) getRuntime();
         message(String.format("Remote Host: %s", hostName));
         message(String.format("Remote Port: %s", port));
         message(String.format("Client Id: %s", clientId));
         if(client != null){
             if(runtime != null) {
-                if(client.getSessionState() != null){
-                    message(String.format("Client Started: %s", client.getSessionState().getSessionStarted()));
-                    message(String.format("Client Session State: %s", getConnectionString(client.getSessionState().getClientState())));
-                    message(String.format("Keep Alive: %s", client.getSessionState().getKeepAlive()));
-                    message(String.format("Ping Interval: %s Seconds", client.getPingDelta()));
-
-                    Long lastSent = getRuntimeRegistry().getMessageStateService().getMessageLastSentToContext(client.getSessionState().getContext());
-                    if(lastSent != null){
-                        message(String.format("Last Packet Sent: %s", new Date(lastSent)));
-                    }
-
-                    Long lastReceived = getRuntimeRegistry().getMessageStateService().getMessageLastReceivedFromContext(client.getSessionState().getContext());
-                    if(lastReceived != null){
-                        message(String.format("Last Packet Received: %s", new Date(lastReceived)));
-                    }
-
-                    if (getRuntimeRegistry().getMessageQueue() != null) {
-                        message(String.format("Publish Queue Size: %s",
-                                getRuntimeRegistry().getMessageQueue().size(client.getSessionState().getContext())));
-                    }
-                }
                 if (getOptions() != null) {
                     Map<String, Integer> pTopics = getOptions().getPredefinedTopics();
                     if(pTopics != null){
@@ -438,29 +433,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         while(itr.hasNext()){
                             String topic = itr.next();
                             tabmessage(String.format("%s = %s", topic, pTopics.get(topic)));
-                        }
-                    }
-                }
-
-                if(client.getSessionState() != null){
-                    Set<Subscription> subs = getRuntimeRegistry().getSubscriptionRegistry().readSubscriptions(client.getSessionState().getContext());
-                    Iterator<Subscription> itr = subs.iterator();
-                    message("Subscription(s): ");
-                    synchronized (subs) {
-                        while (itr.hasNext()) {
-                            Subscription s = itr.next();
-                            tabmessage(String.format("%s -> %s",s.getTopicPath(), s.getQoS()));
-                        }
-                    }
-
-                    if(getRuntimeRegistry().getTopicRegistry() instanceof MqttsnInMemoryTopicRegistry){
-                        Set<MqttsnInMemoryTopicRegistry.ConfirmableTopicRegistration> s =
-                                ((MqttsnInMemoryTopicRegistry)getRuntimeRegistry().getTopicRegistry() ).getAll(client.getSessionState().getContext());
-                        if(s != null){
-                            message(String.format("Registered Topic Count: %s", s.size()));
-                            for(MqttsnInMemoryTopicRegistry.ConfirmableTopicRegistration t : s){
-                                tabmessage(String.format("%s = %s ? %s", t.getTopicPath(), t.getAliasId(), t.isConfirmed()));
-                            }
                         }
                     }
                 }
@@ -509,7 +481,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     @Override
     protected MqttsnOptions createOptions() throws UnknownHostException {
         return new MqttsnOptions().
-                withNetworkAddressEntry("remote-gateway",
+                withNetworkAddressEntry(clientId,
                         NetworkAddress.from(port, hostName)).
                 withContextId(clientId).
                 withMaxProtocolMessageSize(4096);

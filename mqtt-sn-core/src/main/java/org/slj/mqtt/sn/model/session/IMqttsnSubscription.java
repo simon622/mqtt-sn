@@ -22,33 +22,13 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session;
 
-import java.util.Date;
+import org.slj.mqtt.sn.utils.TopicPath;
 
-public interface IMqttsnSessionState {
+public interface IMqttsnSubscription {
 
-    IMqttsnContext getContext();
+    TopicPath getTopicPath();
 
-    MqttsnClientState getClientState();
-
-    Date getLastSeen();
-
-    Date getSessionStarted();
-
-    int getMaxPacketSize();
-
-    int getKeepAlive();
-
-    long getSessionExpiryInterval();
-
-    void setClientState(MqttsnClientState state);
-
-    void setLastSeen(Date date);
-
-    void setKeepAlive(int keepAlive);
-
-    void setSessionExpiryInterval(long sessionExpiryInterval);
-
-    void setMaxPacketSize(int maxPacketSize);
+    int getGrantedQoS();
 }

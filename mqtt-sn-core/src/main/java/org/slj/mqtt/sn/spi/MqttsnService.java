@@ -26,16 +26,16 @@ package org.slj.mqtt.sn.spi;
 
 import java.util.logging.Logger;
 
-public abstract class MqttsnService<T extends IMqttsnRuntimeRegistry> implements IMqttsnService<T> {
+public abstract class MqttsnService implements IMqttsnService {
 
     protected final Logger logger = Logger.getLogger(getClass().getName());
-    protected T registry;
+    protected IMqttsnRuntimeRegistry registry;
     protected volatile boolean running = false;
 
     public MqttsnService(){
     }
 
-    public void start(T runtime) throws MqttsnException {
+    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         this.registry = runtime;
         running = true;
     }
@@ -44,7 +44,7 @@ public abstract class MqttsnService<T extends IMqttsnRuntimeRegistry> implements
         running = false;
     }
 
-    protected T getRegistry(){
+    protected IMqttsnRuntimeRegistry getRegistry(){
         return registry;
     }
 

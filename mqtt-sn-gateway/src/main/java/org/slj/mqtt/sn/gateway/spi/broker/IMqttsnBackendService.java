@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.spi.broker;
 
 import org.slj.mqtt.sn.gateway.spi.*;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
@@ -33,7 +34,7 @@ import org.slj.mqtt.sn.utils.TopicPath;
 
 public interface IMqttsnBackendService {
 
-    IMqttsnRuntimeRegistry getRuntimeRegistry();
+    IMqttsnGatewayRuntimeRegistry getRegistry();
 
     boolean isConnected(IMqttsnContext context) throws MqttsnBackendException;
 

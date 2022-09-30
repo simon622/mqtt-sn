@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
-import org.slj.mqtt.sn.model.IMqttsnSessionState;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
@@ -175,7 +175,7 @@ public class ClientConnectionTest {
     }
 
     protected void assertClientSessionState(MqttsnClient client, MqttsnClientState state){
-        IMqttsnSessionState s = client.getSessionState();
+        IMqttsnSession s = client.getSessionState();
         Assert.assertNotNull("session state should not be null", s);
         MqttsnClientState sessionClientState = s.getClientState();
         if(state != null){

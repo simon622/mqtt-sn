@@ -25,10 +25,7 @@
 package org.slj.mqtt.sn.client.impl;
 
 import org.slj.mqtt.sn.client.spi.IMqttsnClientRuntimeRegistry;
-import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.impl.MqttsnContextFactory;
-import org.slj.mqtt.sn.impl.MqttsnMessageQueueProcessor;
-import org.slj.mqtt.sn.impl.MqttsnSecurityService;
+import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
@@ -42,6 +39,8 @@ public class MqttsnClientRuntimeRegistry extends AbstractMqttsnRuntimeRegistry i
     public static MqttsnClientRuntimeRegistry defaultConfiguration(MqttsnOptions options){
         MqttsnClientRuntimeRegistry registry = (MqttsnClientRuntimeRegistry) new MqttsnClientRuntimeRegistry(options).
                 withContextFactory(new MqttsnContextFactory()).
+                withTopicModifier(new MqttsnDefaultTopicModifier()).
+                withSessionRegistry(new MqttsnSessionRegistry()).
                 withSecurityService(new MqttsnSecurityService()).
                 withMessageHandler(new MqttsnClientMessageHandler()).
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).

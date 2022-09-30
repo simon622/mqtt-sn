@@ -22,24 +22,22 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.impl;
+package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+public class MqttsnNotFoundException extends MqttsnException {
 
-public class AbstractRationalTopicService <T extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<T> {
+    public MqttsnNotFoundException() {
+    }
 
-    /**
-     * Method called before any interactions into or out of the registry to allow for
-     * hooking to manipulate topic formats
-     * @param context
-     * @param topicName
-     * @return
-     */
-    protected String rationalizeTopic(IMqttsnContext context, String topicName) throws MqttsnException {
-        return topicName;
+    public MqttsnNotFoundException(String message) {
+        super(message);
+    }
+
+    public MqttsnNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MqttsnNotFoundException(Throwable cause) {
+        super(cause);
     }
 }

@@ -46,7 +46,7 @@ import java.util.logging.Level;
  * Supports running in both client and server mode.
  */
 public class MqttsnTcpTransport
-        extends AbstractMqttsnTransport<IMqttsnRuntimeRegistry> {
+        extends AbstractMqttsnTransport {
 
     protected final MqttsnTcpOptions options;
     protected boolean clientMode = false;

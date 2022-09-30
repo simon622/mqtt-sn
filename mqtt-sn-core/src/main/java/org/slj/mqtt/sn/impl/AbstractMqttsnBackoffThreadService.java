@@ -30,14 +30,14 @@ import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.logging.Level;
 
-public abstract class AbstractMqttsnBackoffThreadService<T extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<T> implements Runnable {
+public abstract class AbstractMqttsnBackoffThreadService
+        extends MqttsnService implements Runnable {
 
     private Thread t;
     private Object monitor = new Object();
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         initThread();
     }

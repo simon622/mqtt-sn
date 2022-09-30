@@ -32,7 +32,7 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 /**
  * When bound in, sends notification to the cluster service that a device has connected
  */
-public interface IMqttsnGatewayClusterService<T extends IMqttsnRuntimeRegistry> extends IMqttsnService<T> {
+public interface IMqttsnGatewayClusterService extends IMqttsnService {
 
     void notifyConnection(IMqttsnContext context) throws MqttsnException;
 

@@ -159,7 +159,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     @Override
     public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
         try {
-            int QoS = message == null ? MqttsnConstants.QoS2 : backendService.getRuntimeRegistry().getCodec().getQoS(message, true);
+            int QoS = message == null ? MqttsnConstants.QoS2 : backendService.getRegistry().getCodec().getQoS(message, true);
             if(isConnected()) {
                 logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
                 client.subscribe(topicPath.toString(), QoS);

@@ -31,8 +31,8 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.nio.ByteBuffer;
 
-public abstract class AbstractMqttsnUdpTransport<U extends IMqttsnRuntimeRegistry>
-        extends AbstractMqttsnTransport<U> {
+public abstract class AbstractMqttsnUdpTransport
+        extends AbstractMqttsnTransport {
 
     protected final MqttsnUdpOptions options;
 
@@ -41,7 +41,7 @@ public abstract class AbstractMqttsnUdpTransport<U extends IMqttsnRuntimeRegistr
     }
 
     @Override
-    public synchronized void start(U runtime) throws MqttsnException {
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         try {
             super.start(runtime);
             bind();

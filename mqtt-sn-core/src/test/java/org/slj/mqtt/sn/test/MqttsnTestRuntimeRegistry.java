@@ -25,15 +25,11 @@
 package org.slj.mqtt.sn.test;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
-import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.impl.MqttsnContextFactory;
-import org.slj.mqtt.sn.impl.MqttsnMessageQueueProcessor;
-import org.slj.mqtt.sn.impl.MqttsnSecurityService;
+import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
 public class MqttsnTestRuntimeRegistry extends AbstractMqttsnRuntimeRegistry {
 
@@ -49,6 +45,8 @@ public class MqttsnTestRuntimeRegistry extends AbstractMqttsnRuntimeRegistry {
                 withMessageQueue(new MqttsnInMemoryMessageQueue()).
                 withContextFactory(new MqttsnContextFactory()).
                 withSecurityService(new MqttsnSecurityService()).
+                withSessionRegistry(new MqttsnSessionRegistry()).
+                withTopicModifier(new MqttsnDefaultTopicModifier()).
                 withTopicRegistry(new MqttsnInMemoryTopicRegistry()).
                 withQueueProcessor(new MqttsnMessageQueueProcessor(clientMode)).
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).

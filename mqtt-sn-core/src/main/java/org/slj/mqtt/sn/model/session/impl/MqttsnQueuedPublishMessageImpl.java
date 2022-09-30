@@ -22,14 +22,14 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session.impl;
 
 import org.slj.mqtt.sn.PublishData;
+import org.slj.mqtt.sn.model.MqttsnWaitToken;
+import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -37,19 +37,19 @@ import java.util.UUID;
  * the message itself NOR the topic specification are included, this can be obtained JIT from the
  * appropriate registries so we dont duplicate data across many queues.
  */
-public class QueuedPublishMessage implements Serializable, Comparable {
+public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable, IMqttsnQueuedPublishMessage {
 
     private PublishData data;
     private Date created;
     private int retryCount;
     private UUID messageId;
-    private int msgId;
+    private int packetId;
     private transient MqttsnWaitToken token;
 
-    public QueuedPublishMessage() {
+    public MqttsnQueuedPublishMessageImpl() {
     }
 
-    public QueuedPublishMessage(UUID messageId, PublishData data) {
+    public MqttsnQueuedPublishMessageImpl(UUID messageId, PublishData data) {
         this.created = new Date();
         this.messageId = messageId;
         this.data = data;
@@ -107,18 +107,18 @@ public class QueuedPublishMessage implements Serializable, Comparable {
         return created;
     }
 
-    public int getMsgId() {
-        return msgId;
+    public int getPacketId() {
+        return packetId;
     }
 
-    public void setMsgId(int msgId) {
-        this.msgId = msgId;
+    public void setPacketId(int packetId) {
+        this.packetId = packetId;
     }
 
     @Override
     public int compareTo(Object o) {
-        if(o instanceof QueuedPublishMessage){
-            return created.compareTo(((QueuedPublishMessage)o).getCreated());
+        if(o instanceof MqttsnQueuedPublishMessageImpl){
+            return created.compareTo(((MqttsnQueuedPublishMessageImpl)o).getCreated());
         }
         return 0;
     }

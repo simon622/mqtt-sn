@@ -25,36 +25,38 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 
-public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
-        extends AbstractRationalTopicService<T>
-        implements IMqttsnTopicRegistry<T> {
+public abstract class AbstractTopicRegistry
+        extends AbstractMqttsnSessionBeanRegistry
+        implements IMqttsnTopicRegistry {
+
 
     @Override
-    public TopicInfo register(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Map<String, Integer> map = getRegistrationsInternal(context, false);
+    public TopicInfo register(IMqttsnSession session, String topicPath) throws MqttsnException {
+        Map<String, Integer> map = getRegistrationMapInternal(session, false);
         if(map.size() >= registry.getOptions().getMaxTopicsInRegistry()){
-            logger.log(Level.WARNING, String.format("max number of registered topics reached for client [%s] >= [%s]", context, map.size()));
+            logger.log(Level.WARNING, String.format("max number of registered topics reached for client [%s] >= [%s]", session, map.size()));
             throw new MqttsnException("max number of registered topics reached for client");
         }
         synchronized (map){
-            int alias = 0;
+            int alias;
             if(map.containsKey(topicPath)){
                 alias = map.get(topicPath);
-                addOrUpdateRegistration(context, rationalizeTopic(context, topicPath), alias);
+                addOrUpdateRegistration(session,
+                        getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath), alias);
             } else {
                 alias = MqttsnUtils.getNextLeaseId(map.values(), Math.max(1, registry.getOptions().getAliasStartAt()));
-                addOrUpdateRegistration(context, rationalizeTopic(context, topicPath), alias);
+                addOrUpdateRegistration(session,
+                        getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath), alias);
             }
             TopicInfo info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.NORMAL,  alias);
             return info;
@@ -62,45 +64,47 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
     }
 
     @Override
-    public void register(IMqttsnContext context, String topicPath, int topicAlias) throws MqttsnException {
+    public void register(IMqttsnSession session, String topicPath, int topicAlias) throws MqttsnException {
 
         if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] registering [%s] -> [%s]", registry.getOptions().getContextId(), context, topicPath, topicAlias));
+            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] registering [%s] -> [%s]", registry.getOptions().getContextId(), session, topicPath, topicAlias));
         }
 
-        Map<String, Integer> map = getRegistrationsInternal(context, false);
+        Map<String, Integer> map = getRegistrationMapInternal(session, false);
         if(map.containsKey(topicPath)){
             //update existing
-            addOrUpdateRegistration(context, rationalizeTopic(context, topicPath), topicAlias);
+            addOrUpdateRegistration(session,
+                    getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath), topicAlias);
         } else {
             if(map.size() >= registry.getOptions().getMaxTopicsInRegistry()){
-                logger.log(Level.WARNING, String.format("max number of registered topics reached for client [%s] >= [%s]", context, map.size()));
+                logger.log(Level.WARNING, String.format("max number of registered topics reached for client [%s] >= [%s]", session.getContext(), map.size()));
                 throw new MqttsnException("max number of registered topics reached for client");
             }
-            addOrUpdateRegistration(context, rationalizeTopic(context, topicPath), topicAlias);
+            addOrUpdateRegistration(session,
+                    getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath), topicAlias);
         }
     }
 
     @Override
-    public boolean registered(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Map<String, Integer> map = getRegistrationsInternal(context, false);
-        return map.containsKey(rationalizeTopic(context, topicPath));
+    public boolean registered(IMqttsnSession session, String topicPath) throws MqttsnException {
+        Map<String, Integer> map = getRegistrationMapInternal(session, false);
+        return map.containsKey(getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
     }
 
     @Override
-    public String topicPath(IMqttsnContext context, TopicInfo topicInfo, boolean considerContext) throws MqttsnException {
+    public String topicPath(IMqttsnSession session, TopicInfo topicInfo, boolean considerContext) throws MqttsnException {
         String topicPath = null;
         switch (topicInfo.getType()){
             case SHORT:
                 topicPath = topicInfo.getTopicPath();
                 break;
             case PREDEFINED:
-                topicPath = lookupPredefined(context, topicInfo.getTopicId());
+                topicPath = lookupPredefined(session, topicInfo.getTopicId());
                 break;
             case NORMAL:
                 if(considerContext){
-                    if(context == null) throw new MqttsnExpectationFailedException("<null> context cannot be considered");
-                    topicPath = lookupRegistered(context, topicInfo.getTopicId());
+                    if(session == null) throw new MqttsnExpectationFailedException("<null> session cannot be considered");
+                    topicPath = lookupRegistered(session, topicInfo.getTopicId());
                 }
                 break;
             default:
@@ -110,68 +114,62 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
 
         if(topicPath == null) {
             logger.log(Level.WARNING, String.format("unable to find matching topicPath in system for [%s] -> [%s], available was [%s]",
-                    topicInfo, context, Objects.toString(getRegistrationsInternal(context, false))));
+                    topicInfo, session, Objects.toString(getRegistrationMapInternal(session, false))));
             throw new MqttsnExpectationFailedException("unable to find matching topicPath in system");
         }
-        return rationalizeTopic(context, topicPath);
+        return getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
     }
 
     @Override
-    public String lookupRegistered(IMqttsnContext context, int topicAlias) throws MqttsnException {
-        Map<String, Integer> map = getRegistrationsInternal(context, false);
+    public String lookupRegistered(IMqttsnSession session, int topicAlias) throws MqttsnException {
+        Map<String, Integer> map = getRegistrationMapInternal(session, false);
         synchronized (map){
             Iterator<String> itr = map.keySet().iterator();
             while(itr.hasNext()){
                 String topicPath = itr.next();
                 Integer i = map.get(topicPath);
                 if(i != null && i.intValue() == topicAlias)
-                    return rationalizeTopic(context, topicPath);
+                    return getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
             }
         }
         return null;
     }
 
     @Override
-    public Integer lookupRegistered(IMqttsnContext context, String topicPath, boolean confirmedOnly) throws MqttsnException {
-        Map<String, Integer> map = getRegistrationsInternal(context, confirmedOnly);
-        return map.get(rationalizeTopic(context, topicPath));
+    public Integer lookupRegistered(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException {
+        Map<String, Integer> map = getRegistrationMapInternal(session, confirmedOnly);
+        return map.get(getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
     }
 
     @Override
-    public Integer lookupRegistered(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Map<String, Integer> map = getRegistrationsInternal(context, false);
-        return map.get(rationalizeTopic(context, topicPath));
+    public Integer lookupPredefined(IMqttsnSession session, String topicPath) throws MqttsnException {
+        Map<String, Integer> predefinedMap = getPredefinedTopicsForString(session);
+        return predefinedMap.get(getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
     }
 
     @Override
-    public Integer lookupPredefined(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Map<String, Integer> predefinedMap = getPredefinedTopicsForString(context);
-        return predefinedMap.get(rationalizeTopic(context, topicPath));
-    }
-
-    @Override
-    public String lookupPredefined(IMqttsnContext context, int topicAlias) throws MqttsnException {
-        Map<String, Integer> predefinedMap = getPredefinedTopicsForInteger(context);
+    public String lookupPredefined(IMqttsnSession session, int topicAlias) throws MqttsnException {
+        Map<String, Integer> predefinedMap = getPredefinedTopicsForInteger(session);
         synchronized (predefinedMap){
             Iterator<String> itr = predefinedMap.keySet().iterator();
             while(itr.hasNext()){
                 String topicPath = itr.next();
                 Integer i = predefinedMap.get(topicPath);
                 if(i != null && i.intValue() == topicAlias)
-                    return rationalizeTopic(context, topicPath);
+                    return getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
             }
         }
         return null;
     }
 
     @Override
-    public TopicInfo lookup(IMqttsnContext context, String topicPath, boolean confirmedOnly) throws MqttsnException {
-        topicPath = rationalizeTopic(context, topicPath);
+    public TopicInfo lookup(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException {
+        topicPath = getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
 
         //-- check normal first
         TopicInfo info = null;
-        if(registered(context, topicPath)){
-            Integer topicAlias = lookupRegistered(context, topicPath, confirmedOnly);
+        if(registered(session, topicPath)){
+            Integer topicAlias = lookupRegistered(session, topicPath, confirmedOnly);
             if(topicAlias != null){
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.NORMAL, topicAlias);
             }
@@ -179,7 +177,7 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
 
         //-- check predefined if nothing in session registry
         if(info == null){
-            Integer topicAlias = lookupPredefined(context, topicPath);
+            Integer topicAlias = lookupPredefined(session, topicPath);
             if(topicAlias != null){
                 info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.PREDEFINED, topicAlias);
             }
@@ -193,15 +191,15 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
         }
 
         if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] lookup for [%s] found [%s]", registry.getOptions().getContextId(), context, topicPath, info));
+            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] lookup for [%s] found [%s]", registry.getOptions().getContextId(), session, topicPath, info));
         }
 
         return info;
     }
 
     @Override
-    public TopicInfo lookup(IMqttsnContext context, String topicPath) throws MqttsnException {
-        return lookup(context, topicPath, false);
+    public TopicInfo lookup(IMqttsnSession session, String topicPath) throws MqttsnException {
+        return lookup(session, topicPath, false);
     }
 
     @Override
@@ -239,11 +237,22 @@ public abstract class AbstractTopicRegistry <T extends IMqttsnRuntimeRegistry>
         return info;
     }
 
-    protected abstract boolean addOrUpdateRegistration(IMqttsnContext context, String topicPath, int alias) throws MqttsnException;
+    protected Map<String, Integer> getRegistrationMapInternal(IMqttsnSession session, boolean confirmedOnly) throws MqttsnException{
+        Set<IMqttsnTopicRegistration> set = getRegistrations(session);
+        Map<String, Integer> map = new HashMap<>();
+        Iterator<IMqttsnTopicRegistration> itr = set.iterator();
+        while(itr.hasNext()){
+            IMqttsnTopicRegistration reg = itr.next();
+            if(!confirmedOnly || reg.isConfirmed()){
+                map.put(reg.getTopicPath(), reg.getAliasId());
+            }
+        }
+        return map;
+    }
 
-    protected abstract Map<String, Integer> getRegistrationsInternal(IMqttsnContext context, boolean confirmedOnly) throws MqttsnException;
+    protected abstract boolean addOrUpdateRegistration(IMqttsnSession session, String topicPath, int alias) throws MqttsnException;
 
-    protected abstract Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnContext context) throws MqttsnException;
+    protected abstract Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnSession session) throws MqttsnException;
 
-    protected abstract Map<String, Integer> getPredefinedTopicsForString(IMqttsnContext context) throws MqttsnException;
+    protected abstract Map<String, Integer> getPredefinedTopicsForString(IMqttsnSession session) throws MqttsnException;
 }

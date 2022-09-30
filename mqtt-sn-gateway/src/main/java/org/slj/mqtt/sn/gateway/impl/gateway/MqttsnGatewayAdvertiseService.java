@@ -33,7 +33,8 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.util.logging.Level;
 
-public class MqttsnGatewayAdvertiseService extends AbstractMqttsnBackoffThreadService implements IMqttsnGatewayAdvertiseService {
+public class MqttsnGatewayAdvertiseService
+        extends AbstractMqttsnBackoffThreadService implements IMqttsnGatewayAdvertiseService {
 
     long lastGatewayBroadcastTime;
 

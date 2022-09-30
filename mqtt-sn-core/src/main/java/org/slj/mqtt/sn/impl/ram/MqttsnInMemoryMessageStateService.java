@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.impl.ram;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageStateService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.InflightMessage;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -35,8 +36,8 @@ import org.slj.mqtt.sn.utils.Pair;
 import java.util.*;
 import java.util.logging.Level;
 
-public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry>
-        extends AbstractMqttsnMessageStateService<T> {
+public class MqttsnInMemoryMessageStateService
+        extends AbstractMqttsnMessageStateService {
 
     protected Map<IMqttsnContext, Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>>> inflightMessages;
 
@@ -45,7 +46,7 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         inflightMessages = Collections.synchronizedMap(new HashMap());
         super.start(runtime);
     }
@@ -59,6 +60,12 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
                 try {
                     IMqttsnContext context = itr.next();
                     clearInflightInternal(context, System.currentTimeMillis());
+                    Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair =
+                            inflightMessages.get(context);
+                    if(pair != null && pair.getLeft().size() == 0 && pair.getRight().size() == 0){
+                        logger.log(Level.INFO, String.format("removing inflight key for context [%s]", context));
+                        itr.remove();
+                    }
                 } catch(MqttsnException e){
                     logger.log(Level.WARNING, "error occurred during inflight eviction run;", e);
                 }
@@ -69,7 +76,6 @@ public class MqttsnInMemoryMessageStateService <T extends IMqttsnRuntimeRegistry
 
     @Override
     public void clear(IMqttsnContext context) throws MqttsnException{
-        super.clear(context);
         inflightMessages.remove(context);
     }
 

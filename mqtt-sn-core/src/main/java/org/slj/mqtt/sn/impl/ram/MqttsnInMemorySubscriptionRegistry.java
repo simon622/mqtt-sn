@@ -27,49 +27,72 @@ package org.slj.mqtt.sn.impl.ram;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.impl.AbstractSubscriptionRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.model.Subscription;
-import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.utils.TriesTree;
 
 import java.util.*;
+import java.util.logging.Level;
 
-public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry>
-        extends AbstractSubscriptionRegistry<T> {
+public class MqttsnInMemorySubscriptionRegistry
+        extends AbstractSubscriptionRegistry {
 
-    protected Map<IMqttsnContext, Set<Subscription>> subscriptionsLookups;
+    private TriesTree<IMqttsnContext> tree;
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
-        subscriptionsLookups = Collections.synchronizedMap(new HashMap());
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
+        tree = new TriesTree<>("/");
+        tree.addWildcard("#");
+        tree.addWildpath("+");
     }
 
     @Override
-    public List<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException {
+    public Set<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException {
 
-        if(!MqttsnSpecificationValidator.isValidPublishTopic(
-                topicPath)){
+        if (!MqttsnSpecificationValidator.isValidPublishTopic(
+                topicPath)) {
             throw new MqttsnIllegalFormatException("invalid topic format detected");
         }
 
-        List<IMqttsnContext> matchingClients = new ArrayList<>();
-        Iterator<IMqttsnContext> clientItr = null;
-        synchronized (subscriptionsLookups) {
-            clientItr = new HashSet(subscriptionsLookups.keySet()).iterator();
-        }
-        while(clientItr.hasNext()){
-            IMqttsnContext client = clientItr.next();
-            Set<Subscription> paths = subscriptionsLookups.get(client);
+//        long start = System.currentTimeMillis();
+//        Set<IMqttsnContext> sessionMatches = matchFromSessions(topicPath);
+//        logger.log(Level.INFO, String.format("got [%s] session matches in [%s]", sessionMatches.size(),
+//                MqttsnUtils.getDurationString(System.currentTimeMillis() - start)));
+
+        long start = System.currentTimeMillis();
+        Set<IMqttsnContext> treeMatches = matchFromTree(topicPath);
+        logger.log(Level.INFO, String.format("got [%s] tree matches in [%s]", treeMatches.size(),
+                MqttsnUtils.getDurationString(System.currentTimeMillis() - start)));
+
+        return treeMatches;
+    }
+
+    protected Set<IMqttsnContext> matchFromTree(String topicPath) throws MqttsnException {
+        return tree.search(topicPath);
+    }
+
+    protected Set<IMqttsnContext> matchFromSessions(String topicPath) throws MqttsnException {
+
+        Set<IMqttsnContext> matchingClients = new HashSet<>();
+        Iterator<IMqttsnSession> sessionItr = getRegistry().getSessionRegistry().iterator();
+        while(sessionItr.hasNext()){
+            IMqttsnSession session = sessionItr.next();
+            Set<IMqttsnSubscription> paths = getRegistry().getSubscriptionRegistry().readSubscriptions(session);
             if(paths != null && !paths.isEmpty()){
                 synchronized (paths){
-                    Iterator<Subscription> pathItr = paths.iterator();
+                    Iterator<IMqttsnSubscription> pathItr = paths.iterator();
                     client : while(pathItr.hasNext()) {
                         try {
-                            Subscription sub = pathItr.next();
+                            IMqttsnSubscription sub = pathItr.next();
                             TopicPath path = sub.getTopicPath();
                             if(path.matches(topicPath)){
-                                matchingClients.add(client);
+                                matchingClients.add(session.getContext());
                                 break client;
                             }
                         } catch(Exception e){
@@ -84,68 +107,57 @@ public class MqttsnInMemorySubscriptionRegistry<T extends IMqttsnRuntimeRegistry
     }
 
     @Override
-    public Set<Subscription> readSubscriptions(IMqttsnContext context){
-        Set<Subscription> set = subscriptionsLookups.get(context);
-        if(set == null){
-            synchronized (subscriptionsLookups){
-                if((set = subscriptionsLookups.get(context)) == null){
-                    set = new HashSet<>();
-                    subscriptionsLookups.put(context, set);
-                }
-            }
-        }
-        return set;
+    public Set<IMqttsnSubscription> readSubscriptions(IMqttsnSession session){
+        return getSessionBean(session).getSubscriptions();
     }
 
     @Override
-    protected boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnIllegalFormatException {
+    protected boolean addSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnIllegalFormatException {
         if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(
                 subscription.getTopicPath().toString())){
             throw new MqttsnIllegalFormatException("invalid topic format detected");
         }
 
-        Set<Subscription> set = readSubscriptions(context);
-        synchronized (set){
-            //-- the equals method does not include the QoS so need to modify on change
-            boolean existed = set.remove(subscription);
-            set.add(subscription);
-            return !existed;
+        boolean existed = getSessionBean(session).removeSubscription(subscription);
+        getSessionBean(session).addSubscription(subscription);
+        if(!existed){
+            tree.addPath(subscription.getTopicPath().toString(), session.getContext());
         }
+        return !existed;
     }
 
     @Override
-    protected boolean removeSubscription(IMqttsnContext context, Subscription subscription){
-        Set<Subscription> set = readSubscriptions(context);
-        synchronized (set){
-            return set.remove(subscription);
+    protected boolean removeSubscription(IMqttsnSession session, IMqttsnSubscription subscription){
+        boolean removed = getSessionBean(session).removeSubscription(subscription);
+        if(removed){
+            tree.removeMemberFromPath(subscription.getTopicPath().toString(), session.getContext());
         }
+        return removed;
     }
 
     @Override
-    public void clear(IMqttsnContext context) throws MqttsnException {
-        subscriptionsLookups.remove(context);
-    }
-
-    @Override
-    public void clearAll() {
-        subscriptionsLookups.clear();
+    public void clear(IMqttsnSession session) {
+        getSessionBean(session).clearSubscriptions();
     }
 
     @Override
     public Set<TopicPath> readAllSubscribedTopicPaths() {
-        Set<TopicPath> topicPaths = new HashSet<>();
-        synchronized (subscriptionsLookups) {
-            Iterator<IMqttsnContext> clientItr = subscriptionsLookups.keySet().iterator();
-            while(clientItr.hasNext()) {
-                IMqttsnContext client = clientItr.next();
-                Set<Subscription> paths = subscriptionsLookups.get(client);
-                if(paths != null){
-                    synchronized (paths){
-                        paths.stream().map(Subscription::getTopicPath).forEach(topicPaths::add);
-                    }
-                }
-            }
-        }
-        return topicPaths;
+        //TODO use the trie tree here
+        return new HashSet<>();
+
+//        Set<TopicPath> topicPaths = new HashSet<>();
+//        synchronized (subscriptionsLookups) {
+//            Iterator<IMqttsnContext> clientItr = subscriptionsLookups.keySet().iterator();
+//            while(clientItr.hasNext()) {
+//                IMqttsnContext client = clientItr.next();
+//                Set<MqttsnSubscriptionImpl> paths = subscriptionsLookups.get(client);
+//                if(paths != null){
+//                    synchronized (paths){
+//                        paths.stream().map(MqttsnSubscriptionImpl::getTopicPath).forEach(topicPaths::add);
+//                    }
+//                }
+//            }
+//        }
+//        return topicPaths;
     }
 }

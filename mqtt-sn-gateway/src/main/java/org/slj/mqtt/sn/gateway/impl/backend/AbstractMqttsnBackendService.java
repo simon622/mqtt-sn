@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 public abstract class AbstractMqttsnBackendService
-        extends AbstractMqttsnBackoffThreadService<IMqttsnGatewayRuntimeRegistry> implements IMqttsnBackendService {
+        extends AbstractMqttsnBackoffThreadService implements IMqttsnBackendService {
 
     protected MqttsnBackendOptions options;
 
@@ -54,7 +54,7 @@ public abstract class AbstractMqttsnBackendService
     protected AtomicInteger publishReceivedCount = new AtomicInteger();
 
     @Override
-    public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
+    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         validateBrokerConnectionDetails();
     }
@@ -133,7 +133,7 @@ public abstract class AbstractMqttsnBackendService
         registry.getRuntime().async(() -> {
             try {
                 publishReceivedCount.incrementAndGet();
-                registry.getGatewaySessionService().receiveToSessions(topicPath,qos, retained, payload);
+                getRegistry().getGatewaySessionService().receiveToSessions(topicPath,qos, retained, payload);
             } catch(Exception e){
                 logger.log(Level.SEVERE, "error receiving to sessions;", e);
             }
@@ -141,8 +141,8 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public IMqttsnRuntimeRegistry getRuntimeRegistry() {
-        return registry;
+    public IMqttsnGatewayRuntimeRegistry getRegistry() {
+        return (IMqttsnGatewayRuntimeRegistry) registry;
     }
 
     public int getPublishReceiveCount(){

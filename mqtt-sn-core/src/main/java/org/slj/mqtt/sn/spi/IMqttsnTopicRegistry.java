@@ -26,6 +26,10 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
+
+import java.util.Set;
 
 /**
  * The topic registry is responsible for tracking, storing and determining the correct alias
@@ -36,29 +40,30 @@ public interface IMqttsnTopicRegistry<T extends IMqttsnRuntimeRegistry> extends 
 
     TopicInfo normalize(byte topicIdType, byte[] topicData, boolean normalAsLong) throws MqttsnException;
 
-    TopicInfo register(IMqttsnContext context, String topicPath) throws MqttsnException;
+    TopicInfo register(IMqttsnSession session, String topicPath) throws MqttsnException;
 
-    void register(IMqttsnContext context, String topicPath, int alias) throws MqttsnException;
+    void register(IMqttsnSession session, String topicPath, int alias) throws MqttsnException;
 
-    boolean registered(IMqttsnContext context, String topicPath) throws MqttsnException;
+    boolean registered(IMqttsnSession session, String topicPath) throws MqttsnException;
 
-    TopicInfo lookup(IMqttsnContext context, String topicPath) throws MqttsnException;
+    TopicInfo lookup(IMqttsnSession session, String topicPath) throws MqttsnException;
 
-    TopicInfo lookup(IMqttsnContext context, String topicPath, boolean confirmedOnly) throws MqttsnException;
+    TopicInfo lookup(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException;
 
-    String topicPath(IMqttsnContext context, TopicInfo topicInfo, boolean considerContext) throws MqttsnException ;
+    String topicPath(IMqttsnSession session, TopicInfo topicInfo, boolean considerContext) throws MqttsnException ;
 
     //-- lookup specific parts of the registry
-    Integer lookupRegistered(IMqttsnContext context, String topicPath, boolean confirmedOnly) throws MqttsnException;
+    Integer lookupRegistered(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException;
 
-    Integer lookupRegistered(IMqttsnContext context, String topicPath) throws MqttsnException;
+    String lookupRegistered(IMqttsnSession session, int topicAlias) throws MqttsnException;
 
-    String lookupRegistered(IMqttsnContext context, int topicAlias) throws MqttsnException;
+    Integer lookupPredefined(IMqttsnSession session, String topicPath) throws MqttsnException;
 
-    Integer lookupPredefined(IMqttsnContext context, String topicPath) throws MqttsnException;
+    String lookupPredefined(IMqttsnSession session, int topicAlias) throws MqttsnException;
 
-    String lookupPredefined(IMqttsnContext context, int topicAlias) throws MqttsnException;
+    void clear(IMqttsnSession session, boolean hardClear) throws MqttsnException;
 
-    void clear(IMqttsnContext context, boolean hardClear) throws MqttsnException;
+    void clear(IMqttsnSession session) throws MqttsnException;
 
+    Set<IMqttsnTopicRegistration> getRegistrations(IMqttsnSession session) throws MqttsnException;
 }

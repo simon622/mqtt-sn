@@ -31,8 +31,8 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.logging.Level;
 
-public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<T> implements IMqttsnMessageRegistry<T> {
+public abstract class AbstractMqttsnMessageRegistry
+        extends MqttsnService implements IMqttsnMessageRegistry {
 
     @Override
     public UUID add(byte[] data, boolean removeAfterRead) throws MqttsnException {
@@ -62,11 +62,6 @@ public abstract class AbstractMqttsnMessageRegistry  <T extends IMqttsnRuntimeRe
         if(impl == null) throw new MqttsnExpectationFailedException("unable to read message by id, message not found in registry");
 
         return impl.getData();
-    }
-
-    @Override
-    public void clear(IMqttsnContext context) throws MqttsnException {
-        throw new UnsupportedOperationException("message registry is global");
     }
 
     @Override

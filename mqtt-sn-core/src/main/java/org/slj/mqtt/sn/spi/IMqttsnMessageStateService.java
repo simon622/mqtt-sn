@@ -25,8 +25,10 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 
-import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -36,7 +38,7 @@ import java.util.Optional;
  * The message handling layer will call into the state service with messages it has received, and the queue processor
  * will use the state service to dispatch new outbound publish messages.
  */
-public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T> {
+public interface IMqttsnMessageStateService extends IMqttsnRegistry {
 
     /**
      * Dispatch a new message to the transport layer, binding it to the state service en route for tracking.
@@ -52,8 +54,7 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
      * @param queuedPublishMessage - reference to the queues message who originated this send (when its of type Publish);
      * @throws MqttsnException
      */
-    MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, QueuedPublishMessage queuedPublishMessage) throws MqttsnException;
-
+    MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException;
 
     /**
      * Notify into the state service that a new message has arrived from the transport layer.
@@ -151,4 +152,6 @@ public interface IMqttsnMessageStateService<T extends IMqttsnRuntimeRegistry> ex
     Long getMessageLastReceivedFromContext(IMqttsnContext context) throws MqttsnException ;
 
     Long getLastActiveMessage(IMqttsnContext context) throws MqttsnException;
+
+    void clear(IMqttsnContext context) throws MqttsnException;
 }

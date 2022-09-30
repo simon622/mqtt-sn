@@ -24,19 +24,17 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.model.MqttsnContext;
+import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
 import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MqttsnContextFactory<T extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<T> implements IMqttsnContextFactory {
+public class MqttsnContextFactory
+        extends MqttsnService implements IMqttsnContextFactory {
 
     protected static Logger logger = Logger.getLogger(MqttsnContextFactory.class.getName());
 
@@ -65,5 +63,22 @@ public class MqttsnContextFactory<T extends IMqttsnRuntimeRegistry>
         MqttsnContext context = new MqttsnContext(null);
         context.setProtocolVersion(protocolVersion);
         return context;
+    }
+
+    @Override
+    public IMqttsnMessageContext createMessageContext(INetworkContext networkContext) throws MqttsnSecurityException, MqttsnException {
+
+        MqttsnMessageContext connectionContext = new MqttsnMessageContext(networkContext);
+
+        IMqttsnContext mqttsnContext = getRegistry().getNetworkRegistry().getMqttsnContext(networkContext);
+        connectionContext.setMqttsnContext(mqttsnContext);
+
+        IMqttsnSession session =
+                getRegistry().getSessionRegistry().getSession(mqttsnContext, false);
+        connectionContext.setMqttsnSession(session);
+
+        logger.log(Level.INFO, String.format("creating mqtt-sn message context for processing [%s]", connectionContext));
+
+        return connectionContext;
     }
 }

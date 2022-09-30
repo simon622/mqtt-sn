@@ -22,14 +22,17 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.client.spi;
+package org.slj.mqtt.sn.model.session;
 
-import org.slj.mqtt.sn.spi.IMqttsnService;
-import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.TopicPath;
 
-public interface IMqttsnClientService extends IMqttsnService<IMqttsnClientRuntimeRegistry> {
+public interface IMqttsnWillData {
 
-    void start(IMqttsnClientRuntimeRegistry runtime) throws MqttsnException;
+    TopicPath getTopicPath();
 
-    void stop() throws MqttsnException;
+    byte[] getData();
+
+    boolean isRetained();
+
+    int getQos();
 }

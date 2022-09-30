@@ -22,21 +22,26 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session.impl;
+
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 
 import java.util.Date;
 
-public class MqttsnSessionState implements IMqttsnSessionState {
+public class MqttsnSessionImpl implements IMqttsnSession {
 
-    private IMqttsnContext context;
-    private volatile MqttsnClientState state;
-    private Date lastSeen;
-    private int keepAlive;
-    private long sessionExpiryInterval;
-    private Date sessionStarted;
-    private int maxPacketSize;
+    protected final IMqttsnContext context;
+    protected volatile MqttsnClientState state;
+    protected Date lastSeen;
+    protected int keepAlive;
+    protected long sessionExpiryInterval;
+    protected Date sessionStarted;
+    protected int maxPacketSize;
 
-    public MqttsnSessionState(IMqttsnContext context, MqttsnClientState state){
+    public MqttsnSessionImpl(final IMqttsnContext context, MqttsnClientState state){
         this.context = context;
         sessionStarted = new Date();
         this.state = state;
@@ -52,9 +57,6 @@ public class MqttsnSessionState implements IMqttsnSessionState {
         return state;
     }
 
-    public void setContext(IMqttsnContext context) {
-        this.context = context;
-    }
 
     public void setClientState(MqttsnClientState state) {
         this.state = state;
@@ -83,7 +85,6 @@ public class MqttsnSessionState implements IMqttsnSessionState {
         return sessionExpiryInterval;
     }
 
-    @Override
     public void setSessionExpiryInterval(long sessionExpiryInterval) {
         this.sessionExpiryInterval = sessionExpiryInterval;
     }
@@ -102,14 +103,13 @@ public class MqttsnSessionState implements IMqttsnSessionState {
         return maxPacketSize;
     }
 
-    @Override
     public void setMaxPacketSize(int maxPacketSize) {
         this.maxPacketSize = maxPacketSize;
     }
 
     @Override
     public String toString() {
-        return "MqttsnSessionState{" +
+        return "MqttsnSessionImpl{" +
                 "context=" + context +
                 ", state=" + state +
                 ", lastSeen=" + lastSeen +
@@ -118,5 +118,27 @@ public class MqttsnSessionState implements IMqttsnSessionState {
                 ", sessionStarted=" + sessionStarted +
                 ", maxPacketSize=" + maxPacketSize +
                 '}';
+    }
+
+    public void clearAll(){
+        state = MqttsnClientState.DISCONNECTED;
+        keepAlive = 0;
+        sessionExpiryInterval = 0;
+        sessionStarted = null;
+        lastSeen = null;
+        maxPacketSize = 0;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MqttsnSessionImpl that = (MqttsnSessionImpl) o;
+        return context.equals(that.context);
+    }
+
+    @Override
+    public int hashCode() {
+        return context.hashCode();
     }
 }

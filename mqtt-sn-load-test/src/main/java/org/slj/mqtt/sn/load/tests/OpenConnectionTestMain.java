@@ -50,7 +50,7 @@ public class OpenConnectionTestMain {
             try {
                 MqttsnClient client = createClient(host, port);
                 client.connect(2400, true);
-                client.subscribe("test", 2);
+                client.subscribe("foo", 2);
                 Thread.sleep(10);
                 client.stop();
             } catch(Exception e){

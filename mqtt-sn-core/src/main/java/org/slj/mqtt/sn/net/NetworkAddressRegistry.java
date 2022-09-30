@@ -75,7 +75,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     }
 
     @Override
-    public IMqttsnContext getSessionContext(INetworkContext networkContext){
+    public IMqttsnContext getMqttsnContext(INetworkContext networkContext){
         IMqttsnContext context = networkContextRegistry.get(networkContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get session context for network route " + networkContext);

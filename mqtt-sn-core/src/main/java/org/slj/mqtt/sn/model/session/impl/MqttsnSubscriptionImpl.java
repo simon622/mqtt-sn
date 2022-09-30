@@ -22,51 +22,44 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session.impl;
 
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Objects;
 
-public class Subscription {
+public class MqttsnSubscriptionImpl implements IMqttsnSubscription {
 
-    TopicPath topicPath;
-    int QoS;
+    private final TopicPath topicPath;
+    private int grantedQoS;
 
-    public Subscription(){
-
-    }
-
-    public Subscription(TopicPath topicPath){
+    public MqttsnSubscriptionImpl(final TopicPath topicPath){
         this.topicPath = topicPath;
     }
 
-    public Subscription(TopicPath topicPath, int qoS) {
+    public MqttsnSubscriptionImpl(final TopicPath topicPath, int qoS) {
         this.topicPath = topicPath;
-        QoS = qoS;
+        grantedQoS = qoS;
     }
 
     public TopicPath getTopicPath() {
         return topicPath;
     }
 
-    public void setTopicPath(TopicPath topicPath) {
-        this.topicPath = topicPath;
+    public int getGrantedQoS() {
+        return grantedQoS;
     }
 
-    public int getQoS() {
-        return QoS;
-    }
-
-    public void setQoS(int qoS) {
-        QoS = qoS;
+    public void setGrantedQoS(int qoS) {
+        grantedQoS = qoS;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Subscription that = (Subscription) o;
+        MqttsnSubscriptionImpl that = (MqttsnSubscriptionImpl) o;
         return Objects.equals(topicPath, that.topicPath);
     }
 

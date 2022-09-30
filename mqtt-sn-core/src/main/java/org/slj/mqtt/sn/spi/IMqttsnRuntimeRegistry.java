@@ -59,6 +59,8 @@ public interface IMqttsnRuntimeRegistry {
 
     IMqttsnContextFactory getContextFactory();
 
+    IMqttsnSessionRegistry getSessionRegistry();
+
     IMqttsnMessageQueueProcessor getQueueProcessor();
 
     IMqttsnQueueProcessorStateService getQueueProcessorStateCheckService();
@@ -72,6 +74,8 @@ public interface IMqttsnRuntimeRegistry {
     IMqttsnAuthorizationService getAuthorizationService();
 
     IMqttsnSecurityService getSecurityService();
+
+    IMqttsnTopicModifier getTopicModifier();
 
     List<IMqttsnTrafficListener> getTrafficListeners();
 }

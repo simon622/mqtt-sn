@@ -24,56 +24,40 @@
 
 package org.slj.mqtt.sn.impl.ram;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.impl.AbstractMqttsnSessionBeanRegistry;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.model.QueuedPublishMessage;
-import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.utils.MqttsnUtils;
+import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.spi.IMqttsnMessageQueue;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
-import java.util.*;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 
-public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<T> implements IMqttsnMessageQueue<T> {
-
-    protected Map<IMqttsnContext, Queue<QueuedPublishMessage>> queues;
+public class MqttsnInMemoryMessageQueue
+        extends AbstractMqttsnSessionBeanRegistry implements IMqttsnMessageQueue {
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
-        queues = Collections.synchronizedMap(new HashMap<>());
-        super.start(runtime);
+    public int size(IMqttsnSession session) throws MqttsnException {
+        return getSessionBean(session).getQueueSize();
     }
 
     @Override
-    public int size(IMqttsnContext context) throws MqttsnException {
-        if (queues.containsKey(context)) {
-            Queue<QueuedPublishMessage> queue = getQueue(context);
-            return queue.size();
-        }
-        return 0;
-    }
-
-    @Override
-    public MqttsnWaitToken offer(IMqttsnContext context, QueuedPublishMessage message)
+    public MqttsnWaitToken offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
         try {
-            Queue<QueuedPublishMessage> queue = getQueue(context);
-            if(queue.size() >= getMaxQueueSize()){
+            int size = 0;
+            if((size = getSessionBean(session).getQueueSize()) >= getMaxQueueSize()){
                 if(logger.isLoggable(Level.FINE)){
-                    logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", context, queue.size()));
+                    logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", session, size));
                 }
                 throw new MqttsnQueueAcceptException("max queue size reached for client");
             }
-            boolean b;
-            synchronized (queue){
-                b = queue.offer(message);
-            }
-
+            boolean b = getSessionBean(session).offer(message);
             if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, context, queue.size()));
+                logger.log(Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, session, size));
             }
             MqttsnWaitToken token = MqttsnWaitToken.from(message);
             message.setToken(token);
@@ -81,68 +65,26 @@ public class MqttsnInMemoryMessageQueue<T extends IMqttsnRuntimeRegistry>
 
         } finally {
             if(registry.getMessageStateService() != null)
-                registry.getMessageStateService().scheduleFlush(context);
+                registry.getMessageStateService().scheduleFlush(session.getContext());
         }
     }
 
     @Override
-    public void clear(IMqttsnContext context) throws MqttsnException {
-        if (queues.containsKey(context)) {
-            Queue<QueuedPublishMessage> queue = getQueue(context);
-            synchronized (queue){
-                queue.clear();
-            }
-            queues.remove(context);
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("clearing queue for [%s]", context));
-            }
+    public void clear(IMqttsnSession session)  {
+        if(session != null){
+            getSessionBean(session).clearMessageQueue();
         }
+    }
+
+
+    @Override
+    public IMqttsnQueuedPublishMessage poll(IMqttsnSession session) {
+        return getSessionBean(session).poll();
     }
 
     @Override
-    public void clearAll() throws MqttsnException {
-        queues.clear();
-    }
-
-    @Override
-    public Iterator<IMqttsnContext> listContexts() throws MqttsnException {
-        synchronized (queues){
-            return new ArrayList<>(queues.keySet()).iterator();
-        }
-    }
-
-    @Override
-    public QueuedPublishMessage pop(IMqttsnContext context) throws MqttsnException {
-        Queue<QueuedPublishMessage> queue = getQueue(context);
-        synchronized (queue){
-            QueuedPublishMessage p = queue.poll();
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("poll form queue for [%s], queue size is [%s]", context, queue.size()));
-            }
-            return p;
-        }
-    }
-
-    @Override
-    public QueuedPublishMessage peek(IMqttsnContext context) throws MqttsnException {
-        Queue<QueuedPublishMessage> queue = getQueue(context);
-        synchronized (queue){
-            return queue.peek();
-        }
-    }
-
-    protected Queue<QueuedPublishMessage> getQueue(IMqttsnContext context){
-        Queue<QueuedPublishMessage> queue = queues.get(context);
-        if(queue == null){
-            synchronized (queues){
-                if((queue = queues.get(context)) == null){
-                    //-- queued message uses date for natural sort
-                    queue = new PriorityBlockingQueue<>();
-                    queues.put(context, queue);
-                }
-            }
-        }
-        return queue;
+    public IMqttsnQueuedPublishMessage peek(IMqttsnSession session) {
+        return getSessionBean(session).peek();
     }
 
     protected int getMaxQueueSize() {

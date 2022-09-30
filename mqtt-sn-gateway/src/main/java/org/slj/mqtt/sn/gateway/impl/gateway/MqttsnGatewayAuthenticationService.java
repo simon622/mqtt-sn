@@ -33,11 +33,11 @@ import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
 
-public class MqttsnGatewayAuthenticationService<U extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<U>  implements IMqttsnAuthenticationService {
+public class MqttsnGatewayAuthenticationService
+        extends MqttsnService  implements IMqttsnAuthenticationService {
 
     @Override
-    public boolean allowConnect(IMqttsnContext context, String clientId) throws MqttsnException {
+    public boolean allowConnect(IMqttsnContext context, String clientId) {
         Set<String> allowedClientId = ((MqttsnGatewayOptions)registry.getOptions()).getAllowedClientIds();
         if(allowedClientId != null && !allowedClientId.isEmpty()){
             return allowedClientId.contains(MqttsnGatewayOptions.DEFAULT_CLIENT_ALLOWED_ALL)

@@ -28,9 +28,8 @@ import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.IMqttsnSessionState;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnConnectionStateListener;
-import org.slj.mqtt.sn.spi.IMqttsnMessageRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TemporalCounter;
@@ -57,6 +56,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getQueueProcessorStateCheckService());
         callStartup(runtime.getQueueProcessor());
         callStartup(runtime.getContextFactory());
+        callStartup(runtime.getSessionRegistry());
         if (runtime.getAuthenticationService() != null) callStartup(runtime.getAuthenticationService());
         if (runtime.getAuthorizationService() != null) callStartup(runtime.getAuthorizationService());
 
@@ -130,11 +130,10 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
             @Override
             public void notifyConnectionLost(IMqttsnContext context, Throwable t) {
                 try {
-                    IMqttsnSessionState state = ((IMqttsnGatewayRuntimeRegistry) registry).
-                            getGatewaySessionService().getSessionState(context, false);
-                    if(state != null){
+                    IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                    if(session != null){
                         ((IMqttsnGatewayRuntimeRegistry) registry).
-                                getGatewaySessionService().markSessionLost(state);
+                                getGatewaySessionService().markSessionLost(session);
                     }
                 } catch (MqttsnException e) {
                     logger.log(Level.SEVERE, "error marking session lost;", e);
@@ -176,6 +175,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         if (runtime.getAuthenticationService() != null) callShutdown(runtime.getAuthenticationService());
         if (runtime.getAuthorizationService() != null) callShutdown(runtime.getAuthorizationService());
         callShutdown(runtime.getContextFactory());
+        callShutdown(runtime.getSessionRegistry());
         callShutdown(runtime.getMessageHandler());
         callShutdown(runtime.getMessageQueue());
         callShutdown(runtime.getMessageRegistry());

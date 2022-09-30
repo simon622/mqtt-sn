@@ -25,46 +25,51 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.Subscription;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
+import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Iterator;
 import java.util.Set;
 
-public abstract class AbstractSubscriptionRegistry <T extends IMqttsnRuntimeRegistry>
-        extends AbstractRationalTopicService<T>
-        implements IMqttsnSubscriptionRegistry<T> {
+public abstract class AbstractSubscriptionRegistry
+        extends AbstractMqttsnSessionBeanRegistry
+        implements IMqttsnSubscriptionRegistry {
 
     @Override
-    public boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException {
-        TopicPath path = new TopicPath(rationalizeTopic(context, topicPath));
-        return addSubscription(context, new Subscription(path, QoS));
+    public boolean subscribe(IMqttsnSession session, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException {
+        TopicPath path = new TopicPath(
+                getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
+        return addSubscription(session, new MqttsnSubscriptionImpl(path, QoS));
     }
 
     @Override
-    public boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Set<Subscription> paths = readSubscriptions(context);
-        TopicPath path = new TopicPath(rationalizeTopic(context, topicPath));
-        Subscription sub = new Subscription(path);
+    public boolean unsubscribe(IMqttsnSession session, String topicPath) throws MqttsnException {
+        Set<IMqttsnSubscription> paths = readSubscriptions(session);
+        TopicPath path = new TopicPath(
+                getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
+        MqttsnSubscriptionImpl sub = new MqttsnSubscriptionImpl(path);
         if(paths.contains(sub)){
-            return removeSubscription(context, sub);
+            return removeSubscription(session, sub);
         }
         return false;
     }
 
     @Override
-    public int getQos(IMqttsnContext context, String topicPath) throws MqttsnException {
-        Set<Subscription> paths = readSubscriptions(context);
+    public int getQos(IMqttsnSession session, String topicPath) throws MqttsnException {
+        Set<IMqttsnSubscription> paths = readSubscriptions(session);
         if(paths != null && !paths.isEmpty()) {
-            Iterator<Subscription> pathItr = paths.iterator();
+            Iterator<IMqttsnSubscription> pathItr = paths.iterator();
             client:
             while (pathItr.hasNext()) {
                 try {
-                    Subscription sub = pathItr.next();
+                    IMqttsnSubscription sub = pathItr.next();
                     TopicPath path = sub.getTopicPath();
-                    if (path.matches(rationalizeTopic(context, topicPath))) {
-                        return sub.getQoS();
+                    if (path.matches(
+                            getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath))) {
+                        return sub.getGrantedQoS();
                     }
                 } catch (Exception e) {
                     throw new MqttsnException(e);
@@ -74,11 +79,13 @@ public abstract class AbstractSubscriptionRegistry <T extends IMqttsnRuntimeRegi
         throw new MqttsnException("no matching subscription found for client");
     }
 
-    public abstract Set<Subscription> readSubscriptions(IMqttsnContext context) throws MqttsnException ;
+    public abstract Set<IMqttsnSubscription> readSubscriptions(IMqttsnSession session) throws MqttsnException ;
+
+    public abstract void clear(IMqttsnSession session) ;
 
     public abstract Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException ;
 
-    protected abstract boolean addSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException, MqttsnIllegalFormatException;
+    protected abstract boolean addSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnException, MqttsnIllegalFormatException;
 
-    protected abstract boolean removeSubscription(IMqttsnContext context, Subscription subscription) throws MqttsnException ;
+    protected abstract boolean removeSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnException ;
 }

@@ -25,7 +25,8 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.Subscription;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.List;
@@ -36,35 +37,35 @@ import java.util.Set;
  * is used to determine which clients are subscribed to which topics to enable outbound delivery. In client
  * mode it tracks the subscriptions a client presently holds.
  */
-public interface IMqttsnSubscriptionRegistry<T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T> {
+public interface IMqttsnSubscriptionRegistry extends IMqttsnRegistry {
 
     /**
      * Which QoS is a subscription held at
-     * @param context - the remote context who owns the subscription
+     * @param session - the remote context who owns the subscription
      * @param topicPath - the full clear text topicPath for the subscription e.g. foo/bar
      * @return the QoS at which the subscription is held (0,1,2)
      * @throws MqttsnException - an error occurred
      */
-    int getQos(IMqttsnContext context, String topicPath) throws MqttsnException;
+    int getQos(IMqttsnSession session, String topicPath) throws MqttsnException;
 
     /**
      * Create a new subscription for the context, or update the subscription if it already
      * existed
-     * @param context - the remote context who owns the subscription
+     * @param session - the remote context who owns the subscription
      * @param topicPath - the full clear text topicPath for the subscription e.g. foo/bar
      * @return true if a NEW subscription or was created, false if one already existed (and was updated)
      * @throws MqttsnException - an error occurred
      */
-    boolean subscribe(IMqttsnContext context, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException;
+    boolean subscribe(IMqttsnSession session, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException;
 
     /**
      * Remove and existing subscription for the context
-     * @param context - the remote context who owns the subscription
+     * @param session - the remote context who owns the subscription
      * @param topicPath - the full clear text topicPath for the subscription e.g. foo/bar
      * @return true if a subscription was removed, false if one didnt exist
      * @throws MqttsnException - an error occurred
      */
-    boolean unsubscribe(IMqttsnContext context, String topicPath) throws MqttsnException;
+    boolean unsubscribe(IMqttsnSession session, String topicPath) throws MqttsnException;
 
     /**
      * This is called upon receipt of a message being received by a BROKER which necessitated expansion
@@ -74,17 +75,17 @@ public interface IMqttsnSubscriptionRegistry<T extends IMqttsnRuntimeRegistry> e
      * @return a list of context which hold valid subscriptions for the supplied topic (including wildcard matching)
      * @throws MqttsnException
      */
-    List<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException ;
+    Set<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException ;
 
 
     /**
      * A set of all the tracked subscriptions for the context
      *
-     * @param context - the remote context who owns the subscriptions
+     * @param session - the remote context who owns the subscriptions
      * @return a set of subscriptions to which the context is subscribed
      * @throws MqttsnException
      */
-    Set<Subscription> readSubscriptions(IMqttsnContext context) throws MqttsnException ;
+    Set<IMqttsnSubscription> readSubscriptions(IMqttsnSession session) throws MqttsnException ;
 
 
     /**
@@ -93,4 +94,6 @@ public interface IMqttsnSubscriptionRegistry<T extends IMqttsnRuntimeRegistry> e
      * @throws MqttsnException
      */
     Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException;
+
+    void clear(IMqttsnSession session) throws MqttsnException;
 }

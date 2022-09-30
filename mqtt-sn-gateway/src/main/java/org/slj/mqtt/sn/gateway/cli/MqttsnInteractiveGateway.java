@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.gateway.cli;
 
-import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -37,9 +36,14 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;
+import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
-import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -116,6 +120,10 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     public void init(boolean needsBroker, Scanner input, PrintStream output) {
         this.needsBroker = needsBroker;
         super.init(input, output);
+    }
+
+    protected MqttsnGatewayRuntimeRegistry getRuntimeRegistry(){
+        return (MqttsnGatewayRuntimeRegistry) super.getRuntimeRegistry();
     }
 
     @Override
@@ -209,127 +217,47 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     protected void poke() throws MqttsnBackendException {
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getBackendService().pokeQueue();
+        getRuntimeRegistry().getBackendService().pokeQueue();
     }
 
     protected void reinit() throws MqttsnBackendException {
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getBackendService().reinit();
+        getRuntimeRegistry().getBackendService().reinit();
     }
 
     @Override
     protected void resetMetrics() throws IOException {
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getBackendService().clearStats();
-        ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).reset();
+        getRuntimeRegistry().getBackendService().clearStats();
+        ((MqttsnGatewaySessionService)getRuntimeRegistry().getGatewaySessionService()).reset();
         super.resetMetrics();
     }
 
     @Override
     protected void stats() {
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
         super.stats();
 
         if(((MqttsnGatewayOptions)options).isRealtimeMessageCounters()){
-            message(String.format("Peak Send Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getPeakMessageSentPerSecond()));
-            message(String.format("Peak Receive Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getPeakMessageReceivePerSecond()));
-            message(String.format("Current Send Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getCurrentMessageSentPerSecond()));
-            message(String.format("Current Receive Count: %s /ps", ((MqttsnGateway)gatewayRuntimeRegistry.getRuntime()).getCurrentMessageReceivePerSecond()));
+            message(String.format("Peak Send Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getPeakMessageSentPerSecond()));
+            message(String.format("Peak Receive Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getPeakMessageReceivePerSecond()));
+            message(String.format("Current Send Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getCurrentMessageSentPerSecond()));
+            message(String.format("Current Receive Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getCurrentMessageReceivePerSecond()));
         }
 
-        message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)gatewayRuntimeRegistry.getGatewaySessionService()).getExpansionCount()));
-        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingGateway)gatewayRuntimeRegistry.getBackendService()).getLastPublishAttempt()));
-        message(String.format("Aggregated Broker Queue: %s message(s)", gatewayRuntimeRegistry.getBackendService().getQueuedCount()));
-        message(String.format("Aggregated Publish Sent: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishSentCount()));
-        message(String.format("Aggregated Publish Received: %s message(s)", gatewayRuntimeRegistry.getBackendService().getPublishReceiveCount()));
+        message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)getRuntimeRegistry().getGatewaySessionService()).getExpansionCount()));
+        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingGateway)getRuntimeRegistry().getBackendService()).getLastPublishAttempt()));
+        message(String.format("Aggregated Broker Queue: %s message(s)", getRuntimeRegistry().getBackendService().getQueuedCount()));
+        message(String.format("Aggregated Publish Sent: %s message(s)", getRuntimeRegistry().getBackendService().getPublishSentCount()));
+        message(String.format("Aggregated Publish Received: %s message(s)", getRuntimeRegistry().getBackendService().getPublishReceiveCount()));
     }
 
     protected void queue(String topicName, String payload, boolean retained, int qos)
             throws MqttsnException {
 
         message("Enqueued publish to all subscribed sessions: " + topicName);
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        gatewayRuntimeRegistry.getGatewaySessionService().receiveToSessions(topicName, qos, retained, payload.getBytes(StandardCharsets.UTF_8));
-    }
-
-    protected void network() throws NetworkRegistryException {
-        message("Network registry: ");
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        Iterator<INetworkContext> itr = gatewayRuntimeRegistry.getNetworkRegistry().iterator();
-        while(itr.hasNext()){
-            INetworkContext c = itr.next();
-            message("\t" + c + " -> " + gatewayRuntimeRegistry.getNetworkRegistry().hasBoundSessionContext(c));
-        }
-    }
-
-    protected void sessions() throws MqttsnException {
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        Iterator<IMqttsnContext> itr = gatewayRuntimeRegistry.getGatewaySessionService().iterator();
-        message("Sessions(s): ");
-        while(itr.hasNext()){
-
-            IMqttsnContext c = itr.next();
-            INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
-            IMqttsnSessionState state = gatewayRuntimeRegistry.
-                    getGatewaySessionService().getSessionState(c, false);
-            tabmessage(String.format("%s (%s) [%s] -> %s", c.getId(),
-                    gatewayRuntimeRegistry.getMessageQueue().size(c),
-                    networkContext.getNetworkAddress(), getColorForState(state.getClientState())));
-        }
-    }
-
-    protected void session(String clientId)
-            throws MqttsnException {
-        MqttsnGatewayOptions opts = (MqttsnGatewayOptions) getOptions();
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
-        Optional<IMqttsnContext> context =
-                gatewayRuntimeRegistry.getGatewaySessionService().lookupClientIdSession(clientId);
-        if(context.isPresent()){
-            IMqttsnContext c = context.get();
-            IMqttsnSessionState state = gatewayRuntimeRegistry.
-                    getGatewaySessionService().getSessionState(c, false);
-
-            message(String.format("Client session: %s", clientId));
-            message(String.format("Session started: %s", format(state.getSessionStarted())));
-            message(String.format("Last seen:  %s", state.getLastSeen() == null ? "<null>" : format(state.getLastSeen())));
-            message(String.format("Keep alive (seconds):  %s", state.getKeepAlive()));
-            message(String.format("Session expiry interval (seconds):  %s", state.getSessionExpiryInterval()));
-            message(String.format("Time since connect (seconds):  %s", ((System.currentTimeMillis() - state.getSessionStarted().getTime()) / 1000)));
-            message(String.format("State:  %s", getColorForState(state.getClientState())));
-            message(String.format("Queue size:  %s", gatewayRuntimeRegistry.getMessageQueue().size(c)));
-
-            message(String.format("Inflight (Egress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(
-                    state.getContext(), IMqttsnOriginatingMessageSource.LOCAL)));
-            message(String.format("Inflight (Ingress):  %s", gatewayRuntimeRegistry.getMessageStateService().countInflight(
-                    state.getContext(), IMqttsnOriginatingMessageSource.REMOTE)));
-
-            Set<Subscription> subs = gatewayRuntimeRegistry.getSubscriptionRegistry().readSubscriptions(c);
-            message("Subscription(s): ");
-            Iterator<Subscription> itr = subs.iterator();
-            while(itr.hasNext()){
-                Subscription s = itr.next();
-                tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getQoS()));
-            }
-
-            if(gatewayRuntimeRegistry.getWillRegistry().hasWillMessage(c)){
-                MqttsnWillData data = gatewayRuntimeRegistry.getWillRegistry().getWillMessage(c);
-                message(String.format("Will QoS: %s", data.getQos()));
-                message(String.format("Will Topic: %s", data.getTopicPath()));
-                message(String.format("Will Retained: %s", data.isRetain()));
-                message(String.format("Will Data: %s", data.getData().length));
-            }
-
-            INetworkContext networkContext = gatewayRuntimeRegistry.getNetworkRegistry().getContext(c);
-            message(String.format("Network Address(s): %s", networkContext.getNetworkAddress()));
-
-        } else {
-            message(String.format("No session found: %s", clientId));
-        }
+        getRuntimeRegistry().getGatewaySessionService().receiveToSessions(topicName, qos, retained, payload.getBytes(StandardCharsets.UTF_8));
     }
 
     protected void inflight(){
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = getRuntimeRegistry();
         List<IMqttsnContext> m = ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getActiveInflights();
         Iterator<IMqttsnContext> itr = m.iterator();
         while (itr.hasNext()){
@@ -355,14 +283,14 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     protected void flush(String clientId) throws MqttsnException {
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+
         Optional<IMqttsnContext> context =
-                gatewayRuntimeRegistry.getGatewaySessionService().lookupClientIdSession(clientId);
+                getRuntimeRegistry().getSessionRegistry().lookupClientIdSession(clientId);
         if(context.isPresent()) {
             IMqttsnContext c = context.get();
-            gatewayRuntimeRegistry.getMessageStateService().clearInflight(c);
+            getRuntimeRegistry().getMessageStateService().clearInflight(c);
             message(String.format("Inflight reaper run on: %s", clientId));
-            gatewayRuntimeRegistry.getMessageStateService().scheduleFlush(c);
+            getRuntimeRegistry().getMessageStateService().scheduleFlush(c);
         }
         else {
             message(String.format("No session found: %s", clientId));
@@ -409,18 +337,14 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 }
             }
 
-            Iterator<IMqttsnContext> sessionItr = gatewayRuntimeRegistry.getGatewaySessionService().iterator();
-            List<IMqttsnSessionState> allState = new ArrayList<>();
-
+            Iterator<IMqttsnSession> sessionItr = getRuntimeRegistry().getSessionRegistry().iterator();
+            List<IMqttsnSession> allState = new ArrayList<>();
             int queuedMessages = 0;
             while(sessionItr.hasNext()){
-                IMqttsnContext c = sessionItr.next();
-                IMqttsnSessionState state = gatewayRuntimeRegistry.getGatewaySessionService().
-                        getSessionState(c, false);
-                allState.add(state);
-                queuedMessages += gatewayRuntimeRegistry.getMessageQueue().size(c);
+                IMqttsnSession session = sessionItr.next();
+                allState.add(session);
+                queuedMessages += gatewayRuntimeRegistry.getMessageQueue().size(session);
             }
-
 
             message(String.format("Network registry count: %s", getRuntimeRegistry().getNetworkRegistry().size()));
             message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()));
@@ -522,21 +446,6 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected String getPropertyFileName() {
         return "gateway.properties";
-    }
-
-    private static String format(Date d){
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        return sdf.format(d);
-    }
-
-    public String getColorForState(MqttsnClientState state){
-        if(state == null) return cli_reset("N/a");
-        switch(state){
-            case AWAKE:
-            case CONNECTED: return cli_green(state.toString());
-            case ASLEEP: return cli_blue(state.toString());
-            default: return cli_red(state.toString());
-        }
     }
 
     @Override

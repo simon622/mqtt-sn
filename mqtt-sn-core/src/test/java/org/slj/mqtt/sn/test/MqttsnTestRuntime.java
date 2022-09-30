@@ -58,6 +58,7 @@ public class MqttsnTestRuntime extends AbstractMqttsnRuntime {
         if (registry.getAuthenticationService() != null) callStartup(registry.getAuthenticationService());
         if (registry.getAuthorizationService() != null) callStartup(registry.getAuthorizationService());
         callStartup(registry.getTransport());
+        callStartup(registry.getSessionRegistry());
     }
 
     @Override
@@ -76,5 +77,6 @@ public class MqttsnTestRuntime extends AbstractMqttsnRuntime {
         if (registry.getAuthenticationService() != null) callShutdown(registry.getAuthenticationService());
         if (registry.getAuthorizationService() != null) callShutdown(registry.getAuthorizationService());
         callShutdown(registry.getTransport());
+        callShutdown(registry.getSessionRegistry());
     }
 }

@@ -33,13 +33,13 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import java.util.*;
 import java.util.logging.Level;
 
-public class MqttsnInMemoryMessageRegistry<T extends IMqttsnRuntimeRegistry>
-        extends AbstractMqttsnMessageRegistry<T> {
+public class MqttsnInMemoryMessageRegistry
+        extends AbstractMqttsnMessageRegistry {
 
     protected Map<UUID, MessageImpl> messageLookup;
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         messageLookup = Collections.synchronizedMap(new HashMap<>());
         super.start(runtime);
     }

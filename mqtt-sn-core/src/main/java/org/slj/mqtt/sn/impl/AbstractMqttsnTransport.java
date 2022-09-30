@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
@@ -43,8 +44,8 @@ import java.util.logging.Level;
  * transport layer, including message marshalling, thread handling (handoff), authority checking and traffic listener notification.
  * You should sub-class this base as a starting point for you implementations.
  */
-public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<U> implements IMqttsnTransport {
+public abstract class AbstractMqttsnTransport
+        extends MqttsnService implements IMqttsnTransport {
 
     protected ExecutorService protocolProcessor;
     protected ExecutorService egressPublishProcessor;
@@ -52,12 +53,12 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
     public void connectionLost(INetworkContext context, Throwable t){
         if(registry != null && context != null){
             registry.getRuntime().handleConnectionLost(
-                    registry.getNetworkRegistry().getSessionContext(context), t);
+                    registry.getNetworkRegistry().getMqttsnContext(context), t);
         }
     }
 
     @Override
-    public void start(U runtime) throws MqttsnException {
+    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         protocolProcessor = runtime.getRuntime().createManagedExecutorService(String.format("mqtt-sn-transport-%s-", System.identityHashCode(runtime)),
                 runtime.getOptions().getTransportProtocolHandoffThreadCount());
@@ -154,7 +155,7 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
                     authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
                 } else {
                     //-- need to check the context from the network matches the supplied clientId in case of address reuse..
-                    IMqttsnContext mqttsnContext = registry.getNetworkRegistry().getSessionContext(networkContext);
+                    IMqttsnContext mqttsnContext = registry.getNetworkRegistry().getMqttsnContext(networkContext);
                     if(clientId == null || "".equals(clientId.trim()) && message.getMessageType() == MqttsnConstants.PINGREQ){
                         logger.log(Level.INFO, String.format("%s received with no clientId, continue with previous clientId on network address [%s]",
                                 message, mqttsnContext));
@@ -181,8 +182,8 @@ public abstract class AbstractMqttsnTransport<U extends IMqttsnRuntimeRegistry>
 
             if (authd && registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
                 notifyTrafficReceived(networkContext, data, message);
-                IMqttsnContext context = registry.getNetworkRegistry().getSessionContext(networkContext);
-                registry.getMessageHandler().receiveMessage(context, message);
+                IMqttsnMessageContext messageContext = getRegistry().getContextFactory().createMessageContext(networkContext);
+                registry.getMessageHandler().receiveMessage(messageContext, message);
             } else {
                 logger.log(Level.WARNING, "auth could not be established, send disconnect that is not processed by application");
                 writeToTransportInternal(networkContext,

@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 
 /**
@@ -34,8 +34,7 @@ import org.slj.mqtt.sn.model.INetworkContext;
  *
  * It is directly responsible for creating response messages and sending them back to the transport layer
  */
-public interface IMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry> extends IMqttsnService<U>{
-
+public interface IMqttsnMessageHandler extends IMqttsnService {
 
     /**
      * Determine if a network location is considered valid for a publish -1
@@ -45,7 +44,6 @@ public interface IMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry> extends
      */
     boolean temporaryAuthorizeContext(INetworkContext context)
             throws MqttsnException;
-
 
     /**
      * Determine if a network location and clientId are considered authorised
@@ -58,18 +56,10 @@ public interface IMqttsnMessageHandler<U extends IMqttsnRuntimeRegistry> extends
     boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion, boolean assignedClientId)
             throws MqttsnException;
 
-    void receiveMessage(IMqttsnContext context, IMqttsnMessage message)
+    void receiveMessage(IMqttsnMessageContext context, IMqttsnMessage message)
             throws MqttsnException;
 
-    boolean canHandle(IMqttsnContext context, IMqttsnMessage message)
+    boolean canHandle(IMqttsnMessageContext context, IMqttsnMessage message)
             throws MqttsnException;
-
-    boolean validResponse(IMqttsnMessage request, IMqttsnMessage response);
-
-    boolean requiresResponse(IMqttsnMessage message);
-
-    boolean isTerminalMessage(IMqttsnMessage message);
-
-    boolean isPartOfOriginatingMessage(IMqttsnMessage message);
 
 }

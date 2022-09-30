@@ -25,23 +25,25 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnWillData;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 
 /**
  * Stores and Maintains will data associated with a given context
  */
-public interface IMqttsnWillRegistry<T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T> {
+public interface IMqttsnWillRegistry extends IMqttsnRegistry {
 
-    void setWillMessage(IMqttsnContext context, MqttsnWillData willData);
+    void setWillMessage(IMqttsnSession session, IMqttsnWillData willData);
 
-    void updateWillTopic(IMqttsnContext context, String topicPath, int qos, boolean retain);
+    void updateWillTopic(IMqttsnSession session, String topicPath, int qos, boolean retain);
 
-    void updateWillMessage(IMqttsnContext context, byte[] data);
+    void updateWillMessage(IMqttsnSession session, byte[] data);
 
-    MqttsnWillData getWillMessage(IMqttsnContext context);
+    IMqttsnWillData getWillMessage(IMqttsnSession session);
 
-    boolean hasWillMessage(IMqttsnContext context);
+    boolean hasWillMessage(IMqttsnSession session);
 
-    void clear(IMqttsnContext context) throws MqttsnException;
+    void clear(IMqttsnSession session) throws MqttsnException;
 
 }

@@ -25,13 +25,16 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
-        extends MqttsnService<T> implements IMqttsnMessageQueueProcessor<T>{
+public class MqttsnMessageQueueProcessor
+        extends MqttsnSessionService implements IMqttsnMessageQueueProcessor {
 
     static Logger logger = Logger.getLogger(MqttsnMessageQueueProcessor.class.getName());
 
@@ -44,10 +47,11 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
     public RESULT process(IMqttsnContext context) throws MqttsnException {
 
         IMqttsnQueueProcessorStateService stateCheckService = getRegistry().getQueueProcessorStateCheckService();
+        IMqttsnSession session = getSessionFromContext(context);
 
         //-- if the queue is empty, then something will happen to retrigger this process, ie. message in or out
         //-- so safe to remove
-        int count = registry.getMessageQueue().size(context);
+        int count = registry.getMessageQueue().size(session);
 
         if(logger.isLoggable(Level.FINE)){
             logger.log(Level.FINE,
@@ -75,7 +79,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
             return RESULT.BACKOFF_PROCESS;
         }
 
-        QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
+        IMqttsnQueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(session);
         if(queuedMessage != null){
             return processNextMessage(context);
         } else {
@@ -88,16 +92,17 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
      */
     protected RESULT processNextMessage(IMqttsnContext context) throws MqttsnException {
 
-        QueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(context);
+        IMqttsnSession session = getSessionFromContext(context);
+        IMqttsnQueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(session);
         String topicPath = queuedMessage.getData().getTopicPath();
-        TopicInfo info = registry.getTopicRegistry().lookup(context, topicPath, true);
+        TopicInfo info = registry.getTopicRegistry().lookup(session, topicPath, true);
         if(info == null){
             if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("need to register for delivery to [%s] on topic [%s]", context, topicPath));
+                logger.log(Level.FINE, String.format("need to register for delivery to [%s] on topic [%s]", session.getContext(), topicPath));
             }
             if(!clientMode){
                 //-- only the server hands out alias's
-                info = registry.getTopicRegistry().register(context, topicPath);
+                info = registry.getTopicRegistry().register(session, topicPath);
             }
             IMqttsnMessage register = registry.getMessageFactory().createRegister(info != null ? info.getTopicId() : 0, topicPath);
             try {
@@ -119,7 +124,9 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
     }
 
     protected RESULT dequeAndPublishNextMessage(IMqttsnContext context, TopicInfo info) throws MqttsnException {
-        QueuedPublishMessage queuedMessage = registry.getMessageQueue().pop(context);
+
+        IMqttsnSession session = getSessionFromContext(context);
+        IMqttsnQueuedPublishMessage queuedMessage = registry.getMessageQueue().poll(session);
         if (queuedMessage != null) {
             queuedMessage.incrementRetry();
             //-- let the reaper check on delivery
@@ -135,7 +142,7 @@ public class MqttsnMessageQueueProcessor<T extends IMqttsnRuntimeRegistry>
                     }
                 }
 
-                RESULT res = ((registry.getMessageQueue().size(context) > 0) ||
+                RESULT res = ((registry.getMessageQueue().size(session) > 0) ||
                         queuedMessage.getData().getQos() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
                 if(logger.isLoggable(Level.FINE)){
                     logger.log(Level.FINE, String.format("sending complete returning [%s] for [%s]", res, context));

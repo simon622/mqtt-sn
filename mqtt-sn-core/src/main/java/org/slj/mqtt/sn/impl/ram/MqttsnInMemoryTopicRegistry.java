@@ -27,173 +27,72 @@ package org.slj.mqtt.sn.impl.ram;
 import org.slj.mqtt.sn.impl.AbstractTopicRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnContext;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
+import org.slj.mqtt.sn.model.session.impl.MqttsnTopicRegistrationImpl;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
+import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
-public class MqttsnInMemoryTopicRegistry<T extends IMqttsnRuntimeRegistry>
-        extends AbstractTopicRegistry<T> {
-
-    protected Map<IMqttsnContext, Set<ConfirmableTopicRegistration>> topicLookups;
-
-    @Override
-    public synchronized void start(T runtime) throws MqttsnException {
-        topicLookups = Collections.synchronizedMap(new HashMap<>());
-        super.start(runtime);
-    }
-
-    public Set<ConfirmableTopicRegistration> getAll(IMqttsnContext context){
-        Set<ConfirmableTopicRegistration> set = topicLookups.get(context);
-        if(set == null){
-            synchronized (this){
-                if((set = topicLookups.get(context)) == null){
-                    set = Collections.synchronizedSet(new HashSet<>());
-                    topicLookups.put(context, set);
-                }
-            }
-        }
-        return set;
-    }
-
-    protected Map<String, Integer> getRegistrationsInternal(IMqttsnContext context, boolean confirmedOnly){
-        Set<ConfirmableTopicRegistration> set = getAll(context);
-        Map<String, Integer> map = new HashMap<>();
-        synchronized (set){
-            Iterator<ConfirmableTopicRegistration> itr  = set.iterator();
-            while(itr.hasNext()){
-                ConfirmableTopicRegistration reg = itr.next();
-                if(!confirmedOnly || reg.confirmed){
-                    map.put(reg.topicPath, reg.aliasId);
-                }
-            }
-        }
-        return map;
-    }
+public class MqttsnInMemoryTopicRegistry
+        extends AbstractTopicRegistry {
 
     @Override
-    protected boolean addOrUpdateRegistration(IMqttsnContext context, String topicPath, int alias) throws MqttsnException {
+    public Set<IMqttsnTopicRegistration> getRegistrations(IMqttsnSession session) throws MqttsnException {
+        Map<String, IMqttsnTopicRegistration> registrations = getSessionBean(session).getRegistrations();
+        Set<IMqttsnTopicRegistration> set;
+        synchronized (registrations){
+            set = registrations.values().stream().collect(
+                    Collectors.toSet());
+        }
+        return Collections.unmodifiableSet(set);
+    }
+
+
+
+    @Override
+    protected boolean addOrUpdateRegistration(IMqttsnSession session, String topicPath, int alias) throws MqttsnException {
 
         if(topicPath == null || topicPath.trim().length() == 0)
             throw new MqttsnExpectationFailedException("null or empty topic path not allowed");
-        Set<ConfirmableTopicRegistration> set = getAll(context);
-        boolean updated = false;
-        synchronized (set){
-            Iterator<ConfirmableTopicRegistration> itr  = set.iterator();
-            if(itr.hasNext()){
-                ConfirmableTopicRegistration reg = itr.next();
-                if(reg.topicPath.equals(topicPath)){
-                    reg.confirmed = true;
-                    reg.setAliasId(alias);
-                    updated = true;
-                }
-            }
-            if(!updated){
-                set.add(new ConfirmableTopicRegistration(topicPath, alias, true));
-            }
-        }
-
-        return !updated;
+        return getSessionBean(session).addTopicRegistration(new MqttsnTopicRegistrationImpl(topicPath, alias, true));
     }
 
     @Override
-    protected Map<String, Integer> getPredefinedTopicsForString(IMqttsnContext context) {
+    protected Map<String, Integer> getPredefinedTopicsForString(IMqttsnSession session) {
         Map<String, Integer> m = registry.getOptions().getPredefinedTopics();
         return m == null ? Collections.emptyMap() : m;
     }
 
     @Override
-    protected Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnContext context) {
-        return getPredefinedTopicsForString(context);
+    protected Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnSession session) {
+        return getPredefinedTopicsForString(session);
     }
 
     @Override
-    public void clearAll() throws MqttsnException {
-        topicLookups.clear();
-    }
-
-    @Override
-    public void clear(IMqttsnContext context, boolean hardClear) throws MqttsnException {
+    public void clear(IMqttsnSession session, boolean hardClear) throws MqttsnException {
         if(hardClear){
-            topicLookups.remove(context);
+            getSessionBean(session).clearRegistrations();
         } else{
-            Set<ConfirmableTopicRegistration> set = topicLookups.get(context);
-            if(set != null){
-                synchronized (set){
-                    Iterator<ConfirmableTopicRegistration> itr  = set.iterator();
-                    if(itr.hasNext()){
-                        ConfirmableTopicRegistration reg = itr.next();
-                        reg.confirmed = false;
-                    }
-                }
+            Map<String, IMqttsnTopicRegistration> map =
+                    getSessionBean(session).getRegistrations();
+            synchronized (map){
+                map.values().stream().forEach(t -> t.setConfirmed(false));
             }
         }
     }
 
     @Override
-    public void clear(IMqttsnContext context) throws MqttsnException {
-        topicLookups.remove(context);
-    }
-
-    public static class ConfirmableTopicRegistration {
-
-        boolean confirmed;
-        String topicPath;
-        int aliasId;
-
-        public ConfirmableTopicRegistration(String topicPath, int aliasId, boolean confirmed){
-            this.topicPath = topicPath;
-            this.aliasId = aliasId;
-            this.confirmed = confirmed;
-        }
-
-        public boolean isConfirmed() {
-            return confirmed;
-        }
-
-        public void setConfirmed(boolean confirmed) {
-            this.confirmed = confirmed;
-        }
-
-        public String getTopicPath() {
-            return topicPath;
-        }
-
-        public void setTopicPath(String topicPath) {
-            this.topicPath = topicPath;
-        }
-
-        public int getAliasId() {
-            return aliasId;
-        }
-
-        public void setAliasId(int aliasId) {
-            this.aliasId = aliasId;
-        }
-
-        @Override
-        public String toString() {
-            return "ConfirmableTopicRegistration{" +
-                    "confirmed=" + confirmed +
-                    ", topicPath='" + topicPath + '\'' +
-                    ", aliasId=" + aliasId +
-                    '}';
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ConfirmableTopicRegistration that = (ConfirmableTopicRegistration) o;
-            return topicPath.equals(that.topicPath);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = topicPath.hashCode();
-            return result;
+    public void clear(IMqttsnSession session) {
+        try {
+            clear(session, true);
+        } catch(MqttsnException e){
+            throw new MqttsnRuntimeException(e);
         }
     }
 }

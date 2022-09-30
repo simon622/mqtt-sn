@@ -22,31 +22,31 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session.impl;
 
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
-public class MqttsnWillData implements Serializable {
+public class MqttsnWillDataImpl implements IMqttsnWillData, Serializable {
 
     private static final long serialVersionUID = 2284318994034723218L;
 
     private TopicPath topicPath;
     private int qos;
-    private boolean retain;
+    private boolean retained;
     private byte[] data;
 
-    public MqttsnWillData() {
+    public MqttsnWillDataImpl() {
 
     }
 
-    public MqttsnWillData(TopicPath topicPath, byte[] data, int qos, boolean retain) {
+    public MqttsnWillDataImpl(TopicPath topicPath, byte[] data, int qos, boolean retained) {
         this.topicPath = topicPath;
         this.data = data;
         this.qos = qos;
-        this.retain = retain;
+        this.retained = retained;
     }
 
     public TopicPath getTopicPath() {
@@ -65,12 +65,12 @@ public class MqttsnWillData implements Serializable {
         this.data = data;
     }
 
-    public boolean isRetain() {
-        return retain;
+    public boolean isRetained() {
+        return retained;
     }
 
-    public void setRetain(boolean retain) {
-        this.retain = retain;
+    public void setRetained(boolean retained) {
+        this.retained = retained;
     }
 
     public int getQos() {
@@ -86,7 +86,7 @@ public class MqttsnWillData implements Serializable {
         return "MqttsnWillData{" +
                 "topicPath=" + topicPath +
                 ", qos=" + qos +
-                ", retain=" + retain +
+                ", retained=" + retained +
                 ", data=" + (data == null ? "<null>" : data.length) +
                 '}';
     }

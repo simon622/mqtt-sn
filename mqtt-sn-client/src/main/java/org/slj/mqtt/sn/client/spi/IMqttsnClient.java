@@ -25,12 +25,10 @@
 package org.slj.mqtt.sn.client.spi;
 
 import org.slj.mqtt.sn.client.MqttsnClientConnectException;
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.model.MqttsnWillData;
+import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.io.Closeable;
 import java.util.Optional;
@@ -176,7 +174,7 @@ public interface IMqttsnClient extends Closeable {
      * any subsequent CONNECT messages will contain the will workflow to set the will data on the gateway
      * @param willData - The will data you would like set
      */
-    void setWillData(MqttsnWillData willData) throws MqttsnException ;
+    void setWillData(MqttsnWillDataImpl willData) throws MqttsnException ;
 
     /**
      * Clear any existing will data from the runtime.

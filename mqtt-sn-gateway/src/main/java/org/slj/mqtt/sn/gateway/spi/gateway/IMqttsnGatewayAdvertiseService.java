@@ -24,10 +24,9 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 
-public interface IMqttsnGatewayAdvertiseService<T extends IMqttsnRuntimeRegistry> extends IMqttsnService<T> {
+public interface IMqttsnGatewayAdvertiseService extends IMqttsnService {
 
 
 

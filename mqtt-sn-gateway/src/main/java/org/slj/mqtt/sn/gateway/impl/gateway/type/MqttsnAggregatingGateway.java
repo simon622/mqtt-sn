@@ -36,6 +36,7 @@ import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -67,7 +68,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public void start(IMqttsnGatewayRuntimeRegistry runtime) throws MqttsnException {
+    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         double limiter = ((MqttsnGatewayOptions)runtime.getOptions()).
                 getMaxBrokerPublishesPerSecond();
@@ -238,13 +239,13 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             //-- in aggregation mode connect with the gatewayId as the clientId on the broker side
             synchronized (this){
                 if(connection == null){
-                    connection = registry.getBackendConnectionFactory().createConnection(options,
+                    connection = getRegistry().getBackendConnectionFactory().createConnection(options,
                             registry.getOptions().getContextId());
                     if(connection instanceof AbstractMqttsnBackendConnection){
                         ((AbstractMqttsnBackendConnection)connection).setBrokerService(this);
                         //-- ensure we subscribe the connection to any existing subscriptions
                         try {
-                            Set<TopicPath> paths = getRuntimeRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
+                            Set<TopicPath> paths = getRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
                             if(paths!= null){
                                 logger.log(Level.INFO, String.format("new aggregated connection subscribing to [%s] existing topics..", paths.size()));
                                 paths.forEach(path -> {

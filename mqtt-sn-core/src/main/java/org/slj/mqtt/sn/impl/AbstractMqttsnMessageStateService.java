@@ -25,8 +25,12 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.MqttsnMessageRules;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -38,8 +42,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 
-public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntimeRegistry>
-        extends AbstractMqttsnBackoffThreadService<T> implements IMqttsnMessageStateService<T> {
+public abstract class AbstractMqttsnMessageStateService
+        extends AbstractMqttsnBackoffThreadService implements IMqttsnMessageStateService {
 
     protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.UNSIGNED_MAX_16 + 1);
     protected boolean clientMode;
@@ -56,7 +60,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
+    public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         flushOperations = new HashMap<>();
         executorService = runtime.getRuntime().createManagedScheduledExecutorService("mqtt-sn-scheduled-queue-flush-",
                 runtime.getOptions().getQueueProcessorThreadCount());
@@ -200,7 +204,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     }
 
     @Override
-    public MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, QueuedPublishMessage queuedPublishMessage) throws MqttsnException {
+    public MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
 
         byte[] payload = registry.getMessageRegistry().get(queuedPublishMessage.getMessageId());
 
@@ -224,18 +228,18 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                 isDUPDelivery(queuedPublishMessage),
                 queuedPublishMessage.getData().isRetained(), type, topicId,
                 payload);
-        if(queuedPublishMessage.getMsgId() != 0){
+        if(queuedPublishMessage.getPacketId() != 0){
             //-- ensure if we have sent a message before we use the same ID again
-            publish.setId(queuedPublishMessage.getMsgId());
+            publish.setId(queuedPublishMessage.getPacketId());
         }
         return sendMessageInternal(context, publish, queuedPublishMessage);
     }
 
-    protected boolean isDUPDelivery(QueuedPublishMessage message){
-        return message.getRetryCount() > 1 || message.getMsgId() > 0;
+    protected boolean isDUPDelivery(IMqttsnQueuedPublishMessage message){
+        return message.getRetryCount() > 1 || message.getPacketId() > 0;
     }
 
-    protected MqttsnWaitToken sendMessageInternal(IMqttsnContext context, IMqttsnMessage message, QueuedPublishMessage queuedPublishMessage) throws MqttsnException {
+    protected MqttsnWaitToken sendMessageInternal(IMqttsnContext context, IMqttsnMessage message, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
 
         if(!allowedToSend(context, message)){
             logger.log(Level.WARNING,
@@ -244,11 +248,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             throw new MqttsnExpectationFailedException("allowed to send check failed");
         }
 
-        IMqttsnOriginatingMessageSource source = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-                IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
-
-//        InflightMessage.DIRECTION direction = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-//                InflightMessage.DIRECTION.SENDING : InflightMessage.DIRECTION.RECEIVING;
+        //if I send a message that is an ACK it is in response to something received to the remote space
+        IMqttsnOriginatingMessageSource source = MqttsnMessageRules.isAck(message, true) ?
+                IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL;
 
         int count = countInflight(context, source);
         if(count >= registry.getOptions().getMaxMessagesInflight()){
@@ -282,8 +284,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
             MqttsnWaitToken token = null;
             boolean requiresResponse;
-            if((requiresResponse = registry.getMessageHandler().requiresResponse(message))){
-                token = markInflight(context, message, queuedPublishMessage);
+            if((requiresResponse = MqttsnMessageRules.requiresResponse(getRegistry().getCodec(), message))){
+                token = markInflight(source, context, message, queuedPublishMessage);
             }
 
             if(logger.isLoggable(Level.FINE)){
@@ -395,15 +397,16 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         }
         lastMessageReceived.put(context, System.currentTimeMillis());
 
-        IMqttsnOriginatingMessageSource source = registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-                IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL;
+        //if I receive a message that is an ACK it is in response to something sent in the local space
+        IMqttsnOriginatingMessageSource source = MqttsnMessageRules.isAck(message, false) ?
+                IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
 
         Integer msgId = message.needsId() ? message.getId() : WEAK_ATTACH_ID;
         boolean matchedMessage = inflightExists(context, source, msgId);
-        boolean terminalMessage = registry.getMessageHandler().isTerminalMessage(message);
+        boolean terminalMessage = MqttsnMessageRules.isTerminalMessage(getRegistry().getCodec(), message);
 
         if(logger.isLoggable(Level.INFO)){
-            logger.log(Level.INFO, String.format("matched message by id [%s]->[%s] in [%s] space, terminalMessage [%s], messageIn [%s]",
+            logger.log(Level.INFO, String.format("matching message by id [%s]->[%s] in [%s] space, terminalMessage [%s], messageIn [%s]",
                     msgId, matchedMessage, source, terminalMessage, message));
         }
 
@@ -415,7 +418,8 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                             String.format("inflight message was cleared during notifyReceive for [%s] -> [%s]", context, msgId));
                     return null;
                 }
-                else if (!registry.getMessageHandler().validResponse(inflight.getMessage(), message)) {
+                else if (!MqttsnMessageRules.validResponse(getRegistry().getCodec(),
+                        inflight.getMessage(), message)) {
                     logger.log(Level.WARNING,
                             String.format("invalid response message [%s] for [%s] -> [%s]",
                                     message, inflight.getMessage(), context));
@@ -464,7 +468,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 
                         if (inflight instanceof RequeueableInflightMessage) {
                             try {
-                                QueuedPublishMessage m = ((RequeueableInflightMessage) inflight).getQueuedPublishMessage();
+                                IMqttsnQueuedPublishMessage m = ((RequeueableInflightMessage) inflight).getQueuedPublishMessage();
                                 if(m.getRetryCount() >= registry.getOptions().getMaxErrorRetries()){
                                     logger.log(Level.WARNING, String.format("publish message [%s] exceeded max retries [%s], discard and notify application", registry.getOptions().getMaxErrorRetries(), m));
                                     PublishData data = registry.getCodec().getData(confirmedMessage);
@@ -474,7 +478,10 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                                 } else {
                                     logger.log(Level.INFO,
                                             String.format("message was re-queueable offer to queue [%s]", context));
-                                    registry.getMessageQueue().offer(context, m);
+                                    IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                                    if(session != null){
+                                        registry.getMessageQueue().offer(session, m);
+                                    }
                                 }
                             } catch(MqttsnQueueAcceptException e){
                                 throw new MqttsnException(e);
@@ -534,7 +541,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
 //                       throw new MqttsnException("cannot receive more than maxInflight!");
 //                    }
                     //-- Qos 2 needs further confirmation before being sent to application
-                    markInflight(context, message, null);
+                    markInflight(source, context, message, null);
                 } else {
                     //-- Qos 0 & 1 are inbound are confirmed on receipt of message
 
@@ -584,13 +591,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         });
     }
 
-    protected MqttsnWaitToken markInflight(IMqttsnContext context, IMqttsnMessage message, QueuedPublishMessage queuedPublishMessage)
+    protected MqttsnWaitToken markInflight(IMqttsnOriginatingMessageSource source, IMqttsnContext context, IMqttsnMessage message, IMqttsnQueuedPublishMessage queuedPublishMessage)
             throws MqttsnException {
 
-        IMqttsnOriginatingMessageSource source = message instanceof MqttsnPublish ?
-                                        queuedPublishMessage == null ? IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL :
-                                    registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-                                            IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
+//        IMqttsnOriginatingMessageSource source = message instanceof MqttsnPublish ?
+//                                        queuedPublishMessage == null ? IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL :
+//                                    registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
+//                                            IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
 
         //may have old inbound messages kicking around depending on reap settings, to just allow these to come in
         if(countInflight(context, source) >=
@@ -620,13 +627,13 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
             }
 
             //-- ensure we update the queued version so if delivery fails we know what to redeliver with
-            if(queuedPublishMessage != null) queuedPublishMessage.setMsgId(msgId);
+            if(queuedPublishMessage != null) queuedPublishMessage.setPacketId(msgId);
         }
 
         addInflightMessage(context, msgId, inflight);
 
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("[%s - %s] marking [%s] message [%s] inflight id context [%s]",
+        if(logger.isLoggable(Level.INFO)){
+            logger.log(Level.INFO, String.format("[%s - %s] marking [%s] message [%s] inflight id context [%s]",
                     registry.getOptions().getContextId(), context, source, message, idContext));
         }
 
@@ -727,7 +734,7 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                     requeueableInflightMessage.getQueuedPublishMessage() != null) {
                 logger.log(Level.INFO, String.format("re-queuing publish message [%s] for client [%s]", context,
                         ((RequeueableInflightMessage) inflight).getQueuedPublishMessage()));
-                QueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
+                IMqttsnQueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
                 queuedPublishMessage.setToken(null);
                 boolean maxRetries = queuedPublishMessage.getRetryCount() >= registry.getOptions().getMaxErrorRetries();
                 try {
@@ -736,7 +743,10 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
                         //-- registry as we'll need it again on next connection
                         queuedPublishMessage.setRetryCount(0);
                     }
-                    registry.getMessageQueue().offer(context, queuedPublishMessage);
+                    IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                    if(session != null){
+                        registry.getMessageQueue().offer(session, queuedPublishMessage);
+                    }
                 } catch(MqttsnQueueAcceptException e){
                     //queue is full cant put it there
                 } finally {
@@ -751,9 +761,6 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
     @Override
     public int countInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException {
         Map<Integer, InflightMessage> map = getInflightMessages(context, source);
-        if(map.size() == 1){
-            logger.log(Level.WARNING, Objects.toString(map));
-        }
         return map.size();
     }
 
@@ -798,7 +805,9 @@ public abstract class AbstractMqttsnMessageStateService <T extends IMqttsnRuntim
         }
 
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);
-        String topicPath = registry.getTopicRegistry().topicPath(context, info, true);
+
+        IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+        String topicPath = registry.getTopicRegistry().topicPath(session, info, true);
         return topicPath;
     }
 

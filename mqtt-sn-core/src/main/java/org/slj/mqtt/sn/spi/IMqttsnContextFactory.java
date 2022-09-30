@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnContext;
 import org.slj.mqtt.sn.net.NetworkAddress;
@@ -74,5 +75,14 @@ public interface IMqttsnContextFactory <T extends IMqttsnRuntimeRegistry> {
      * @throws MqttsnSecurityException - The supplied clientId was not allowed on the gateway
      */
     IMqttsnContext createTemporaryApplicationContext(INetworkContext context, int protocolVersion) throws MqttsnSecurityException;
+
+
+    /**
+     * Called for every inbound message. A message context encapsulates the network, application and session context for a given message
+     * @param networkContext - The source network context
+     * @return a new instance of a message context that will be used by the runtime to process this inbound message
+     * @throws MqttsnSecurityException - A security exception was encountered
+     */
+    IMqttsnMessageContext createMessageContext(INetworkContext networkContext) throws MqttsnSecurityException, MqttsnException ;
 
 }

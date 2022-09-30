@@ -24,11 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-
 public interface IMqttsnRegistry<T extends IMqttsnRuntimeRegistry> extends IMqttsnService<T> {
-
-    void clear(IMqttsnContext context) throws MqttsnException;
 
     void clearAll() throws MqttsnException;
 

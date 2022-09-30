@@ -26,7 +26,9 @@ package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractWillRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnWillData;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -36,45 +38,38 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-public class MqttsnInMemoryWillRegistry<T extends IMqttsnRuntimeRegistry>
-        extends AbstractWillRegistry<T> {
-
-    protected Map<IMqttsnContext, MqttsnWillData> willLookup;
+public class MqttsnInMemoryWillRegistry
+        extends AbstractWillRegistry {
 
     @Override
-    public synchronized void start(T runtime) throws MqttsnException {
-        willLookup = Collections.synchronizedMap(new HashMap<>());
-        super.start(runtime);
-    }
+    public void updateWillTopic(IMqttsnSession session, String topicPath, int qos, boolean retained) {
 
-    @Override
-    public void updateWillTopic(IMqttsnContext context, String topicPath, int qos, boolean retain) {
-        MqttsnWillData willData = getWillMessage(context);
+        MqttsnWillDataImpl willData = getWillMessageInternal(session);
         if(willData == null){
             synchronized (this){
                 if(willData == null){
-                    willData = new MqttsnWillData();
-                    setWillMessage(context, willData);
+                    willData = new MqttsnWillDataImpl();
+                    setWillMessage(session, willData);
                 }
             }
         }
         if(willData != null){
             willData.setQos(qos);
-            willData.setRetain(retain);
+            willData.setRetained(retained);
             willData.setTopicPath(new TopicPath(topicPath));
         }
 
-        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", context, willData));
+        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", session, willData));
     }
 
     @Override
-    public void updateWillMessage(IMqttsnContext context, byte[] data) {
-        MqttsnWillData willData = getWillMessage(context);
+    public void updateWillMessage(IMqttsnSession session, byte[] data) {
+        MqttsnWillDataImpl willData = getWillMessageInternal(session);
         if(willData == null){
             synchronized (this){
                 if(willData == null){
-                    willData = new MqttsnWillData();
-                    setWillMessage(context, willData);
+                    willData = new MqttsnWillDataImpl();
+                    setWillMessage(session, willData);
                 }
             }
         }
@@ -82,31 +77,30 @@ public class MqttsnInMemoryWillRegistry<T extends IMqttsnRuntimeRegistry>
             willData.setData(data);
         }
 
-        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", context, willData));
+        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", session, willData));
     }
 
     @Override
-    public void clearAll() {
-        willLookup.clear();
+    public void setWillMessage(IMqttsnSession session, IMqttsnWillData willData) {
+        getSessionBean(session).setWillData(willData);
     }
 
     @Override
-    public void setWillMessage(IMqttsnContext context, MqttsnWillData willData) {
-        willLookup.put(context, willData);
+    public IMqttsnWillData getWillMessage(IMqttsnSession session) {
+        return getSessionBean(session).getWillData();
+    }
+
+    public MqttsnWillDataImpl getWillMessageInternal(IMqttsnSession session) {
+        return (MqttsnWillDataImpl) getSessionBean(session).getWillData();
     }
 
     @Override
-    public MqttsnWillData getWillMessage(IMqttsnContext context) {
-        return willLookup.get(context);
+    public boolean hasWillMessage(IMqttsnSession session) {
+        return getWillMessage(session) != null;
     }
 
     @Override
-    public boolean hasWillMessage(IMqttsnContext context) {
-        return getWillMessage(context) != null;
-    }
-
-    @Override
-    public void clear(IMqttsnContext context) throws MqttsnException {
-        willLookup.remove(context);
+    public void clear(IMqttsnSession session) {
+        getSessionBean(session).setWillData(null);
     }
 }

@@ -27,10 +27,11 @@ package org.slj.mqtt.sn.cli;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
+import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
+import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.ThreadDump;
@@ -39,10 +40,8 @@ import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.io.*;
 import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.Properties;
-import java.util.Scanner;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -426,6 +425,91 @@ public abstract class AbstractInteractiveCli {
         message(String.format("Network Bytes Received: %s byte(s)", receiveByteCount.get()));
     }
 
+    protected void session(String clientId)
+            throws MqttsnException {
+
+        Optional<IMqttsnContext> context =
+                getRuntimeRegistry().getSessionRegistry().lookupClientIdSession(clientId);
+        if(context.isPresent()){
+            IMqttsnContext c = context.get();
+            IMqttsnSession session = getRuntimeRegistry().getSessionRegistry().getSession(c, false);
+            if(session != null){
+                message(String.format("Session: %s", clientId));
+                message(String.format("Session started: %s", format(session.getSessionStarted())));
+                message(String.format("Last seen:  %s", session.getLastSeen() == null ? "<null>" : format(session.getLastSeen())));
+                message(String.format("Keep alive (seconds):  %s", session.getKeepAlive()));
+                message(String.format("Session expiry interval (seconds):  %s", session.getSessionExpiryInterval()));
+
+                if(session.getSessionStarted() != null){
+                    message(String.format("Time since connect (seconds):  %s", ((System.currentTimeMillis() - session.getSessionStarted().getTime()) / 1000)));
+                }
+
+                if(session.getLastSeen() != null){
+                    message(String.format("Time since last seen (seconds):  %s", ((System.currentTimeMillis() - session.getLastSeen().getTime()) / 1000)));
+                }
+
+                message(String.format("State:  %s", getColorForState(session.getClientState())));
+                message(String.format("Queue size:  %s", runtimeRegistry.getMessageQueue().size(session)));
+                message(String.format("Inflight (Egress):  %s", runtimeRegistry.getMessageStateService().countInflight(
+                        session.getContext(), IMqttsnOriginatingMessageSource.LOCAL)));
+                message(String.format("Inflight (Ingress):  %s", runtimeRegistry.getMessageStateService().countInflight(
+                        session.getContext(), IMqttsnOriginatingMessageSource.REMOTE)));
+
+                Set<IMqttsnSubscription> subs = runtimeRegistry.getSubscriptionRegistry().readSubscriptions(session);
+                message("Subscription(s): ");
+                Iterator<IMqttsnSubscription> itr = subs.iterator();
+                while(itr.hasNext()){
+                    IMqttsnSubscription s = itr.next();
+                    tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getGrantedQoS()));
+                }
+
+                Set<IMqttsnTopicRegistration> regs = runtimeRegistry.getTopicRegistry().getRegistrations(session);
+                message("Registrations(s): ");
+                Iterator<IMqttsnTopicRegistration> regItr = regs.iterator();
+                while(regItr.hasNext()){
+                    IMqttsnTopicRegistration s = regItr.next();
+                    tabmessage(String.format("%s -> %s (%s)", s.getTopicPath(), s.getAliasId(), s.isConfirmed()));
+                }
+
+                if(runtimeRegistry.getWillRegistry().hasWillMessage(session)){
+                    IMqttsnWillData data = runtimeRegistry.getWillRegistry().getWillMessage(session);
+                    message(String.format("Will QoS: %s", data.getQos()));
+                    message(String.format("Will Topic: %s", data.getTopicPath()));
+                    message(String.format("Will Retained: %s", data.isRetained()));
+                    message(String.format("Will Data: %s", data.getData().length));
+                }
+                INetworkContext networkContext = runtimeRegistry.getNetworkRegistry().getContext(c);
+                message(String.format("Network Address(s): %s", networkContext.getNetworkAddress()));
+            }
+            else {
+                message(String.format("No session found: %s", clientId));
+            }
+        } else {
+            message(String.format("Invalid clientId: %s", clientId));
+        }
+    }
+
+    protected void sessions() throws MqttsnException {
+        Iterator<IMqttsnSession> itr = getRuntimeRegistry().getSessionRegistry().iterator();
+        message("Sessions(s): ");
+        while(itr.hasNext()){
+            IMqttsnSession session = itr.next();
+            INetworkContext networkContext = getRuntimeRegistry().getNetworkRegistry().getContext(session.getContext());
+            tabmessage(String.format("%s (%s) [%s] -> %s", session.getContext().getId(),
+                    getRuntimeRegistry().getMessageQueue().size(session),
+                    networkContext.getNetworkAddress(), getColorForState(session.getClientState())));
+        }
+    }
+
+    protected void network() throws NetworkRegistryException {
+        message("Network registry: ");
+        Iterator<INetworkContext> itr = getRuntimeRegistry().getNetworkRegistry().iterator();
+        while(itr.hasNext()){
+            INetworkContext c = itr.next();
+            message("\t" + c + " -> " + getRuntimeRegistry().getNetworkRegistry().getMqttsnContext(c));
+        }
+    }
+
     protected void threadDump() {
         output.println(ThreadDump.create());
     }
@@ -539,6 +623,21 @@ public abstract class AbstractInteractiveCli {
         if(runtime != null){
             stop();
             message("stopped - bye :-)");
+        }
+    }
+
+    protected static String format(Date d){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        return sdf.format(d);
+    }
+
+    public String getColorForState(MqttsnClientState state){
+        if(state == null) return cli_reset("N/a");
+        switch(state){
+            case AWAKE:
+            case CONNECTED: return cli_green(state.toString());
+            case ASLEEP: return cli_blue(state.toString());
+            default: return cli_red(state.toString());
         }
     }
 

@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 /**
  * The network registry maintains a list of known network contexts against a remote address ({@link NetworkAddress}).
@@ -45,7 +44,7 @@ public interface INetworkAddressRegistry {
 
     INetworkContext getContext(IMqttsnContext sessionContext);
 
-    IMqttsnContext getSessionContext(INetworkContext networkContext);
+    IMqttsnContext getMqttsnContext(INetworkContext networkContext);
 
     Optional<INetworkContext> first() throws NetworkRegistryException ;
 

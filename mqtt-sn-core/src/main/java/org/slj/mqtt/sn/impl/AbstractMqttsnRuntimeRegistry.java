@@ -59,6 +59,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnSubscriptionRegistry subscriptionRegistry;
     protected IMqttsnMessageStateService messageStateService;
     protected IMqttsnContextFactory contextFactory;
+    protected IMqttsnSessionRegistry sessionRegistry;
     protected IMqttsnMessageQueueProcessor queueProcessor;
     protected IMqttsnQueueProcessorStateService queueProcessorStateCheckService;
     protected IMqttsnMessageRegistry messageRegistry;
@@ -66,6 +67,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnAuthorizationService authorizationService;
     protected IMqttsnWillRegistry willRegistry;
     protected IMqttsnSecurityService securityService;
+    protected IMqttsnTopicModifier topicModifier;
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
     public AbstractMqttsnRuntimeRegistry(MqttsnOptions options){
@@ -148,6 +150,19 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      */
     public AbstractMqttsnRuntimeRegistry withQueueProcessor(IMqttsnMessageQueueProcessor queueProcessor){
         this.queueProcessor = queueProcessor;
+        return this;
+    }
+
+
+    /**
+     * Provide a topic modifier to manipulate topics before the enter the system runtime to allow for custom prefixing
+     * or placeholders.
+     *
+     * @param topicModifier - The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withTopicModifier(IMqttsnTopicModifier topicModifier){
+        this.topicModifier = topicModifier;
         return this;
     }
 
@@ -316,6 +331,17 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     /**
+     * Provide sessionFactory services to the runtime
+     *
+     * @param sessionRegistry The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withSessionRegistry(IMqttsnSessionRegistry sessionRegistry){
+        this.sessionRegistry = sessionRegistry;
+        return this;
+    }
+
+    /**
      * Optional - when installed it will be consulted to determine whether a remote context can perform certain
      * operations;
      *
@@ -459,6 +485,14 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return securityService;
     }
 
+    public IMqttsnSessionRegistry getSessionRegistry() {
+        return sessionRegistry;
+    }
+
+    public IMqttsnTopicModifier getTopicModifier() {
+        return topicModifier;
+    }
+
     protected void validateOnStartup() throws MqttsnRuntimeException {
         if(networkAddressRegistry == null) throw new MqttsnRuntimeException("network-registry must be bound for valid runtime");
         if(messageStateService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
@@ -472,5 +506,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         if(messageRegistry == null) throw new MqttsnRuntimeException("message registry must be bound for valid runtime");
         if(willRegistry == null) throw new MqttsnRuntimeException("will registry must be bound for valid runtime");
         if(securityService == null) throw new MqttsnRuntimeException("security service must be bound for valid runtime");
+        if(sessionRegistry == null) throw new MqttsnRuntimeException("sessionRegistry must be bound for valid runtime");
+        if(topicModifier == null) throw new MqttsnRuntimeException("topicModifier must be bound for valid runtime");
     }
 }

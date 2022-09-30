@@ -26,47 +26,30 @@ package org.slj.mqtt.sn.gateway.spi.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.IMqttsnSessionState;
 import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 
-import java.util.Iterator;
 import java.util.Optional;
 
-public interface IMqttsnGatewaySessionService extends IMqttsnRegistry<IMqttsnGatewayRuntimeRegistry> {
-
-    Optional<IMqttsnContext> lookupClientIdSession(String clientId) throws MqttsnException;
-
-    IMqttsnSessionState getSessionState(IMqttsnContext context, boolean createIfNotExists) throws MqttsnException;
-
-    void wake(IMqttsnSessionState state) throws MqttsnException;
-
-    void ping(IMqttsnSessionState state) throws MqttsnException;
-
-    void updateLastSeen(IMqttsnSessionState state);
-
-    void clear(IMqttsnContext context, boolean cleanSession, boolean networkLayer) throws MqttsnException;
-
-    void cleanSession(IMqttsnContext state, boolean deepClean) throws MqttsnException;
+public interface IMqttsnGatewaySessionService extends IMqttsnService {
 
     void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException ;
 
-    void markSessionLost(IMqttsnSessionState state) throws MqttsnException;
+    void markSessionLost(IMqttsnSession state) throws MqttsnException;
 
-    Iterator<IMqttsnContext> iterator();
+    //-- methods that delegate to the backend
 
-    //-- methods that deletegate to the backend
+    ConnectResult connect(IMqttsnSession state, IMqttsnMessage message) throws MqttsnException;
 
-    ConnectResult connect(IMqttsnSessionState state, IMqttsnMessage message) throws MqttsnException;
+    SubscribeResult subscribe(IMqttsnSession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
 
-    SubscribeResult subscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
+    UnsubscribeResult unsubscribe(IMqttsnSession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
 
-    UnsubscribeResult unsubscribe(IMqttsnSessionState state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
+    RegisterResult register(IMqttsnSession state, String topicPath) throws MqttsnException;
 
-    RegisterResult register(IMqttsnSessionState state, String topicPath) throws MqttsnException;
-
-    DisconnectResult disconnect(IMqttsnSessionState state, IMqttsnMessage message) throws MqttsnException;
+    DisconnectResult disconnect(IMqttsnSession state, IMqttsnMessage message) throws MqttsnException;
 }

@@ -93,7 +93,7 @@ public interface IMqttsnSubscriptionRegistry extends IMqttsnRegistry {
      * @return a set of subscriptions to which the context is subscribed
      * @throws MqttsnException
      */
-    Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException;
+    Set<String> readAllSubscribedTopicPaths() throws MqttsnException;
 
     void clear(IMqttsnSession session) throws MqttsnException;
 }

@@ -83,8 +83,6 @@ public abstract class AbstractSubscriptionRegistry
 
     public abstract void clear(IMqttsnSession session) ;
 
-    public abstract Set<TopicPath> readAllSubscribedTopicPaths() throws MqttsnException ;
-
     protected abstract boolean addSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnException, MqttsnIllegalFormatException;
 
     protected abstract boolean removeSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnException ;

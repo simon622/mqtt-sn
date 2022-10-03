@@ -35,7 +35,7 @@ import java.io.IOException;
 public class MqttsnTestRuntime extends AbstractMqttsnRuntime {
 
     public static MqttsnOptions TEST_OPTIONS = new MqttsnOptions();
-    public static String TEST_CLIENT_ID = "testClientId";
+    public static String TEST_CLIENT_ID = "testClientId-";
     public static NetworkAddress TEST_ADDRESS = NetworkAddress.localhost(10001);
 
     @Override

@@ -39,9 +39,9 @@ import org.slj.mqtt.sn.test.MqttsnTestRuntime;
 import org.slj.mqtt.sn.test.MqttsnTestRuntimeRegistry;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class SubscriptionTests {
 
@@ -104,6 +104,81 @@ public class SubscriptionTests {
 
         Assert.assertEquals("subscription should match from multi-wildcard", 1,
                 subscriptionRegistry.matches(TEST_TOPIC).size());
+    }
+
+    @Test
+    public void testConcurrentAccessSubscriptionManipulated() throws MqttsnException, MqttsnIllegalFormatException {
+
+        int THREADS = 5;
+        final CountDownLatch latch = new CountDownLatch(THREADS);
+        final Object mon = new Object();
+
+        for (int i = 0; i < THREADS; i++){
+
+            System.err.println("starting thread " + (i + 1));
+
+            Thread t = new Thread(() -> {
+                String clientId = null;
+                try {
+
+                    clientId = MqttsnTestRuntime.TEST_CLIENT_ID +
+                            ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+
+                    System.err.println(clientId + " is starting");
+
+                    IMqttsnSession session = createConfirmedTestSession(clientId, 1);
+                    final IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
+
+                    //-- add common subscription
+                    Assert.assertTrue("new subscription should be added",
+                            subscriptionRegistry.subscribe(session, TEST_TOPIC, 1));
+
+                    String customTopicFilter = TEST_TOPIC + "/" + session.getContext().getId();
+
+                    //-- add custom subscription
+                    Assert.assertTrue("new subscription should be added",
+                            subscriptionRegistry.subscribe(session, customTopicFilter, 1));
+
+                    //-- search common subscription
+                    Assert.assertTrue("subscription search for shared filter should match multiple",
+                            subscriptionRegistry.matches(TEST_TOPIC).size() >= 1);
+
+                    //-- search custom subscription
+                    Assert.assertEquals("subscription search for custom filter should return 1", 1,
+                            subscriptionRegistry.matches(customTopicFilter).size());
+
+                    //-- remove custom subscription
+                    Assert.assertTrue("subscription should have been removed",
+                            subscriptionRegistry.unsubscribe(session, customTopicFilter));
+
+                    //-- search custom subscription
+                    Assert.assertEquals("subscription search for custom filter should return 0", 0,
+                            subscriptionRegistry.matches(customTopicFilter).size());
+
+                    subscriptionRegistry.readAllSubscribedTopicPaths();
+
+                    latch.countDown();
+
+                } catch(Exception e){
+                    throw new RuntimeException(e);
+                } finally {
+                    try {
+                        System.err.println("im done " + clientId);
+                    } catch(Exception e){
+                        Assert.fail("error closing runtime " + e.getMessage());
+                    }
+                }
+            });
+            t.start();
+        }
+
+        try {
+            if(!latch.await(5, TimeUnit.SECONDS)){
+                Assert.fail("error waiting on latch");
+            }
+        } catch(Exception e){
+            Assert.fail("latch failure");
+        }
     }
 
     @Test

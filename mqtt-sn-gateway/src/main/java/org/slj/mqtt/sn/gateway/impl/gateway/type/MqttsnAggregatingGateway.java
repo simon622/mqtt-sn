@@ -245,12 +245,12 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                         ((AbstractMqttsnBackendConnection)connection).setBrokerService(this);
                         //-- ensure we subscribe the connection to any existing subscriptions
                         try {
-                            Set<TopicPath> paths = getRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
+                            Set<String> paths = getRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
                             if(paths!= null){
                                 logger.log(Level.INFO, String.format("new aggregated connection subscribing to [%s] existing topics..", paths.size()));
                                 paths.forEach(path -> {
                                     try {
-                                        connection.subscribe(null, path, null);
+                                        connection.subscribe(null, new TopicPath(path), null);
                                     } catch (MqttsnBackendException e) {
                                         e.printStackTrace();
                                         logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);

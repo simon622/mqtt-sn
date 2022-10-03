@@ -116,6 +116,30 @@ public class TriesTreeTests {
         Assert.assertEquals("top level path sep is distinct from none", 0, tree.search("/foo").size());
     }
 
+    @Test
+    public void testWildcard() throws TriesTreeLimitExceededException {
+
+        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        tree.addPath("foo/bar#", "foo");
+        System.err.println(tree.toTree(System.lineSeparator()));
+        Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
+        Assert.assertEquals("wildcard should match", 1, tree.search("foo/bar/is/me").size());
+        Assert.assertEquals("wildcard should match", 1, tree.search("foo/baris/me").size());
+        Assert.assertEquals("wildcard should match", 0, tree.search("moo/bar/is/me").size());
+    }
+
+    @Test
+    public void testWildpath() throws TriesTreeLimitExceededException {
+
+        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        tree.addPath("foo/+/is/good", "foo");
+        System.err.println(tree.toTree(System.lineSeparator()));
+        Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
+        Assert.assertEquals("wildcard should match", 1, tree.search("foo/mar/is/good").size());
+        Assert.assertEquals("wildcard should match", 1, tree.search("foo/bar/is/good").size());
+        Assert.assertEquals("wildcard should match", 0, tree.search("foo/bar/is/bad").size());
+    }
+
     public static String generateRandomTopic(int segments){
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < segments; i++){

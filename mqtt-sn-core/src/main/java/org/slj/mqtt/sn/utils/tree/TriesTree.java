@@ -32,9 +32,9 @@ import java.util.regex.Pattern;
  */
 public class TriesTree<T> {
 
-    private int DEFAULT_MAX_PATH_SIZE = 1024 * 10;
-    private int DEFAULT_MAX_PATH_SEGMENTS = 1024;
-    private int DEFAULT_MAX_MEMBERS_AT_LEVEL = 1024 * 10;
+    private static final int DEFAULT_MAX_PATH_SIZE = 1024 * 10;
+    private static final int DEFAULT_MAX_PATH_SEGMENTS = 1024;
+    private static final int DEFAULT_MAX_MEMBERS_AT_LEVEL = 1024 * 10;
 
     private final String pathSplitStr;
     private final String pathSplitRegex;
@@ -60,7 +60,7 @@ public class TriesTree<T> {
     public TriesTree(final String pathSplitRegex, final String pathSplitStr, final boolean selfPruningTree){
         this.pathSplitStr = pathSplitStr;
         this.pathSplitRegex = pathSplitRegex;
-        pattern = Pattern.compile(pathSplitRegex);
+        this.pattern = Pattern.compile(pathSplitRegex);
         this.selfPruningTree = selfPruningTree;
         this.root = new TrieNode<T>( null, null);
     }
@@ -242,7 +242,6 @@ public class TriesTree<T> {
 
     protected String[] split(final String path){
         return pattern.split(path);
-//        return path.split(pathSplitRegex);
     }
 
     class TrieNode<T> {

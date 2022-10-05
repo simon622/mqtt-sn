@@ -77,5 +77,7 @@ public interface IMqttsnRuntimeRegistry {
 
     IMqttsnTopicModifier getTopicModifier();
 
+    IMqttsnMetricsService getMetrics();
+
     List<IMqttsnTrafficListener> getTrafficListeners();
 }

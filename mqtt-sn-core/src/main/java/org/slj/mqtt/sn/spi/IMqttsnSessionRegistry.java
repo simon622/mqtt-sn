@@ -41,7 +41,9 @@ public interface IMqttsnSessionRegistry extends IMqttsnRegistry {
     boolean cleanSession(IMqttsnContext context, boolean deepClean) throws MqttsnException ;
     void clear(IMqttsnSession session, boolean clearNetworking) throws MqttsnException;
     void clear(IMqttsnSession session) throws MqttsnException ;
-    long countActiveSessions();
+
+    long countSessions(MqttsnClientState state) ;
+
     long countTotalSessions();
     boolean hasSession(IMqttsnContext context);
 

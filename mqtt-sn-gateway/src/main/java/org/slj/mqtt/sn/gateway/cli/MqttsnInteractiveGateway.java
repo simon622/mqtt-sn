@@ -38,22 +38,16 @@ import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
-import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;
-import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.NetworkRegistryException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
@@ -171,9 +165,6 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 case STATS:
                     stats();
                     break;
-                case RESET:
-                    resetMetrics();
-                    break;
                 case STATUS:
                     status();
                     break;
@@ -222,31 +213,6 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     protected void reinit() throws MqttsnBackendException {
         getRuntimeRegistry().getBackendService().reinit();
-    }
-
-    @Override
-    protected void resetMetrics() throws IOException {
-        getRuntimeRegistry().getBackendService().clearStats();
-        ((MqttsnGatewaySessionService)getRuntimeRegistry().getGatewaySessionService()).reset();
-        super.resetMetrics();
-    }
-
-    @Override
-    protected void stats() {
-        super.stats();
-
-        if(((MqttsnGatewayOptions)options).isRealtimeMessageCounters()){
-            message(String.format("Peak Send Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getPeakMessageSentPerSecond()));
-            message(String.format("Peak Receive Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getPeakMessageReceivePerSecond()));
-            message(String.format("Current Send Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getCurrentMessageSentPerSecond()));
-            message(String.format("Current Receive Count: %s /ps", ((MqttsnGateway)getRuntimeRegistry().getRuntime()).getCurrentMessageReceivePerSecond()));
-        }
-
-        message(String.format("Expansion Count: %s", ((MqttsnGatewaySessionService)getRuntimeRegistry().getGatewaySessionService()).getExpansionCount()));
-        message(String.format("Last Publish Attempt: %s", ((MqttsnAggregatingGateway)getRuntimeRegistry().getBackendService()).getLastPublishAttempt()));
-        message(String.format("Aggregated Broker Queue: %s message(s)", getRuntimeRegistry().getBackendService().getQueuedCount()));
-        message(String.format("Aggregated Publish Sent: %s message(s)", getRuntimeRegistry().getBackendService().getPublishSentCount()));
-        message(String.format("Aggregated Publish Received: %s message(s)", getRuntimeRegistry().getBackendService().getPublishReceiveCount()));
     }
 
     protected void queue(String topicName, String payload, boolean retained, int qos)
@@ -347,7 +313,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             }
 
             message(String.format("Network registry count: %s", getRuntimeRegistry().getNetworkRegistry().size()));
-            message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count()));
+            message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE)).count()));
             message(String.format("Current sleeping sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.ASLEEP).count()));
             message(String.format("Current disconnected sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.DISCONNECTED).count()));
             message(String.format("Current lost sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.LOST).count()));
@@ -364,7 +330,6 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected MqttsnOptions createOptions() {
         return new MqttsnGatewayOptions().
-                withRealtimeMessageCounters(true).
                 withMaxConnectedClients(100).
                 withGatewayId(101).
                 withContextId(clientId).

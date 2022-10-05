@@ -25,22 +25,17 @@
 package org.slj.mqtt.sn.gateway.impl;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnConnectionStateListener;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.utils.TemporalCounter;
 
 import java.io.IOException;
 import java.util.logging.Level;
 
 public class MqttsnGateway extends AbstractMqttsnRuntime {
-
-    private TemporalCounter sendCounter;
-    private TemporalCounter receiveCounter;
 
     protected void startupServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
 
@@ -57,6 +52,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getQueueProcessor());
         callStartup(runtime.getContextFactory());
         callStartup(runtime.getSessionRegistry());
+        if (runtime.getMetrics() != null) callStartup(runtime.getMetrics());
         if (runtime.getAuthenticationService() != null) callStartup(runtime.getAuthenticationService());
         if (runtime.getAuthorizationService() != null) callStartup(runtime.getAuthorizationService());
 
@@ -90,23 +86,6 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                 logger.log(Level.SEVERE, "error publishing message to backend", e);
             }
         });
-
-        if(((MqttsnGatewayOptions)runtime.getOptions()).isRealtimeMessageCounters()){
-            if(sendCounter == null) {
-                sendCounter = new TemporalCounter("SendCounter", 1000);
-            }
-            if(receiveCounter == null){
-                receiveCounter = new TemporalCounter("ReceiveCounter", 1000);
-            }
-            sendCounter.start();
-            receiveCounter.start();
-            registerPublishSentListener((context, messageId, topicPath, qos, retained, data, message) ->  {
-                sendCounter.increment(1);
-            });
-            registerPublishReceivedListener((context, topicPath, qos, retained, data, message) ->  {
-                receiveCounter.increment(1);
-            });
-        }
 
         registerConnectionListener(new IMqttsnConnectionStateListener() {
             @Override
@@ -142,7 +121,6 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                 }
             }
 
-
             private void notifyCluster(IMqttsnContext context){
                 if(((MqttsnGatewayRuntimeRegistry)registry).getGatewayClusterService() != null){
                     try {
@@ -172,6 +150,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         //-- ensure we stop all the startable services
 
+        if (runtime.getMetrics() != null) callShutdown(runtime.getMetrics());
         if (runtime.getAuthenticationService() != null) callShutdown(runtime.getAuthenticationService());
         if (runtime.getAuthorizationService() != null) callShutdown(runtime.getAuthorizationService());
         callShutdown(runtime.getContextFactory());
@@ -185,11 +164,6 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callShutdown(runtime.getQueueProcessorStateCheckService());
         callShutdown(runtime.getQueueProcessor());
         callShutdown(runtime.getMessageStateService());
-
-        if(((MqttsnGatewayOptions)runtime.getOptions()).isRealtimeMessageCounters()){
-            if(sendCounter != null) sendCounter.stop();
-            if(receiveCounter != null) receiveCounter.stop();
-        }
     }
 
     public boolean handleRemoteDisconnect(IMqttsnContext context) {
@@ -198,26 +172,6 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
     public boolean handleLocalDisconnectError(IMqttsnContext context, Throwable t) {
         return true;
-    }
-
-    public long getPeakMessageSentPerSecond(){
-        if(sendCounter == null) return 0;
-        return sendCounter.getMaxValue();
-    }
-
-    public long getCurrentMessageSentPerSecond(){
-        if(sendCounter == null) return 0;
-        return sendCounter.getLastValue();
-    }
-
-    public long getPeakMessageReceivePerSecond(){
-        if(receiveCounter == null) return 0;
-        return receiveCounter.getMaxValue();
-    }
-
-    public long getCurrentMessageReceivePerSecond(){
-        if(receiveCounter == null) return 0;
-        return receiveCounter.getLastValue();
     }
 
     @Override

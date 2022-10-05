@@ -24,6 +24,28 @@
 
 package org.slj.mqtt.sn.model;
 
-public enum MqttsnClientState {
-    ACTIVE, DISCONNECTED, AWAKE, ASLEEP, LOST
+import java.util.Date;
+import java.util.List;
+
+public interface IMqttsnMetric {
+
+    String getName();
+
+    String getDescription();
+
+    List<MqttsnMetricSample> getSamples(Date from, Date to);
+
+    List<MqttsnMetricSample> getSamples(Date from);
+
+    MqttsnMetricSample getLastSample();
+
+    MqttsnMetricSample getMaxSample();
+
+    MqttsnMetricSample getMinSample();
+
+    Long getTotalValue();
+
+    void putSample(MqttsnMetricSample sample);
+
+    void increment(long by);
 }

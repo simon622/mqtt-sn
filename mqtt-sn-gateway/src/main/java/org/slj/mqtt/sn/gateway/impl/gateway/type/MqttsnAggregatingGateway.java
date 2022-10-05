@@ -58,7 +58,6 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     private Thread publishingThread = null;
     private final Object monitor = new Object();
     private final Queue<BrokerPublishOperation> queue = new LinkedBlockingQueue<>();
-    private volatile Date lastPublishAttempt = null;
     private volatile RateLimiter rateLimiter = null;
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
@@ -191,7 +190,6 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                     if(connection != null && connection.isConnected()) {
                         BrokerPublishOperation op = queue.poll();
                         if(op != null){
-                            lastPublishAttempt = new Date();
                             if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
                                 if(rateLimiter != null) rateLimiter.acquire();
                                 logger.log(Level.FINE, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
@@ -290,10 +288,6 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
         synchronized (monitor){
             monitor.notifyAll();
         }
-    }
-
-    public Date getLastPublishAttempt(){
-        return lastPublishAttempt;
     }
 
     @Override

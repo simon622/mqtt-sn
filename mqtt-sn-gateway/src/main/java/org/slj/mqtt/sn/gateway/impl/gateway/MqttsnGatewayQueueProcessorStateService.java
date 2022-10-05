@@ -46,7 +46,7 @@ public class MqttsnGatewayQueueProcessorStateService extends MqttsnService
     @Override
     public boolean canReceive(IMqttsnContext context) throws MqttsnException {
         IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
-        return session != null && MqttsnUtils.in(session.getClientState() , MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE);
+        return session != null && MqttsnUtils.in(session.getClientState() , MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE);
     }
 
     @Override

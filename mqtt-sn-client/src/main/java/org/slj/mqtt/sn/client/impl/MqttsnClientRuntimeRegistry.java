@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.client.impl;
 
 import org.slj.mqtt.sn.client.spi.IMqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.impl.*;
+import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
@@ -42,6 +43,7 @@ public class MqttsnClientRuntimeRegistry extends AbstractMqttsnRuntimeRegistry i
                 withTopicModifier(new MqttsnDefaultTopicModifier()).
                 withSessionRegistry(new MqttsnSessionRegistry()).
                 withSecurityService(new MqttsnSecurityService()).
+                withMetrics(new MqttsnMetricsService()).
                 withMessageHandler(new MqttsnClientMessageHandler()).
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).
                 withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).

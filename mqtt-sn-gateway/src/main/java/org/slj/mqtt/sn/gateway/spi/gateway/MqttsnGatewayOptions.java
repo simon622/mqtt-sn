@@ -52,11 +52,6 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public static final int DEFAULT_GATEWAY_ADVERTISE_TIME = 60;
 
     /**
-     * Activate the per second message counters
-     */
-    public static final boolean DEFAULT_REALTIME_MESSAGE_COUNTERS = false;
-
-    /**
      * The maximum number of publish operations per second that the gateway will send to the gateway -
      * By default this is disabled and unlimited (0)
      */
@@ -79,7 +74,6 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
 
     private int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
     private int gatewayId = DEFAULT_GATEWAY_ID;
-    private boolean realtimeMessageCounters = DEFAULT_REALTIME_MESSAGE_COUNTERS;
 
     public MqttsnGatewayOptions withMaxBrokerPublishesPerSecond(double maxBrokerPublishesPerSecond){
         this.maxBrokerPublishesPerSecond = maxBrokerPublishesPerSecond;
@@ -99,15 +93,6 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public MqttsnGatewayOptions withGatewayAdvertiseTime(int gatewayAdvertiseTime){
         this.gatewayAdvertiseTime = gatewayAdvertiseTime;
         return this;
-    }
-
-    public MqttsnGatewayOptions withRealtimeMessageCounters(boolean counters){
-        this.realtimeMessageCounters = counters;
-        return this;
-    }
-
-    public boolean isRealtimeMessageCounters() {
-        return realtimeMessageCounters;
     }
 
     public int getGatewayAdvertiseTime() {

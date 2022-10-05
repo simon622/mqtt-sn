@@ -26,7 +26,9 @@ package org.slj.mqtt.sn.utils;
 
 import java.io.Serializable;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * All Topic Names and Topic Filters MUST be at least one character long [MQTT-4.7.3-1] Topic Names and Topic Filters are case sensitive

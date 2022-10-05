@@ -22,8 +22,27 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.impl.metrics;
 
-public enum MqttsnClientState {
-    ACTIVE, DISCONNECTED, AWAKE, ASLEEP, LOST
+import org.slj.mqtt.sn.model.IMqttsnMetric;
+
+public abstract class AbstractMqttsnMetric implements IMqttsnMetric {
+
+    private final String name;
+    private final String description;
+
+    public AbstractMqttsnMetric(String name, String description){
+        this.name = name;
+        this.description = description;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
 }

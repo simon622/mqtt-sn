@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
+import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
@@ -44,6 +46,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         sessionLookup = Collections.synchronizedMap(new HashMap());
+        registerMetrics(runtime);
     }
 
     @Override
@@ -153,10 +156,10 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     }
 
     @Override
-    public long countActiveSessions() {
+    public long countSessions(MqttsnClientState state) {
         synchronized (sessionLookup){
             return sessionLookup.values().stream().filter(s ->
-                    MqttsnUtils.in(s.getClientState(), MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)).count();
+                    s.getClientState() == state).count();
         }
     }
 
@@ -201,5 +204,20 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     public void modifyMaxPacketSize(IMqttsnSession session, int maxPacketSize) {
         getSessionBean(session).setMaxPacketSize(maxPacketSize);
         logger.log(Level.INFO, String.format("setting session-maxPacketSize as '%s' [%s]", maxPacketSize, session));
+    }
+
+    protected void registerMetrics(IMqttsnRuntimeRegistry runtime){
+        if(runtime.getMetrics() != null){
+            runtime.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SESSION_ACTIVE_REGISTRY_COUNT, "A count of the number of sessions marked in the 'ACTIVE' state resident in the runtime.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> countSessions(MqttsnClientState.ACTIVE)));
+            runtime.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SESSION_DISCONNECTED_REGISTRY_COUNT, "A count of the number of sessions marked in the 'DISCONNECTED' state resident in the runtime.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> countSessions(MqttsnClientState.DISCONNECTED)));
+            runtime.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SESSION_LOST_REGISTRY_COUNT, "A count of the number of sessions marked in the 'LOST' state resident in the runtime.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> countSessions(MqttsnClientState.LOST)));
+            runtime.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SESSION_AWAKE_REGISTRY_COUNT, "A count of the number of sessions marked in the 'AWAKE' state resident in the runtime.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> countSessions(MqttsnClientState.ASLEEP)));
+            runtime.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SESSION_ASLEEP_REGISTRY_COUNT, "A count of the number of sessions marked in the 'ASLEEP' state resident in the runtime.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> countSessions(MqttsnClientState.ASLEEP)));
+        }
     }
 }

@@ -24,17 +24,18 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnWaitToken;
+import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MqttsnMessageQueueProcessor
-        extends MqttsnSessionService implements IMqttsnMessageQueueProcessor {
+        extends MqttsnService implements IMqttsnMessageQueueProcessor {
 
     static Logger logger = Logger.getLogger(MqttsnMessageQueueProcessor.class.getName());
 
@@ -157,6 +158,25 @@ public class MqttsnMessageQueueProcessor
         } else {
             //-- no more messages
             return RESULT.REMOVE_PROCESS;
+        }
+    }
+
+    protected IMqttsnSession getSessionFromContext(IMqttsnContext context)
+            throws MqttsnNotFoundException {
+
+        try {
+            if(context == null) throw new NullPointerException("unable to session from <null> context");
+            IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+            if(session == null){
+                throw new MqttsnNotFoundException("no session found for " + context.getId());
+            }
+            return session;
+        }
+        catch(MqttsnNotFoundException e){
+            throw e;
+        }
+        catch(MqttsnException e){
+            throw new MqttsnRuntimeException("error obtaining session", e);
         }
     }
 }

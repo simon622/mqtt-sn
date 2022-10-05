@@ -29,12 +29,8 @@ import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryTopicRegistry;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
-import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;
 import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
@@ -46,10 +42,8 @@ import org.slj.mqtt.sn.utils.TopicPath;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
 
@@ -192,9 +186,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                 case NETWORK:
                     network();
                     break;
-                case RESET:
-                    resetMetrics();
-                    break;
                 case STATUS:
                     status();
                     break;
@@ -242,7 +233,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null && !client.isConnected()){
             try {
-                resetMetrics();
                 client.connect(keepAlive, cleanSession);
                 message("DONE - connect issued successfully, client is connected");
             } catch(MqttsnClientConnectException e){
@@ -258,7 +248,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null && !client.isConnected()){
             try {
-                resetMetrics();
                 client.connect(240, true);
                 message("DONE - quick connect issued successfully, client is connected with clean session and keepAlive 240");
             } catch(MqttsnClientConnectException e){
@@ -405,19 +394,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         }
     }
 
-    @Override
-    public void resetMetrics() throws IOException {
-        super.resetMetrics();
-        if(runtime != null && runtimeRegistry != null){
-            try {
-                MqttsnClient client = (MqttsnClient) getRuntime();
-                runtimeRegistry.getMessageQueue().clear(client.getSessionState());
-            } catch(Exception e){
-                error("error clearing queue;", e);
-            }
-        }
-    }
-
     protected void status() {
         MqttsnClient client = (MqttsnClient) getRuntime();
         message(String.format("Remote Host: %s", hostName));
@@ -452,8 +428,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null && !client.isConnected()){
             try {
-                resetMetrics();
-                Thread.sleep(TEST_PAUSE);
                 connect(true, 60);
                 Thread.sleep(TEST_PAUSE);
                 subscribe(TEST_TOPIC, 2);
@@ -508,7 +482,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         if(state == null) return "N/a";
         switch (state){
             case AWAKE:
-            case CONNECTED:
+            case ACTIVE:
                 return cli_green(state.toString());
             case ASLEEP:
                 return cli_blue(state.toString());

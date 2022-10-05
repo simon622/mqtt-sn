@@ -71,7 +71,7 @@ public class ClientConnectionTest {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
         }
     }
 
@@ -80,9 +80,9 @@ public class ClientConnectionTest {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
         }
     }
 
@@ -91,7 +91,7 @@ public class ClientConnectionTest {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
             client.disconnect();
             assertClientSessionState(client, MqttsnClientState.DISCONNECTED);
         }
@@ -102,7 +102,7 @@ public class ClientConnectionTest {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
             client.sleep(CONNECT_TIMEOUT);
             assertClientSessionState(client, MqttsnClientState.ASLEEP);
         }
@@ -113,7 +113,7 @@ public class ClientConnectionTest {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
             client.sleep(CONNECT_TIMEOUT);
             assertClientSessionState(client, MqttsnClientState.ASLEEP);
             client.wake(15000);
@@ -126,11 +126,11 @@ public class ClientConnectionTest {
         try (MqttsnClient client = new MqttsnClient()) {
             client.start(createClientRuntimeRegistry("testClientId"));
             client.connect(CONNECT_TIMEOUT, true);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
             client.sleep(CONNECT_TIMEOUT);
             assertClientSessionState(client, MqttsnClientState.ASLEEP);
             client.connect(CONNECT_TIMEOUT, false);
-            assertClientSessionState(client, MqttsnClientState.CONNECTED);
+            assertClientSessionState(client, MqttsnClientState.ACTIVE);
         }
     }
 
@@ -156,7 +156,7 @@ public class ClientConnectionTest {
                         client.connect(CONNECT_TIMEOUT, true);
                         final String publishTopic = String.format(TOPIC, client.getClientId());
                         client.subscribe(publishTopic, 2);
-                        assertClientSessionState(client, MqttsnClientState.CONNECTED);
+                        assertClientSessionState(client, MqttsnClientState.ACTIVE);
                         client.publish(publishTopic,2, false,
                                 payload);
                         localLatch.await(MUTLI_CLIENT_LATCH_TIMEOUT, TimeUnit.SECONDS);

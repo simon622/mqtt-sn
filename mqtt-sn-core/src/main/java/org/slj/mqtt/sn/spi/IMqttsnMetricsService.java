@@ -22,8 +22,20 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.spi;
 
-public enum MqttsnClientState {
-    ACTIVE, DISCONNECTED, AWAKE, ASLEEP, LOST
+import org.slj.mqtt.sn.model.IMqttsnMetric;
+
+public interface IMqttsnMetricsService {
+
+    IMqttsnMetric getMetric(String metricName);
+    void registerMetric(IMqttsnMetric metric);
+
+    Long getLatestValue(String metricName);
+
+    Long getMaxValue(String metricName);
+
+    Long getMinValue(String metricName);
+
+    Long getTotalValue(String metricName);
 }

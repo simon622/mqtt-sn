@@ -50,9 +50,6 @@ public abstract class AbstractMqttsnBackendService
         this.options = options;
     }
 
-    protected AtomicInteger publishSentCount = new AtomicInteger();
-    protected AtomicInteger publishReceivedCount = new AtomicInteger();
-
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
@@ -92,9 +89,6 @@ public abstract class AbstractMqttsnBackendService
             throw new MqttsnBackendException("underlying broker connection was not connected");
         }
         PublishResult result = connection.publish(context, topic, qos, retained, payload, message);
-        if(!result.isError()){
-            publishSentCount.incrementAndGet();
-        }
         return result;
     }
 
@@ -132,7 +126,6 @@ public abstract class AbstractMqttsnBackendService
     public void receive(String topicPath, int qos, boolean retained, byte[] payload) {
         registry.getRuntime().async(() -> {
             try {
-                publishReceivedCount.incrementAndGet();
                 getRegistry().getGatewaySessionService().receiveToSessions(topicPath,qos, retained, payload);
             } catch(Exception e){
                 logger.log(Level.SEVERE, "error receiving to sessions;", e);
@@ -143,19 +136,6 @@ public abstract class AbstractMqttsnBackendService
     @Override
     public IMqttsnGatewayRuntimeRegistry getRegistry() {
         return (IMqttsnGatewayRuntimeRegistry) registry;
-    }
-
-    public int getPublishReceiveCount(){
-        return publishReceivedCount.get();
-    }
-
-    public int getPublishSentCount(){
-        return publishSentCount.get();
-    }
-
-    public void clearStats(){
-        publishReceivedCount.set(0);
-        publishSentCount.set(0);
     }
 
     @Override

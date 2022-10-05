@@ -35,7 +35,6 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.*;
 import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
-import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
@@ -49,7 +48,6 @@ import java.util.logging.Level;
 public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadService
         implements IMqttsnGatewaySessionService {
     private static final int MIN_SESSION_MONITOR_CHECK = 30000;
-    private AtomicLong expansionCount = new AtomicLong(0);
 
     protected IMqttsnGatewayRuntimeRegistry getRegistry(){
         return (IMqttsnGatewayRuntimeRegistry) super.getRegistry();
@@ -64,7 +62,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 if(session == null) continue;
 
                 //check keep alive timing
-                if(session.getClientState() == MqttsnClientState.CONNECTED ||
+                if(session.getClientState() == MqttsnClientState.ACTIVE ||
                         session.getClientState() == MqttsnClientState.ASLEEP){
                     long time = System.currentTimeMillis();
                     if(session.getKeepAlive() > 0){
@@ -77,7 +75,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         //This is a condition in case the sender was blocked when it attempted to send a message,
                         //we need something to ensure devices don't get stuck in the stale state (ie. ready to receive with messages
                         //in the queue but noone doing the work - this won't be needed 99% of the time
-                        if(session.getClientState() == MqttsnClientState.CONNECTED){
+                        if(session.getClientState() == MqttsnClientState.ACTIVE){
                             try {
                                 if(getRegistry().getMessageQueue().size(session) > 0){
                                     getRegistry().getMessageStateService().scheduleFlush(session.getContext());
@@ -158,7 +156,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         notifyCluster(session.getContext());
                         getRegistry().getSessionRegistry().cleanSession(session.getContext(), cleanSession);
                         getRegistry().getSessionRegistry().modifyKeepAlive(session, (int) keepAlive);
-                        getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.CONNECTED);
+                        getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.ACTIVE);
                     }
                 }
             }
@@ -329,7 +327,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
     protected ConnectResult checkSessionSize(){
         int maxConnectedClients = ((MqttsnGatewayOptions) registry.getOptions()).getMaxConnectedClients();
-        if(getRegistry().getSessionRegistry().countActiveSessions() >= maxConnectedClients){
+        if(getRegistry().getSessionRegistry().countTotalSessions() >= maxConnectedClients){
             return new ConnectResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION,
                     "gateway has reached capacity");
         }
@@ -381,8 +379,6 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 logger.log(Level.WARNING, String.format("detected subscription issue for session receipt.. ignore client (%s)", context));
             }
         }
-
-        expansionCount.addAndGet(successfulExpansion);
         if(successfulExpansion == 0){
             registry.getMessageRegistry().remove(messageId);
         }
@@ -398,13 +394,5 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     protected String getDaemonName() {
         return "gateway-session";
-    }
-
-    public long getExpansionCount(){
-        return expansionCount.get();
-    }
-
-    public void reset(){
-        expansionCount.set(0);
     }
 }

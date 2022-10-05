@@ -121,7 +121,7 @@ public class MqttsnGatewayMessageHandler
                 if(messageIn != null && MqttsnMessageRules.isTerminalMessage(getRegistry().getCodec(), messageIn) && !messageIn.isErrorMessage() ||
                         messageOut != null && MqttsnMessageRules.isTerminalMessage(getRegistry().getCodec(), messageOut) && !messageOut.isErrorMessage() ){
                     if(MqttsnUtils.in(session.getClientState(),
-                            MqttsnClientState.CONNECTED, MqttsnClientState.AWAKE)) {
+                            MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE)) {
                         if(logger.isLoggable(Level.FINE)){
                             logger.log(Level.FINE, String.format("scheduling flush based on outbound message [%s] -> inflight [%s]", messageOut == null ? messageIn : messageOut,
                                     getRegistry().getMessageStateService().countInflight(context.getMqttsnContext(), IMqttsnOriginatingMessageSource.LOCAL)));
@@ -254,7 +254,7 @@ public class MqttsnGatewayMessageHandler
 
 
         IMqttsnSession session = getActiveSession(context);
-        if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.CONNECTED)){
+        if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.ACTIVE)){
             if(getRegistry().getMessageQueue().size(session) > 0){
                 getRegistry().getMessageStateService().scheduleFlush(context.getMqttsnContext());
             }

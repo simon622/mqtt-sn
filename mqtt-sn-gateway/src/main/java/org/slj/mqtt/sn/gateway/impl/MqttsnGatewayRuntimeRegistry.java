@@ -32,13 +32,13 @@ import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayClusterService;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.impl.*;
+import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
-
     private IMqttsnGatewayAdvertiseService advertiseService;
     private IMqttsnBackendService brokerService;
     private IMqttsnBackendConnectionFactory connectionFactory;
@@ -63,6 +63,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withSessionRegistry(new MqttsnSessionRegistry()).
                 withSecurityService(new MqttsnSecurityService()).
                 withTopicRegistry(new MqttsnInMemoryTopicRegistry()).
+                withMetrics(new MqttsnMetricsService()).
                 withQueueProcessor(new MqttsnMessageQueueProcessor(false)).
                 withQueueProcessorStateCheck(new MqttsnGatewayQueueProcessorStateService()).
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).

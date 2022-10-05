@@ -52,13 +52,7 @@ public interface IMqttsnBackendService {
 
     void reinit() throws MqttsnBackendException;
 
-    int getPublishReceiveCount();
-
-    int getPublishSentCount();
-
     int getQueuedCount();
-
-    void clearStats();
 
     void pokeQueue() throws MqttsnBackendException;
 

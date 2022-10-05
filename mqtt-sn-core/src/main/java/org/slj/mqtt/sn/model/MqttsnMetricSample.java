@@ -24,6 +24,40 @@
 
 package org.slj.mqtt.sn.model;
 
-public enum MqttsnClientState {
-    ACTIVE, DISCONNECTED, AWAKE, ASLEEP, LOST
+import java.util.Comparator;
+
+public class MqttsnMetricSample {
+
+    private final long timestamp;
+    private long longValue;
+    public MqttsnMetricSample(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public MqttsnMetricSample(long timestamp, long value) {
+        this(timestamp);
+        this.longValue = value;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public long getLongValue() {
+        return longValue;
+    }
+
+    public void setLongValue(long longValue) {
+        this.longValue = longValue;
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnMetricSample{" +
+                "timestamp=" + timestamp +
+                ", longValue=" + longValue +
+                '}';
+    }
+
+    public static final Comparator<MqttsnMetricSample> TIMESTAMP = (o1, o2) -> (int) (o1.timestamp - o2.timestamp);
 }

@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.cli;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
@@ -34,33 +35,22 @@ import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
 import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
+import org.slj.mqtt.sn.utils.SystemUtils;
 import org.slj.mqtt.sn.utils.ThreadDump;
 import org.slj.mqtt.sn.utils.TopicPath;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.io.*;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 public abstract class AbstractInteractiveCli {
-
     static final int MAX_ALLOWED_CLIENTID_LENGTH = 255;
     static final String HOSTNAME = "hostName";
     static final String CLIENTID = "clientId";
     static final String PORT = "port";
     static final String PROTOCOL_VERSION = "protocolVersion";
-
-
-    protected final AtomicInteger sentByteCount = new AtomicInteger(0);
-    protected final AtomicInteger receiveByteCount = new AtomicInteger(0);
-    protected final AtomicInteger receiveCount = new AtomicInteger(0);
-    protected final AtomicInteger receivedPublishBytesCount = new AtomicInteger(0);
-    protected final AtomicInteger sentCount = new AtomicInteger(0);
-    protected final AtomicInteger publishedBytesCount = new AtomicInteger(0);
-
     protected boolean colors = false;
     protected boolean useHistory = false;
     protected String hostName;
@@ -114,8 +104,6 @@ public abstract class AbstractInteractiveCli {
 
         runtime.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
-                receiveCount.incrementAndGet();
-                receivedPublishBytesCount.addAndGet(data.length);
                 if(enableOutput) asyncmessage(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] \"%s\"",
                         data.length, topic, context.getId(), new String(data)));
             } catch(Exception e){
@@ -124,8 +112,6 @@ public abstract class AbstractInteractiveCli {
         });
         runtime.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
-                sentCount.incrementAndGet();
-                publishedBytesCount.addAndGet(data.length);
                 if(enableOutput) asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
                         data.length, topic, context.getId(), new String(data)));
             } catch(Exception e){
@@ -137,7 +123,6 @@ public abstract class AbstractInteractiveCli {
 
         runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
             try {
-                sentCount.incrementAndGet();
                 int QoS = runtimeRegistry.getCodec().getQoS(message, true);
                 asyncmessage(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] \"%s\"",
                         retryCount, data.length, topic, QoS, new String(data)));
@@ -145,20 +130,7 @@ public abstract class AbstractInteractiveCli {
                 e.printStackTrace();
             }
         });
-
         message("Adding traffic listeners.. DONE");
-        runtimeRegistry.withTrafficListener(new IMqttsnTrafficListener() {
-            @Override
-            public void trafficSent(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                sentByteCount.addAndGet(data.length);
-            }
-
-            @Override
-            public void trafficReceived(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                receiveByteCount.addAndGet(data.length);
-            }
-        });
-
         message("Runtime successfully initialised.");
     }
 
@@ -306,6 +278,15 @@ public abstract class AbstractInteractiveCli {
         }
     }
 
+    public void message_nochev(String message) {
+        StringBuilder sb = new StringBuilder("\t\t");
+        sb.append(message);
+        synchronized (output){
+            output.println(cli_reset(sb.toString()));
+            lastCursorAsync = false;
+        }
+    }
+
     public void tabmessage(String message) {
         StringBuilder sb = new StringBuilder("\t\t>> ");
         sb.append(message);
@@ -399,16 +380,6 @@ public abstract class AbstractInteractiveCli {
         return "org.slj interactive command line";
     }
 
-    protected void resetMetrics() throws IOException {
-        receivedPublishBytesCount.set(0);
-        sentCount.set(0);
-        receiveCount.set(0);
-        sentByteCount.set(0);
-        receiveByteCount.set(0);
-        publishedBytesCount.set(0);
-        message("Metrics & queue reset");
-    }
-
     protected void predefine(String topicName, int alias) {
         if(runtime != null && runtimeRegistry != null){
             getOptions().getPredefinedTopics().put(topicName, alias);
@@ -419,10 +390,40 @@ public abstract class AbstractInteractiveCli {
     }
 
     protected void stats() {
-        message(String.format("Publish Sent Count: %s messages(s) - (%s bytes) ", sentCount.get(), publishedBytesCount.get()));
-        message(String.format("Publish Receive Count: %s messages(s) - (%s bytes)", receiveCount.get(), receivedPublishBytesCount.get()));
-        message(String.format("Network Bytes Sent: %s byte(s)", sentByteCount.get()));
-        message(String.format("Network Bytes Received: %s byte(s)", receiveByteCount.get()));
+        //-- enabled by metrics
+        if(options.isMetricsEnabled()){
+            IMqttsnMetricsService metricsService = runtimeRegistry.getMetrics();
+            if(metricsService != null){
+                message_nochev("======== Network Stats ========");
+                message_nochev(String.format("Publish Sent Count: %s messages(s)", getValueSafe(metricsService.getTotalValue(IMqttsnMetrics.PUBLISH_MESSAGE_OUT))));
+                message_nochev(String.format("Publish Receive Count: %s messages(s)", getValueSafe(metricsService.getTotalValue(IMqttsnMetrics.PUBLISH_MESSAGE_IN))));
+                message_nochev(String.format("Network Bytes Sent: %s byte(s)", getValueSafe(metricsService.getTotalValue(IMqttsnMetrics.NETWORK_BYTES_OUT))));
+                message_nochev(String.format("Network Bytes Received: %s byte(s)", getValueSafe(metricsService.getTotalValue(IMqttsnMetrics.NETWORK_BYTES_IN))));
+                message_nochev(String.format("Peak Send Count: %s /ps", getValueSafe(metricsService.getMaxValue(IMqttsnMetrics.PUBLISH_MESSAGE_OUT))));
+                message_nochev(String.format("Peak Receive Count: %s /ps", getValueSafe(metricsService.getMaxValue(IMqttsnMetrics.PUBLISH_MESSAGE_IN))));
+                message_nochev(String.format("Current Send Count: %s /ps", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.PUBLISH_MESSAGE_OUT))));
+                message_nochev(String.format("Current Receive Count: %s /ps", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.PUBLISH_MESSAGE_IN))));
+                message_nochev("");
+                message_nochev("======== Session Stats ========");
+                message_nochev(String.format("Current Active Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_ACTIVE_REGISTRY_COUNT))));
+                message_nochev(String.format("Current Asleep Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_ASLEEP_REGISTRY_COUNT))));
+                message_nochev(String.format("Current Awake Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_AWAKE_REGISTRY_COUNT))));
+                message_nochev(String.format("Current Disconnected Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_DISCONNECTED_REGISTRY_COUNT))));
+                message_nochev(String.format("Current Lost Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_LOST_REGISTRY_COUNT))));
+                message_nochev("");
+                message_nochev("======== System Stats ========");
+                message_nochev(String.format("JVM Used Memory: %s", SystemUtils.getMemoryString(getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED)))));
+                message_nochev(String.format("JVM Threads: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_THREADS_USED))));
+            } else {
+                message("metrics disabled by service");
+            }
+        } else {
+            message("metrics disabled by config");
+        }
+    }
+
+    public static long getValueSafe(Long l){
+        return l == null ? 0 : l.longValue();
     }
 
     protected void session(String clientId)
@@ -635,7 +636,7 @@ public abstract class AbstractInteractiveCli {
         if(state == null) return cli_reset("N/a");
         switch(state){
             case AWAKE:
-            case CONNECTED: return cli_green(state.toString());
+            case ACTIVE: return cli_green(state.toString());
             case ASLEEP: return cli_blue(state.toString());
             default: return cli_red(state.toString());
         }

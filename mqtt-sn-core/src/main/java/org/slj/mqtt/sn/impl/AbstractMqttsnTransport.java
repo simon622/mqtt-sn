@@ -243,14 +243,14 @@ public abstract class AbstractMqttsnTransport
     }
 
     private void notifyTrafficReceived(final INetworkContext context, byte[] data, IMqttsnMessage message) {
-        List<IMqttsnTrafficListener> list = getRegistry().getTrafficListeners();
+        List<IMqttsnTrafficListener> list = getRegistry().getRuntime().getTrafficListeners();
         if(list != null && !list.isEmpty()){
             list.forEach(l -> l.trafficReceived(context, data, message));
         }
     }
 
     private void notifyTrafficSent(final INetworkContext context, byte[] data, IMqttsnMessage message) {
-        List<IMqttsnTrafficListener> list = getRegistry().getTrafficListeners();
+        List<IMqttsnTrafficListener> list = getRegistry().getRuntime().getTrafficListeners();
         if(list != null && !list.isEmpty()){
             list.forEach(l -> l.trafficSent(context, data, message));
         }

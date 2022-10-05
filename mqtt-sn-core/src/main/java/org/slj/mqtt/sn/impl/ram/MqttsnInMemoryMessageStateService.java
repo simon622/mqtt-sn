@@ -63,7 +63,7 @@ public class MqttsnInMemoryMessageStateService
                     Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair =
                             inflightMessages.get(context);
                     if(pair != null && pair.getLeft().size() == 0 && pair.getRight().size() == 0){
-                        logger.log(Level.INFO, String.format("removing inflight key for context [%s]", context));
+                        logger.log(Level.FINE, String.format("removing inflight key for context [%s]", context));
                         itr.remove();
                     }
                 } catch(MqttsnException e){

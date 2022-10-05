@@ -173,7 +173,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             synchronized(this){
                 IMqttsnSession state = checkSession(false);
                 if(state == null) return false;
-                return state.getClientState() == MqttsnClientState.CONNECTED;
+                return state.getClientState() == MqttsnClientState.ACTIVE;
             }
         } catch(MqttsnException e){
             logger.log(Level.WARNING, "error checking connection state", e);
@@ -205,7 +205,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             //-- its assumed regardless of being already connected or not, if connect is called
             //-- local state should be discarded
             clearState(cleanSession);
-            if (session.getClientState() != MqttsnClientState.CONNECTED) {
+            if (session.getClientState() != MqttsnClientState.ACTIVE) {
                 startProcessing(false);
                 try {
                     IMqttsnMessage message = registry.getMessageFactory().createConnect(
@@ -214,7 +214,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     MqttsnWaitToken token = registry.getMessageStateService().sendMessage(session.getContext(), message);
                     Optional<IMqttsnMessage> response =
                             registry.getMessageStateService().waitForCompletion(session.getContext(), token);
-                    stateChangeResponseCheck(session, token, response, MqttsnClientState.CONNECTED);
+                    stateChangeResponseCheck(session, token, response, MqttsnClientState.ACTIVE);
 
                     getRegistry().getSessionRegistry().modifyKeepAlive(session, keepAlive);
                     startProcessing(true);
@@ -240,7 +240,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         registry.getWillRegistry().setWillMessage(session, willData);
 
-        if (session.getClientState() == MqttsnClientState.CONNECTED) {
+        if (session.getClientState() == MqttsnClientState.ACTIVE) {
             try {
 
                 //-- topic update first
@@ -530,7 +530,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 if(state != null){
                     try {
                         if (MqttsnUtils.in(state.getClientState(),
-                                MqttsnClientState.CONNECTED, MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)) {
+                                MqttsnClientState.ACTIVE, MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)) {
                             logger.log(Level.INFO, String.format("disconnecting client; deepClean ? [%s], sending remote disconnect ? [%s]", deepClean, sendRemoteDisconnect));
                             if(sendRemoteDisconnect){
                                 IMqttsnMessage message = registry.getMessageFactory().createDisconnect();
@@ -645,7 +645,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                                                 resetErrorState();
                                             }
                                         }
-                                        else if(state.getClientState() == MqttsnClientState.CONNECTED){
+                                        else if(state.getClientState() == MqttsnClientState.ACTIVE){
                                             if(keepAlive > 0){ //-- keepAlive 0 means alive forever, dont bother pinging
                                                 Long lastMessageSent = registry.getMessageStateService().
                                                         getMessageLastSentToContext(state.getContext());
@@ -709,7 +709,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
     private IMqttsnSession checkSession(boolean validateConnected) throws MqttsnException {
         IMqttsnSession session = discoverGatewaySession();
-        if(validateConnected && session.getClientState() != MqttsnClientState.CONNECTED)
+        if(validateConnected && session.getClientState() != MqttsnClientState.ACTIVE)
             throw new MqttsnRuntimeException("client not connected");
         return session;
     }

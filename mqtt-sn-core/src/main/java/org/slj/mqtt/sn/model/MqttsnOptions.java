@@ -192,6 +192,8 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_WORK_QUEUE_BACKPRESSURE = 50000;
 
+    public static final boolean DEFAULT_METRICS_ENABLED = true;
+
     private String contextId;
     private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
     private int transportPublishHandoffThreadCount = DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT;
@@ -223,10 +225,22 @@ public class MqttsnOptions {
     private int congestionWait = DEFAULT_CONGESTION_WAIT;
     private int removeDisconnectedSessionsSeconds = DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS;
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
-
+    private boolean metricsEnabled = DEFAULT_METRICS_ENABLED;
+    private MqttsnSecurityOptions securityOptions;
     private Map<String, Integer> predefinedTopics = new HashMap<>();
     private volatile Map<String, NetworkAddress> networkAddressEntries;
-    private MqttsnSecurityOptions securityOptions;
+
+    /**
+     * Should the metrics system be enabled
+     *
+     * @param metricsEnabled
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_METRICS_ENABLED}
+     */
+    public MqttsnOptions withMetricsEnabled(boolean metricsEnabled) {
+        this.metricsEnabled = metricsEnabled;
+        return this;
+    }
 
     /**
      * How many seconds after a client is last seen should disconnected sessions be removed from
@@ -827,5 +841,9 @@ public class MqttsnOptions {
 
     public int getStateLoopTimeout() {
         return stateLoopTimeout;
+    }
+
+    public boolean isMetricsEnabled() {
+        return metricsEnabled;
     }
 }

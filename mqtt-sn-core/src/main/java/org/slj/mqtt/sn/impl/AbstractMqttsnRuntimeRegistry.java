@@ -48,7 +48,6 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     //-- obtained lazily from the codec --//
     protected IMqttsnMessageFactory factory;
-
     protected IMqttsnCodec codec;
     protected IMqttsnMessageHandler messageHandler;
     protected IMqttsnMessageQueue messageQueue;
@@ -68,6 +67,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnWillRegistry willRegistry;
     protected IMqttsnSecurityService securityService;
     protected IMqttsnTopicModifier topicModifier;
+    protected IMqttsnMetricsService metrics;
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
     public AbstractMqttsnRuntimeRegistry(MqttsnOptions options){
@@ -130,6 +130,18 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      */
     public AbstractMqttsnRuntimeRegistry withQueueProcessorStateCheck(IMqttsnQueueProcessorStateService queueProcessorStateCheckService){
         this.queueProcessorStateCheckService = queueProcessorStateCheckService;
+        return this;
+    }
+
+    /**
+     * NOTE: this is optional
+     * When contributed, the runtime will track various metrics relating to the runtime which can be accessed via the registry
+     *
+     * @param metricsService - The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withMetrics(IMqttsnMetricsService metricsService){
+        this.metrics = metricsService;
         return this;
     }
 
@@ -491,6 +503,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     public IMqttsnTopicModifier getTopicModifier() {
         return topicModifier;
+    }
+
+    @Override
+    public IMqttsnMetricsService getMetrics() {
+        return metrics;
     }
 
     protected void validateOnStartup() throws MqttsnRuntimeException {

@@ -39,7 +39,6 @@ public abstract class AbstractTopicRegistry
         extends AbstractMqttsnSessionBeanRegistry
         implements IMqttsnTopicRegistry {
 
-
     @Override
     public TopicInfo register(IMqttsnSession session, String topicPath) throws MqttsnException {
         Map<String, Integer> map = getRegistrationMapInternal(session, false);

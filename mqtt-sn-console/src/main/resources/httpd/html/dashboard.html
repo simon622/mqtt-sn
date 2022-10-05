@@ -1,0 +1,93 @@
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Dashboard</h5>
+            <p>Using color to add meaning only provides a visual indication, which will not be conveyed to users of assistive technologies – such as screen readers. Ensure that information denoted by the color is either obvious from the content itself (e.g. the visible text), or is included through alternative means, such as additional text hidden with the <code>.visually-hidden</code> class.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <canvas id="myChart1" height="120"></canvas>
+    </div>
+    <div class="col">
+        <canvas id="myChart2" height="120"></canvas>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <canvas class="" id="myChart3" height="120"></canvas>
+    </div>
+    <div class="col">
+        <canvas class="" id="myChart4" height="120"></canvas>
+    </div>
+</div>
+
+
+<script>
+    (function () {
+        'use strict'
+        feather.replace({ 'aria-hidden': 'true' })
+
+        // Graphs
+        createGraph('myChart1');
+        createGraph('myChart2');
+        createGraph('myChart3');
+        createGraph('myChart4');
+
+
+
+        // eslint-disable-next-line no-unused-vars
+
+        function createGraph(id){
+            var ctx = document.getElementById(id)
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [
+                        'Sunday',
+                        'Monday',
+                        'Tuesday',
+                        'Wednesday',
+                        'Thursday',
+                        'Friday',
+                        'Saturday'
+                    ],
+                    datasets: [{
+                        data: [
+                            15339,
+                            21345,
+                            18483,
+                            24003,
+                            23489,
+                            24092,
+                            12034
+                        ],
+                        lineTension: 0,
+                        backgroundColor: 'transparent',
+                        borderColor: '#007bff',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#007bff'
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: false
+                            }
+                        }]
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            })
+        }
+
+    })()
+</script>

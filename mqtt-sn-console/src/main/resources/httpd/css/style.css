@@ -51,10 +51,6 @@ body {
     color: #727272;
 }
 
-.sidebar .nav-link.active {
-    color: #2470dc;
-}
-
 .sidebar .nav-link:hover .feather,
 .sidebar .nav-link.active .feather {
     color: inherit;
@@ -89,7 +85,7 @@ body {
 }
 
 .sidebar .nav-link.active {
-    color: #ffc000; !important;
+    color: rgb(248, 53, 68); !important;
 }
 
 .form-control-dark {
@@ -103,15 +99,31 @@ body {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
 }
 
-.bd-callout-info{
-    border-left-color: #ffc000 !important;
-}
-
 .bd-callout {
     padding: 1.25rem;
     margin-top: 1.25rem;
     margin-bottom: 1.25rem;
     border: 1px solid #e9ecef;
+    border-left-color: rgb(248, 53, 68); !important;
     border-left-width: .25rem;
     border-radius: .25rem;
+}
+
+.bg-dark {
+    background-color: #000 !important;
+}
+
+.navbar-brand {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+    padding-left: .75rem;
+}
+
+.card-chart {
+    padding: 15px;
+}
+
+.card-metric {
+    background-color: #f8f9fa!important;
+    margin-bottom: 5px;
 }

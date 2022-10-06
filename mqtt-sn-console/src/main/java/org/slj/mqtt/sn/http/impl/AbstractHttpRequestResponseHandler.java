@@ -92,19 +92,29 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
                 Html.getErrorMessage(HttpConstants.SC_NOT_FOUND, "Resource Not found"));
     }
 
+    protected void sendRedirect(IHttpRequestResponse request, String resourceUri) throws IOException {
+        try {
+            LOG.log(Level.INFO, String.format("sending client side redirect to [%s]", resourceUri));
+            request.addResponseHeader(HttpConstants.LOCATION_HEADER, resourceUri);
+            request.sendResponseHeaders(HttpConstants.SC_MOVED_TEMPORARILY, 0);
+        } finally {
+            request.commit();
+        }
+    }
+
     protected void writeASCIIResponse(IHttpRequestResponse request, int responseCode, String message) throws IOException {
-        writeResponse(request, responseCode, HttpConstants.PLAIN_MIME_TYPE, message.getBytes(StandardCharsets.UTF_8));
+        writeResponseInternal(request, responseCode, HttpConstants.PLAIN_MIME_TYPE, message.getBytes(StandardCharsets.UTF_8));
     }
 
     protected void writeHTMLResponse(IHttpRequestResponse request, int responseCode, String html) throws IOException {
-        writeResponse(request, responseCode, HttpConstants.HTML_MIME_TYPE, html.getBytes(StandardCharsets.UTF_8));
+        writeResponseInternal(request, responseCode, HttpConstants.HTML_MIME_TYPE, html.getBytes(StandardCharsets.UTF_8));
     }
 
     protected void writeJSONResponse(IHttpRequestResponse request, int responseCode, byte[] bytes) throws IOException {
-        writeResponse(request, responseCode, HttpConstants.JSON_MIME_TYPE, bytes);
+        writeResponseInternal(request, responseCode, HttpConstants.JSON_MIME_TYPE, bytes);
     }
 
-    protected void writeBinaryResponse(IHttpRequestResponse request, int responseCode, String mimeType, InputStream is) throws IOException {
+    protected void writeStreamResponse(IHttpRequestResponse request, int responseCode, String mimeType, InputStream is) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         byte[] buf = new byte[1024];
         int length;
@@ -112,10 +122,10 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
             baos.write(buf, 0, length);
         }
         byte[] bytes = baos.toByteArray();
-        writeResponse(request, responseCode, mimeType, bytes);
+        writeResponseInternal(request, responseCode, mimeType, bytes);
     }
 
-    protected void writeResponse(IHttpRequestResponse request, int responseCode, String mimeType, byte[] bytes) throws IOException {
+    protected void writeResponseInternal(IHttpRequestResponse request, int responseCode, String mimeType, byte[] bytes) throws IOException {
         OutputStream os = null;
         try {
             request.setResponseContentType(mimeType, StandardCharsets.UTF_8);
@@ -124,10 +134,11 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
             os.write(bytes);
         } finally {
             if(os != null) os.close();
+            request.commit();
         }
     }
 
-    protected void writeContentFromResource(IHttpRequestResponse requestResponse, String resourcePath) throws IOException {
+    protected void writeDataFromResource(IHttpRequestResponse requestResponse, String resourcePath) throws IOException {
         InputStream is = loadClasspathResource(resourcePath);
         if (is == null) {
             sendNotFoundResponse(requestResponse);
@@ -135,7 +146,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
             String fileName = HttpUtils.getFileName(resourcePath);
             String ext = HttpUtils.getFileExtension(resourcePath);
             String mimeType = HttpUtils.getMimeTypeFromFileExtension(ext);
-            writeBinaryResponse(requestResponse, HttpConstants.SC_OK, mimeType, is);
+            writeStreamResponse(requestResponse, HttpConstants.SC_OK, mimeType, is);
         }
     }
 

@@ -24,40 +24,21 @@
 
 package org.slj.mqtt.sn.http.impl.handlers;
 
-import org.slj.mqtt.sn.http.HttpUtils;
 import org.slj.mqtt.sn.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.http.impl.AbstractHttpRequestResponseHandler;
 
 import java.io.IOException;
 
-public class AsyncContentHandler extends AbstractHttpRequestResponseHandler {
+public class RenderPageHandler extends AbstractHttpRequestResponseHandler {
 
-    private String[] allowedPages;
-    private String root;
+    protected final String resource;
 
-    public AsyncContentHandler(String root, String... allowedPages){
-        this.allowedPages = allowedPages;
-        this.root = root;
+    public RenderPageHandler(String resourceRoot) {
+        this.resource = resourceRoot;
     }
 
     @Override
-    protected void handleHttpGet(IHttpRequestResponse request) throws IOException {
-        String page = request.getParameter("page");
-        if(in(page, allowedPages)){
-            String filePath = HttpUtils.combinePaths(root, page);
-            writeDataFromResource(request, filePath);
-        }
-        else {
-            sendNotFoundResponse(request);
-        }
-    }
-
-    public static boolean in(String needle, String... haystack){
-        if(haystack == null) return false;
-        if(needle == null) return false;
-        for (int i = 0; i < haystack.length; i++) {
-            if(haystack[i].equals(needle)) return true;
-        }
-        return false;
+    protected void handleHttpGet(IHttpRequestResponse requestResponse) throws IOException {
+        writeDataFromResource(requestResponse, resource);
     }
 }

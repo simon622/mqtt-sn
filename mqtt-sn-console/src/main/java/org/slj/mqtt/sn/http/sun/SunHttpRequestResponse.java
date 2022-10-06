@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.http.sun;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import org.slj.mqtt.sn.http.HttpConstants;
 import org.slj.mqtt.sn.http.impl.HttpRequestResponse;
@@ -31,6 +32,7 @@ import org.slj.mqtt.sn.http.impl.HttpRequestResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.*;
 
 public class SunHttpRequestResponse extends HttpRequestResponse {
 
@@ -52,5 +54,28 @@ public class SunHttpRequestResponse extends HttpRequestResponse {
 
     protected void sendResponseHeadersInternal(int httpCode, int size) throws IOException {
         exchange.sendResponseHeaders(httpCode, size);
+    }
+
+    @Override
+    protected Map<String, String> getRequestHeaders() {
+        Headers headers = exchange.getRequestHeaders();
+        Set<String> s = headers.keySet();
+        Iterator<String> itr = s.iterator();
+        HashMap<String, String> map = new HashMap<>();
+        while(itr.hasNext()){
+            String key = itr.next();
+            String value = headers.getFirst(key);
+            map.put(key, value);
+        }
+        return Collections.unmodifiableMap(map);
+    }
+
+    @Override
+    public void commit() {
+        try {
+            exchange.close();
+        } catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }

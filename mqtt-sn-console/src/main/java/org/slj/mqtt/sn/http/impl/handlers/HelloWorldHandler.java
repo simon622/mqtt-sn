@@ -35,6 +35,6 @@ public class HelloWorldHandler extends AbstractHttpRequestResponseHandler {
 
     @Override
     protected void handleHttpGet(IHttpRequestResponse request) throws IOException {
-        writeHTMLResponse(request, HttpConstants.SC_OK, Html.span("Hello World!", Html.RED, true));
+        writeHTMLResponse(request, HttpConstants.SC_OK, Html.span("Hello World From SLJ MQTT-SN Console!", Html.RED, true));
     }
 }

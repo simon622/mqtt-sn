@@ -1,0 +1,8 @@
+{
+    "providers" : [
+      {
+        "name": "Mqtt-Sn Cloud",
+        "endpointPointUrl" : "https://mqtt-sn.cloud/api/services.json"
+      }
+    ]
+}

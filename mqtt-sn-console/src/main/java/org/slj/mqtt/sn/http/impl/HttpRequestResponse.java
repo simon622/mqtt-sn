@@ -86,8 +86,6 @@ public abstract class HttpRequestResponse implements IHttpRequestResponse {
         sendResponseHeadersInternal(httpCode, responseSize);
     }
 
-    protected abstract void sendResponseHeadersInternal(int httpCode, int size) throws IOException ;
-
     @Override
     public synchronized String getParameter(String key) {
         if(parameters == null){
@@ -105,4 +103,7 @@ public abstract class HttpRequestResponse implements IHttpRequestResponse {
                 ", method=" + method +
                 '}';
     }
+
+    protected abstract void sendResponseHeadersInternal(int httpCode, int size) throws IOException ;
+    protected abstract Map<String, String> getRequestHeaders();
 }

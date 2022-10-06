@@ -24,14 +24,11 @@
 
 package org.slj.mqtt.sn.http.impl.handlers;
 
-import org.slj.mqtt.sn.http.HttpConstants;
 import org.slj.mqtt.sn.http.HttpUtils;
 import org.slj.mqtt.sn.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.http.impl.AbstractHttpRequestResponseHandler;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Level;
 
 public class StaticFileHandler extends AbstractHttpRequestResponseHandler {
 
@@ -47,7 +44,7 @@ public class StaticFileHandler extends AbstractHttpRequestResponseHandler {
         String resourcePath = requestResponse.getContextRelativePath();
         resourcePath = HttpUtils.sanitizePath(resourcePath);
         String filePath = HttpUtils.combinePaths(resourceRoot, resourcePath);
-        writeContentFromResource(requestResponse, filePath);
+        writeDataFromResource(requestResponse, filePath);
     }
 
 

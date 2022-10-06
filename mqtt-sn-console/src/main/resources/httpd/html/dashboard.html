@@ -11,83 +11,97 @@
 
 <div class="row">
     <div class="col">
-        <canvas id="myChart1" height="120"></canvas>
+        <div class="card card-metric">
+            <div class="card-chart">
+                <canvas id="myChart1" height="80"></canvas>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Publish Messages</h6>
+                <p class="card-text">The number of mqtt-sn publish messages sent (egress) and received (ingress) in the time period.</p>
+            </div>
+        </div>
     </div>
     <div class="col">
-        <canvas id="myChart2" height="120"></canvas>
+        <div class="card card-metric">
+            <div class="card-chart">
+                <canvas id="myChart2" height="80"></canvas>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Network Bytes</h6>
+                <p class="card-text">The network traffic over time.</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row">
     <div class="col">
-        <canvas class="" id="myChart3" height="120"></canvas>
+        <div class="card card-metric">
+            <div class="card-chart">
+                <canvas id="myChart3" height="80"></canvas>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Sessions</h6>
+                <p class="card-text">The number of sessions in each state over time.</p>
+            </div>
+        </div>
     </div>
     <div class="col">
-        <canvas class="" id="myChart4" height="120"></canvas>
+        <div class="card card-metric">
+            <div class="card-chart">
+                <canvas id="myChart4" height="80"></canvas>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">Network Registry</h6>
+                <p class="card-text">Number of addresses in the network registry over time.</p>
+            </div>
+        </div>
     </div>
 </div>
 
 
 <script>
-    (function () {
-        'use strict'
-        feather.replace({ 'aria-hidden': 'true' })
 
-        // Graphs
-        createGraph('myChart1');
-        createGraph('myChart2');
-        createGraph('myChart3');
-        createGraph('myChart4');
+    bindChart('myChart1', "/www/html/data.json");
+    bindChart('myChart2', "/www/html/data.json");
+    bindChart('myChart3', "/www/html/data.json");
+    bindChart('myChart4', "/www/html/data.json");
 
-
-
-        // eslint-disable-next-line no-unused-vars
-
-        function createGraph(id){
-            var ctx = document.getElementById(id)
-            var myChart = new Chart(ctx, {
+    function bindChart(e, d){
+        $.getJSON(d, function(data) {
+            var labels = data.series[0].data.map(function(e) {
+                return e[0];
+            });
+            var data = data.series[0].data.map(function(e) {
+                return e[1];
+            });
+            var ctx = document.getElementById(e);
+            var chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [
-                        'Sunday',
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday'
-                    ],
+                    labels: labels,
                     datasets: [{
-                        data: [
-                            15339,
-                            21345,
-                            18483,
-                            24003,
-                            23489,
-                            24092,
-                            12034
-                        ],
-                        lineTension: 0,
-                        backgroundColor: 'transparent',
-                        borderColor: '#007bff',
-                        borderWidth: 4,
-                        pointBackgroundColor: '#007bff'
+                        backgroundColor: 'rgb(129, 198, 2228)',
+                        borderColor: 'rgb(0, 150, 215)',
+                        data: data
                     }]
                 },
                 options: {
+                    responsive: 'true',
                     scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: false
-                            }
-                        }]
+                        x: {
+                            type: 'timeseries',
+                            time: {
+                                unit: 'second'
+                            },
+                            display: false
+                        },
+                        y: {
+                            min: 0
+                        }
                     },
-                    legend: {
-                        display: false
-                    }
                 }
-            })
-        }
-
-    })()
+            });
+        });
+    }
 </script>

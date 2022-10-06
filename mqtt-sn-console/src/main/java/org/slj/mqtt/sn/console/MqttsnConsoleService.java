@@ -24,10 +24,7 @@
 
 package org.slj.mqtt.sn.console;
 
-import org.slj.mqtt.sn.http.impl.handlers.AsyncContentHandler;
-import org.slj.mqtt.sn.http.impl.handlers.AsyncFieldHandler;
-import org.slj.mqtt.sn.http.impl.handlers.HelloWorldHandler;
-import org.slj.mqtt.sn.http.impl.handlers.StaticFileHandler;
+import org.slj.mqtt.sn.http.impl.handlers.*;
 import org.slj.mqtt.sn.http.sun.SunHttpServerBoostrap;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -57,10 +54,11 @@ public class MqttsnConsoleService extends MqttsnService {
             server = new SunHttpServerBoostrap(
                     new InetSocketAddress(hostName, port));
             server.registerContext("/hello", new HelloWorldHandler());
+            server.registerContext("/", new RedirectHandler("./www/html/index.html"));
             server.registerContext("/www", new StaticFileHandler("httpd"));
             server.registerContext("/api", new AsyncFieldHandler());
             server.registerContext("/async", new AsyncContentHandler("httpd/html/",
-                    "dashboard.html", "access.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));
+                    "dashboard.html", "clients.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));
             server.startServer();
             logger.log(Level.INFO, String.format("console server listening..."));
         } catch(Exception e){

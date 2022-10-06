@@ -52,4 +52,6 @@ public interface IHttpRequestResponse {
 
     int getResponseCode();
 
+    void commit();
+
 }

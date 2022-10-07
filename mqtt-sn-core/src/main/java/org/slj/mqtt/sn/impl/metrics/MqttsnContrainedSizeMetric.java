@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * A metric whose sample size is constrained to the number of samples provided by the contructor.
@@ -38,7 +39,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * sample. Operates in FIFO mode.
  */
 public class MqttsnContrainedSizeMetric extends AbstractMqttsnMetric {
-
     final private List<MqttsnMetricSample> samples;
     volatile MqttsnMetricSample minValue;
     volatile MqttsnMetricSample maxValue;
@@ -51,15 +51,20 @@ public class MqttsnContrainedSizeMetric extends AbstractMqttsnMetric {
     }
 
     @Override
-    public List<MqttsnMetricSample> getSamples(Date from, Date to) {
-        //TODO sort the filter
-        return Arrays.asList(getSamplesInternal());
+    public List<MqttsnMetricSample> getSamples(Date from, Date to, int max) {
+        MqttsnMetricSample[] samples = getSamplesInternal(max);
+        List<MqttsnMetricSample> l = Arrays.stream(samples).
+                filter(s -> s.getTimestamp() > from.getTime()).
+                filter(s -> s.getTimestamp() <= to.getTime()).collect(Collectors.toList());
+        return l;
     }
 
     @Override
-    public List<MqttsnMetricSample> getSamples(Date from) {
-        //TODO sort the filter
-        return Arrays.asList(getSamplesInternal());
+    public List<MqttsnMetricSample> getSamples(Date from, int max) {
+        MqttsnMetricSample[] samples = getSamplesInternal(max);
+        List<MqttsnMetricSample> l = Arrays.stream(samples).
+                filter(s -> s.getTimestamp() > from.getTime()).collect(Collectors.toList());
+        return l;
     }
 
     @Override
@@ -85,16 +90,24 @@ public class MqttsnContrainedSizeMetric extends AbstractMqttsnMetric {
         }
     }
 
-    protected MqttsnMetricSample[] getSamplesInternal(){
+    protected MqttsnMetricSample[] getSamplesInternal(int max){
         MqttsnMetricSample[] sortedSamples = samples.toArray(
                 new MqttsnMetricSample[samples.size()]);
         Arrays.sort(sortedSamples, MqttsnMetricSample.TIMESTAMP);
+
+        //0 idx is the oldest -> youngest at end of list
+
+        if(sortedSamples.length > max){
+            MqttsnMetricSample[] arr = new MqttsnMetricSample[max];
+            System.arraycopy(sortedSamples, sortedSamples.length - max, arr, 0, max);
+            sortedSamples = arr;
+        }
         return sortedSamples;
     }
 
     public MqttsnMetricSample getLastSample(){
         if(samples.isEmpty()) return null;
-        return getSamplesInternal()[samples.size() - 1];
+        return getSamplesInternal(1)[samples.size() - 1];
     }
 
     @Override

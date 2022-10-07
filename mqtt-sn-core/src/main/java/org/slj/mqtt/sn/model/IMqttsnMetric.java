@@ -33,9 +33,9 @@ public interface IMqttsnMetric {
 
     String getDescription();
 
-    List<MqttsnMetricSample> getSamples(Date from, Date to);
+    List<MqttsnMetricSample> getSamples(Date from, Date to, int max);
 
-    List<MqttsnMetricSample> getSamples(Date from);
+    List<MqttsnMetricSample> getSamples(Date from, int max);
 
     MqttsnMetricSample getLastSample();
 

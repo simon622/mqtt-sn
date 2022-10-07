@@ -33,14 +33,23 @@ import org.slj.mqtt.sn.spi.MqttsnService;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
 
-public class MqttsnConsoleService extends MqttsnService {
+public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsole{
 
     private SunHttpServerBoostrap server;
+
+    private MqttsnConsoleOptions options;
+
+    public MqttsnConsoleService(MqttsnConsoleOptions options){
+        this.options = options;
+    }
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        startWebServer(8080, "localhost");
+        if(options.isConsoleEnabled()){
+            logger.log(Level.INFO, String.format("starting console service with - %s", options));
+            startWebServer(options);
+        }
     }
 
     @Override
@@ -49,18 +58,22 @@ public class MqttsnConsoleService extends MqttsnService {
         stopWebServer();
     }
 
-    private void startWebServer(int port, String hostName) throws MqttsnException {
+    private void startWebServer(MqttsnConsoleOptions options) throws MqttsnException {
         try {
+
+            logger.log(Level.INFO, String.format("starting console server listening on [%s] -> [%s]", options.getHostName(), options.getConsolePort()));
             server = new SunHttpServerBoostrap(
-                    new InetSocketAddress(hostName, port));
+                    new InetSocketAddress(options.getHostName(), options.getConsolePort()),
+                    options.getServerThreads(), options.getTcpBacklog());
+            server.registerContext("/", new RedirectHandler("./console/html/index.html"));
             server.registerContext("/hello", new HelloWorldHandler());
-            server.registerContext("/", new RedirectHandler("./www/html/index.html"));
-            server.registerContext("/www", new StaticFileHandler("httpd"));
-            server.registerContext("/api", new AsyncFieldHandler());
-            server.registerContext("/async", new AsyncContentHandler("httpd/html/",
+            server.registerContext("/console", new StaticFileHandler("httpd"));
+            server.registerContext("/console/api", new AsyncFieldHandler());
+            server.registerContext("/console/chart", new MqttsnMetricChartHandler(getRegistry()));
+            server.registerContext("/console/async", new AsyncContentHandler("httpd/html/",
                     "dashboard.html", "clients.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));
             server.startServer();
-            logger.log(Level.INFO, String.format("console server listening..."));
+            logger.log(Level.INFO, String.format("console server started..."));
         } catch(Exception e){
             throw new MqttsnException(e);
         }
@@ -74,8 +87,9 @@ public class MqttsnConsoleService extends MqttsnService {
 
     public static void main(String[] args) {
         try {
-            MqttsnConsoleService console = new MqttsnConsoleService();
-            console.startWebServer(8080, "localhost");
+            MqttsnConsoleOptions options = new MqttsnConsoleOptions();
+            MqttsnConsoleService console = new MqttsnConsoleService(options);
+            console.startWebServer(options);
         } catch(Exception e){
             throw new RuntimeException(e);
         }

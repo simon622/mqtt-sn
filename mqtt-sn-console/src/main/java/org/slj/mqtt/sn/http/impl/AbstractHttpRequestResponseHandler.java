@@ -68,7 +68,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
                 LOG.log(Level.SEVERE, String.format("error sending internal server error request!", ex));
             }
         } finally {
-            LOG.log(Level.INFO, String.format("request [%s] [%s] (%s) -> [%s] done in [%s]",
+            LOG.log(Level.FINE, String.format("request [%s] [%s] (%s) -> [%s] done in [%s]",
                     httpRequestResponse.getHttpRequestUri(), httpRequestResponse.getContextPath(),
                     httpRequestResponse.getContextRelativePath(), httpRequestResponse.getResponseCode(), System.currentTimeMillis() - start));
         }
@@ -90,6 +90,11 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     protected void sendNotFoundResponse(IHttpRequestResponse request) throws IOException {
         writeHTMLResponse(request, HttpConstants.SC_NOT_FOUND,
                 Html.getErrorMessage(HttpConstants.SC_NOT_FOUND, "Resource Not found"));
+    }
+
+    protected void sendBadRequestResponse(IHttpRequestResponse request, String message) throws IOException {
+        writeHTMLResponse(request, HttpConstants.SC_BAD_REQUEST,
+                Html.getErrorMessage(HttpConstants.SC_BAD_REQUEST, message));
     }
 
     protected void sendRedirect(IHttpRequestResponse request, String resourceUri) throws IOException {
@@ -151,7 +156,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected InputStream loadClasspathResource(String resource) {
-        LOG.log(Level.INFO, String.format("loading resource from path " + resource));
+        LOG.log(Level.FINE, String.format("loading resource from path " + resource));
         return StaticFileHandler.class.getClassLoader().getResourceAsStream(resource);
     }
 }

@@ -418,16 +418,19 @@ public abstract class AbstractMqttsnRuntime {
         if(registry.getMetrics() != null){
 
             //-- snapshot metrics are self-managed
-            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, "The amount of memory available to the virtual machine.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, 30 * IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> SystemUtils.getUsedMemory()));
+            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, "The amount of memory available to the virtual machine (kb).",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> SystemUtils.getUsedMemoryKb()));
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_THREADS_USED, "The number of threads in the virtual machine.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, 30 * IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> SystemUtils.getThreadCount()));
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> SystemUtils.getThreadCount()));
+            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, "The number of entries in the network registry.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
 
             //-- these require managing externally
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN, "The number of mqtt-sn publish messages received (ingress) in the time period.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT, "The number of mqtt-sn publish messages sent (egress) in the time period.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.NETWORK_BYTES_IN, "The number of network bytes received (ingress) in the time period.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.NETWORK_BYTES_OUT, "The number of network bytes sent (egress) in the time period.",
@@ -436,7 +439,7 @@ public abstract class AbstractMqttsnRuntime {
             registerPublishReceivedListener((context, topicPath, qos, retained, data, message) ->
                     registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).increment(1));
 
-            registerPublishReceivedListener((context, topicPath, qos, retained, data, message) ->
+            registerPublishSentListener((context, messageId, topicPath, qos, retained, data, message) ->
                     registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT).increment(1));
             registerTrafficListener(new IMqttsnTrafficListener() {
                 @Override

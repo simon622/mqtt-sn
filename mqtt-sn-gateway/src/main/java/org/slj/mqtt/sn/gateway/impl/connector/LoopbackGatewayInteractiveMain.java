@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.gateway.impl.connector;
 
+import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
+import org.slj.mqtt.sn.console.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -53,7 +55,9 @@ public class LoopbackGatewayInteractiveMain {
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(
                         MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
 
-                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
+                ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
+
+                return MqttsnGatewayRuntimeRegistry.defaultConfiguration((MqttsnGatewayOptions)options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport());

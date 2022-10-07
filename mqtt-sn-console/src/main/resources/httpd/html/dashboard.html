@@ -13,7 +13,7 @@
     <div class="col">
         <div class="card card-metric">
             <div class="card-chart">
-                <canvas id="myChart1" height="80"></canvas>
+                <canvas id="publishMetrics" height="80"></canvas>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Publish Messages</h6>
@@ -24,11 +24,11 @@
     <div class="col">
         <div class="card card-metric">
             <div class="card-chart">
-                <canvas id="myChart2" height="80"></canvas>
+                <canvas id="networkMetrics" height="80"></canvas>
             </div>
             <div class="card-body">
-                <h6 class="card-title">Network Bytes</h6>
-                <p class="card-text">The network traffic over time.</p>
+                <h6 class="card-title">Network</h6>
+                <p class="card-text">Network statistics plotted over time.</p>
             </div>
         </div>
     </div>
@@ -38,7 +38,7 @@
     <div class="col">
         <div class="card card-metric">
             <div class="card-chart">
-                <canvas id="myChart3" height="80"></canvas>
+                <canvas id="sessionMetrics" height="80"></canvas>
             </div>
             <div class="card-body">
                 <h6 class="card-title">Sessions</h6>
@@ -49,59 +49,65 @@
     <div class="col">
         <div class="card card-metric">
             <div class="card-chart">
-                <canvas id="myChart4" height="80"></canvas>
+                <canvas id="systemMetrics" height="80"></canvas>
             </div>
             <div class="card-body">
-                <h6 class="card-title">Network Registry</h6>
-                <p class="card-text">Number of addresses in the network registry over time.</p>
+                <h6 class="card-title">System</h6>
+                <p class="card-text">System metrics.</p>
             </div>
         </div>
     </div>
 </div>
 
-
 <script>
 
-    bindChart('myChart1', "/www/html/data.json");
-    bindChart('myChart2', "/www/html/data.json");
-    bindChart('myChart3', "/www/html/data.json");
-    bindChart('myChart4', "/www/html/data.json");
+    bindChart('publishMetrics', "/console/chart?chartId=");
+    bindChart('networkMetrics', "/console/chart?chartId=");
+    bindChart('sessionMetrics', "/console/chart?chartId=");
+    bindChart('systemMetrics', "/console/chart?chartId=");
 
-    function bindChart(e, d){
-        $.getJSON(d, function(data) {
-            var labels = data.series[0].data.map(function(e) {
-                return e[0];
-            });
-            var data = data.series[0].data.map(function(e) {
-                return e[1];
-            });
-            var ctx = document.getElementById(e);
-            var chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        backgroundColor: 'rgb(129, 198, 2228)',
-                        borderColor: 'rgb(0, 150, 215)',
-                        data: data
-                    }]
-                },
-                options: {
-                    responsive: 'true',
-                    scales: {
-                        x: {
-                            type: 'timeseries',
-                            time: {
-                                unit: 'second'
-                            },
-                            display: false
-                        },
-                        y: {
-                            min: 0
-                        }
-                    },
-                }
-            });
+    function bindChart(el, d){
+
+        var maxEntries = 500;
+        var updateTime = 10000;
+
+        $.getJSON(d + el, function(chartConfig) {
+            var ctx = document.getElementById(el).getContext("2d");
+            var chart = new Chart(ctx, chartConfig);
+            var epoch = Date.now();
+            setInterval(function(){
+                $.getJSON(d + el + "&requestType=update&epoch=" + epoch, function (update){
+                    console.log(JSON.stringify(update));
+                    if(update.labels.length > 0){
+                        update.labels.forEach((label) => {
+                            chart.data.labels.push(label)
+                        });
+                        chart.data.datasets.forEach((dataset, i) => {
+                            // console.log("["+i+"] array ? ["+Array.isArray(update.data[i])+"] pushing " + JSON.stringify(update.data[i]));
+                            Array.prototype.push.apply(dataset.data, update.data[i]);
+                        });
+                    } else {
+                        console.log("nothing to update with");
+                    }
+
+                    if(chart.data.labels.length > maxEntries){
+                        removeData(chart, update.labels.length);
+                    }
+                    chart.update();
+                });
+                epoch = Date.now();
+            },updateTime);
         });
     }
+
+    function removeData(chart, count) {
+        for (let i = 0; i < count; i++) {
+            chart.data.labels.shift();
+            chart.data.datasets.forEach((dataset) => {
+                dataset.data.shift();
+            });
+        }
+        chart.update();
+    }
+
 </script>

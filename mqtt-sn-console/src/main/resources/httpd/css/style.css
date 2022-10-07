@@ -1,3 +1,10 @@
+:root {
+    --primary-color: #244992;
+    --secondary-color: #d3dbe9;
+    --primary-background-color: #f8f9fa;
+    --secondary-background-color: #ffffff;
+}
+
 body {
     font-size: .875rem;
 }
@@ -85,7 +92,7 @@ body {
 }
 
 .sidebar .nav-link.active {
-    color: rgb(248, 53, 68); !important;
+    color: var(--primary-color); !important;
 }
 
 .form-control-dark {
@@ -104,8 +111,8 @@ body {
     margin-top: 1.25rem;
     margin-bottom: 1.25rem;
     border: 1px solid #e9ecef;
-    border-left-color: rgb(248, 53, 68); !important;
-    border-left-width: .25rem;
+    border-left-color: var(--primary-color); !important;
+    border-left-width: 2.25rem;
     border-radius: .25rem;
 }
 
@@ -124,6 +131,24 @@ body {
 }
 
 .card-metric {
-    background-color: #f8f9fa!important;
+    background-color: var(--secondary-background-color) !important;
     margin-bottom: 5px;
+}
+
+.nav-pills .nav-link {
+    border-radius: 0 !important;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    background-color: var(--secondary-color);
+}
+
+.form-control-dark {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .7);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+he1, h2, h3, h4, h5, h6 {
+    color: var(--primary-color) !important;
 }

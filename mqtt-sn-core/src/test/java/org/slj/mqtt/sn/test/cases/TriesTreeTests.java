@@ -88,7 +88,7 @@ public class TriesTreeTests {
 
         TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addPath("/", "foo");
-        Assert.assertEquals("first level is a token", 1, tree.search("/").size());
+        Assert.assertEquals("first level is a token", 1, tree.searchMembers("/").size());
     }
 
     @Test
@@ -99,8 +99,8 @@ public class TriesTreeTests {
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 2 distinct branches", 2, tree.getBranchCount());
-        Assert.assertEquals("top level path sep is distinct from none", 1, tree.search("/foo").size());
-        Assert.assertEquals("top level path sep is distinct from none", 1, tree.search("foo").size());
+        Assert.assertEquals("top level path sep is distinct from none", 1, tree.searchMembers("/foo").size());
+        Assert.assertEquals("top level path sep is distinct from none", 1, tree.searchMembers("foo").size());
     }
 
     @Test
@@ -111,9 +111,9 @@ public class TriesTreeTests {
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 2 distinct branches", 1, tree.getBranchCount());
-        Assert.assertEquals("top level path sep is distinct from none", 1, tree.search("foo/").size());
-        Assert.assertEquals("top level path sep is distinct from none", 1, tree.search("foo").size());
-        Assert.assertEquals("top level path sep is distinct from none", 0, tree.search("/foo").size());
+        Assert.assertEquals("top level path sep is distinct from none", 1, tree.searchMembers("foo/").size());
+        Assert.assertEquals("top level path sep is distinct from none", 1, tree.searchMembers("foo").size());
+        Assert.assertEquals("top level path sep is distinct from none", 0, tree.searchMembers("/foo").size());
     }
 
     @Test
@@ -123,9 +123,9 @@ public class TriesTreeTests {
         tree.addPath("foo/bar#", "foo");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
-        Assert.assertEquals("wildcard should match", 1, tree.search("foo/bar/is/me").size());
-        Assert.assertEquals("wildcard should match", 1, tree.search("foo/baris/me").size());
-        Assert.assertEquals("wildcard should match", 0, tree.search("moo/bar/is/me").size());
+        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/bar/is/me").size());
+        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/baris/me").size());
+        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("moo/bar/is/me").size());
     }
 
     @Test
@@ -135,9 +135,9 @@ public class TriesTreeTests {
         tree.addPath("foo/+/is/good", "foo");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
-        Assert.assertEquals("wildcard should match", 1, tree.search("foo/mar/is/good").size());
-        Assert.assertEquals("wildcard should match", 1, tree.search("foo/bar/is/good").size());
-        Assert.assertEquals("wildcard should match", 0, tree.search("foo/bar/is/bad").size());
+        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/mar/is/good").size());
+        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/bar/is/good").size());
+        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("foo/bar/is/bad").size());
     }
 
     public static String generateRandomTopic(int segments){

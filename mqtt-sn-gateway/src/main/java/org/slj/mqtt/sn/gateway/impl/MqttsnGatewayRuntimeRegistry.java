@@ -24,13 +24,13 @@
 
 package org.slj.mqtt.sn.gateway.impl;
 
+import org.slj.mqtt.sn.console.IMqttsnConsole;
+import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
+import org.slj.mqtt.sn.console.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayAdvertiseService;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayClusterService;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
+import org.slj.mqtt.sn.gateway.spi.gateway.*;
 import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
 import org.slj.mqtt.sn.impl.ram.*;
@@ -44,12 +44,13 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     private IMqttsnBackendConnectionFactory connectionFactory;
     private IMqttsnGatewaySessionService sessionService;
     private IMqttsnGatewayClusterService clusterService;
+    private IMqttsnConsole console;
 
     public MqttsnGatewayRuntimeRegistry(MqttsnOptions options){
         super(options);
     }
 
-    public static MqttsnGatewayRuntimeRegistry defaultConfiguration(MqttsnOptions options){
+    public static MqttsnGatewayRuntimeRegistry defaultConfiguration(MqttsnGatewayOptions options){
         final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry) new MqttsnGatewayRuntimeRegistry(options).
                 withGatewaySessionService(new MqttsnGatewaySessionService()).
                 withGatewayAdvertiseService(new MqttsnGatewayAdvertiseService()).
@@ -69,11 +70,22 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).
                 withAuthenticationService(new MqttsnGatewayAuthenticationService()).
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
+
+        MqttsnConsoleOptions consoleOptions = options.getConsoleOptions();
+        if(consoleOptions != null &&
+                consoleOptions.isConsoleEnabled()){
+            registry.withConsole(new MqttsnConsoleService(consoleOptions));
+        }
         return registry;
     }
 
     public MqttsnGatewayRuntimeRegistry withGatewayClusterService(IMqttsnGatewayClusterService clusterService){
         this.clusterService = clusterService;
+        return this;
+    }
+
+    public MqttsnGatewayRuntimeRegistry withConsole(IMqttsnConsole console){
+        this.console = console;
         return this;
     }
 
@@ -120,6 +132,11 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     @Override
     public IMqttsnGatewayClusterService getGatewayClusterService() {
         return clusterService;
+    }
+
+    @Override
+    public IMqttsnConsole getConsole() {
+        return console;
     }
 
     @Override

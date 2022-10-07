@@ -38,8 +38,8 @@ public class SystemUtils {
         }
     }
 
-    public static long getUsedMemory(){
-        long used = getTotalMemory() - getFreeMemory();
+    public static long getUsedMemoryKb(){
+        long used = (getTotalMemory() - getFreeMemory()) / 1024;
         return used;
     }
 

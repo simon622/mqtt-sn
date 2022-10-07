@@ -137,9 +137,19 @@ public class TriesTree<T> {
         }
     }
 
-    public Set<T> search(final String path){
+    public Set<T> searchMembers(final String path){
         String[] segments = split(path);
-        return searchTree(root, segments);
+        return searchTreeForMembers(root, segments);
+    }
+
+    public Set<String> searchStringPrefix(String prefix){
+//        String[] segments = split(prefix);
+        final HashSet<String> paths = new HashSet<>();
+        visitChildren(root, node -> {
+            String name = node.getPathSegment();
+
+        });
+        return paths;
     }
 
     public static void visitChildren(TriesTree.TrieNode node, Visitor visitor) {
@@ -159,7 +169,7 @@ public class TriesTree<T> {
         }
     }
 
-    protected Set<T> searchTree(TrieNode<T> node, String[] segments){
+    protected Set<T> searchTreeForMembers(TrieNode<T> node, String[] segments){
 
         if(node == null) throw new NullPointerException("cannot search a null node");
         Set<T> merged = new HashSet<>();
@@ -184,7 +194,7 @@ public class TriesTree<T> {
                         String[] remainingSegments =
                                 Arrays.copyOfRange(segments, i, segments.length - 1);
                         //recurse point
-                        Set<T> wildMembers = searchTree(wild, remainingSegments);
+                        Set<T> wildMembers = searchTreeForMembers(wild, remainingSegments);
                         if(wildMembers != null && !wildMembers.isEmpty()){
                             merged.addAll(wildMembers);
                         }
@@ -301,6 +311,10 @@ public class TriesTree<T> {
 
         public boolean isRoot(){
             return isRoot;
+        }
+
+        public String getPathSegment(){
+            return pathSegment;
         }
 
         public void removeChild(TrieNode node){

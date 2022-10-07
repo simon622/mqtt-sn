@@ -66,6 +66,11 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
             callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewayAdvertiseService());
         }
 
+        if(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole() != null){
+            callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole());
+        }
+
+        //-- start transport
         callStartup(runtime.getTransport());
 
         //-- notify the backend of confirmed message

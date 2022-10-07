@@ -53,7 +53,7 @@ public class SunHttpHandlerProxy implements HttpHandler  {
         HttpConstants.METHOD method = HttpConstants.METHOD.valueOf(requestMethod);
         SunHttpRequestResponse sunHttpRequestResponse =
                 new SunHttpRequestResponse(method, requestURI, contextPath, exchange);
-        printRequestInfo(exchange);
+//        printRequestInfo(exchange);
         handler.handleRequest(sunHttpRequestResponse);
     }
 

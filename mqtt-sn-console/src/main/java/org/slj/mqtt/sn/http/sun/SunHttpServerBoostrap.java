@@ -47,16 +47,16 @@ public class SunHttpServerBoostrap {
     private ThreadPoolExecutor threadPoolExecutor;
     private volatile boolean running = false;
 
-    public SunHttpServerBoostrap(InetSocketAddress bindAddress) throws IOException {
+    public SunHttpServerBoostrap(InetSocketAddress bindAddress, int tcpBacklog, int threads) throws IOException {
         this.bindAddress = bindAddress;
-        init();
+        init(tcpBacklog, threads);
     }
 
-    public synchronized void init() throws IOException {
+    public synchronized void init(int tcpBacklog, int threads) throws IOException {
         if(!running && server == null){
-            LOG.log(Level.INFO, String.format("bootstrapping sun-http-server to [%s]", bindAddress));
-            server = HttpServer.create(bindAddress, 0);
-            threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+            LOG.log(Level.INFO, String.format("bootstrapping sun-http-server to [%s], threads=%s, tcpBacklog=%s", bindAddress, threads, tcpBacklog));
+            server = HttpServer.create(bindAddress, tcpBacklog);
+            threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
             server.setExecutor(threadPoolExecutor);
         }
     }

@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
+import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 
 import java.util.HashSet;
@@ -74,6 +75,13 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
 
     private int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
     private int gatewayId = DEFAULT_GATEWAY_ID;
+
+    private MqttsnConsoleOptions consoleOptions;
+
+    public MqttsnGatewayOptions withConsoleOptions(MqttsnConsoleOptions consoleOptions){
+        this.consoleOptions = consoleOptions;
+        return this;
+    }
 
     public MqttsnGatewayOptions withMaxBrokerPublishesPerSecond(double maxBrokerPublishesPerSecond){
         this.maxBrokerPublishesPerSecond = maxBrokerPublishesPerSecond;
@@ -132,6 +140,10 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public MqttsnGatewayOptions withMaxBackendQueueSize(int maxBackendQueueSize){
         this.maxBackendQueueSize = maxBackendQueueSize;
         return this;
+    }
+
+    public MqttsnConsoleOptions getConsoleOptions() {
+        return consoleOptions;
     }
 
     public void withPerformanceProfile(MqttsnGatewayPerformanceProfile profile){

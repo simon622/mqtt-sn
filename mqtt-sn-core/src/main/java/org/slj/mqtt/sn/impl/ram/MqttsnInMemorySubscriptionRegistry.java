@@ -64,7 +64,7 @@ public class MqttsnInMemorySubscriptionRegistry
     }
 
     protected Set<IMqttsnContext> matchFromTree(String topicPath) throws MqttsnException {
-        return tree.search(topicPath);
+        return tree.searchMembers(topicPath);
     }
 
     @Override

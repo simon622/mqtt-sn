@@ -29,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
@@ -53,9 +54,10 @@ public class SubscriptionTests {
 
     @Before
     public void setup() throws MqttsnException {
-        runtime = new MqttsnTestRuntime();
+        MqttsnFilesystemStorageService storageService = new MqttsnFilesystemStorageService();
         MqttsnTestRuntimeRegistry registry =
-                MqttsnTestRuntimeRegistry.defaultConfiguration(MqttsnTestRuntime.TEST_OPTIONS, false);
+                MqttsnTestRuntimeRegistry.defaultConfiguration(storageService, MqttsnTestRuntime.TEST_OPTIONS, false);
+        runtime = new MqttsnTestRuntime();
         runtime.start(registry);
     }
 

@@ -444,12 +444,12 @@ public abstract class AbstractMqttsnRuntime {
             registerTrafficListener(new IMqttsnTrafficListener() {
                 @Override
                 public void trafficSent(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                    registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_IN).increment(data.length);
+                    registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_OUT).increment(data.length);
                 }
 
                 @Override
                 public void trafficReceived(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                    registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_OUT).increment(data.length);
+                    registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_IN).increment(data.length);
                 }
             });
         }

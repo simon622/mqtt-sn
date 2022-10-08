@@ -27,8 +27,6 @@ package org.slj.mqtt.sn.gateway.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.impl.gateway.MqttsnGatewaySessionService;
-import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
@@ -37,10 +35,10 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
@@ -52,14 +50,9 @@ import java.util.*;
 
 public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
-    static final String LISTEN_PORT = "listenPort";
-    static final String USERNAME = "username";
-    static final String PASSWORD = "password";
-
-    protected String username;
-    protected String password;
-
-    protected int listenPort = MqttsnUdpOptions.DEFAULT_LOCAL_PORT;
+    protected static final String LISTEN_PORT = "listenPort";
+    protected static final String USERNAME = "username";
+    protected static final String PASSWORD = "password";
 
     protected boolean needsBroker;
 
@@ -265,11 +258,9 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     protected void status()
             throws IOException, MqttsnException {
-        MqttsnGatewayOptions opts = (MqttsnGatewayOptions) getOptions();
-        MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = (MqttsnGatewayRuntimeRegistry) getRuntimeRegistry();
+        MqttsnGatewayOptions opts = (MqttsnGatewayOptions) runtimeRegistry.getOptions();
         if(runtime != null) {
-
-            boolean connected = gatewayRuntimeRegistry.getBackendService().isConnected(null);
+            boolean connected = getRuntimeRegistry().getBackendService().isConnected(null);
 
             int maxClients = opts.getMaxConnectedClients();
             int advertiseTime = opts.getGatewayAdvertiseTime();
@@ -278,8 +269,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message(String.format("Gateway Id: %s", opts.getGatewayId()));
             message(String.format("Advertise Interval: %s", advertiseTime));
 
-            if(gatewayRuntimeRegistry.getTransport() instanceof AbstractMqttsnUdpTransport){
-                MqttsnUdpOptions udpOptions = ((AbstractMqttsnUdpTransport)gatewayRuntimeRegistry.getTransport()).getUdpOptions();
+            if(getRuntimeRegistry().getTransport() instanceof AbstractMqttsnUdpTransport){
+                MqttsnUdpOptions udpOptions = ((AbstractMqttsnUdpTransport)getRuntimeRegistry().getTransport()).getUdpOptions();
                 message(String.format("Host: %s", udpOptions.getHost()));
                 message(String.format("Datagram port: %s", udpOptions.getPort()));
                 message(String.format("Secure port: %s", udpOptions.getSecurePort()));
@@ -287,12 +278,12 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 message(String.format("MTU: %s", udpOptions.getMtu()));
             }
 
-            message(String.format("Max message size: %s", getOptions().getMaxProtocolMessageSize()));
+            message(String.format("Max message size: %s", runtimeRegistry.getOptions().getMaxProtocolMessageSize()));
             message(String.format("Max connected clients: %s", maxClients));
             message(String.format("Message registry size: %s", getRuntimeRegistry().getMessageRegistry().size()));
 
-            if (getOptions() != null) {
-                Map<String, Integer> pTopics = getOptions().getPredefinedTopics();
+            if (runtimeRegistry.getOptions() != null) {
+                Map<String, Integer> pTopics = runtimeRegistry.getOptions().getPredefinedTopics();
                 if(pTopics != null){
                     message(String.format("Predefined topic count: %s", pTopics.size()));
                     Iterator<String> itr = pTopics.keySet().iterator();
@@ -309,7 +300,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             while(sessionItr.hasNext()){
                 IMqttsnSession session = sessionItr.next();
                 allState.add(session);
-                queuedMessages += gatewayRuntimeRegistry.getMessageQueue().size(session);
+                queuedMessages += getRuntimeRegistry().getMessageQueue().size(session);
             }
 
             message(String.format("Network registry count: %s", getRuntimeRegistry().getNetworkRegistry().size()));
@@ -328,22 +319,24 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     @Override
-    protected MqttsnOptions createOptions() {
-        return new MqttsnGatewayOptions().
-                withMaxConnectedClients(100).
+    protected MqttsnOptions createOptions(IMqttsnStorageService storageService) {
+        MqttsnGatewayOptions options = new MqttsnGatewayOptions();
+        options.withMaxConnectedClients(100).
                 withGatewayId(101).
-                withContextId(clientId).
+                withContextId(storageService.getStringPreference(CLIENTID, null)).
                 withMaxMessagesInQueue(100).
                 withRemoveDisconnectedSessionsSeconds(60 * 60).
                 withTransportProtocolHandoffThreadCount(20).
                 withQueueProcessorThreadCount(2).
                 withMinFlushTime(5);
+        return options;
     }
 
+
     @Override
-    protected IMqttsnTransport createTransport() {
+    protected IMqttsnTransport createTransport(IMqttsnStorageService storageService) {
         MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().
-                withPort(listenPort);
+                withPort(storageService.getIntegerPreference(LISTEN_PORT, null));
         return new MqttsnUdpBatchTransport(udpOptions, 2048);
     }
 
@@ -354,17 +347,20 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(IMqttsnStorageService storageService) throws Exception {
+        super.start(storageService);
         if(needsBroker){
-            message(String.format("Attempting to connect to backend broker at %s:%s...", hostName, port));
+            message(String.format("Attempting to connect to backend broker at %s:%s...",
+                    storageService.getStringPreference(HOSTNAME, null),
+                    storageService.getIntegerPreference(PORT, null)));
         }
         try {
             getRuntime().start(getRuntimeRegistry(), false);
             if(needsBroker){
                 message("Successfully connected to broker, TCP/IP connection active.");
             }
-            message(String.format("Gateway listening for datagram traffic on port %s", listenPort));
+            message(String.format("Gateway listening for datagram traffic on port %s",
+                    storageService.getIntegerPreference(LISTEN_PORT, null)));
         } catch(Exception e){
             message(cli_red("Unable to connect to broker"));
             message("Please check the connection details supplied");
@@ -373,45 +369,37 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     }
 
     @Override
-    protected void configure() throws IOException {
-        super.configure();
-        listenPort = captureMandatoryInt(input, output, "Please enter the local listen port", null);
+    protected void captureSettings() throws MqttsnException {
+        super.captureSettings();
+        storageService.setIntegerPreference(LISTEN_PORT,
+                captureMandatoryInt(input, output, "(B) Please enter the local listen port", null));
         if(needsBroker){
-            username = captureString(input, output, "Please enter a valid username for you broker connection");
-            password = captureString(input, output,  "Please enter a valid password for you broker connection");
+            storageService.setStringPreference(USERNAME,
+                    captureString(input, output, "(B) Please enter a valid username for you broker connection"));
+            storageService.setStringPreference(PASSWORD,
+                    captureString(input, output,  "(B) Please enter a valid password for you broker connection"));
         }
     }
 
-    @Override
-    protected void loadConfigHistory(Properties props) throws IOException {
-        super.loadConfigHistory(props);
-        if(needsBroker){
-            username = props.getProperty(USERNAME);
-            password = props.getProperty(PASSWORD);
-        }
-        String listenPortStr = props.getProperty(LISTEN_PORT);
-        if(listenPortStr != null){
-            try {
-                listenPort = Integer.valueOf(listenPortStr);
-            } catch(Exception e){
-            }
-        }
-    }
-
-    @Override
-    protected void saveConfigHistory(Properties props) {
-        super.saveConfigHistory(props);
-        if(needsBroker){
-            props.setProperty(USERNAME, username);
-            props.setProperty(PASSWORD, password);
-        }
-        props.setProperty(LISTEN_PORT, String.valueOf(listenPort));
-    }
-
-    @Override
-    protected String getPropertyFileName() {
-        return "gateway.properties";
-    }
+//    @Override
+//    protected void loadFromSettings() throws MqttsnException {
+//        super.loadFromSettings();
+//        if(needsBroker){
+//            username = getRuntimeRegistry().getStorageService().getStringPreference(USERNAME, null);
+//            password = getRuntimeRegistry().getStorageService().getStringPreference(PASSWORD, null);
+//        }
+//        listenPort = getRuntimeRegistry().getStorageService().getIntegerPreference(LISTEN_PORT, null);
+//    }
+//
+//    @Override
+//    protected void saveToSettings() throws MqttsnException {
+//        super.saveToSettings();
+//        if(needsBroker){
+//            getRuntimeRegistry().getStorageService().setStringPreference(USERNAME, username);
+//            getRuntimeRegistry().getStorageService().setStringPreference(PASSWORD, password);
+//        }
+//        getRuntimeRegistry().getStorageService().setIntegerPreference(LISTEN_PORT, listenPort);
+//    }
 
     @Override
     protected boolean needsHostname() {

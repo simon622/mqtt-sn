@@ -49,7 +49,7 @@ public class OpenConnectionTestMain {
         for(int i = 0; i < 1500; i++){
             try {
                 MqttsnClient client = createClient(host, port);
-                client.connect(2400, true);
+                client.connect(60, true);
                 client.subscribe("foo", 2);
                 Thread.sleep(10);
                 client.stop();

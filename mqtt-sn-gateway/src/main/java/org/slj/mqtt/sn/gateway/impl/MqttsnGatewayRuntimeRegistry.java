@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.gateway.impl;
 
 import org.slj.mqtt.sn.console.IMqttsnConsole;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
-import org.slj.mqtt.sn.console.MqttsnConsoleService;
+import org.slj.mqtt.sn.console.impl.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
@@ -36,6 +36,7 @@ import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
@@ -46,12 +47,12 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     private IMqttsnGatewayClusterService clusterService;
     private IMqttsnConsole console;
 
-    public MqttsnGatewayRuntimeRegistry(MqttsnOptions options){
-        super(options);
+    public MqttsnGatewayRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options){
+        super(storageService, options);
     }
 
-    public static MqttsnGatewayRuntimeRegistry defaultConfiguration(MqttsnGatewayOptions options){
-        final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry) new MqttsnGatewayRuntimeRegistry(options).
+    public static MqttsnGatewayRuntimeRegistry defaultConfiguration(IMqttsnStorageService storageService, MqttsnGatewayOptions options){
+        final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry) new MqttsnGatewayRuntimeRegistry(storageService, options).
                 withGatewaySessionService(new MqttsnGatewaySessionService()).
                 withGatewayAdvertiseService(new MqttsnGatewayAdvertiseService()).
                 withMessageHandler(new MqttsnGatewayMessageHandler()).

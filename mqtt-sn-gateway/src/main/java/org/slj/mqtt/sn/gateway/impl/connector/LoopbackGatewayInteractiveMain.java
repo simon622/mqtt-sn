@@ -25,7 +25,6 @@
 package org.slj.mqtt.sn.gateway.impl.connector;
 
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
-import org.slj.mqtt.sn.console.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -35,32 +34,38 @@ import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayPerformanceProfile;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
 public class LoopbackGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
-            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
+            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
+
                 MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions(){
                     @Override
                     public boolean validConnectionDetails() {
                         return true;
                     }
                 };
-                brokerOptions.withHost(hostName).
-                        withPort(port).
-                        withUsername(username).
-                        withPassword(password);
-                options.withMaxMessagesInflight(1000);
-                ((MqttsnGatewayOptions)options).withPerformanceProfile(
-                        MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
 
+                if(needsBroker){
+                    String hostName = storageService.getStringPreference(HOSTNAME, null);
+                    String password = storageService.getStringPreference(PASSWORD, null);
+                    String username = storageService.getStringPreference(USERNAME, null);
+                    Integer port = storageService.getIntegerPreference(PORT, null);
+                    brokerOptions.withHost(hostName).
+                            withPort(port).
+                            withUsername(username).
+                            withPassword(password);
+                }
+
+                ((MqttsnGatewayOptions)options).withPerformanceProfile(MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
-
-                return MqttsnGatewayRuntimeRegistry.defaultConfiguration((MqttsnGatewayOptions)options).
+                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions)options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
-                        withTransport(createTransport());
+                        withTransport(createTransport(storageService));
 
             }
         }, false, "Welcome to the loopback gateway. This version does NOT use a backend broker, instead brokering MQTT messages itself as a loopback to connected devices.");

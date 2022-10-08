@@ -68,10 +68,13 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnSecurityService securityService;
     protected IMqttsnTopicModifier topicModifier;
     protected IMqttsnMetricsService metrics;
+    protected IMqttsnStorageService storageService;
+
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
-    public AbstractMqttsnRuntimeRegistry(MqttsnOptions options){
+    public AbstractMqttsnRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options){
         this.options = options;
+        this.storageService = storageService;
     }
 
     @Override
@@ -510,7 +513,13 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return metrics;
     }
 
+    @Override
+    public IMqttsnStorageService getStorageService() {
+        return storageService;
+    }
+
     protected void validateOnStartup() throws MqttsnRuntimeException {
+        if(storageService == null) throw new MqttsnRuntimeException("storage service must be found for a valid runtime");
         if(networkAddressRegistry == null) throw new MqttsnRuntimeException("network-registry must be bound for valid runtime");
         if(messageStateService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
         if(transport == null) throw new MqttsnRuntimeException("transport must be bound for valid runtime");

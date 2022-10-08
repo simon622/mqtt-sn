@@ -29,7 +29,6 @@ import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -40,7 +39,7 @@ import java.util.UUID;
 public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable, IMqttsnQueuedPublishMessage {
 
     private PublishData data;
-    private Date created;
+    private long created;
     private int retryCount;
     private UUID messageId;
     private int packetId;
@@ -50,7 +49,7 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
     }
 
     public MqttsnQueuedPublishMessageImpl(UUID messageId, PublishData data) {
-        this.created = new Date();
+        this.created = System.currentTimeMillis();
         this.messageId = messageId;
         this.data = data;
         this.retryCount = 0;
@@ -103,7 +102,7 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
                 '}';
     }
 
-    public Date getCreated() {
+    public long getCreated() {
         return created;
     }
 
@@ -118,7 +117,8 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
     @Override
     public int compareTo(Object o) {
         if(o instanceof MqttsnQueuedPublishMessageImpl){
-            return created.compareTo(((MqttsnQueuedPublishMessageImpl)o).getCreated());
+            return (int) (created - ((MqttsnQueuedPublishMessageImpl)o).getCreated());
+//            return created.compareTo(((MqttsnQueuedPublishMessageImpl)o).getCreated());
         }
         return 0;
     }

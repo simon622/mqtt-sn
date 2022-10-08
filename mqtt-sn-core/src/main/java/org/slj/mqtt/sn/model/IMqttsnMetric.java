@@ -37,6 +37,8 @@ public interface IMqttsnMetric {
 
     List<MqttsnMetricSample> getSamples(Date from, int max);
 
+    List<MqttsnMetricSample> getSamples(Date from);
+
     MqttsnMetricSample getLastSample();
 
     MqttsnMetricSample getMaxSample();

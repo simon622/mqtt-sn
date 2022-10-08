@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.gateway.cli;
 
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
+
 import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.logging.LogManager;
@@ -36,8 +38,7 @@ public class MqttsnInteractiveGatewayLauncher {
             PrintStream output = System.out;
             interactiveGateway.init(needsBroker, input, output);
             interactiveGateway.welcome(welcome);
-            interactiveGateway.configureWithHistory();
-            interactiveGateway.start();
+            interactiveGateway.start(new MqttsnFilesystemStorageService("mqtt-sn-gateway-config.xml"));
             interactiveGateway.command();
             interactiveGateway.exit();
         } catch (Exception e) {

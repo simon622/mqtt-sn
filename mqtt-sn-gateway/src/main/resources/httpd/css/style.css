@@ -1,0 +1,164 @@
+:root {
+    --primary-color: #244992;
+    --secondary-color: #d3dbe9;
+    --primary-background-color: #f8f9fa;
+    --secondary-background-color: #ffffff;
+}
+
+body {
+    font-size: .875rem;
+}
+
+.feather {
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+/*
+ * Sidebar
+ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    /* rtl:raw:
+    right: 0;
+    */
+    bottom: 0;
+    /* rtl:remove */
+    left: 0;
+    z-index: 100; /* Behind the navbar */
+    padding: 48px 0 0; /* Height of navbar */
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        top: 5rem;
+    }
+}
+
+.sidebar-sticky {
+    position: relative;
+    top: 0;
+    height: calc(100vh - 48px);
+    padding-top: .5rem;
+    overflow-x: hidden;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+}
+
+.sidebar .nav-link .feather {
+    margin-right: 4px;
+    color: #727272;
+}
+
+.sidebar .nav-link:hover .feather,
+.sidebar .nav-link.active .feather {
+    color: inherit;
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+/*
+ * Navbar
+ */
+
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    font-size: 1rem;
+    background-color: rgba(0, 0, 0, .25);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar .navbar-toggler {
+    top: .25rem;
+    right: 1rem;
+}
+
+.navbar .form-control {
+    padding: .75rem 1rem;
+    border-width: 0;
+    border-radius: 0;
+}
+
+.sidebar .nav-link.active {
+    color: var(--primary-color); !important;
+}
+
+.form-control-dark {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+.form-control-dark:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+}
+
+.bd-callout {
+    padding: 1.25rem;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #e9ecef;
+    border-left-color: var(--primary-color); !important;
+    border-left-width: 2.25rem;
+    border-radius: .25rem;
+}
+
+.bg-dark {
+    background-color: #000 !important;
+}
+
+.navbar-brand {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+    padding-left: .75rem;
+}
+
+.card-chart {
+    padding: 15px;
+}
+
+.card-metric {
+    background-color: var(--secondary-background-color) !important;
+    margin-bottom: 5px;
+}
+
+.nav-pills .nav-link {
+    border-radius: 0 !important;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    background-color: var(--secondary-color);
+}
+
+.form-control-dark {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .7);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-color) !important;
+}
+
+.dropdown-menu[data-bs-popper] {
+    margin-top: 0px;
+    margin-left: 12px;
+    background-color: var(--primary-background-color);
+}
+.dropdown-menu {
+    --bs-dropdown-border-radius: 0rem;
+    --bs-dropdown-border-width: 0px;
+}

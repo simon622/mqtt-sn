@@ -27,13 +27,12 @@ package org.slj.mqtt.sn.model.session;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 
-import java.util.Date;
 import java.util.UUID;
 
 public interface IMqttsnQueuedPublishMessage {
 
     PublishData getData();
-    Date getCreated();
+    long getCreated();
     int getRetryCount();
     UUID getMessageId();
     int getPacketId();

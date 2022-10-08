@@ -24,8 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.cli;
 
-import java.io.IOException;
-import java.util.Properties;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
 public abstract class MqttsnInteractiveGatewayWithKeystore extends MqttsnInteractiveGateway {
 
@@ -35,49 +34,48 @@ public abstract class MqttsnInteractiveGatewayWithKeystore extends MqttsnInterac
     static final String CERTIFICATE_LOCATION = "certificateLocation";
     static final String PRIVATEKEY_LOCATION = "privateKeyLocation";
 
-    protected String keystoreLocation;
-    protected String certificateLocation;
-    protected String privateKeyLocation;
-    protected String keyStorePassword;
-    protected String keyPassword;
-
+//    protected String keystoreLocation;
+//    protected String certificateLocation;
+//    protected String privateKeyLocation;
+//    protected String keyStorePassword;
+//    protected String keyPassword;
 
     @Override
-    protected void configure() throws IOException {
-        super.configure();
-        keystoreLocation = captureFilePath(input, output, "Please enter the file location of your keystore (leave blank for certs & keys)");
-        if(keystoreLocation != null){
-            keyStorePassword = captureString(input, output,  "Please enter the keystore password");
+    protected void captureSettings() throws MqttsnException {
+        super.captureSettings();
+        storageService.setStringPreference(KEYSTORE_LOCATION,
+                captureFilePath(input, output, "Please enter the file location of your keystore (leave blank for certs & keys)"));
+        if(storageService.getStringPreference(KEYSTORE_LOCATION, null) == null){
+            storageService.setStringPreference(KEYSTORE_PASSWORD,
+                    captureString(input, output,  "Please enter the keystore password"));
         }
         else {
-            certificateLocation = captureFilePath(input, output,  "Please enter the file location of your certificate");
-            privateKeyLocation = captureFilePath(input, output,  "Please enter the file location of your private key");
+            storageService.setStringPreference(CERTIFICATE_LOCATION,
+                    captureFilePath(input, output, "Please enter the file location of your certificate"));
+            storageService.setStringPreference(PRIVATEKEY_LOCATION,
+                    captureFilePath(input, output, "Please enter the file location of your private key"));
+            storageService.setStringPreference(KEY_PASSWORD,
+                    captureFilePath(input, output, "Please enter the private key password"));
         }
-        keyPassword = captureMandatoryString(input, output,  "Please enter the private key password");
     }
 
-    @Override
-    protected void loadConfigHistory(Properties props) throws IOException {
-        super.loadConfigHistory(props);
-        keystoreLocation = props.getProperty(KEYSTORE_LOCATION);
-        keyStorePassword = props.getProperty(KEYSTORE_PASSWORD);
-        keyPassword = props.getProperty(KEY_PASSWORD);
-        privateKeyLocation = props.getProperty(PRIVATEKEY_LOCATION);
-        certificateLocation = props.getProperty(CERTIFICATE_LOCATION);
-    }
-
-    @Override
-    protected void saveConfigHistory(Properties props) {
-        super.saveConfigHistory(props);
-        if(keystoreLocation != null)  props.setProperty(KEYSTORE_LOCATION, keystoreLocation);
-        if(keyStorePassword != null)   props.setProperty(KEYSTORE_PASSWORD, keyStorePassword);
-        if(keyPassword != null)  props.setProperty(KEY_PASSWORD, keyPassword);
-        if(privateKeyLocation != null) props.setProperty(PRIVATEKEY_LOCATION, privateKeyLocation);
-        if(certificateLocation != null) props.setProperty(CERTIFICATE_LOCATION, certificateLocation);
-    }
-
-    @Override
-    protected String getPropertyFileName() {
-        return "gateway-keystore.properties";
-    }
+//    @Override
+//    protected void loadFromSettings() throws MqttsnException {
+//        super.loadFromSettings();
+//        keystoreLocation = getRuntimeRegistry().getStorageService().getStringPreference(KEYSTORE_LOCATION, null);
+//        keyStorePassword = getRuntimeRegistry().getStorageService().getStringPreference(KEYSTORE_PASSWORD, null);
+//        keyPassword = getRuntimeRegistry().getStorageService().getStringPreference(KEY_PASSWORD, null);
+//        privateKeyLocation = getRuntimeRegistry().getStorageService().getStringPreference(PRIVATEKEY_LOCATION, null);
+//        certificateLocation = getRuntimeRegistry().getStorageService().getStringPreference(CERTIFICATE_LOCATION, null);
+//    }
+//
+//    @Override
+//    protected void saveToSettings() throws MqttsnException {
+//        super.saveToSettings();
+//        getRuntimeRegistry().getStorageService().setStringPreference(KEYSTORE_LOCATION, keystoreLocation);
+//        getRuntimeRegistry().getStorageService().setStringPreference(KEYSTORE_PASSWORD, keyStorePassword);
+//        getRuntimeRegistry().getStorageService().setStringPreference(KEY_PASSWORD, keyPassword);
+//        getRuntimeRegistry().getStorageService().setStringPreference(PRIVATEKEY_LOCATION, privateKeyLocation);
+//        getRuntimeRegistry().getStorageService().setStringPreference(CERTIFICATE_LOCATION, certificateLocation);
+//    }
 }

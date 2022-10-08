@@ -67,6 +67,13 @@ public class MqttsnContrainedSizeMetric extends AbstractMqttsnMetric {
         return l;
     }
 
+    public List<MqttsnMetricSample> getSamples(Date from) {
+        MqttsnMetricSample[] samples = getSamplesInternal(Integer.MAX_VALUE);
+        List<MqttsnMetricSample> l = Arrays.stream(samples).
+                filter(s -> s.getTimestamp() > from.getTime()).collect(Collectors.toList());
+        return l;
+    }
+
     @Override
     public void putSample(MqttsnMetricSample sample) {
 

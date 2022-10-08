@@ -192,6 +192,9 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_WORK_QUEUE_BACKPRESSURE = 50000;
 
+    /**
+     * Whether metrics will be collected at runtime
+     */
     public static final boolean DEFAULT_METRICS_ENABLED = true;
 
     private String contextId;
@@ -229,6 +232,8 @@ public class MqttsnOptions {
     private MqttsnSecurityOptions securityOptions;
     private Map<String, Integer> predefinedTopics = new HashMap<>();
     private volatile Map<String, NetworkAddress> networkAddressEntries;
+
+
 
     /**
      * Should the metrics system be enabled
@@ -702,6 +707,7 @@ public class MqttsnOptions {
         this.securityOptions = securityOptions;
         return this;
     }
+
 
     public Map<String, NetworkAddress> getNetworkAddressEntries() {
         return networkAddressEntries;

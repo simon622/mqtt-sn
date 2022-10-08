@@ -31,6 +31,7 @@ import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -53,6 +54,8 @@ public class ClientConnectionTest {
     static final byte[] PAYLOAD = new byte[]{0x01,0x02,0x03};
 
     protected MqttsnClientRuntimeRegistry createClientRuntimeRegistry(String clientId){
+
+        MqttsnFilesystemStorageService storageService = new MqttsnFilesystemStorageService();
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
         MqttsnOptions options = new MqttsnOptions().
                 withNetworkAddressEntry("gatewayId",
@@ -61,7 +64,7 @@ public class ClientConnectionTest {
                 withMaxWait(60000).
                 withPredefinedTopic("my/example/topic/1", 1);
 
-        return (MqttsnClientRuntimeRegistry) MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+        return (MqttsnClientRuntimeRegistry) MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                 withTransport(new MqttsnUdpTransport(udpOptions)).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
     }

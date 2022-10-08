@@ -29,29 +29,32 @@ import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
 public class PahoGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
-            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
+            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
 
+                int port = storageService.getIntegerPreference(PORT, null);
                 MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
-                        withHost(hostName).
+                        withHost(storageService.getStringPreference(HOSTNAME, null)).
                         withPort(port).
-                        withUsername(username).
-                        withPassword(password);
+                        withUsername(storageService.getStringPreference(USERNAME, null)).
+                        withPassword(storageService.getStringPreference(PASSWORD, null));
 
                 if(port == MqttsnBackendOptions.DEFAULT_MQTT_TLS_PORT){
                     brokerOptions.withProtocol(MqttsnBackendOptions.DEFAULT_MQTT_TLS_PROTOCOL);
                 }
 
-                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
+                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
                         withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
-                        withTransport(createTransport());
+                        withTransport(createTransport(storageService));
 
             }
         }, true, "Welcome to the PAHO custom-broker version of the gateway. You will need to connect your gateway to your MQTT broker using a client connection host, port, username, password & clientId.");

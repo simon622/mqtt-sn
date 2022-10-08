@@ -30,14 +30,13 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnTrafficListener;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.UUID;
@@ -47,6 +46,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Example {
     public static void main(String[] args) throws Exception {
+
+        MqttsnFilesystemStorageService filesystemStorageService =
+                new MqttsnFilesystemStorageService();
 
         //-- use the client transport options, which will use random unallocated local ports
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
@@ -62,7 +64,7 @@ public class Example {
 
         //-- using a default configuration for the controllers will just work out of the box, alternatively
         //-- you can supply your own implementations to change underlying storage or business logic as is required
-        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(filesystemStorageService, options).
                 withTransport(new MqttsnUdpTransport(udpOptions)).
                 //-- select the codec you wish to use, support for SN 1.2 is standard or you can nominate your own
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);

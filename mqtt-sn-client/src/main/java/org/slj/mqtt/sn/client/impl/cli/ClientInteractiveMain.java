@@ -28,16 +28,13 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
-import org.slj.mqtt.sn.net.MqttsnUdpOptions;
-import org.slj.mqtt.sn.net.MqttsnUdpTransport;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
 public class ClientInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
-            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
-
+            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
 
                 /*
                 MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
@@ -47,7 +44,7 @@ public class ClientInteractiveMain {
                 */
                 options.withMaxMessagesInQueue(100000);
                 options.withMaxMessagesInflight(1000);
-                AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+                AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                         withTransport(transport).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

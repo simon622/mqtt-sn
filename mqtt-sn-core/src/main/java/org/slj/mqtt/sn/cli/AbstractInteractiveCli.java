@@ -39,28 +39,30 @@ import org.slj.mqtt.sn.utils.SystemUtils;
 import org.slj.mqtt.sn.utils.ThreadDump;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.io.*;
-import java.net.UnknownHostException;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
 public abstract class AbstractInteractiveCli {
-    static final int MAX_ALLOWED_CLIENTID_LENGTH = 255;
-    static final String HOSTNAME = "hostName";
-    static final String CLIENTID = "clientId";
-    static final String PORT = "port";
-    static final String PROTOCOL_VERSION = "protocolVersion";
+    protected static final int MAX_ALLOWED_CLIENTID_LENGTH = 255;
+    protected static final String HOSTNAME = "hostName";
+    protected static final String CLIENTID = "clientId";
+    protected static final String PORT = "port";
+    protected static final String PROTOCOL_VERSION = "protocolVersion";
     protected boolean colors = false;
     protected boolean useHistory = false;
-    protected String hostName;
-    protected int port;
-    protected String clientId;
-    protected int protocolVersion = 1;
 
-    protected MqttsnOptions options;
+//    protected String hostName;
+//    protected Integer port;
+//    protected String clientId;
+//    protected Integer protocolVersion = 1;
+
     protected AbstractMqttsnRuntimeRegistry runtimeRegistry;
     protected AbstractMqttsnRuntime runtime;
+    protected IMqttsnStorageService storageService;
 
     protected PrintStream output;
     protected Scanner input;
@@ -74,19 +76,16 @@ public abstract class AbstractInteractiveCli {
         colors = !System.getProperty("os.name").contains("Windows");
     }
 
-    public void start() throws Exception {
-        if(input == null || output == null) throw new IllegalStateException("no init");
-        message(String.format("Starting up interactive CLI with clientId=%s, protocolVersion=%s", clientId, protocolVersion));
-        if(useHistory){
-            saveConfig();
-        }
-
-        message(String.format("Creating runtime configuration.. DONE"));
-        options = createOptions();
+    public void start(IMqttsnStorageService storageService) throws Exception {
+        if(input == null || output == null || storageService == null) throw new IllegalStateException("no init");
+        this.storageService = storageService;
         message(String.format("Creating runtime registry.. DONE"));
-        runtimeRegistry = createRuntimeRegistry(options, createTransport());
-        IMqttsnCodec codec = createCodec();
+        runWizard();
+        MqttsnOptions options = createOptions(storageService);
+        runtimeRegistry = createRuntimeRegistry(storageService, options, createTransport(storageService));
+        IMqttsnCodec codec = createCodec(storageService);
         runtimeRegistry.withCodec(codec);
+        message(String.format("Starting up interactive CLI with clientId=%s", options.getContextId()));
         message(String.format("Creating runtime with codec version.. %s", codec.getProtocolVersion()));
         if(options.getSecurityOptions() != null){
             message(String.format("Creating security configuration.. DONE"));
@@ -101,7 +100,6 @@ public abstract class AbstractInteractiveCli {
         }
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
-
         runtime.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
                 if(enableOutput) asyncmessage(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] \"%s\"",
@@ -164,98 +162,70 @@ public abstract class AbstractInteractiveCli {
         }
     }
 
-    protected void configure() throws IOException {
+    public void runWizard() throws MqttsnException {
+        String clientId = storageService.getStringPreference(CLIENTID, null);
+        boolean useWizard = clientId == null;
+        if(!useWizard) {
+            useWizard = !captureMandatoryBoolean(input, output,
+                            String.format("I managed to load clientId=%s profile from history, would you like to use it?", clientId));
+        }
+        if(useWizard){
+            captureSettings();
+        }
+    }
+
+    protected void captureSettings() throws MqttsnException {
         if(needsHostname()){
+            String hostName;
             do{
                 hostName = captureMandatoryString(input, output, "Please enter a valid host name or ip address");
-            } while(!validHost());
+            } while(!validHost(hostName));
+            storageService.setStringPreference(HOSTNAME, hostName);
         }
 
         if(needsPort()){
-            port = captureMandatoryInt(input, output, "Please enter a remote port", null);
+            storageService.setIntegerPreference(PORT,
+                    captureMandatoryInt(input, output, "Please enter a remote port", null));
         }
 
         if(needsClientId()){
+            String clientId;
             do{
                 clientId = captureString(input, output,  "Please enter a valid client or gateway Id");
-            } while(!validClientId(MAX_ALLOWED_CLIENTID_LENGTH));
+            } while(!validClientId(clientId, MAX_ALLOWED_CLIENTID_LENGTH));
+            storageService.setStringPreference(CLIENTID, clientId);
         }
 
+        int protocolVersion;
         do{
             protocolVersion = captureMandatoryInt(input, output,  "Please enter a protocol version (1 for 1.2 or 2 for 2.0)", new int[] {1, 2});
-        } while(!validProtocolVersion());
+        } while(!validProtocolVersion(protocolVersion));
+        storageService.setIntegerPreference(PROTOCOL_VERSION, protocolVersion);
     }
 
-    public void configureWithHistory() throws IOException {
-        boolean useConfig = false;
-        useHistory = true;
-        if(loadConfig()){
-            if(configOk()){
-                useConfig = captureMandatoryBoolean(input, output,
-                        String.format("I managed to load clientId=%s profile from history, would you like to use it?",
-                                clientId));
-            }
-        }
+//    protected void loadFromSettings() throws MqttsnException {
+//        hostName = storageService.getStringPreference(HOSTNAME, null);
+//        port = storageService.getIntegerPreference(PORT, null);
+//        protocolVersion = storageService.getIntegerPreference(PROTOCOL_VERSION, null);
+//        clientId = storageService.getStringPreference(CLIENTID, null);
+//    }
+//
+//    protected void saveToSettings() throws MqttsnException {
+//        storageService.setStringPreference(HOSTNAME, hostName);
+//        storageService.setIntegerPreference(PORT, port);
+//        storageService.setIntegerPreference(PROTOCOL_VERSION, protocolVersion);
+//        storageService.setStringPreference(CLIENTID, clientId);
+//    }
 
-        if(!useConfig){
-            configure();
-        }
-    }
-
-    protected boolean configOk(){
-        if(needsHostname()){
-            if(hostName == null) return false;
-        }
-        if(needsPort()){
-            if(port == 0) return false;
-        }
-        return validProtocolVersion();
-    }
-
-    protected void loadConfigHistory(Properties props) throws IOException {
-        hostName = props.getProperty(HOSTNAME);
-        try {
-            port = Integer.valueOf(props.getProperty(PORT));
-        } catch(Exception e){
-        }
-        try {
-            protocolVersion = Integer.valueOf(props.getProperty(PROTOCOL_VERSION));
-        } catch(Exception e){
-        }
-        clientId = props.getProperty(CLIENTID);
-    }
-
-    protected void saveConfigHistory(Properties props) {
-        if(needsHostname() && hostName != null) props.setProperty(HOSTNAME, hostName);
-        if(needsPort()) props.setProperty(PORT, String.valueOf(port));
-        if(needsClientId() && clientId != null){
-            props.setProperty(CLIENTID, clientId);
-        }
-        props.setProperty(PROTOCOL_VERSION, String.valueOf(protocolVersion));
-    }
-
-    protected boolean loadConfig() throws IOException {
-        Properties properties = new Properties();
-        File f = new File("./" + getPropertyFileName());
-        if(f.exists()){
-            properties.load(new FileInputStream(f));
-            loadConfigHistory(properties);
-            return true;
-        }
-        return false;
-    }
-
-    protected void saveConfig() throws IOException {
-        Properties properties = new Properties();
-        File f = new File("./" + getPropertyFileName());
-        if(!f.exists()){
-            f.createNewFile();
-        }
-        saveConfigHistory(properties);
-        properties.store(new FileOutputStream(f), "Generated at " + new Date());
-        message(String.format("History file written to %s", f.getAbsolutePath()));
-    }
-
+//    protected boolean configOk(){
+//        if(needsHostname()){
+//            if(hostName == null) return false;
+//        }
+//        if(needsPort()){
+//            if(port == 0) return false;
+//        }
+//        return validProtocolVersion();
+//    }
 
     public void asyncmessage(String message) {
         StringBuilder sb = new StringBuilder("\t** ");
@@ -357,19 +327,19 @@ public abstract class AbstractInteractiveCli {
         } while(!closed);
     }
 
-    protected boolean validHost(){
+    protected boolean validHost(String hostName){
         if(hostName == null) return false;
         if(hostName.trim().length() == 0) return false;
         Pattern p = Pattern.compile("[^a-zA-Z0-9.-]");
         return !p.matcher(hostName).find();
     }
 
-    protected boolean validProtocolVersion(){
+    protected boolean validProtocolVersion(int protocolVersion){
         if(protocolVersion == 1 || protocolVersion == 2) return true;
         return false;
     }
 
-    protected boolean validClientId(int maxLength){
+    protected boolean validClientId(String clientId, int maxLength){
         if(clientId == null) return true;
         if(clientId.trim().length() > maxLength) return false;
         Pattern p = Pattern.compile("[a-zA-Z0-9\\-]{1,65528}");
@@ -382,7 +352,7 @@ public abstract class AbstractInteractiveCli {
 
     protected void predefine(String topicName, int alias) {
         if(runtime != null && runtimeRegistry != null){
-            getOptions().getPredefinedTopics().put(topicName, alias);
+            runtimeRegistry.getOptions().getPredefinedTopics().put(topicName, alias);
             message("DONE - predefined topic registered successfully");
         } else {
             message("Cannot add a topic to an uninitialised runtime");
@@ -391,7 +361,7 @@ public abstract class AbstractInteractiveCli {
 
     protected void stats() {
         //-- enabled by metrics
-        if(options.isMetricsEnabled()){
+        if(runtimeRegistry.getOptions().isMetricsEnabled()){
             IMqttsnMetricsService metricsService = runtimeRegistry.getMetrics();
             if(metricsService != null){
                 message_nochev("======== Network Stats ========");
@@ -654,19 +624,18 @@ public abstract class AbstractInteractiveCli {
         return true;
     }
 
-    protected abstract String getPropertyFileName();
-
     protected abstract boolean processCommand(String command) throws Exception;
 
-    protected abstract MqttsnOptions createOptions() throws UnknownHostException;
+    protected abstract MqttsnOptions createOptions(IMqttsnStorageService storageService) ;
 
-    protected abstract IMqttsnTransport createTransport();
+    protected abstract IMqttsnTransport createTransport(IMqttsnStorageService storageService);
 
-    protected abstract AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport);
+    protected abstract AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport);
 
     protected abstract AbstractMqttsnRuntime createRuntime(AbstractMqttsnRuntimeRegistry registry, MqttsnOptions options);
 
-    protected IMqttsnCodec createCodec(){
+    protected IMqttsnCodec createCodec(IMqttsnStorageService storageService){
+        int protocolVersion = storageService.getIntegerPreference(PROTOCOL_VERSION, 1);
         return protocolVersion == 1 ? MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2 :
                 MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0;
     }
@@ -677,9 +646,5 @@ public abstract class AbstractInteractiveCli {
 
     protected AbstractMqttsnRuntime getRuntime(){
         return runtime;
-    }
-
-    protected MqttsnOptions getOptions(){
-        return options;
     }
 }

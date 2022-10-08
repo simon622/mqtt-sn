@@ -29,16 +29,21 @@ import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 public class MqttsnTestRuntimeRegistry extends AbstractMqttsnRuntimeRegistry {
 
-    public MqttsnTestRuntimeRegistry(final MqttsnOptions options){
-        super(options);
+    public MqttsnTestRuntimeRegistry(final IMqttsnStorageService storageService, final MqttsnOptions options){
+        super(storageService, options);
     }
 
-    public static MqttsnTestRuntimeRegistry defaultConfiguration(final MqttsnOptions options, final boolean clientMode){
-        final MqttsnTestRuntimeRegistry registry = (MqttsnTestRuntimeRegistry) new MqttsnTestRuntimeRegistry(options).
+    public static MqttsnTestRuntimeRegistry defaultConfiguration(
+            final IMqttsnStorageService storageService,
+            final MqttsnOptions options, final boolean clientMode){
+
+        final MqttsnTestRuntimeRegistry registry = (MqttsnTestRuntimeRegistry)
+                new MqttsnTestRuntimeRegistry(storageService, options).
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).
                 withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).
                 withWillRegistry(new MqttsnInMemoryWillRegistry()).

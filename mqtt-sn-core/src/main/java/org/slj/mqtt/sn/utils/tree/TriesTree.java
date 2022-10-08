@@ -147,7 +147,7 @@ public class TriesTree<T> {
         final HashSet<String> paths = new HashSet<>();
         visitChildren(root, node -> {
             String name = node.getPathSegment();
-
+            name.startsWith(prefix);
         });
         return paths;
     }

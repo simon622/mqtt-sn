@@ -58,7 +58,12 @@ public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
                         if(packet != null) {
                             MqttsnUdpBatchTransport.super.send(packet);
                         }
-                    } catch(Exception e){
+                    }
+                    catch(InterruptedException e){
+                        Thread.currentThread().interrupt();
+                        logger.log(Level.WARNING, "batched sending interrupted");
+                    }
+                    catch(Exception e){
                         logger.log(Level.SEVERE, "error on sending thread", e);
                     }
                 }
@@ -71,6 +76,7 @@ public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
     @Override
     public void stop() throws MqttsnException {
         super.stop();
+        senderThread.interrupt();
         senderThread = null;
     }
 

@@ -147,6 +147,10 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
             callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewayAdvertiseService());
         }
 
+        if(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole() != null){
+            callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole());
+        }
+
         callShutdown(runtime.getSecurityService());
 
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());

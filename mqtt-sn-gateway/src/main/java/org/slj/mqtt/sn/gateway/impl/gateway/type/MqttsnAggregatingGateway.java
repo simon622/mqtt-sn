@@ -32,7 +32,6 @@ import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
-import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
@@ -41,7 +40,6 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.Date;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -214,10 +212,9 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                         Thread.sleep(
                                 MqttsnUtils.getExponentialBackoff(errorCount, true));
                     }
-
                     if(running && !stopped) {
                         synchronized (monitor){
-                            while(queue.peek() == null){
+                            while(running && queue.peek() == null){
                                 monitor.wait(PUBLISH_THREAD_MAX_WAIT);
                             }
                         }

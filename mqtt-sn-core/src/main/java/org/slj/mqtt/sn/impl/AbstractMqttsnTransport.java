@@ -163,10 +163,15 @@ public abstract class AbstractMqttsnTransport
                     else if(!mqttsnContext.getId().equals(clientId)){
                         //-- the connecting device is presenting a different clientId to the previous one held against the
                         //-- network address - we must ensure they dont interfere..
-                        logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] invalidate, and re-auth",
-                                networkContext.getNetworkAddress(), mqttsnContext, clientId));
-                        getRegistry().getRuntime().handleConnectionLost(mqttsnContext, null);
-                        authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
+                        if(checkNewClientIdMatchesClientIdFromExistingContext()){
+                            logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] invalidate, and re-auth",
+                                    networkContext.getNetworkAddress(), mqttsnContext, clientId));
+                            getRegistry().getRuntime().handleConnectionLost(mqttsnContext, null);
+                            authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
+                        } else {
+                            logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] implementation says this is OK, ignore",
+                                    networkContext.getNetworkAddress(), mqttsnContext, clientId));
+                        }
                     }
                 }
             } else {
@@ -201,6 +206,10 @@ public abstract class AbstractMqttsnTransport
         catch(Throwable t){
             logger.log(Level.SEVERE, "unknown error;", t);
         }
+    }
+
+    protected boolean checkNewClientIdMatchesClientIdFromExistingContext(){
+        return true;
     }
 
     protected String generateAssignedClientId(){

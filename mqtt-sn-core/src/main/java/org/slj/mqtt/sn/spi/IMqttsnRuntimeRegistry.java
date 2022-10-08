@@ -80,4 +80,6 @@ public interface IMqttsnRuntimeRegistry {
     IMqttsnMetricsService getMetrics();
 
     List<IMqttsnTrafficListener> getTrafficListeners();
+
+    IMqttsnStorageService getStorageService();
 }

@@ -29,18 +29,19 @@ import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
@@ -70,7 +71,6 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         SESSION("Obtain the local session details", new String[0]),
         NETWORK("Get network details", new String[0]),
         HELO("Send a HELO message to gateway", new String[0]),
-        TEST("Execute an built in test suite", new String[0]),
         PREDEFINE("Add a predefined topic alias", new String[]{"String* topicName",  "int16 topicAlias"}),
         HELP("List this message", new String[0]),
         QUIT("Quit the application", new String[0]),
@@ -190,14 +190,11 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     status();
                     break;
                 case SESSION:
-                    String sessionId = clientId;
+                    String sessionId = storageService.getStringPreference(CLIENTID, null);
                     if(sessionId == null){
                         sessionId = captureMandatoryString(input, output, "Could not determine clientId from runtime, please supply to view session?");
                     }
                     session(sessionId);
-                    break;
-                case TEST:
-                    test();
                     break;
                 case QUIET:
                     disableOutput();
@@ -396,13 +393,13 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
 
     protected void status() {
         MqttsnClient client = (MqttsnClient) getRuntime();
-        message(String.format("Remote Host: %s", hostName));
-        message(String.format("Remote Port: %s", port));
-        message(String.format("Client Id: %s", clientId));
+        message(String.format("Remote Host: %s", storageService.getStringPreference(HOSTNAME, null)));
+        message(String.format("Remote Port: %s", storageService.getIntegerPreference(PORT, null)));
+        message(String.format("Client Id: %s", storageService.getStringPreference(CLIENTID, null)));
         if(client != null){
-            if(runtime != null) {
-                if (getOptions() != null) {
-                    Map<String, Integer> pTopics = getOptions().getPredefinedTopics();
+            if(runtimeRegistry != null) {
+                if (runtimeRegistry.getOptions() != null) {
+                    Map<String, Integer> pTopics = runtimeRegistry.getOptions().getPredefinedTopics();
                     if(pTopics != null){
                         message( "Predefined Topic Count: " + pTopics.size());
                         Iterator<String> itr = pTopics.keySet().iterator();
@@ -423,42 +420,27 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         }
     }
 
-    protected void test()
-            throws IOException {
-        MqttsnClient client = (MqttsnClient) getRuntime();
-        if(client != null && !client.isConnected()){
-            try {
-                connect(true, 60);
-                Thread.sleep(TEST_PAUSE);
-                subscribe(TEST_TOPIC, 2);
-                Thread.sleep(TEST_PAUSE);
-                publish(TEST_TOPIC, 0, false, "test qos 0");
-                publish(TEST_TOPIC, 1, false, "test qos 1");
-                publish(TEST_TOPIC, 2, false, "test qos 2");
-                Thread.sleep(20000);
-                disconnect();
-                message("Tests have finished");
-            } catch(Exception e){
-                error("Client Reporting Queue Accept Error", e);
-            }
-        } else {
-            message("Client must first be disconnected before running tests, please issue DISCONNECT command");
-        }
-    }
-
-    protected IMqttsnTransport createTransport() {
+    @Override
+    protected IMqttsnTransport createTransport(IMqttsnStorageService storageService) {
         MqttsnUdpOptions udpOptions = new MqttsnUdpOptions().withMtu(4096).withReceiveBuffer(4096).
                 withPort(MqttsnUdpOptions.DEFAULT_LOCAL_CLIENT_PORT);
         return new MqttsnUdpTransport(udpOptions);
     }
 
     @Override
-    protected MqttsnOptions createOptions() throws UnknownHostException {
-        return new MqttsnOptions().
-                withNetworkAddressEntry(clientId,
-                        NetworkAddress.from(port, hostName)).
-                withContextId(clientId).
-                withMaxProtocolMessageSize(4096);
+    protected MqttsnOptions createOptions(IMqttsnStorageService storageService) {
+        try {
+            MqttsnOptions options = new MqttsnOptions();
+            String clientId = storageService.getStringPreference(CLIENTID, null);
+            options.withNetworkAddressEntry(clientId,
+                    NetworkAddress.from(storageService.getIntegerPreference(PORT, null),
+                            storageService.getStringPreference(HOSTNAME, null)));
+            options.withContextId(clientId);
+            options.withMaxProtocolMessageSize(4096);
+            return options;
+        } catch(Exception e){
+            throw new MqttsnRuntimeException(e);
+        }
     }
 
     @Override
@@ -468,29 +450,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     }
 
     @Override
-    public void start() throws Exception {
-        super.start();
+    public void start(IMqttsnStorageService storageService) throws Exception {
+        super.start(storageService);
         getRuntime().start(getRuntimeRegistry());
-    }
-
-    @Override
-    protected String getPropertyFileName() {
-        return "client.properties";
-    }
-
-    protected String getConnectionString(MqttsnClientState state){
-        if(state == null) return "N/a";
-        switch (state){
-            case AWAKE:
-            case ACTIVE:
-                return cli_green(state.toString());
-            case ASLEEP:
-                return cli_blue(state.toString());
-            case DISCONNECTED:
-            case LOST:
-                return cli_red(state.toString());
-            default:
-                return cli_reset(state.toString());
-        }
     }
 }

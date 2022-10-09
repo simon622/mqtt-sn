@@ -28,11 +28,12 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 
-import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
-public interface IMqttsnSessionRegistry extends IMqttsnRegistry {
+public interface
+IMqttsnSessionRegistry extends IMqttsnRegistry {
 
     Optional<IMqttsnContext> lookupClientIdSession(String clientId) throws MqttsnException;
     IMqttsnSession createNewSession(IMqttsnContext context) throws MqttsnException;
@@ -47,6 +48,7 @@ public interface IMqttsnSessionRegistry extends IMqttsnRegistry {
     long countTotalSessions();
     boolean hasSession(IMqttsnContext context);
 
+    List<String> prefixSearch(String prefix);
 
     //-- attributes of the session setters
     void modifyClientState(IMqttsnSession session, MqttsnClientState state);

@@ -30,8 +30,12 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.impl.MqttsnSessionBeanImpl;
-import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.utils.MqttsnUtils;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnSessionRegistry;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
+import org.slj.mqtt.sn.utils.radix.RadixTree;
+import org.slj.mqtt.sn.utils.radix.RadixTreeImpl;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -42,11 +46,16 @@ import java.util.logging.Level;
 public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry implements IMqttsnSessionRegistry {
 
     protected Map<IMqttsnContext, IMqttsnSession> sessionLookup;
-
+    protected RadixTree<String> searchTree;
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
+        searchTree = new RadixTreeImpl<>();
         super.start(runtime);
         sessionLookup = Collections.synchronizedMap(new HashMap());
         registerMetrics(runtime);
+    }
+
+    public List<String> prefixSearch(String prefix){
+        return searchTree.searchPrefix(prefix, 100);
     }
 
     @Override
@@ -55,6 +64,14 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
         logger.log(Level.INFO, String.format("creating new session for [%s]", context));
         IMqttsnSession session = new MqttsnSessionBeanImpl(context, MqttsnClientState.DISCONNECTED);
         sessionLookup.put(context, session);
+        try {
+            if(searchTree != null) {
+                String clientId = context.getId();
+                searchTree.insert(clientId, clientId);
+            }
+        } catch(Exception e){
+            throw new MqttsnRuntimeException(e);
+        }
         return session;
     }
 
@@ -122,6 +139,11 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
             cleanSession(session.getContext(), true);
         } finally {
             sessionLookup.remove(session.getContext());
+            try {
+                if(searchTree != null) searchTree.delete(session.getContext().getId());
+            } catch(Exception e){
+                throw new MqttsnRuntimeException(e);
+            }
         }
     }
 

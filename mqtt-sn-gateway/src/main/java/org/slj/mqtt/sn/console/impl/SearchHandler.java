@@ -32,6 +32,8 @@ import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 public class SearchHandler extends AbstractHttpRequestResponseHandler {
 
@@ -52,12 +54,18 @@ public class SearchHandler extends AbstractHttpRequestResponseHandler {
     }
 
     protected Option[] generateData(String prefix){
-        Option[] a = new Option[10];
-        for (int i = 0; i<10; i++){
+
+        List<String> clientIds = registry.getSessionRegistry().prefixSearch(prefix);
+//System.err.println("got " + clientIds);
+        Option[] a = new Option[clientIds.size()];
+        Iterator<String> itr = clientIds.iterator();
+        int i = 0;
+        while(itr.hasNext()){
+            String clientId = itr.next();
             Option o = new Option();
-            o.label = prefix + " fill" + i;
-            o.value = o.label;
-            a[i] = o;
+            o.label = clientId;
+            o.value = "/session.html?clientId="+clientId;
+            a[i++] = o;
         }
         return a;
     }

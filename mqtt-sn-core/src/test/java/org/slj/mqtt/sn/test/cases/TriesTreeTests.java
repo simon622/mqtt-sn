@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
-import org.slj.mqtt.sn.utils.tree.TriesTree;
+import org.slj.mqtt.sn.utils.tree.PathTriesTree;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -45,7 +45,7 @@ public class TriesTreeTests {
 
     @Test
     public void testReadAllFromTree() throws TriesTreeLimitExceededException {
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         int BRANCHES = 50;
         Set<String> added = new HashSet<>();
         for (int i = 0; i < BRANCHES; i++){
@@ -62,21 +62,21 @@ public class TriesTreeTests {
 
     @Test(expected = TriesTreeLimitExceededException.class)
     public void testLargeTopicExceedsMaxSegments() throws TriesTreeLimitExceededException {
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         String topic = generateRandomTopic((int) tree.getMaxPathSegments() + 1);
         tree.addPath(topic, "foo");
     }
 
     @Test(expected = TriesTreeLimitExceededException.class)
     public void testLargeTopicExceedsMaxLength() throws TriesTreeLimitExceededException {
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         String topic = generateTopicMaxLength((int) tree.getMaxPathSize() + 1);
         tree.addPath(topic, "foo");
     }
 
     @Test(expected = TriesTreeLimitExceededException.class)
     public void testLargeTopicExceedsMaxMembers() throws TriesTreeLimitExceededException {
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         String topic = generateRandomTopic(10);
         String[] members = new String[(int) tree.getMaxMembersAtLevel() + 1];
         Arrays.fill(members, UUID.randomUUID().toString());
@@ -86,7 +86,7 @@ public class TriesTreeTests {
     @Test
     public void testTopLevelTokenMatch() throws TriesTreeLimitExceededException {
 
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addPath("/", "foo");
         Assert.assertEquals("first level is a token", 1, tree.searchMembers("/").size());
     }
@@ -94,7 +94,7 @@ public class TriesTreeTests {
     @Test
     public void testTopLevelPrefixTokenMatchDistinct() throws TriesTreeLimitExceededException {
 
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addPath("/foo", "foo"); //different things
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
@@ -106,7 +106,7 @@ public class TriesTreeTests {
     @Test
     public void testTopLevelSuffixTokenMatchDistinct() throws TriesTreeLimitExceededException {
 
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addPath("foo/", "foo"); //different things
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
@@ -119,7 +119,7 @@ public class TriesTreeTests {
     @Test
     public void testWildcard() throws TriesTreeLimitExceededException {
 
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addPath("foo/bar#", "foo");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
@@ -131,7 +131,7 @@ public class TriesTreeTests {
     @Test
     public void testWildpath() throws TriesTreeLimitExceededException {
 
-        TriesTree<String> tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addPath("foo/+/is/good", "foo");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());

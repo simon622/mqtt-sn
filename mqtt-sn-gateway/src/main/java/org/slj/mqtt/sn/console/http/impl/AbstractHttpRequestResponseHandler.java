@@ -128,7 +128,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected void writeJSONResponse(IHttpRequestResponse request, int responseCode, byte[] bytes) throws IOException {
-System.err.println(new String(bytes));
+//System.err.println(new String(bytes));
         writeResponseInternal(request, responseCode, HttpConstants.JSON_MIME_TYPE, bytes);
     }
 

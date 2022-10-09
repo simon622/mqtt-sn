@@ -35,19 +35,19 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
-import org.slj.mqtt.sn.utils.tree.TriesTree;
+import org.slj.mqtt.sn.utils.tree.PathTriesTree;
 
 import java.util.Set;
 
 public class MqttsnInMemorySubscriptionRegistry
         extends AbstractSubscriptionRegistry {
 
-    private TriesTree<IMqttsnContext> tree;
+    private PathTriesTree<IMqttsnContext> tree;
 
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        tree = new TriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
         tree.addWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
         tree.addWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);
     }

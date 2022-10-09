@@ -171,7 +171,7 @@
         onInput: (value) => {
             console.log("user input: ", value);
             $.getJSON("/console/search?searchTerm=" + value, function (update){
-                console.log("recieved: ", value);
+                console.log("recieved: ", update);
                 ac.setData(update);
                 ac.renderIfNeeded();
             });

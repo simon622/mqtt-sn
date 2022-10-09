@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 /**
  * Simple TriesTree implementation designed to add members at each level of the tree and normalise the storage
  */
-public class TriesTree<T> {
+public class PathTriesTree<T> {
 
     private static final int DEFAULT_MAX_PATH_SIZE = 1024 * 10;
     private static final int DEFAULT_MAX_PATH_SEGMENTS = 1024;
@@ -48,6 +48,18 @@ public class TriesTree<T> {
     private long maxMembersAtLevel = DEFAULT_MAX_MEMBERS_AT_LEVEL;
 
     /**
+     * Construct your tree taking the immutable configuration for the rest of the life of the tree. Using this constructor
+     * will ensure the tree is simply single level (NB this is not the most efficient use of the tree - you would be better using
+     * a traditional radix tree)
+     *
+     * @param selfPruningTree - when removing members, when a leaf is determined to be empty subsequent to the removal operation, should the
+     *                        tree at that level be pruned (where it is the last level of the tree)
+     */
+    public PathTriesTree(final boolean selfPruningTree){
+        this(null, null, selfPruningTree);
+    }
+
+    /**
      * Construct your tree taking the immutable configuration for the rest of the life of the tree.
      *
      * @param pathSplitRegex - the regex around which to split your tree path, for example '/my/tree/file/system' could be
@@ -57,10 +69,10 @@ public class TriesTree<T> {
      * @param selfPruningTree - when removing members, when a leaf is determined to be empty subsequent to the removal operation, should the
      *                        tree at that level be pruned (where it is the last level of the tree)
      */
-    public TriesTree(final String pathSplitRegex, final String pathSplitStr, final boolean selfPruningTree){
+    public PathTriesTree(final String pathSplitRegex, final String pathSplitStr, final boolean selfPruningTree){
         this.pathSplitStr = pathSplitStr;
         this.pathSplitRegex = pathSplitRegex;
-        this.pattern = Pattern.compile(pathSplitRegex);
+        this.pattern = pathSplitRegex != null ? Pattern.compile(pathSplitRegex) : null;
         this.selfPruningTree = selfPruningTree;
         this.root = new TrieNode<T>( null, null);
     }
@@ -142,23 +154,13 @@ public class TriesTree<T> {
         return searchTreeForMembers(root, segments);
     }
 
-    public Set<String> searchStringPrefix(String prefix){
-//        String[] segments = split(prefix);
-        final HashSet<String> paths = new HashSet<>();
-        visitChildren(root, node -> {
-            String name = node.getPathSegment();
-            name.startsWith(prefix);
-        });
-        return paths;
-    }
-
-    public static void visitChildren(TriesTree.TrieNode node, Visitor visitor) {
+    public static void visitChildren(PathTriesTree.TrieNode node, Visitor visitor) {
         if (node != null) {
             Set<String> children = node.getChildPaths();
             Iterator<String> itr = children.iterator();
             while (itr.hasNext()) {
                 String path = itr.next();
-                TriesTree.TrieNode child = node.getChild(path);
+                PathTriesTree.TrieNode child = node.getChild(path);
                 if (child == null) {
                     throw new RuntimeException("encountered invalid tree state");
                 } else {
@@ -236,10 +238,23 @@ public class TriesTree<T> {
      * @return the distinct paths
      */
     public Set<String> getDistinctPaths(boolean considerMembership){
+//        Set<String> paths = new HashSet<>();
+//        visitChildren(root, n -> {
+//            //-- either its a leaf node or a node with children but also members
+//            if(n.isLeaf() || (considerMembership && n.hasMembers())){
+//                paths.add(n.toPath(true));
+//            }
+//        });
+//        return paths;
+
+        return getDistinctPathsFromNode(root, considerMembership);
+    }
+
+    public Set<String> getDistinctPathsFromNode(PathTriesTree.TrieNode node, boolean considerMembership){
         Set<String> paths = new HashSet<>();
-        visitChildren(root, n -> {
+        visitChildren(node, n -> {
             //-- either its a leaf node or a node with children but also members
-            if(!n.hasChildren() || (considerMembership && n.hasMembers())){
+            if(n.isLeaf() || (considerMembership && n.hasMembers())){
                 paths.add(n.toPath(true));
             }
         });
@@ -251,7 +266,7 @@ public class TriesTree<T> {
     }
 
     protected String[] split(final String path){
-        return pattern.split(path);
+        return pattern == null ? new String[]{path} : pattern.split(path);
     }
 
     class TrieNode<T> {
@@ -338,7 +353,7 @@ public class TriesTree<T> {
             }
 
             if(membersIn != null){
-                if(members.size() + membersIn.length > TriesTree.this.getMaxMembersAtLevel()){
+                if(members.size() + membersIn.length > PathTriesTree.this.getMaxMembersAtLevel()){
                     throw new TriesTreeLimitExceededException("member limit exceeded at level");
                 }
                 members.addAll(Arrays.asList(membersIn));
@@ -361,6 +376,10 @@ public class TriesTree<T> {
             synchronized (children){
                 return Collections.unmodifiableSet(children.keySet());
             }
+        }
+
+        public boolean isLeaf(){
+            return !hasChildren();
         }
 
         @Override
@@ -412,6 +431,6 @@ public class TriesTree<T> {
 
 interface Visitor {
 
-    void visit(TriesTree.TrieNode node);
+    void visit(PathTriesTree.TrieNode node);
 }
 

@@ -24,19 +24,13 @@
 
 package org.slj.mqtt.sn.console.http;
 
-public class HttpBadRequestException extends Exception {
-    public HttpBadRequestException() {
+public class HttpBadRequestException extends HttpException {
+
+    public HttpBadRequestException(String responseMessage) {
+        super(HttpConstants.SC_BAD_REQUEST, responseMessage);
     }
 
-    public HttpBadRequestException(String message) {
-        super(message);
-    }
-
-    public HttpBadRequestException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public HttpBadRequestException(Throwable cause) {
-        super(cause);
+    public HttpBadRequestException(String responseMessage, Throwable cause) {
+        super(HttpConstants.SC_BAD_REQUEST, responseMessage, cause);
     }
 }

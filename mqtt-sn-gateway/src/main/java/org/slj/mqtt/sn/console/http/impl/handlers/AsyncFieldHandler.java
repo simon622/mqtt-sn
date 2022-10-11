@@ -25,25 +25,27 @@
 package org.slj.mqtt.sn.console.http.impl.handlers;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.slj.mqtt.sn.console.http.HttpBadRequestException;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 
 import java.io.IOException;
-import java.util.concurrent.ThreadLocalRandom;
 
-public class AsyncFieldHandler extends AbstractHttpRequestResponseHandler {
+public abstract class AsyncFieldHandler extends AbstractHttpRequestResponseHandler {
+
+    static final String fieldParameter = "field";
 
     public AsyncFieldHandler(ObjectWriter writer) {
         super(writer);
     }
 
     @Override
-    protected void handleHttpGet(IHttpRequestResponse request) throws IOException {
+    protected void handleHttpGet(IHttpRequestResponse request) throws IOException, HttpBadRequestException {
 
-        String field = request.getParameter("field");
-        String id = request.getParameter("id");
-
-        writeHTMLResponse(request, HttpConstants.SC_OK, ThreadLocalRandom.current().nextInt() + " " + field);
+        String field = getMandatoryParameter(request, fieldParameter);
+        writeHTMLResponse(request, HttpConstants.SC_OK, getValue(request, field));
     }
+
+    protected abstract String getValue(IHttpRequestResponse request, String fieldName);
 }

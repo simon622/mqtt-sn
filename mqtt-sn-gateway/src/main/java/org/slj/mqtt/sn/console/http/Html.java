@@ -46,6 +46,7 @@ public class Html {
     public static final String ORANGE = "#FF9033";
     public static final String BLACK = "#000";
     public static final String WHITE = "#FFFFFF";
+    public static final String BLUE = "#3633FF";
 
     public static String css(String url) {
         return String.format("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">", url);
@@ -72,20 +73,33 @@ public class Html {
     }
 
     public static String span(String text, String colorCode, boolean embolden) {
-        return span(text, colorCode, embolden, WHITE, false);
+        return span(text, colorCode, embolden, WHITE, false, null);
     }
 
     public static String span(String text, String colorCode, boolean embolden, String backgroundColor) {
-        return span(text, colorCode, embolden, backgroundColor, false);
+        return span(text, colorCode, embolden, backgroundColor, false, null);
     }
 
-    public static String span(String text, String colorCode, boolean embolden, String backgroundColor, boolean italic) {
+    public static String span(String text, String colorCode, boolean embolden, String backgroundColor, String classes) {
+        return span(text, colorCode, embolden, backgroundColor, false, classes);
+    }
+
+    public static String span(String text, String colorCode, boolean embolden, String backgroundColor, boolean italic, String classes) {
         String weight = embolden ? "bold" : "normal";
-        return String.format("<span style=\"%s;%s;%s;%s\">%s</span>",
-                String.format("color: %s", colorCode),
-                String.format("font-weight: %s", weight),
-                String.format("background-color: %s", backgroundColor),
+        backgroundColor = backgroundColor == null ? "" : backgroundColor;
+        colorCode = colorCode == null ? "" : colorCode;
+        classes = classes == null ? "" : classes;
+
+        backgroundColor = backgroundColor == null ? "" : String.format("background-color: %s", backgroundColor);
+        weight = weight == null ? "" : String.format("font-weight: %s", weight);
+        colorCode = colorCode == null ? "" : String.format("color: %s", colorCode);
+
+        return String.format("<span style=\"%s;%s;%s;%s\" class=\"%s\">%s</span>",
+                colorCode,
+                weight,
+                backgroundColor,
                 String.format("font-style: %s", italic ? STYLE_ITALIC : STYLE_NORMAL),
+                classes,
                 text == null ? "" : text);
     }
 

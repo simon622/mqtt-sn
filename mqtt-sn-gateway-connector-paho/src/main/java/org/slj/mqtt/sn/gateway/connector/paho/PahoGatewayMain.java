@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 
@@ -58,6 +58,9 @@ public class PahoGatewayMain {
         //-- the password of the MQTT broker you are connecting to
         String password = args[5].trim();
 
+        MqttsnFilesystemStorageService filesystemStorageService =
+                new MqttsnFilesystemStorageService();
+
         MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
                 withHost(host).
                 withPort(port).
@@ -65,14 +68,14 @@ public class PahoGatewayMain {
                 withPassword(password);
 
         //-- configure your gateway runtime
-        MqttsnOptions gatewayOptions = new MqttsnGatewayOptions().
-                withGatewayId(1).
+        MqttsnGatewayOptions gatewayOptions = new MqttsnGatewayOptions();
+        gatewayOptions.withGatewayId(1).
                 withMaxConnectedClients(10).
-                withContextId(clientId).
-                withPredefinedTopic("/my/example/topic/1", 1);
+                withContextId(clientId);
+        gatewayOptions.withPredefinedTopic("/my/example/topic/1", 1);
 
         //-- construct the registry of controllers and config
-        AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(gatewayOptions).
+        AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(filesystemStorageService, gatewayOptions).
                 withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
                 withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).

@@ -38,7 +38,6 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 public abstract class AbstractMqttsnBackendService
@@ -127,6 +126,7 @@ public abstract class AbstractMqttsnBackendService
         registry.getRuntime().async(() -> {
             try {
                 getRegistry().getGatewaySessionService().receiveToSessions(topicPath,qos, retained, payload);
+                getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE).increment(1);
             } catch(Exception e){
                 logger.log(Level.SEVERE, "error receiving to sessions;", e);
             }

@@ -7,131 +7,146 @@
     <meta name="author" content="Simon Johnson">
     <title>..:: MQTT-SN ::..</title>
 
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/console/img/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/console/img/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/console/img/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/console/img/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/console/img/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/console/img/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/console/img/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/console/img/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/console/img/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/console/img/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/console/img/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/console/img/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/console/img/favicon/mstile-310x310.png" />
+
     <!-- Bootstrap core CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
     <script src="/console/js/autocomplete.js"></script>
 
-    <style>
-        .bd-placeholder-img {
-            font-size: 1.125rem;
-            text-anchor: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
-        }
-
-        @media (min-width: 768px) {
-            .bd-placeholder-img-lg {
-                font-size: 3.5rem;
-            }
-        }
-    </style>
     <link href="/console/css/style.css" rel="stylesheet">
 </head>
 <body>
 
-<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-    <a class="navbar-brand" href="#">
-        <img src="/console/img/logo-no-background.png" alt="" height="40">
-    </a>
-    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Open Source MQTT-SN Gateway</a>
-    <div class="container-fluid">
-        <input class="form-control form-control-dark w-100" type="text" id="searchField" placeholder="Search sessions or topics..." aria-label="Search" autocomplete="off">
-    </div>
-</header>
-
 <div class="container-fluid">
     <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-            <div class="position-sticky pt-3">
-                <ul class="nav nav-pills flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#" id="dashboardLink">
-                            <span data-feather="activity"></span>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="clientsLink">
-                            <span data-feather="lock"></span>
-                            Clients
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="configLink">
-                            <span data-feather="edit"></span>
-                            Configuration
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="topicsLink">
-                            <span data-feather="hash"></span>
-                            Topics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="backendLink">
-                            <span data-feather="package"></span>
-                            Backend (Connectors)
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="clusterLink">
-                            <span data-feather="share-2"></span>
-                            Cluster
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="systemLink">
-                            <span data-feather="tool"></span>
-                            System
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="settingsLink">
-                            <span data-feather="settings"></span>
-                            Settings
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="notificationsLink" disabled>
-                            <span data-feather="send"></span>
-                            Notifications
-                        </a>
-                    </li>
+        <div class="col">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item" style="text-align: center">
+                            <img src="/console/img/logo-no-background-round.png" alt="" height="180">
+                        </li>
+                        <hr>
+                        <li class="nav-item" style="padding: 12px">
+                            <form class="d-flex" role="search">
+                                <input class="form-control me-2" type="text" id="searchField" placeholder="Find sessions by clientId..." aria-label="Search" autocomplete="off" aria-describedby="basic-addon1">
+                            </form>
+                            <div id="searchHistory"></div>
+                        </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" disabled>
-                            <span data-feather="cloud"></span>
-                            Mqtt-sn Cloud
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="docsLink">
-                            <span data-feather="file-text"></span>
-                            Documentation
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="">
-                            <span data-feather="github"></span>
-                            GitHub
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                        <hr>
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#" id="dashboardLink">
+                                <span data-feather="activity"></span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="clientsLink">
+                                <span data-feather="radio"></span>
+                                Start Client Connection
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="configLink">
+                                <span data-feather="edit"></span>
+                                Configuration
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="topicsLink">
+                                <span data-feather="hash"></span>
+                                Topics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="backendLink">
+                                <span data-feather="package"></span>
+                                Backend (Connectors)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="settingsLink">
+                                <span data-feather="settings"></span>
+                                Settings
+                            </a>
+                        </li>
+
+                        <hr>
+                        <li class="nav-item">
+                            <a class="nav-link cloud" href="#">
+    <!--                            <span data-feather="cloud"></span>-->
+                                <img src="/console/img/cloud-logo-no-background.png" height="24"/>
+                                Mqtt-sn Cloud
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="#" id="clusterLink" disabled>
+                                <span data-feather="share-2"></span>
+                                Cluster
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="#" id="notificationsLink" disabled>
+                                <span data-feather="send"></span>
+                                Notifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="#" id="alarmsLink" disabled>
+                                <span data-feather="bell"></span>
+                                Alarms
+                            </a>
+                        </li>
+                        <hr>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="docsLink">
+                                <span data-feather="file-text"></span>
+                                Documentation
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="">
+                                <span data-feather="github"></span>
+                                GitHub
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="dyna">
                 <!-- empty div -->
             </div>
         </main>
+        </div>
     </div>
 </div>
 
 <script>
+
+    var sessionId;
 
     bindClick('#dashboardLink', "dashboard.html", true);
     bindClick('#clientsLink', "clients.html");
@@ -159,26 +174,56 @@
         }
     }
 
+    function updateHtmlElementTimerById(id, refreshRate){
+        updateHtmlElementTimer(document.getElementById(id), refreshRate);
+    }
+
+    function updateHtmlElementTimer(el, refreshRate){
+        setInterval(function(){
+            updateHtmlElement(el);
+        }, refreshRate);
+    }
+
+    function updateHtmlElement(el){
+        $.ajax({
+            dataType: "html",
+            url: "/console/metrics/field?field=" + el.id,
+            type: "GET",
+            success: function (data,status,xhr) {   // success callback function
+                $(el).html(data);
+            },
+            error: function (jqXhr, textStatus, errorMessage) { // error callback
+                $(el).html("Unavailable");
+            }
+        });
+    }
 
     const field = document.getElementById('searchField');
     const ac = new Autocomplete(field, {
-        data: [{label: "I'm a label", value: 42}],
-        maximumItems: 10,
+        data: [{label: "", value: ""}],
+        maximumItems: 20,
         threshold: 2,
         onSelectItem: ({label, value}) => {
-            alert("simon");
+            sessionId = value;
+            $.ajax({
+                url: "/console/async?page=session.html&clientId=" + sessionId,
+                success: function( result ) {
+                    $("#dyna").html(result);
+                }
+            });
+
+            field.value = '';
+            // var root = document.getElementById('searchHistory');
+            // root.insertAdjacentHTML('afterbegin', "<a className=\"nav-link\" href=\"#\" id=\"topicsLink\">"+sessionId+"</a>")
         },
         onInput: (value) => {
-            console.log("user input: ", value);
             $.getJSON("/console/search?searchTerm=" + value, function (update){
-                console.log("recieved: ", update);
+                // console.log("user input: " + JSON.stringify(update));
                 ac.setData(update);
                 ac.renderIfNeeded();
             });
         }
     });
-
-
 </script>
 
 

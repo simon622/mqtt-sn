@@ -40,7 +40,6 @@ import java.util.logging.Level;
 public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsole {
 
     private SunHttpServerBootstrap server;
-
     private MqttsnConsoleOptions options;
     private ObjectWriter jsonWriter;
 
@@ -76,9 +75,12 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/", new RedirectHandler(getJsonWriter(), "./console/html/index.html"));
             server.registerContext("/hello", new HelloWorldHandler(getJsonWriter()));
             server.registerContext("/console", new StaticFileHandler(getJsonWriter(), "httpd"));
-            server.registerContext("/console/api", new AsyncFieldHandler(getJsonWriter()));
+            server.registerContext("/console/metrics/field", new ConsoleAsyncMetricFieldHandler(getJsonWriter(), getRegistry()));
             server.registerContext("/console/chart", new ChartHandler(getJsonWriter(), getRegistry()));
+            server.registerContext("/console/session", new SessionHandler(getJsonWriter(), getRegistry()));
             server.registerContext("/console/search", new SearchHandler(getJsonWriter(), getRegistry()));
+            server.registerContext("/console/config", new ConfigHandler(getJsonWriter(), getRegistry()));
+
             server.registerContext("/console/async", new AsyncContentHandler(getJsonWriter(), "httpd/html/",
                     "dashboard.html", "clients.html",  "session.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));
             server.startServer();

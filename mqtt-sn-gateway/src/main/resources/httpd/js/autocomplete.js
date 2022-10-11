@@ -41,6 +41,12 @@ class Autocomplete {
                 this.dropdown.hide();
                 return;
             }
+            else if (e.keyCode === 13) {
+                var a = document.getElementsByClassName("dropdown-item");
+                if(a.length > 0){
+                    a[0].click();
+                }
+            }
         });
     }
 
@@ -96,7 +102,7 @@ class Autocomplete {
                 this.field.value = e.target.innerText;
                 if (this.options.onSelectItem)
                     this.options.onSelectItem({
-                        value: e.target.value,
+                        value: dataValue,
                         label: e.target.innerText,
                     });
                 this.dropdown.hide();
@@ -124,4 +130,13 @@ function ce(html) {
  */
 function insertAfter(elem, refElem) {
     return refElem.parentNode.insertBefore(elem, refElem.nextSibling)
+}
+
+const getMethods = (obj) => {
+    let properties = new Set()
+    let currentObj = obj
+    do {
+        Object.getOwnPropertyNames(currentObj).map(item => properties.add(item))
+    } while ((currentObj = Object.getPrototypeOf(currentObj)))
+    return [...properties.keys()].filter(item => typeof obj[item] === 'function')
 }

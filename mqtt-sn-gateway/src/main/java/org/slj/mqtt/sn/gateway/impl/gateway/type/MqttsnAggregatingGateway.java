@@ -27,12 +27,16 @@ package org.slj.mqtt.sn.gateway.impl.gateway.type;
 import com.google.common.util.concurrent.RateLimiter;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
+import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
 import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
+import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
+import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
+import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
@@ -84,6 +88,21 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 throw new MqttsnException("encountered error attempting broker connect..",e);
             }
             logger.log(Level.INFO, "connection complete, backend service ready.");
+        }
+
+        if(registry.getMetrics() != null){
+            registry.getMetrics().registerMetric(new MqttsnCountingMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH,
+                    "The number of mqtt application messages published through the backend connector.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+            registry.getMetrics().registerMetric(new MqttsnCountingMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_ERROR,
+                    "The number of errors received during mqtt application messages published through the backend connector.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+            registry.getMetrics().registerMetric(new MqttsnCountingMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE,
+                    "The number of mqtt application messages received through the backend connector.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE,
+                    "The number of mqtt application messages waiting to be published to the backend.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> queue.size()));
         }
     }
 
@@ -195,9 +214,11 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                                 if(res.isError()){
                                     logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
                                     queue.offer(op);
+                                    getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_ERROR).increment(1);
                                     errorCount++;
                                 } else {
                                     errorCount = 0;
+                                    getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH).increment(1);
                                 }
                             } else {
                                 logger.log(Level.WARNING, "unable to accept publish operation from queue - discard");

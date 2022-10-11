@@ -29,18 +29,20 @@ import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.SystemUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 public abstract class AbstractMqttsnRuntime {
@@ -189,8 +191,27 @@ public abstract class AbstractMqttsnRuntime {
     }
 
     public static void setupEnvironment(MqttsnOptions options){
-        if(options.getLogPattern() != null){
-            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
+
+        initializeLogging(options);
+    }
+
+    public static void initializeLogging(MqttsnOptions options) {
+        if (System.getProperty("java.util.logging.config.file") == null) {
+            try (InputStream stream = AbstractMqttsnRuntime.class.getResourceAsStream("/logging.properties")) {
+                if (null != stream) {
+                    LogManager.getLogManager().reset();
+                    LogManager.getLogManager().readConfiguration(stream);
+                    Logger.getAnonymousLogger().log(Level.INFO, "applying logging config from resource");
+                } else {
+                    Logger.getAnonymousLogger().log(Level.SEVERE, "unable to initialise logging, applying fallback");
+                    String pattern = options.getLogPattern();
+                    pattern = pattern == null ? "[%1$tc] %4$s %2$s - %5$s %6$s%n" : pattern;
+                    System.setProperty("java.util.logging.SimpleFormatter.format", pattern);
+                }
+            } catch (IOException e) {
+                // ignored for now
+                e.printStackTrace();
+            }
         }
     }
 

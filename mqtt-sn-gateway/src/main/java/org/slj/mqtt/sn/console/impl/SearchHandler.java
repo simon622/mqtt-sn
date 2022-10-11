@@ -54,9 +54,7 @@ public class SearchHandler extends AbstractHttpRequestResponseHandler {
     }
 
     protected Option[] generateData(String prefix){
-
         List<String> clientIds = registry.getSessionRegistry().prefixSearch(prefix);
-//System.err.println("got " + clientIds);
         Option[] a = new Option[clientIds.size()];
         Iterator<String> itr = clientIds.iterator();
         int i = 0;
@@ -64,7 +62,7 @@ public class SearchHandler extends AbstractHttpRequestResponseHandler {
             String clientId = itr.next();
             Option o = new Option();
             o.label = clientId;
-            o.value = "/session.html?clientId="+clientId;
+            o.value = clientId;
             a[i++] = o;
         }
         return a;
@@ -74,12 +72,4 @@ public class SearchHandler extends AbstractHttpRequestResponseHandler {
         public String label;
         public String value;
     }
-
-
-    /*
-    [{
-                "label": "SIMON",
-                "value": "FIT"
-            }]
-     */
 }

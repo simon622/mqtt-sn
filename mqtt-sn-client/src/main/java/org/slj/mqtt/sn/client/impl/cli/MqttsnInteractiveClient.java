@@ -243,10 +243,16 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void quickConnect()
             throws IOException, MqttsnException {
         MqttsnClient client = (MqttsnClient) getRuntime();
+        if(client != null && client.isConnected()){
+            client.disconnect();
+            message("DONE - initially disconnected an existing session");
+        }
         if(client != null && !client.isConnected()){
             try {
                 client.connect(240, true);
                 message("DONE - quick connect issued successfully, client is connected with clean session and keepAlive 240");
+                client.subscribe("foo", 2);
+                message("DONE - quick subscribe to foo issued successfully");
             } catch(MqttsnClientConnectException e){
                 error("Client Reporting Connection Error", e);
             }

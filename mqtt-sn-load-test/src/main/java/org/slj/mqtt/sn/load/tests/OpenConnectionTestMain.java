@@ -37,16 +37,18 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.net.UnknownHostException;
 import java.util.UUID;
+import java.util.logging.LogManager;
 
 public class OpenConnectionTestMain {
 
     public static void main(String[] args) {
 
-        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
+        LogManager.getLogManager().reset();
+//        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
         int port = 2442;
 //        String host = "34.248.60.25";
         String host = "localhost";
-        for(int i = 0; i < 1500; i++){
+        for(int i = 0; i < 1200; i++){
             try {
                 MqttsnClient client = createClient(host, port);
                 client.connect(60, true);

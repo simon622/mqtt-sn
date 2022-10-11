@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.console.chart.ChartJSUtils;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
+import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.model.MqttsnMetricSample;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
@@ -53,6 +54,7 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
     static final String PUBLISH = "publishMetrics",
                         SESSION = "sessionMetrics",
                         NETWORK = "networkMetrics",
+                        BACKEND = "backendMetrics",
                         SYSTEM = "systemMetrics";
 
     private IMqttsnRuntimeRegistry registry;
@@ -103,6 +105,19 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
                     } else {
                         Long value = Long.valueOf(epoch);
                         writeNetworkUpdate(request, value);
+                    }
+                }
+                break;
+            case BACKEND:
+                if(!REQUEST_TYPE_UPDATE.equals(requestType)){
+                    writeBackendk(request);
+                } else {
+                    String epoch = request.getParameter(EPOCH);
+                    if(epoch == null){
+                        sendBadRequestResponse(request, "epoch must be provided");
+                    } else {
+                        Long value = Long.valueOf(epoch);
+                        writeBackendUpdate(request, value);
                     }
                 }
                 break;
@@ -174,8 +189,8 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
         LineOptions options = new LineOptions();
         lineChart.setOptions(options);
         lineChart.setData(new LineData()
-                .addDataset(ChartJSUtils.createLineDataset("Ingress", ChartJSUtils.getColorForIndex(0), ingressSamples))
-                .addDataset(ChartJSUtils.createLineDataset("Egress", ChartJSUtils.getColorForIndex(1), egressSamples))
+                .addDataset(ChartJSUtils.createLineDataset("MQTT-SN Publish Received", ChartJSUtils.getColorForIndex(0), ingressSamples))
+                .addDataset(ChartJSUtils.createLineDataset("MQTT-SN Publish Sent", ChartJSUtils.getColorForIndex(1), egressSamples))
                 .addLabels(ChartJSUtils.timestampsToStr(arr)));
         writeJSONResponse(request, HttpConstants.SC_OK,
                 ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));
@@ -184,12 +199,13 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
     private void writePublishUpdate(IHttpRequestResponse request, long since) throws IOException {
         List<MqttsnMetricSample> in = getSamplesForMetricSince(IMqttsnMetrics.PUBLISH_MESSAGE_IN, since);
         List<MqttsnMetricSample> out = getSamplesForMetricSince(IMqttsnMetrics.PUBLISH_MESSAGE_OUT, since);
-        long[] arr = ChartJSUtils.calculateLabels(in, out);
+        List<MqttsnMetricSample> backend = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH, since);
+        long[] arr = ChartJSUtils.calculateLabels(in, out, backend);
         String[] labels = ChartJSUtils.timestampsToStr(arr);
         Update u = new Update();
         u.labels = labels;
         u.data = new int [][]{
-                ChartJSUtils.values(in), ChartJSUtils.values(out)
+                ChartJSUtils.values(in), ChartJSUtils.values(out), ChartJSUtils.values(backend)
         };
         String json = writer.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,
@@ -253,6 +269,40 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
         u.labels = labels;
         u.data = new int [][]{
                 ChartJSUtils.values(netInSamples), ChartJSUtils.values(netOutSamples)
+        };
+        String json = writer.writeValueAsString(u);
+        writeJSONResponse(request, HttpConstants.SC_OK,
+                json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void writeBackendk(IHttpRequestResponse request) throws IOException {
+        List<MqttsnMetricSample> publish = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH);
+        List<MqttsnMetricSample> recieve = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE);
+        List<MqttsnMetricSample> queuesize = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE);
+        long[] arr = ChartJSUtils.calculateLabels(publish, recieve, queuesize);
+        LineChart lineChart = new LineChart();
+        LineOptions options = new LineOptions();
+        lineChart.setOptions(options);
+        lineChart.setData(new LineData()
+                .addDataset(ChartJSUtils.createLineDataset("MQTT Publish Sent", ChartJSUtils.getColorForIndex(0), publish))
+                .addDataset(ChartJSUtils.createLineDataset("MQTT Publish Received", ChartJSUtils.getColorForIndex(1), recieve))
+                .addDataset(ChartJSUtils.createLineDataset("Publish Queue", ChartJSUtils.getColorForIndex(2), queuesize))
+                .addLabels(ChartJSUtils.timestampsToStr(arr)));
+        writeJSONResponse(request, HttpConstants.SC_OK,
+                ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void writeBackendUpdate(IHttpRequestResponse request, long since) throws IOException {
+        List<MqttsnMetricSample> publish = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH, since);
+        List<MqttsnMetricSample> recieve = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE, since);
+        List<MqttsnMetricSample> queuesize = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE, since);
+
+        long[] arr = ChartJSUtils.calculateLabels(publish, recieve, queuesize);
+        String[] labels = ChartJSUtils.timestampsToStr(arr);
+        Update u = new Update();
+        u.labels = labels;
+        u.data = new int [][]{
+                ChartJSUtils.values(publish), ChartJSUtils.values(recieve), ChartJSUtils.values(queuesize)
         };
         String json = writer.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,

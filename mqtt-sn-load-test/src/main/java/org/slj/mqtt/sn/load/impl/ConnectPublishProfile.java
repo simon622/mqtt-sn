@@ -28,7 +28,6 @@ import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
 
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,6 +65,7 @@ public class ConnectPublishProfile extends MqttsnClientProfile {
                         String.format(message, System.currentTimeMillis()).getBytes());
             }
             progress.waitForCompletion();
+            client.disconnect();
 
         } catch(Exception e){
             logger.log(Level.SEVERE, "error detected", e);

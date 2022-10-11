@@ -50,7 +50,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         searchTree = new RadixTreeImpl<>();
         super.start(runtime);
-        sessionLookup = Collections.synchronizedMap(new HashMap());
+        sessionLookup = new HashMap();
         registerMetrics(runtime);
     }
 

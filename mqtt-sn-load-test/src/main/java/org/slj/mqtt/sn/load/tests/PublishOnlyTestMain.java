@@ -25,7 +25,6 @@
 package org.slj.mqtt.sn.load.tests;
 
 import org.slj.mqtt.sn.load.impl.ConnectPublishProfile;
-import org.slj.mqtt.sn.load.impl.ConnectSubscribeWaitProfile;
 import org.slj.mqtt.sn.load.impl.MqttsnClientProfile;
 import org.slj.mqtt.sn.load.runner.ThreadPerProfileLoadTestRunner;
 
@@ -35,7 +34,8 @@ public class PublishOnlyTestMain {
 
     public static void main(String[] args) {
         try {
-            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
+//            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
+//            LogManager.getLogManager().reset();
             ThreadPerProfileLoadTestRunner runner =
                     new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 100, 20);
 
@@ -45,9 +45,9 @@ public class PublishOnlyTestMain {
 //            input.host = "34.248.60.25";
                         input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 10;
-            input.qos = 0;
-            input.topic = "test";
+            input.messageCount = 200;
+            input.qos = 1;
+            input.topic = "foo";
 
             runner.start(input);
 

@@ -114,7 +114,10 @@ public class MqttsnContrainedSizeMetric extends AbstractMqttsnMetric {
 
     public MqttsnMetricSample getLastSample(){
         if(samples.isEmpty()) return null;
-        return getSamplesInternal(1)[samples.size() - 1];
+        MqttsnMetricSample[] sortedSamples = samples.toArray(
+                new MqttsnMetricSample[samples.size()]);
+        Arrays.sort(sortedSamples, MqttsnMetricSample.TIMESTAMP);
+        return sortedSamples[sortedSamples.length - 1];
     }
 
     @Override

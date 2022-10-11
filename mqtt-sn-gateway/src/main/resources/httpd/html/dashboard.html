@@ -2,33 +2,31 @@
 <div class="row">
     <div class="col">
         <div class="bd-callout bd-callout-info">
-            <h5>Dashboard</h5>
-            <p>Using color to add meaning only provides a visual indication, which will not be conveyed to users of assistive technologies – such as screen readers. Ensure that information denoted by the color is either obvious from the content itself (e.g. the visible text), or is included through alternative means, such as additional text hidden with the <code>.visually-hidden</code> class.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col">
-        <div class="card card-metric">
-            <div class="card-chart">
-                <canvas id="publishMetrics" height="80"></canvas>
-            </div>
-            <div class="card-body">
-                <h6 class="card-title">MQTT-SN Publish Operations</h6>
-                <p class="card-text">The number of mqtt-sn publish messages sent (egress) and received (ingress) in the time period.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card card-metric">
-            <div class="card-chart">
-                <canvas id="networkMetrics" height="80"></canvas>
-            </div>
-            <div class="card-body">
-                <h6 class="card-title">Network</h6>
-                <p class="card-text">Network statistics plotted over time.</p>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-y">
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h3 class="fw-bold mb-0 fs-4">Current Sessions</h3>
+                        <span class="metric"><span id="currentSessions"></span> / <span id="totalSessions"></span></span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h3 class="fw-bold mb-0 fs-4">MQTT-SN Publish Out</h3>
+                        <span class="metric"><span id="peakEgress"></span> Mp/s</span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h3 class="fw-bold mb-0 fs-4">MQTT-SN Publish In</h3>
+                        <span class="metric"><span id="peakIngress"></span> Mp/s</span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h3 class="fw-bold mb-0 fs-4">MQTT Publish Out</h3>
+                        <span class="metric"><span id="currentConnector"></span> / <span id="totalConnector"></span> Mp/s</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -36,24 +34,55 @@
 
 <div class="row">
     <div class="col">
-        <div class="card card-metric">
-            <div class="card-chart">
-                <canvas id="sessionMetrics" height="80"></canvas>
+        <div class="bd-callout bd-callout-info">
+            <div class="row">
+                <div class="col">
+                    <div class="card card-metric">
+                        <div class="card-chart">
+                            <canvas id="publishMetrics" height="80"></canvas>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">MQTT-SN Publish Operations</h6>
+                            <p class="card-text">The number of mqtt-sn publish messages sent and received in the time period.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card card-metric">
+                        <div class="card-chart">
+                            <canvas id="backendMetrics" height="80"></canvas>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">MQTT (Backend) Publish Operations</h6>
+                            <p class="card-text">Statistics relating to the backend connector performance.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <h6 class="card-title">MQTT-SN Sessions</h6>
-                <p class="card-text">The number of sessions in each state over time.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card card-metric">
-            <div class="card-chart">
-                <canvas id="systemMetrics" height="80"></canvas>
-            </div>
-            <div class="card-body">
-                <h6 class="card-title">System</h6>
-                <p class="card-text">View information about the virtual machine and networking layers.</p>
+
+            <div class="row">
+                <div class="col">
+                    <div class="card card-metric">
+                        <div class="card-chart">
+                            <canvas id="sessionMetrics" height="80"></canvas>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">MQTT-SN Sessions</h6>
+                            <p class="card-text">The number of sessions in each state over time.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card card-metric">
+                        <div class="card-chart">
+                            <canvas id="systemMetrics" height="80"></canvas>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">System</h6>
+                            <p class="card-text">View information about the virtual machine and networking layers.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -61,15 +90,17 @@
 
 <script>
 
+    var maxEntries = 100;
+    var updateTime = 5000;
+    var fieldRefreshTime = 1000;
+
     bindChart('publishMetrics', "/console/chart?chartId=");
-    bindChart('networkMetrics', "/console/chart?chartId=");
+    // bindChart('networkMetrics', "/console/chart?chartId=");
+    bindChart('backendMetrics', "/console/chart?chartId=");
     bindChart('sessionMetrics', "/console/chart?chartId=");
     bindChart('systemMetrics', "/console/chart?chartId=");
 
     function bindChart(el, d){
-
-        var maxEntries = 250;
-        var updateTime = 5000;
 
         $.getJSON(d + el, function(chartConfig) {
             var ctx = document.getElementById(el).getContext("2d");
@@ -77,19 +108,17 @@
             var epoch = Date.now();
             setInterval(function(){
                 $.getJSON(d + el + "&requestType=update&epoch=" + epoch, function (update){
-                    console.log(JSON.stringify(update));
+                    // console.log(JSON.stringify(update));
                     if(update.labels.length > 0){
                         update.labels.forEach((label) => {
                             chart.data.labels.push(label)
                         });
                         chart.data.datasets.forEach((dataset, i) => {
-                            // console.log("["+i+"] array ? ["+Array.isArray(update.data[i])+"] pushing " + JSON.stringify(update.data[i]));
                             Array.prototype.push.apply(dataset.data, update.data[i]);
                         });
                     } else {
-                        console.log("nothing to update with");
+                        // console.log("nothing to update with");
                     }
-
                     if(chart.data.labels.length > maxEntries){
                         removeData(chart, update.labels.length);
                     }
@@ -109,5 +138,14 @@
         }
         chart.update();
     }
+
+
+    //dynafields
+    updateHtmlElementTimerById("currentSessions", fieldRefreshTime);
+    updateHtmlElementTimerById("totalSessions", fieldRefreshTime);
+    updateHtmlElementTimerById("peakEgress", fieldRefreshTime);
+    updateHtmlElementTimerById("peakIngress", fieldRefreshTime);
+    updateHtmlElementTimerById("currentConnector", fieldRefreshTime);
+    updateHtmlElementTimerById("totalConnector", fieldRefreshTime);
 
 </script>

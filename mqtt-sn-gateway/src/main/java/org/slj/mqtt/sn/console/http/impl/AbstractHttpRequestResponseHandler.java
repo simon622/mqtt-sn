@@ -67,13 +67,18 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
                     sendUnsupportedOperationRequest(httpRequestResponse);
             }
         }
-        catch(HttpBadRequestException e){
-            LOG.log(Level.WARNING, String.format("bad request", e));
-            sendBadRequestResponse(httpRequestResponse,"bad request");
+        catch(HttpException e){
+            LOG.log(Level.WARNING, String.format("caught strong typed http exception, use code and message [%s -> %s]",
+                    e.getResponseCode(), e.getResponseMessage()), e);
+            try {
+                writeASCIIResponse(httpRequestResponse, e.getResponseCode(), e.getResponseMessage());
+            } catch (Exception ex){
+                LOG.log(Level.SEVERE, String.format("error sending internal server error request!", ex));
+            }
         }
         catch(Exception e){
             e.printStackTrace();
-            LOG.log(Level.WARNING, String.format("error handling request", e));
+            LOG.log(Level.SEVERE, "unhandled error", e);
             try {
                 writeASCIIResponse(httpRequestResponse, HttpConstants.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             } catch (Exception ex){
@@ -86,11 +91,11 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
         }
     }
 
-    protected void handleHttpGet(IHttpRequestResponse request) throws HttpBadRequestException, IOException {
+    protected void handleHttpGet(IHttpRequestResponse request) throws HttpException, IOException {
         sendNotFoundResponse(request);
     }
 
-    protected void handleHttpPost(IHttpRequestResponse request) throws HttpBadRequestException, IOException {
+    protected void handleHttpPost(IHttpRequestResponse request) throws HttpException, IOException {
         sendNotFoundResponse(request);
     }
 
@@ -105,6 +110,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected void sendBadRequestResponse(IHttpRequestResponse request, String message) throws IOException {
+        LOG.log(Level.INFO, String.format("resource not found [%s]", request));
         writeHTMLResponse(request, HttpConstants.SC_BAD_REQUEST,
                 Html.getErrorMessage(HttpConstants.SC_BAD_REQUEST, message));
     }
@@ -130,6 +136,10 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     protected void writeJSONResponse(IHttpRequestResponse request, int responseCode, byte[] bytes) throws IOException {
 //System.err.println(new String(bytes));
         writeResponseInternal(request, responseCode, HttpConstants.JSON_MIME_TYPE, bytes);
+    }
+
+    protected void writeJSONBeanResponse(IHttpRequestResponse request, int responseCode, Object bean) throws IOException {
+        writeJSONResponse(request, responseCode, writer.writeValueAsBytes(bean));
     }
 
     protected void writeStreamResponse(IHttpRequestResponse request, int responseCode, String mimeType, InputStream is) throws IOException {

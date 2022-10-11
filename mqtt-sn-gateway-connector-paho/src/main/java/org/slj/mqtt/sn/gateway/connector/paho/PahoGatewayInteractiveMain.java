@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.connector.paho;
 
+import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
@@ -50,6 +51,9 @@ public class PahoGatewayInteractiveMain {
                 if(port == MqttsnBackendOptions.DEFAULT_MQTT_TLS_PORT){
                     brokerOptions.withProtocol(MqttsnBackendOptions.DEFAULT_MQTT_TLS_PROTOCOL);
                 }
+
+                ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
+                ((MqttsnGatewayOptions) options).withMaxConnectedClients(500);
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).

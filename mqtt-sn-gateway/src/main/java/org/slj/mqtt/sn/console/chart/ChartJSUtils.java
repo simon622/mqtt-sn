@@ -79,7 +79,7 @@ public class ChartJSUtils {
 
     public static String upgradeToV3AxisOptions(String json){
         return json.replaceAll("\"options\" : \\{ \\}", "\"options\": {" +
-                "    \"responsive\": \"true\", \"scales\": {\"x\": {\"display\": false}}}");
+                "    \"responsive\": \"true\", \"scales\": {\"x\": {\"display\": false}, \"y\": {\"min\": 0}}}");
 
 //        String anno = "annotation: {" +
 //                "      annotations: [{" +

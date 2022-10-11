@@ -30,16 +30,18 @@ import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnPublish_V2_0;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public abstract class AbstractMqttsnMessageStateService
@@ -770,7 +772,7 @@ public abstract class AbstractMqttsnMessageStateService
         boolean canSend = inflight <
                 registry.getOptions().getMaxMessagesInflight();
         if(!canSend){
-            logger.log(Level.WARNING, String.format("number of inflight messages [%s] reached the configured max. [%s]", inflight, registry.getOptions().getMaxMessagesInflight()));
+            logger.log(Level.WARNING, String.format("[%s] number of inflight messages [%s] reached the configured max. [%s]", context, inflight, registry.getOptions().getMaxMessagesInflight()));
         }
         return canSend;
     }

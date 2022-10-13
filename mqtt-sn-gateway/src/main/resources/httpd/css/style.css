@@ -4,10 +4,12 @@
     --primary-background-color: #f8f9fa;
     --secondary-background-color: #ffffff;
     --primary-border-color: #c6c6c6;
+    --font-family-main:  Tahoma, sans-serif;
 }
 
 body {
     font-size: .875rem;
+    font-family: var(--font-family-main);
 }
 
 .bg-dark {

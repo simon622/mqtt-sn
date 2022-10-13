@@ -50,10 +50,10 @@ public class ConsoleAsyncMetricFieldHandler extends AsyncFieldHandler {
             case "totalSessions":
                 int max = ((MqttsnGatewayOptions)registry.getOptions()).getMaxConnectedClients();
                 return safeValue(new Long(max));
-            case "peakEgress":
-                return safeValue(registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT).getMaxSample().getLongValue());
-            case "peakIngress":
-                return safeValue(registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).getMaxSample().getLongValue());
+            case "currentEgress":
+                return safeValue(registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT).getLastSample().getLongValue());
+            case "currentIngress":
+                return safeValue(registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).getLastSample().getLongValue());
             case "currentConnector":
                 return safeValue(registry.getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH).getLastSample().getLongValue());
             case "totalConnector":

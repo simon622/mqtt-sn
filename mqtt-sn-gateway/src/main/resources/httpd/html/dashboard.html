@@ -12,13 +12,13 @@
                 <div class="col d-flex align-items-start">
                     <div>
                         <h3 class="fw-bold mb-0 fs-4">MQTT-SN Publish Out</h3>
-                        <span class="metric"><span id="peakEgress"></span> Mp/s</span>
+                        <span class="metric"><span id="currentEgress"></span> Mp/s</span>
                     </div>
                 </div>
                 <div class="col d-flex align-items-start">
                     <div>
                         <h3 class="fw-bold mb-0 fs-4">MQTT-SN Publish In</h3>
-                        <span class="metric"><span id="peakIngress"></span> Mp/s</span>
+                        <span class="metric"><span id="currentIngress"></span> Mp/s</span>
                     </div>
                 </div>
                 <div class="col d-flex align-items-start">
@@ -143,8 +143,8 @@
     //dynafields
     updateHtmlElementTimerById("currentSessions", fieldRefreshTime);
     updateHtmlElementTimerById("totalSessions", fieldRefreshTime);
-    updateHtmlElementTimerById("peakEgress", fieldRefreshTime);
-    updateHtmlElementTimerById("peakIngress", fieldRefreshTime);
+    updateHtmlElementTimerById("currentEgress", fieldRefreshTime);
+    updateHtmlElementTimerById("currentIngress", fieldRefreshTime);
     updateHtmlElementTimerById("currentConnector", fieldRefreshTime);
     updateHtmlElementTimerById("totalConnector", fieldRefreshTime);
 

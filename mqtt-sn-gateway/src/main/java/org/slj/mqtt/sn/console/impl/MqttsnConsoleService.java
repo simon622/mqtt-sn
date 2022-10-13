@@ -80,6 +80,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/console/session", new SessionHandler(getJsonWriter(), getRegistry()));
             server.registerContext("/console/search", new SearchHandler(getJsonWriter(), getRegistry()));
             server.registerContext("/console/config", new ConfigHandler(getJsonWriter(), getRegistry()));
+            server.registerContext("/console/topic", new TopicHandler(getJsonWriter(), getRegistry()));
 
             server.registerContext("/console/async", new AsyncContentHandler(getJsonWriter(), "httpd/html/",
                     "dashboard.html", "clients.html",  "session.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));

@@ -1,9 +1,67 @@
 <div class="row">
     <div class="col">
         <div class="bd-callout bd-callout-info">
-            <h5>Topic Registry</h5>
-            <p>Using color to add meaning only provides a visual indication, which will not be conveyed to users of assistive technologies – such as screen readers. Ensure that information denoted by the color is either obvious from the content itself (e.g. the visible text), or is included through alternative means, such as additional text hidden with the <code>.visually-hidden</code> class.
+            <h5>Predefined Topics</h5>
+            <p>
+                Predefined topics can be setup on the runtime options. They are known by the client and the server as per <a href="">Predefined Topics</a>.
             </p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Topic Filter</th>
+                    <th scope="col">Topic Alias</th>
+                    <th scope="col">Description</th>
+                </tr>
+                </thead>
+                <tbody id="predefinedRoot">
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Subscriptions</h5>
+            <p>
+                The table below shows a list of distinct topic filters being used by the runtime and how many associated subscriptions they have. A topic filter can be transient in the system, as a subscription is removed, so the topic filter will disappear in the list below.
+            </p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Topic Filter</th>
+                    <th scope="col">Subscription Count</th>
+                    <th scope="col">Description</th>
+                </tr>
+                </thead>
+                <tbody id="normalRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function update(){
+        $.getJSON("/console/topic", function(data) {
+            console.log(JSON.stringify(data));
+            $.each(data, function(key,val) {
+                $( "#" + key ).html(data[key])
+            });
+            var root = document.getElementById('predefinedRoot');
+            removeChildren(root);
+            data['predefinedTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.alias}</td><td>${element.description}</td></tr>`));
+
+            var root = document.getElementById('normalRoot');
+            removeChildren(root);
+            data['normalTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.subscriptionCount}</td><td>${element.description}</td></tr>`));
+        })
+    }
+
+    update();
+
+    setInterval(function(){
+        update();
+    },updateTime);
+</script>

@@ -70,6 +70,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withQueueProcessorStateCheck(new MqttsnGatewayQueueProcessorStateService()).
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).
                 withAuthenticationService(new MqttsnGatewayAuthenticationService()).
+                withClientIdFactory(new MqttsnDefaultClientIdFactory()).
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
 
         MqttsnConsoleOptions consoleOptions = options.getConsoleOptions();
@@ -147,5 +148,6 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         if(brokerService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
         if(connectionFactory == null) throw new MqttsnRuntimeException("connection factory must be bound for valid runtime");
         if(sessionService == null) throw new MqttsnRuntimeException("session service must be bound for valid runtime");
+        if(clientIdFactory == null) throw new MqttsnRuntimeException("clientIdFactory must be bound for valid runtime");
     }
 }

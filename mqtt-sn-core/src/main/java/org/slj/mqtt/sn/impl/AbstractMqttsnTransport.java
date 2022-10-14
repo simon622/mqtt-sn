@@ -34,7 +34,6 @@ import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -146,9 +145,11 @@ public abstract class AbstractMqttsnTransport
             boolean assignedClientId = false;
             if (message instanceof IMqttsnIdentificationPacket) {
                 String clientId = ((IMqttsnIdentificationPacket) message).getClientId();
+                clientId = getRegistry().getClientIdFactory().resolvedClientId(clientId);
                 if(clientId == null){
                     if(protocolVersion == MqttsnConstants.PROTOCOL_VERSION_2_0){
-                        clientId = generateAssignedClientId();
+                        clientId = getRegistry().getClientIdFactory().createClientId(null);
+                        logger.log(Level.INFO, String.format("detected <null> clientId, creating an assignedClient using clientId factory [%s]", clientId));
                     }
                 }
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
@@ -210,12 +211,6 @@ public abstract class AbstractMqttsnTransport
 
     protected boolean checkNewClientIdMatchesClientIdFromExistingContext(){
         return true;
-    }
-
-    protected String generateAssignedClientId(){
-        String assignedClientId = UUID.randomUUID().toString();
-        logger.log(Level.INFO, String.format("detected <null> clientId, creating an assignedClient [%s]", assignedClientId));
-        return assignedClientId;
     }
 
     protected boolean writeToTransportInternal(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){

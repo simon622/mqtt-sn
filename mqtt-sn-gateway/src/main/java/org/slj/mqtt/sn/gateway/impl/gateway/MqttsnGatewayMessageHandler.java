@@ -162,6 +162,10 @@ public class MqttsnGatewayMessageHandler
             maxPacketSize = connectMessage.getMaxPacketSize();
         }
 
+        //-- just be careful here - the cliendId from the message may well not match the one on the context at this
+        //-- point if it has been resolved by the clientIdFactory to be something different; however the inbound
+        //-- message version should be used for atuh checking
+
         if(registry.getAuthenticationService() != null){
             if(!registry.getAuthenticationService().allowConnect(context.getMqttsnContext(), clientId)){
                 logger.log(Level.WARNING, String.format("authentication service rejected client [%s]", clientId));

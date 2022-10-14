@@ -82,4 +82,6 @@ public interface IMqttsnRuntimeRegistry {
     List<IMqttsnTrafficListener> getTrafficListeners();
 
     IMqttsnStorageService getStorageService();
+
+    IMqttsnClientIdFactory getClientIdFactory();
 }

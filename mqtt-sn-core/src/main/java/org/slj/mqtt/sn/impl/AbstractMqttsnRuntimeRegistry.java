@@ -69,6 +69,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnTopicModifier topicModifier;
     protected IMqttsnMetricsService metrics;
     protected IMqttsnStorageService storageService;
+    protected IMqttsnClientIdFactory clientIdFactory;
 
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
 
@@ -385,6 +386,24 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     /**
+     * A clientId factory allows the runtime to generate clientIds in a format
+     * that the application needs. For example, UUID, tokens.
+     *
+     * A clientId will be passed through the installed factory to resolve a 'final' clientId
+     * inside the state system. For example '636c69656e744964' maybe passed over the wire in a CONNECT
+     * message but the factory may resolve this to a 'clientId' for use in the application. (This is the string 'clientId' encoded to HEX).
+     *
+     * This allows for opaque token usage on the protocol message layer
+     *
+     * @param clientIdFactory The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withClientIdFactory(IMqttsnClientIdFactory clientIdFactory){
+        this.clientIdFactory = clientIdFactory;
+        return this;
+    }
+
+    /**
      * The will registry holds the last will and testament data for against a given context. This will be used
      * by the runtime to intialise a session (in client mode) or to notify a topic (in gateway mode)
      *
@@ -516,6 +535,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     @Override
     public IMqttsnStorageService getStorageService() {
         return storageService;
+    }
+
+    @Override
+    public IMqttsnClientIdFactory getClientIdFactory() {
+        return clientIdFactory;
     }
 
     protected void validateOnStartup() throws MqttsnRuntimeException {

@@ -37,32 +37,6 @@ public class HttpUtils {
         return mime;
     }
 
-    public static String getFileName(String filePath){
-        int idx = filePath.lastIndexOf(File.separator);
-        String name = null;
-        if(idx > -1){
-            name = filePath.substring(idx);
-        }
-        return name;
-    }
-
-    public static String getFileExtension(String filePath){
-        int idx = filePath.lastIndexOf(".");
-        String ext = null;
-        if(idx > -1){
-            ext = filePath.substring(idx + 1);
-        }
-        return ext;
-    }
-
-    public static void copy(InputStream is, OutputStream os, int bufSize) throws IOException {
-        byte[] buf = new byte[bufSize];
-        int length;
-        while ((length = is.read(buf)) != -1) {
-            os.write(buf, 0, length);
-        }
-    }
-
     public static String getContextRelativePath(String contextPath, String requestUri){
             return requestUri.substring(requestUri.indexOf(contextPath) + contextPath.length());
     }

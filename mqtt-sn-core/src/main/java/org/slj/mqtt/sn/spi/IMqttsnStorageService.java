@@ -24,14 +24,20 @@
 
 package org.slj.mqtt.sn.spi;
 
+import org.slj.mqtt.sn.model.MqttsnOptions;
+
 import java.util.Date;
-import java.util.Properties;
+import java.util.Optional;
 
 
 /**
  *
  */
 public interface IMqttsnStorageService extends IMqttsnService {
+
+    String DEFAULT_FOLDER_NAME = "mqtt-sn-runtimes";
+    String DEFAULT_SETTINGS_FILENAME = "mqtt-sn-settings.xml";
+    String CREDENTIALS_FILENAME = "mqtt-sn-client-credentials";
 
     void setStringPreference(String key, String value) throws MqttsnException;
 
@@ -52,8 +58,11 @@ public interface IMqttsnStorageService extends IMqttsnService {
 
     Date getDatePreference(String key, Date defaultValue) ;
 
-    void putAll(Properties properties) throws MqttsnException;
+    void saveFile(String fileName, byte[] arr) throws MqttsnException;
 
-    Properties loadAll() throws MqttsnException;
+    Optional<byte[]> loadFileIfExists(String fileName) throws MqttsnException ;
 
+    void updateRuntimeOptionsFromFilesystem(MqttsnOptions options) throws MqttsnException ;
+
+    void writeRuntimeOptions(MqttsnOptions options) throws MqttsnException ;
 }

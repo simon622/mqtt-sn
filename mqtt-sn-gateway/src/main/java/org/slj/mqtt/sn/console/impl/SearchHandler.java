@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.impl;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpBadRequestException;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
@@ -40,8 +40,8 @@ public class SearchHandler extends AbstractHttpRequestResponseHandler {
     static final String SEARCH_TERM = "searchTerm";
     private IMqttsnRuntimeRegistry registry;
 
-    public SearchHandler(ObjectWriter writer, IMqttsnRuntimeRegistry registry) {
-        super(writer);
+    public SearchHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
+        super(mapper);
         this.registry = registry;
     }
 
@@ -50,7 +50,7 @@ public class SearchHandler extends AbstractHttpRequestResponseHandler {
 
         String prefix = getMandatoryParameter(request, SEARCH_TERM);
         Object[] options = generateData(prefix);
-        writeJSONResponse(request, HttpConstants.SC_OK, writer.writeValueAsBytes(options));
+        writeJSONResponse(request, HttpConstants.SC_OK, mapper.writeValueAsBytes(options));
     }
 
     protected Option[] generateData(String prefix){

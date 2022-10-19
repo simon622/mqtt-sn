@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 
 public interface MqttsnConstants {
 
-    //-- topic path separator regex with lookahead and lookbehind to maintainn tokens
+    //-- topic path separator regex with lookahead and lookbehind to maintain tokens
     String TOPIC_SEPARATOR_REGEX = "((?<=/)|(?=/))";
 
     //-- protocol versions

@@ -1,3 +1,7 @@
+var updateTime = 5000;
+var fieldRefreshTime = 1000;
+
+
 function getAllUrlParams(url) {
 
     // get query string from url (optional) or window
@@ -64,7 +68,27 @@ function getAllUrlParams(url) {
 }
 
 function removeChildren(el){
-    while (el.firstChild) {
-        el.firstChild.remove()
+    if(el !== null && el !== undefined){
+        while (el.firstChild !== undefined && el.firstChild) {
+            el.firstChild.remove()
+        }
     }
+}
+
+function renderMessage(msg){
+    message(msg.title == null ? (msg.success ? "Success" : "Error") : msg.title, msg.message, msg.success ? "success" : "danger");
+}
+
+function message(title, msg, level){
+
+    var msg = '<div class="alert alert-'+level+' alert-dismissible fade show" role="alert">' +
+        '<strong>'+title+'</strong> '+ msg +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+        '</div>';
+
+    $("#messages").html(msg);
+
+    var alertList = document.querySelectorAll('.alert')
+    alertList.forEach(element => new bootstrap.Alert(element))
+
 }

@@ -76,19 +76,24 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void start(IMqttsnRuntimeRegistry reg, boolean join) throws MqttsnException {
         if(!running){
-            setupEnvironment(reg.getOptions());
             startedAt = System.currentTimeMillis();
             registry = reg;
             startupLatch = new CountDownLatch(1);
-            running = true;
             registry.setRuntime(this);
             registry.init();
+
+            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", System.identityHashCode(this),
+                    getRegistry().getStorageService().getClass().getSimpleName()));
+            registry.getStorageService().updateRuntimeOptionsFromFilesystem(registry.getOptions());
+            setupEnvironment(reg.getOptions());
+
+            running = true;
+
             if(reg.getTrafficListeners() != null && !reg.getTrafficListeners().isEmpty()){
                 trafficListeners.addAll(reg.getTrafficListeners());
             }
             generalUseExecutorService = createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
             bindShutdownHook();
-            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s]", System.identityHashCode(this)));
             startupServices(registry);
             postStartupTasks();
             startupLatch.countDown();

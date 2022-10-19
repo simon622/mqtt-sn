@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.console.impl;
 import be.ceau.chart.LineChart;
 import be.ceau.chart.data.LineData;
 import be.ceau.chart.options.LineOptions;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.chart.ChartJSUtils;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
@@ -59,8 +59,8 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
 
     private IMqttsnRuntimeRegistry registry;
 
-    public ChartHandler(ObjectWriter writer, IMqttsnRuntimeRegistry registry) {
-        super(writer);
+    public ChartHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
+        super(mapper);
         this.registry = registry;
     }
 
@@ -176,7 +176,7 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
                 ChartJSUtils.values(asleep),
                 ChartJSUtils.values(lost)
         };
-        String json = writer.writeValueAsString(u);
+        String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,
                 json.getBytes(StandardCharsets.UTF_8));
     }
@@ -207,7 +207,7 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
         u.data = new int [][]{
                 ChartJSUtils.values(in), ChartJSUtils.values(out), ChartJSUtils.values(backend)
         };
-        String json = writer.writeValueAsString(u);
+        String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,
                 json.getBytes(StandardCharsets.UTF_8));
     }
@@ -240,7 +240,7 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
         u.data = new int [][]{
                 ChartJSUtils.values(in), ChartJSUtils.values(out), ChartJSUtils.values(netRegSamples)
         };
-        String json = writer.writeValueAsString(u);
+        String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,
                 json.getBytes(StandardCharsets.UTF_8));
     }
@@ -270,7 +270,7 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
         u.data = new int [][]{
                 ChartJSUtils.values(netInSamples), ChartJSUtils.values(netOutSamples)
         };
-        String json = writer.writeValueAsString(u);
+        String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,
                 json.getBytes(StandardCharsets.UTF_8));
     }
@@ -304,7 +304,7 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
         u.data = new int [][]{
                 ChartJSUtils.values(publish), ChartJSUtils.values(recieve), ChartJSUtils.values(queuesize)
         };
-        String json = writer.writeValueAsString(u);
+        String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,
                 json.getBytes(StandardCharsets.UTF_8));
     }

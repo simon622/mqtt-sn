@@ -84,4 +84,5 @@ public interface IMqttsnRuntimeRegistry {
     IMqttsnStorageService getStorageService();
 
     IMqttsnClientIdFactory getClientIdFactory();
+
 }

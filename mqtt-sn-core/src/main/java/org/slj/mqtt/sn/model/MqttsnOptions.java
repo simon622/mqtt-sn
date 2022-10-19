@@ -232,8 +232,8 @@ public class MqttsnOptions {
     private MqttsnSecurityOptions securityOptions;
     private Map<String, Integer> predefinedTopics = new HashMap<>();
     private volatile Map<String, NetworkAddress> networkAddressEntries;
-
-
+    private MqttsnClientCredentials clientCredentials =
+            new MqttsnClientCredentials(true);
 
     /**
      * Should the metrics system be enabled
@@ -708,6 +708,10 @@ public class MqttsnOptions {
         return this;
     }
 
+    public MqttsnOptions withClientCredentials(MqttsnClientCredentials clientCredentials){
+        this.clientCredentials = clientCredentials;
+        return this;
+    }
 
     public Map<String, NetworkAddress> getNetworkAddressEntries() {
         return networkAddressEntries;
@@ -851,5 +855,9 @@ public class MqttsnOptions {
 
     public boolean isMetricsEnabled() {
         return metricsEnabled;
+    }
+
+    public MqttsnClientCredentials getClientCredentials() {
+        return clientCredentials;
     }
 }

@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.impl;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.handlers.AsyncFieldHandler;
 import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
@@ -36,8 +36,8 @@ public class ConsoleAsyncMetricFieldHandler extends AsyncFieldHandler {
 
     private IMqttsnRuntimeRegistry registry;
 
-    public ConsoleAsyncMetricFieldHandler(ObjectWriter writer, IMqttsnRuntimeRegistry registry) {
-        super(writer);
+    public ConsoleAsyncMetricFieldHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
+        super(mapper);
         this.registry = registry;
     }
 

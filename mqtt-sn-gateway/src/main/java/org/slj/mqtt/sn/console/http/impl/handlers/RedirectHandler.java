@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.http.impl.handlers;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 
@@ -34,8 +34,8 @@ public class RedirectHandler extends AbstractHttpRequestResponseHandler {
 
     protected String redirectLocation;
 
-    public RedirectHandler(ObjectWriter writer, String redirectLocation) {
-        super(writer);
+    public RedirectHandler(ObjectMapper mapper, String redirectLocation) {
+        super(mapper);
         this.redirectLocation = redirectLocation;
     }
 

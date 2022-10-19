@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.client.impl.cli;
 
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
+import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 
 import java.io.PrintStream;
 import java.util.Scanner;
@@ -39,7 +40,8 @@ public class MqttsnInteractiveClientLauncher {
             PrintStream output = System.out;
             interactiveClient.init(input, output);
             interactiveClient.welcome("Welcome to the mqtt-sn interactive client. You will need to give me the location of your MQTT-SN compliant gateway to continue.. ");
-            interactiveClient.start(new MqttsnFilesystemStorageService("mqtt-sn-client-config.xml"));
+            interactiveClient.start(new MqttsnFilesystemStorageService(
+                    new MqttsnVMObjectReaderWriter(), "mqtt-sn-client"));
             interactiveClient.command();
             interactiveClient.exit();
         } catch (Exception e) {

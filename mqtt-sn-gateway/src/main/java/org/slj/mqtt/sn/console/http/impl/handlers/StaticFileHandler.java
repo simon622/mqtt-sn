@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.http.impl.handlers;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpUtils;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
@@ -35,8 +35,8 @@ public class StaticFileHandler extends AbstractHttpRequestResponseHandler {
 
     protected final String resourceRoot;
 
-    public StaticFileHandler(ObjectWriter writer, String resourceRoot) {
-        super(writer);
+    public StaticFileHandler(ObjectMapper mapper, String resourceRoot) {
+        super(mapper);
         this.resourceRoot = resourceRoot;
     }
 

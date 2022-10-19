@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.http.impl.handlers;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 
@@ -34,8 +34,8 @@ public class RenderPageHandler extends AbstractHttpRequestResponseHandler {
 
     protected final String resource;
 
-    public RenderPageHandler(ObjectWriter writer, String resourceRoot) {
-        super(writer);
+    public RenderPageHandler(ObjectMapper mapper, String resourceRoot) {
+        super(mapper);
         this.resource = resourceRoot;
     }
 

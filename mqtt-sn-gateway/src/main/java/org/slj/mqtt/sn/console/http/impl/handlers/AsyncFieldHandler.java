@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.http.impl.handlers;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpBadRequestException;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
@@ -36,8 +36,8 @@ public abstract class AsyncFieldHandler extends AbstractHttpRequestResponseHandl
 
     static final String fieldParameter = "field";
 
-    public AsyncFieldHandler(ObjectWriter writer) {
-        super(writer);
+    public AsyncFieldHandler(ObjectMapper mapper) {
+        super(mapper);
     }
 
     @Override

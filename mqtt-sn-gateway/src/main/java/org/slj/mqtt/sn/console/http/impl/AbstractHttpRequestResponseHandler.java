@@ -24,9 +24,10 @@
 
 package org.slj.mqtt.sn.console.http.impl;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.*;
 import org.slj.mqtt.sn.console.http.impl.handlers.StaticFileHandler;
+import org.slj.mqtt.sn.utils.Files;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,10 +41,10 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     protected final Logger LOG =
             Logger.getLogger(getClass().getName());
 
-    protected final ObjectWriter writer;
+    protected final ObjectMapper mapper;
 
-    public AbstractHttpRequestResponseHandler(ObjectWriter writer) {
-        this.writer = writer;
+    public AbstractHttpRequestResponseHandler(ObjectMapper mapper) {
+        this.mapper = mapper;
     }
 
     public void handleRequest(IHttpRequestResponse httpRequestResponse) throws IOException {
@@ -139,7 +140,11 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected void writeJSONBeanResponse(IHttpRequestResponse request, int responseCode, Object bean) throws IOException {
-        writeJSONResponse(request, responseCode, writer.writeValueAsBytes(bean));
+        writeJSONResponse(request, responseCode, mapper.writeValueAsBytes(bean));
+    }
+
+    protected void writeMessageBeanResponse(IHttpRequestResponse request, int responseCode, Message message) throws IOException {
+        writeJSONResponse(request, responseCode, mapper.writeValueAsBytes(message));
     }
 
     protected void writeStreamResponse(IHttpRequestResponse request, int responseCode, String mimeType, InputStream is) throws IOException {
@@ -166,15 +171,32 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
         }
     }
 
+    protected void writeSimpleOKResponse(IHttpRequestResponse request) throws IOException {
+        try {
+            request.setResponseContentType(HttpConstants.PLAIN_MIME_TYPE, StandardCharsets.UTF_8);
+            request.sendResponseHeaders(HttpConstants.SC_OK, 0);
+        } finally {
+            request.commit();
+        }
+    }
+
     protected void writeDataFromResource(IHttpRequestResponse requestResponse, String resourcePath) throws IOException {
         InputStream is = loadClasspathResource(resourcePath);
         if (is == null) {
             sendNotFoundResponse(requestResponse);
         } else {
-            String fileName = HttpUtils.getFileName(resourcePath);
-            String ext = HttpUtils.getFileExtension(resourcePath);
+            String fileName = Files.getFileName(resourcePath);
+            String ext = Files.getFileExtension(resourcePath);
             String mimeType = HttpUtils.getMimeTypeFromFileExtension(ext);
             writeStreamResponse(requestResponse, HttpConstants.SC_OK, mimeType, is);
+        }
+    }
+
+    protected <T> T readRequestBody(IHttpRequestResponse requestResponse, Class<T> cls) throws HttpInternalServerError{
+        try {
+            return mapper.readValue(requestResponse.getRequestBody(), cls);
+        } catch(Exception e) {
+            throw new HttpInternalServerError("error reading request body", e);
         }
     }
 
@@ -190,4 +212,32 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
         }
         return value;
     }
+
+    protected String getParameter(IHttpRequestResponse requestResponse, String paramKey) {
+        String value = requestResponse.getParameter(paramKey);
+        return value;
+    }
+
+    public static class Message {
+
+        public String title;
+        public String message;
+        public boolean success;
+
+        public Message() {
+
+        }
+
+        public Message(String message, boolean success) {
+            this.message = message;
+            this.success = success;
+        }
+
+        public Message(String title, String message, boolean success) {
+            this.title = title;
+            this.message = message;
+            this.success = success;
+        }
+    }
 }
+

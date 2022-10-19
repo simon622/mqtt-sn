@@ -41,7 +41,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
 
     private SunHttpServerBootstrap server;
     private MqttsnConsoleOptions options;
-    private ObjectWriter jsonWriter;
+    private ObjectMapper jsonMapper;
 
     public MqttsnConsoleService(MqttsnConsoleOptions options){
         this.options = options;
@@ -52,7 +52,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
         super.start(runtime);
 
         if(options.isConsoleEnabled()){
-            jsonWriter = (new ObjectMapper()).writerWithDefaultPrettyPrinter();
+            jsonMapper = new ObjectMapper();
             logger.log(Level.INFO, String.format("starting console service with - %s", options));
             startWebServer(options);
         }
@@ -72,17 +72,18 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server = new SunHttpServerBootstrap(
                     new InetSocketAddress(options.getHostName(), options.getConsolePort()),
                     options.getServerThreads(), options.getTcpBacklog());
-            server.registerContext("/", new RedirectHandler(getJsonWriter(), "./console/html/index.html"));
-            server.registerContext("/hello", new HelloWorldHandler(getJsonWriter()));
-            server.registerContext("/console", new StaticFileHandler(getJsonWriter(), "httpd"));
-            server.registerContext("/console/metrics/field", new ConsoleAsyncMetricFieldHandler(getJsonWriter(), getRegistry()));
-            server.registerContext("/console/chart", new ChartHandler(getJsonWriter(), getRegistry()));
-            server.registerContext("/console/session", new SessionHandler(getJsonWriter(), getRegistry()));
-            server.registerContext("/console/search", new SearchHandler(getJsonWriter(), getRegistry()));
-            server.registerContext("/console/config", new ConfigHandler(getJsonWriter(), getRegistry()));
-            server.registerContext("/console/topic", new TopicHandler(getJsonWriter(), getRegistry()));
+            server.registerContext("/", new RedirectHandler(getJsonMapper(), "./console/html/index.html"));
+            server.registerContext("/hello", new HelloWorldHandler(getJsonMapper()));
+            server.registerContext("/console", new StaticFileHandler(getJsonMapper(), "httpd"));
+            server.registerContext("/console/metrics/field", new ConsoleAsyncMetricFieldHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/chart", new ChartHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/session", new SessionHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/search", new SearchHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/config", new ConfigHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/topic", new TopicHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/client/access", new ClientAccessHandler(getJsonMapper(), getRegistry()));
 
-            server.registerContext("/console/async", new AsyncContentHandler(getJsonWriter(), "httpd/html/",
+            server.registerContext("/console/async", new AsyncContentHandler(getJsonMapper(), "httpd/html/",
                     "dashboard.html", "clients.html",  "session.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));
             server.startServer();
             logger.log(Level.INFO, String.format("console server started..."));
@@ -97,8 +98,8 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
         }
     }
 
-    public ObjectWriter getJsonWriter() {
-        return jsonWriter;
+    public ObjectMapper getJsonMapper() {
+        return jsonMapper;
     }
 
     public static void main(String[] args) {

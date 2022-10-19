@@ -83,6 +83,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         validateOnStartup();
         initNetworkRegistry();
         factory = codec.createMessageFactory();
+
     }
 
     protected void initNetworkRegistry(){

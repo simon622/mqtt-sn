@@ -24,10 +24,14 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slj.mqtt.sn.model.MqttsnClientCredentials;
+import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.Files;
 
 import java.io.*;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -35,51 +39,67 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
 
     final String HOME_DIR = "user.dir";
     final String TMP_DIR = "java.io.tmpdir";
-
-    static final String DEFAULT_FOLDER = "mqtt-sn-runtimes";
-    static final String DEFAULT_SETTINGS_FILENAME = "mqtt-sn-settings.xml";
     static final String FIRSTRUN = "firstrun";
     private File settingsFile = null;
     private Properties properties = null;
     private File path;
-    private String fileName = DEFAULT_SETTINGS_FILENAME;
+    private String workspace;
+    private boolean firstRun = false;
+    private IMqttsnObjectReaderWriter readerWriter;
 
-    public MqttsnFilesystemStorageService(File path, String fileName) {
-        try {
-            this.path = path;
-            this.fileName = fileName;
-            init();
-        } catch(MqttsnException e){
-            throw new MqttsnRuntimeException(e);
-        }
+    public MqttsnFilesystemStorageService(IMqttsnObjectReaderWriter readerWriter, File path, String workspace) {
+        this.path = path;
+        this.workspace = workspace;
+        this.readerWriter = readerWriter;
+        init();
     }
 
-    public MqttsnFilesystemStorageService(String fileName) {
-        try {
-            this.fileName = fileName;
-            init();
-        } catch(MqttsnException e){
-            throw new MqttsnRuntimeException(e);
-        }
+    public MqttsnFilesystemStorageService(IMqttsnObjectReaderWriter readerWriter, String workspace) {
+        this.workspace = workspace;
+        this.readerWriter = readerWriter;
+        init();
+    }
+
+    public MqttsnFilesystemStorageService(String workspace) {
+        this.workspace = workspace;
+        this.readerWriter = IMqttsnObjectReaderWriter.DEFAULT;
+        init();
+    }
+
+    public MqttsnFilesystemStorageService(IMqttsnObjectReaderWriter readerWriter) {
+        this.readerWriter = readerWriter;
+        init();
     }
 
     public MqttsnFilesystemStorageService() {
-        try {
-            init();
-        } catch(MqttsnException e){
-            throw new MqttsnRuntimeException(e);
+        this(IMqttsnObjectReaderWriter.DEFAULT);
+    }
+
+    private void init(){
+        initRoot();
+        initWorkspace();
+        initSettings();
+    }
+
+    private synchronized void initRoot(){
+        path = path == null ?  new File(System.getProperty(HOME_DIR)) : path;
+        path = new File(path, IMqttsnStorageService.DEFAULT_FOLDER_NAME);
+        if(!path.isDirectory()) throw new MqttsnSecurityException("path location must be a directory");
+        if(!path.exists()){
+            path.mkdirs();
         }
     }
 
-    public synchronized void init() throws MqttsnException {
+    private synchronized void initWorkspace(){
+        path = new File(path, workspace);
+        if(!path.exists()){
+            path.mkdirs();
+        }
+    }
+
+    public synchronized void initSettings() {
         if(settingsFile == null){
-            path = path == null ?  new File(System.getProperty(HOME_DIR)) : path;
-            if(!path.isDirectory()) throw new MqttsnSecurityException("path location must be a directory");
-            path = new File(path, DEFAULT_FOLDER);
-            if(!path.exists()){
-                path.mkdirs();
-            }
-            settingsFile = new File(path, fileName);
+            settingsFile = new File(path, DEFAULT_SETTINGS_FILENAME);
             try {
                 if(!settingsFile.exists()){
                     if(!settingsFile.createNewFile()){
@@ -90,6 +110,7 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
                                 settingsFile.getAbsolutePath()));
                         properties = new Properties();
                         setDatePreference(FIRSTRUN, new Date());
+                        firstRun = true;
                     }
                 } else {
                     try(InputStream fis =
@@ -136,18 +157,6 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
             throw new MqttsnRuntimeException("invalid settings key format <null> or empty string");
         String propertyValue = properties.getProperty(key);
         return propertyValue == null ? defaultValue : propertyValue;
-    }
-
-    @Override
-    public void putAll(Properties properties) throws MqttsnException {
-        this.properties.putAll(properties);
-    }
-
-    @Override
-    public Properties loadAll() throws MqttsnException {
-        Properties props = new Properties();
-        props.putAll(properties);
-        return props;
     }
 
     @Override
@@ -202,5 +211,67 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
     public Boolean getBooleanPreference(String key, Boolean defaultValue) {
         String val = readPreferenceInternal(key, defaultValue == null ? null : defaultValue.toString());
         return val == null ? null : Boolean.valueOf(val);
+    }
+
+    @Override
+    public void saveFile(String fileName, byte[] bytes) throws MqttsnException {
+        try {
+            logger.log(Level.INFO, String.format("writing data to storage [%s] -> [%s]", fileName, bytes.length));
+            if(fileName.contains(File.separator) || fileName.contains(".."))
+                throw new MqttsnSecurityException("only able to write to child of root storage");
+            File f = new File(path, fileName);
+            Files.writeWithLock(f.getAbsolutePath(), bytes);
+        } catch(IOException e){
+            throw new MqttsnException(e);
+        }
+    }
+
+    @Override
+    public Optional<byte[]> loadFileIfExists(String fileName) throws MqttsnException {
+        File f = new File(path, fileName);
+        if(!f.exists()) return Optional.empty();
+        try(InputStream fis = new FileInputStream(f)){
+            return Optional.of(Files.read(fis, 1024));
+        }catch(IOException e){
+            throw new MqttsnException(e);
+        }
+    }
+
+    @Override
+    public void updateRuntimeOptionsFromFilesystem(MqttsnOptions options) throws MqttsnException {
+        if(firstRun){
+            if(options.getClientCredentials() != null){
+                writeCredentials(options.getClientCredentials());
+            }
+        } else {
+            //load it all
+            MqttsnClientCredentials credsFromFilesystem = readCredentials();
+            if(credsFromFilesystem != null){
+                options.withClientCredentials(credsFromFilesystem);
+            }
+        }
+    }
+
+    public void writeRuntimeOptions(MqttsnOptions options) throws MqttsnException {
+        writeCredentials(options.getClientCredentials());
+    }
+
+    protected void writeCredentials(MqttsnClientCredentials credentials) throws MqttsnException {
+        if(readerWriter != null){
+            saveFile(IMqttsnStorageService.CREDENTIALS_FILENAME,
+                    readerWriter.write(credentials));
+        }
+    }
+
+    protected MqttsnClientCredentials readCredentials() throws MqttsnException {
+        if(readerWriter != null){
+            Optional<byte[]> data = loadFileIfExists(IMqttsnStorageService.CREDENTIALS_FILENAME);
+            if(data.isPresent()){
+                return readerWriter.load(MqttsnClientCredentials.class, data.get());
+            } else {
+                return null;
+            }
+        }
+        throw new MqttsnRuntimeException("unable to initialise filesystem with null reader");
     }
 }

@@ -136,10 +136,11 @@
                 </div>
             </nav>
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="dyna">
-                <!-- empty div -->
-            </div>
-        </main>
+                <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="messages"></div>
+                <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="dyna">
+                    <!-- empty div -->
+                </div>
+            </main>
         </div>
     </div>
 </div>
@@ -147,6 +148,7 @@
 <script>
 
     var sessionId;
+    var timerIds = [];
 
     bindClick('#dashboardLink', "dashboard.html", true);
     bindClick('#clientsLink', "clients.html");
@@ -160,6 +162,8 @@
 
     function bindClick(selector, page, loadnow = false){
         $(selector).click(function() {
+            clearTimers();
+            $("#messages").html('');
             $.ajax({
                 url: "/console/async?page=" + page,
                 success: function( result ) {
@@ -179,9 +183,21 @@
     }
 
     function updateHtmlElementTimer(el, refreshRate){
-        setInterval(function(){
+        pageTimer(refreshRate, function(){
             updateHtmlElement(el);
-        }, refreshRate);
+        });
+    }
+
+    function pageTimer(refreshRate, f){
+        var id = setInterval(f, refreshRate);
+        timerIds.push(id);
+    }
+
+    function clearTimers(){
+        timerIds.forEach(function(id) {
+            clearInterval(id);
+        });
+        timerIds = [];
     }
 
     function updateHtmlElement(el){
@@ -211,10 +227,7 @@
                     $("#dyna").html(result);
                 }
             });
-
             field.value = '';
-            // var root = document.getElementById('searchHistory');
-            // root.insertAdjacentHTML('afterbegin', "<a className=\"nav-link\" href=\"#\" id=\"topicsLink\">"+sessionId+"</a>")
         },
         onInput: (value) => {
             $.getJSON("/console/search?searchTerm=" + value, function (update){

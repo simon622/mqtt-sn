@@ -45,10 +45,6 @@
 <script>
     function update(){
         $.getJSON("/console/topic", function(data) {
-            console.log(JSON.stringify(data));
-            $.each(data, function(key,val) {
-                $( "#" + key ).html(data[key])
-            });
             var root = document.getElementById('predefinedRoot');
             removeChildren(root);
             data['predefinedTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.alias}</td><td>${element.description}</td></tr>`));
@@ -61,7 +57,7 @@
 
     update();
 
-    setInterval(function(){
+    pageTimer(updateTime, function (){
         update();
-    },updateTime);
+    })
 </script>

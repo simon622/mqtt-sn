@@ -26,23 +26,32 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnClientCredentials;
 import org.slj.mqtt.sn.spi.IMqttsnAuthenticationService;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
+import java.util.logging.Level;
 
 public class MqttsnGatewayAuthenticationService
         extends MqttsnService  implements IMqttsnAuthenticationService {
 
     @Override
     public boolean allowConnect(IMqttsnContext context, String clientId) {
-        Set<String> allowedClientId = ((MqttsnGatewayOptions)registry.getOptions()).getAllowedClientIds();
-        if(allowedClientId != null && !allowedClientId.isEmpty()){
-            return allowedClientId.contains(MqttsnGatewayOptions.DEFAULT_CLIENT_ALLOWED_ALL)
-                    || allowedClientId.contains(clientId);
+        MqttsnClientCredentials credentials = ((MqttsnGatewayOptions)registry.getOptions()).getClientCredentials();
+        if(credentials == null) {
+            logger.log(Level.WARNING, "credentials not defined on runtime options.. deny all");
+            return false;
         }
-        return false;
+        //allow all
+        if(credentials.isAllowAllClientIds()){
+            return true;
+        } else {
+            Set<String> allowedClientId = credentials.getClientIdTokens();
+            if(allowedClientId != null && !allowedClientId.isEmpty()){
+                return allowedClientId.contains(clientId);
+            }
+            return false;
+        }
     }
 }

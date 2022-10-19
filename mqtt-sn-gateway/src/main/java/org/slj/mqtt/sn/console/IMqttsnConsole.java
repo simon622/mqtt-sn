@@ -24,10 +24,10 @@
 
 package org.slj.mqtt.sn.console;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 
 public interface IMqttsnConsole extends IMqttsnService {
 
-    ObjectWriter getJsonWriter();
+    ObjectMapper getJsonMapper();
 }

@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.console.http;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -46,6 +47,8 @@ public interface IHttpRequestResponse {
     void setResponseContentType(String mimeType, Charset charset);
 
     OutputStream getResponseBody();
+
+    InputStream getRequestBody();
 
     void sendResponseHeaders(int httpCode, int size) throws IOException;
 

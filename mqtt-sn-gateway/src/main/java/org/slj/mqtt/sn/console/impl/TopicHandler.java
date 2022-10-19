@@ -25,7 +25,7 @@
 package org.slj.mqtt.sn.console.impl;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.HttpException;
 import org.slj.mqtt.sn.console.http.HttpInternalServerError;
@@ -43,8 +43,8 @@ public class TopicHandler extends AbstractHttpRequestResponseHandler {
 
     protected IMqttsnRuntimeRegistry registry;
 
-    public TopicHandler(ObjectWriter writer, IMqttsnRuntimeRegistry registry) {
-        super(writer);
+    public TopicHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
+        super(mapper);
         this.registry = registry;
     }
 

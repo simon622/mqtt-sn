@@ -22,24 +22,23 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.console.http.impl.handlers;
+package org.slj.mqtt.sn.spi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slj.mqtt.sn.console.http.Html;
-import org.slj.mqtt.sn.console.http.HttpConstants;
-import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 
-import java.io.IOException;
+import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 
-public class HelloWorldHandler extends AbstractHttpRequestResponseHandler {
+import java.io.Serializable;
 
-    public HelloWorldHandler(ObjectMapper mapper) {
-        super(mapper);
-    }
+/**
+ * Interface out the reading and writing of JSON as there could be any number of implementions we want to use
+ * according to the environment
+ */
+public interface IMqttsnObjectReaderWriter {
 
-    @Override
-    protected void handleHttpGet(IHttpRequestResponse request) throws IOException {
-        writeHTMLResponse(request, HttpConstants.SC_OK, Html.span("Hello World From SLJ MQTT-SN Console!", Html.RED, true));
-    }
+    IMqttsnObjectReaderWriter DEFAULT = new MqttsnVMObjectReaderWriter();
+
+    byte[] write(Serializable o) throws MqttsnException;
+
+    <T extends Serializable> T load(Class<? extends T> clz, byte[] arr) throws MqttsnException;
+
 }

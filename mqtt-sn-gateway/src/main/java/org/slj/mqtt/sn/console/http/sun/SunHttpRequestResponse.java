@@ -30,6 +30,7 @@ import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.impl.HttpRequestResponse;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
@@ -45,6 +46,11 @@ public class SunHttpRequestResponse extends HttpRequestResponse {
 
     public OutputStream getResponseBody(){
         return exchange.getResponseBody();
+    }
+
+    @Override
+    public InputStream getRequestBody() {
+        return exchange.getRequestBody();
     }
 
     public void addResponseHeader(String headerKey, String headerValue){

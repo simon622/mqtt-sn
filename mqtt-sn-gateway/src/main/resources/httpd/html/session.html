@@ -134,8 +134,8 @@
 
     update();
 
-    setInterval(function(){
-       update();
-    },updateTime);
+    pageTimer(updateTime, function (){
+        update();
+    })
 
 </script>

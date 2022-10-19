@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.console.http.impl.handlers;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpUtils;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
@@ -36,8 +36,8 @@ public class AsyncContentHandler extends AbstractHttpRequestResponseHandler {
     private String[] allowedPages;
     private String root;
 
-    public AsyncContentHandler(ObjectWriter writer, String root, String... allowedPages){
-        super(writer);
+    public AsyncContentHandler(ObjectMapper mapper, String root, String... allowedPages){
+        super(mapper);
         this.allowedPages = allowedPages;
         this.root = root;
     }

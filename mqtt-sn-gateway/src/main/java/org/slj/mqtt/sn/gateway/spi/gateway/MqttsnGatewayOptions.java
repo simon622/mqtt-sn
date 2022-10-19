@@ -27,15 +27,9 @@ package org.slj.mqtt.sn.gateway.spi.gateway;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public final class MqttsnGatewayOptions extends MqttsnOptions {
-
-    /**
-     * By default, any clientId ("*") will be allowed to connect to the gateway.
-     */
-    public static final String DEFAULT_CLIENT_ALLOWED_ALL = "*";
 
     /**
      * The default gatewayId used in advertise / discovery is 1
@@ -62,11 +56,6 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
      * The maximum number of publish operations queued up to send to backend
      */
     public static final int DEFAULT_MAX_BACKEND_QUEUE_SIZE = 10000;
-
-    private Set<String> allowedClientIds = new HashSet();
-    {
-        allowedClientIds.add(DEFAULT_CLIENT_ALLOWED_ALL);
-    }
 
     private int maxConnectedClients = DEFAULT_MAX_CONNECTED_CLIENTS;
     private double maxBrokerPublishesPerSecond = DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND;
@@ -116,7 +105,7 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     }
 
     public Set<String> getAllowedClientIds() {
-        return allowedClientIds;
+        return getClientCredentials().getClientIdTokens();
     }
 
     public double getMaxBrokerPublishesPerSecond() {
@@ -128,12 +117,7 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     }
 
     public MqttsnGatewayOptions withAllowedClientId(String clientId){
-
-        //-- if the application specifies custom allow list, remove wildcard
-        if(allowedClientIds.contains(DEFAULT_CLIENT_ALLOWED_ALL)){
-            allowedClientIds.remove(DEFAULT_CLIENT_ALLOWED_ALL);
-        }
-        allowedClientIds.add(clientId);
+        super.getClientCredentials().addAllowedClientId(clientId, clientId);
         return this;
     }
 
@@ -145,6 +129,8 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public MqttsnConsoleOptions getConsoleOptions() {
         return consoleOptions;
     }
+
+
 
     public void withPerformanceProfile(MqttsnGatewayPerformanceProfile profile){
         withMaxConnectedClients(profile.getMaxConnectedClients());

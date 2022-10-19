@@ -91,8 +91,7 @@
 <script>
 
     var maxEntries = 100;
-    var updateTime = 5000;
-    var fieldRefreshTime = 1000;
+
 
     bindChart('publishMetrics', "/console/chart?chartId=");
     // bindChart('networkMetrics', "/console/chart?chartId=");
@@ -106,7 +105,7 @@
             var ctx = document.getElementById(el).getContext("2d");
             var chart = new Chart(ctx, chartConfig);
             var epoch = Date.now();
-            setInterval(function(){
+            pageTimer(updateTime, function(){
                 $.getJSON(d + el + "&requestType=update&epoch=" + epoch, function (update){
                     // console.log(JSON.stringify(update));
                     if(update.labels.length > 0){
@@ -125,7 +124,7 @@
                     chart.update();
                 });
                 epoch = Date.now();
-            },updateTime);
+            })
         });
     }
 

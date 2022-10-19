@@ -34,9 +34,7 @@
     }
 
     update();
-
-    setInterval(function(){
+    pageTimer(updateTime, function (){
         update();
-    },updateTime);
-
+    })
 </script>

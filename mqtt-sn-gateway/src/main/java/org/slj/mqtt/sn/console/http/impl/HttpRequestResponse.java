@@ -89,7 +89,8 @@ public abstract class HttpRequestResponse implements IHttpRequestResponse {
     @Override
     public synchronized String getParameter(String key) {
         if(parameters == null){
-            String query = httpRequestUri.getQuery();
+//            String query = httpRequestUri.getQuery();
+            String query = httpRequestUri.getRawQuery();
             parameters = HttpUtils.parseQueryString(query);
         }
         return parameters.get(key);

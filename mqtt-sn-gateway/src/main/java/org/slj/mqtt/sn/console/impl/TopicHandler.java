@@ -30,7 +30,6 @@ import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.HttpException;
 import org.slj.mqtt.sn.console.http.HttpInternalServerError;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -39,13 +38,10 @@ import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import java.io.IOException;
 import java.util.*;
 
-public class TopicHandler extends AbstractHttpRequestResponseHandler {
-
-    protected IMqttsnRuntimeRegistry registry;
+public class TopicHandler extends MqttsnConsoleAjaxRealmHandler {
 
     public TopicHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
-        super(mapper);
-        this.registry = registry;
+        super(mapper, registry);
     }
 
     @Override

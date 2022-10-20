@@ -30,7 +30,6 @@ import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.HttpException;
 import org.slj.mqtt.sn.console.http.HttpInternalServerError;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -40,14 +39,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class ConfigHandler extends AbstractHttpRequestResponseHandler {
+public class ConfigHandler extends MqttsnConsoleAjaxRealmHandler {
 
-
-    protected IMqttsnRuntimeRegistry registry;
 
     public ConfigHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
-        super(mapper);
-        this.registry = registry;
+        super(mapper, registry);
     }
 
     @Override

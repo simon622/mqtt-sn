@@ -28,21 +28,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpBadRequestException;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class SearchHandler extends AbstractHttpRequestResponseHandler {
-
+public class SearchHandler extends MqttsnConsoleAjaxRealmHandler {
     static final String SEARCH_TERM = "searchTerm";
-    private IMqttsnRuntimeRegistry registry;
 
     public SearchHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
-        super(mapper);
-        this.registry = registry;
+        super(mapper, registry);
     }
 
     @Override

@@ -39,6 +39,9 @@ public interface HttpConstants {
     Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     String CONTENT_TYPE_HEADER = "Content-Type";
     String LOCATION_HEADER = "Location";
+    String BASIC_AUTH_HEADER = "Authorization";
+    String BASIC_AUTH_CHALLENGE_HEADER = "WWW-Authenticate";
+    String BASIC_AUTH_REALM = "Basic realm=\"%s\"";
     String HTML_MIME_TYPE = "text/html";
     String PLAIN_MIME_TYPE = "text/plain";
     String JSON_MIME_TYPE = "application/json";

@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,8 +49,15 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     public void handleRequest(IHttpRequestResponse httpRequestResponse) throws IOException {
+
         long start = System.currentTimeMillis();
         try {
+            UsernamePassword credentials = getRequiredCredentials();
+            if(credentials != null){
+                if(!handleBasicHttpAuthentication(credentials, httpRequestResponse)){
+                    return;
+                }
+            }
             switch(httpRequestResponse.getMethod()){
                 case GET:
                     handleHttpGet(httpRequestResponse);
@@ -216,6 +224,29 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     protected String getParameter(IHttpRequestResponse requestResponse, String paramKey) {
         String value = requestResponse.getParameter(paramKey);
         return value;
+    }
+
+    protected boolean handleBasicHttpAuthentication(UsernamePassword usernamePassword, IHttpRequestResponse httpRequestResponse) throws IOException {
+
+        String value = httpRequestResponse.getRequestHeader(HttpConstants.BASIC_AUTH_HEADER);
+        if(value != null){
+            value = value.substring(value.lastIndexOf(" ") + 1);
+            value = new String(Base64.getDecoder().decode(value));
+            String[] userNamePassword = value.split(":");
+            if(usernamePassword.getUserName().equals(userNamePassword[0]) &&
+                    usernamePassword.getPassword().equals(userNamePassword[1])){
+                return true;
+            }
+        }
+
+        httpRequestResponse.addResponseHeader(HttpConstants.BASIC_AUTH_CHALLENGE_HEADER,
+                String.format(HttpConstants.BASIC_AUTH_REALM, usernamePassword.getRealm()));
+        writeResponseInternal(httpRequestResponse, HttpConstants.SC_UNAUTHORIZED, HttpConstants.HTML_MIME_TYPE, new byte[0]);
+        return false;
+    }
+
+    protected UsernamePassword getRequiredCredentials(){
+        return null;
     }
 
     public static class Message {

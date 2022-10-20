@@ -24,38 +24,43 @@
 
 package org.slj.mqtt.sn.console.http;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.nio.charset.Charset;
+public class UsernamePassword {
 
-public interface IHttpRequestResponse {
+    String userName;
+    String password;
+    String realm;
 
-    String getContextPath();
+    public UsernamePassword() {
+    }
 
-    String getContextRelativePath();
 
-    URI getHttpRequestUri();
+    public UsernamePassword(String userName, String password, String realm) {
+        this.userName = userName;
+        this.password = password;
+        this.realm = realm;
+    }
 
-    HttpConstants.METHOD getMethod();
+    public String getUserName() {
+        return userName;
+    }
 
-    String getParameter(String key);
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-    String getRequestHeader(String key);
+    public String getPassword() {
+        return password;
+    }
 
-    void addResponseHeader(String headerKey, String headerValue);
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    void setResponseContentType(String mimeType, Charset charset);
+    public String getRealm() {
+        return realm;
+    }
 
-    OutputStream getResponseBody();
-
-    InputStream getRequestBody();
-
-    void sendResponseHeaders(int httpCode, int size) throws IOException;
-
-    int getResponseCode();
-
-    void commit();
-
+    public void setRealm(String realm) {
+        this.realm = realm;
+    }
 }

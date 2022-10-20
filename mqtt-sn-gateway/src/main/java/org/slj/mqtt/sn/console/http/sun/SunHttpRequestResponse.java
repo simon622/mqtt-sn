@@ -63,6 +63,11 @@ public class SunHttpRequestResponse extends HttpRequestResponse {
     }
 
     @Override
+    public String getRequestHeader(String key) {
+        return exchange.getRequestHeaders().getFirst(key);
+    }
+
+    @Override
     protected Map<String, String> getRequestHeaders() {
         Headers headers = exchange.getRequestHeaders();
         Set<String> s = headers.keySet();

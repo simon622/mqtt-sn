@@ -25,10 +25,11 @@
 package org.slj.mqtt.sn.console.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import org.slj.mqtt.sn.console.IMqttsnConsole;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
-import org.slj.mqtt.sn.console.http.impl.handlers.*;
+import org.slj.mqtt.sn.console.http.impl.handlers.AsyncContentHandler;
+import org.slj.mqtt.sn.console.http.impl.handlers.HelloWorldHandler;
+import org.slj.mqtt.sn.console.http.impl.handlers.RedirectHandler;
 import org.slj.mqtt.sn.console.http.sun.SunHttpServerBootstrap;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -74,7 +75,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
                     options.getServerThreads(), options.getTcpBacklog());
             server.registerContext("/", new RedirectHandler(getJsonMapper(), "./console/html/index.html"));
             server.registerContext("/hello", new HelloWorldHandler(getJsonMapper()));
-            server.registerContext("/console", new StaticFileHandler(getJsonMapper(), "httpd"));
+            server.registerContext("/console", new MqttsnStaticWebsiteHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/metrics/field", new ConsoleAsyncMetricFieldHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/chart", new ChartHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/session", new SessionHandler(getJsonMapper(), getRegistry()));

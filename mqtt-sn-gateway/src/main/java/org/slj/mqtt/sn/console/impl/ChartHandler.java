@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.chart.ChartJSUtils;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.model.MqttsnMetricSample;
@@ -44,7 +43,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class ChartHandler extends AbstractHttpRequestResponseHandler {
+public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
 
     static final String CHART_ID = "chartId";
     static final String REQUEST_TYPE = "requestType";
@@ -57,11 +56,8 @@ public class ChartHandler extends AbstractHttpRequestResponseHandler {
                         BACKEND = "backendMetrics",
                         SYSTEM = "systemMetrics";
 
-    private IMqttsnRuntimeRegistry registry;
-
     public ChartHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
-        super(mapper);
-        this.registry = registry;
+        super(mapper, registry);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class MqttsnConsoleOptions {
     public static final int DEFAULT_CONSOLE_PORT = 8080;
     public static final String DEFAULT_CONSOLE_HOST_NAME = "localhost";
     public static final String DEFAULT_CONSOLE_USERNAME = "admin";
-    public static final String DEFAULT_CONSOLE_PASSWORD = "p4ssword";
+    public static final String DEFAULT_CONSOLE_PASSWORD = "password";
     public static final int DEFAULT_TCP_BACKLOG = 10;
     public static final int DEFAULT_SERVER_THREADS = 2;
     private boolean consoleEnabled = DEFAULT_CONSOLE_ENABLED;

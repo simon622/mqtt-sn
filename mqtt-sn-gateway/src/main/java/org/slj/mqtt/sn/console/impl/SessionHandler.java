@@ -27,7 +27,6 @@ package org.slj.mqtt.sn.console.impl;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.*;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
@@ -45,15 +44,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SessionHandler extends AbstractHttpRequestResponseHandler {
+public class SessionHandler extends MqttsnConsoleAjaxRealmHandler {
 
     static final String CLIENTID = "clientId";
 
-    protected IMqttsnRuntimeRegistry registry;
-
     public SessionHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
-        super(mapper);
-        this.registry = registry;
+        super(mapper, registry);
     }
 
     @Override

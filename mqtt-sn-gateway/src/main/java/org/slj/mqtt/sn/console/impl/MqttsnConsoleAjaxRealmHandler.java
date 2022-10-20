@@ -22,40 +22,22 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.console.http;
+package org.slj.mqtt.sn.console.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.nio.charset.Charset;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
-public interface IHttpRequestResponse {
+public abstract class MqttsnConsoleAjaxRealmHandler extends AbstractHttpRequestResponseHandler {
 
-    String getContextPath();
+    protected IMqttsnRuntimeRegistry registry;
 
-    String getContextRelativePath();
+    public MqttsnConsoleAjaxRealmHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
+        super(mapper);
+        this.registry = registry;
+    }
 
-    URI getHttpRequestUri();
-
-    HttpConstants.METHOD getMethod();
-
-    String getParameter(String key);
-
-    String getRequestHeader(String key);
-
-    void addResponseHeader(String headerKey, String headerValue);
-
-    void setResponseContentType(String mimeType, Charset charset);
-
-    OutputStream getResponseBody();
-
-    InputStream getRequestBody();
-
-    void sendResponseHeaders(int httpCode, int size) throws IOException;
-
-    int getResponseCode();
-
-    void commit();
-
+    protected IMqttsnRuntimeRegistry getRegistry(){
+        return registry;
+    }
 }

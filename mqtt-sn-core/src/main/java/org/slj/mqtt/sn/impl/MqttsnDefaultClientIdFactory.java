@@ -26,15 +26,21 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.spi.IMqttsnClientIdFactory;
 
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
+/**
+ * Simple implementation of the clientID factory where the Client Identifier seed is used
+ * as the actual clientId for the purposes of connection and thus the resolved version is
+ * the same.
+ *
+ * Input Seed -> 'MyClientId'
+ * Runtime Output -> 'MyClientId'
+ * Connect Value -> 'MyClientId'
+ */
 public class MqttsnDefaultClientIdFactory implements IMqttsnClientIdFactory {
 
     @Override
     public String createClientId(String clientIdSeed) {
-        return clientIdSeed == null ? UUID.randomUUID().toString() :
-                UUID.nameUUIDFromBytes(clientIdSeed.getBytes(StandardCharsets.UTF_8)).toString();
+        return clientIdSeed;
     }
 
     @Override

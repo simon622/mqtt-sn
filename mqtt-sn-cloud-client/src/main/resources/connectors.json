@@ -1,0 +1,26 @@
+[
+  {
+    "name" : "Loopback Gateway Connector",
+    "description" : "The loopback connector puts the gateway into standalone broker mode. It needs no MQTT broker to connect to, instead it will serving the MQTT-SN clients directly as a broker itself, using the MQTT-SN protocol.",
+    "documentationLink" : "https://github.com/simon622/mqtt-sn",
+    "homeLink" : "https://github.com/simon622/mqtt-sn",
+    "version" : "1.0",
+    "className" : "org.slj.mqtt.sn.gateway.impl.connector.LoopbackMqttsnConnector",
+    "developer" : "Simon Johnson",
+    "imageUrl" : "https://github.com/simon622/mqtt-sn",
+    "companyName" : "SLJ",
+    "author" : "Simon Johnson"
+  } ,
+  {
+    "name" : "Hive MQ Cloud Connector",
+    "description" : "The HiveMQ Cloud connector will connect to your HiveMQ Cloud account, allowing MQTT-SN enabled devices to access your cloud environment.",
+    "documentationLink" : "https://github.com/simon622/mqtt-sn",
+    "homeLink" : "https://github.com/simon622/mqtt-sn",
+    "version" : "1.0",
+    "className" : "org.slj.mqtt.sn.gateway.impl.connector.HiveMQCloudMqttsnConnector",
+    "developer" : "Simon Johnson",
+    "imageUrl" : "https://github.com/simon622/mqtt-sn",
+    "companyName" : "SLJ",
+    "author" : "Simon Johnson"
+  }
+]

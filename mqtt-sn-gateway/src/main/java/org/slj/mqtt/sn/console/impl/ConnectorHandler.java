@@ -25,14 +25,16 @@
 package org.slj.mqtt.sn.console.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
+import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
+import org.slj.mqtt.sn.cloud.client.impl.HttpCloudServiceImpl;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.HttpException;
 import org.slj.mqtt.sn.console.http.HttpInternalServerError;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.IMqttsnCloudService;
-import org.slj.mqtt.sn.gateway.spi.connector.ConnectorBean;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 import java.io.IOException;
@@ -45,6 +47,7 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
 
     public ConnectorHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
         super(mapper, registry);
+        cloudService = new HttpCloudServiceImpl(mapper, "http://mqtt-sn.cloud/api/services.json", 5000, 5000);
     }
 
     @Override
@@ -57,8 +60,8 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
         }
     }
 
-    protected BeanList populateBean() {
-        List<ConnectorBean> connectors = null;
+    protected BeanList populateBean() throws MqttsnCloudServiceException {
+        List<MqttsnConnectorDescriptor> connectors = null;
         if(cloudService == null){
             connectors = cloudService.getAvailableConnectors();
         }
@@ -73,11 +76,11 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
         return beanList;
     }
 
-    protected List<ConnectorBean> applyRuntimeStatus(List<ConnectorBean> list){
+    protected List<MqttsnConnectorDescriptor> applyRuntimeStatus(List<MqttsnConnectorDescriptor> list){
 
-        Iterator<ConnectorBean> itr = list.iterator();
+        Iterator<MqttsnConnectorDescriptor> itr = list.iterator();
         while(itr.hasNext()){
-            ConnectorBean bean = itr.next();
+            MqttsnConnectorDescriptor bean = itr.next();
             RuntimeConnectorBean runtimeBean = new RuntimeConnectorBean(bean);
             try {
                 Class.forName(runtimeBean.getClassName());
@@ -87,30 +90,26 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
             }
 
             try {
-                IMqttsnBackendService backendService =
-                        ((MqttsnGatewayRuntimeRegistry)getRegistry()).getBackendConnectionFactory()
-                Class.forName(runtimeBean.getClassName());
-                runtimeBean.available = true;
+                IMqttsnConnector connector =
+                        ((MqttsnGatewayRuntimeRegistry)getRegistry()).getConnector();
+                runtimeBean.running = connector.getClass().getName().equals(runtimeBean.getClassName());
             } catch(Exception e){
                 // not available on runtime
             }
-
-            runtimeBean.running =
-
         }
 
         return list;
     }
 
     class BeanList {
-        public List<ConnectorBean> connectors;
+        public List<MqttsnConnectorDescriptor> connectors;
     }
 
-    class RuntimeConnectorBean extends ConnectorBean {
+    class RuntimeConnectorBean extends MqttsnConnectorDescriptor {
 
         public boolean running = false;
         public boolean available = false;
-        public RuntimeConnectorBean(ConnectorBean bean){
+        public RuntimeConnectorBean(MqttsnConnectorDescriptor bean){
             copyFrom(bean);
         }
     }

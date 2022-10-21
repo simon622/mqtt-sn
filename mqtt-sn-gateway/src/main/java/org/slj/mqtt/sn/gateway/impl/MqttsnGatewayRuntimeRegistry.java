@@ -122,7 +122,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     }
 
     @Override
-    public IMqttsnConnector getBackendConnectionFactory() {
+    public IMqttsnConnector getConnector() {
         return connectionFactory;
     }
 

@@ -39,15 +39,15 @@ import java.util.logging.Logger;
  * @author simonjohnson
  *
  */
-public class LoopbackMqttsnBrokerConnection extends AbstractMqttsnBackendConnection {
+public class LoopbackMqttsnConnectorConnection extends AbstractMqttsnBackendConnection {
 
-    private Logger logger = Logger.getLogger(LoopbackMqttsnBrokerConnection.class.getName());
+    private Logger logger = Logger.getLogger(LoopbackMqttsnConnectorConnection.class.getName());
     protected MqttsnConnectorOptions options;
     protected final String clientId;
 
     volatile boolean connected = false;
 
-    public LoopbackMqttsnBrokerConnection(MqttsnConnectorOptions options, String clientId) {
+    public LoopbackMqttsnConnectorConnection(MqttsnConnectorOptions options, String clientId) {
         this.options = options;
         this.clientId = clientId;
     }

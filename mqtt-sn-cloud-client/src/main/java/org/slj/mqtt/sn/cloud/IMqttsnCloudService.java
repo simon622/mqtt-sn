@@ -22,25 +22,23 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.gateway;
+package org.slj.mqtt.sn.cloud;
 
-import org.slj.mqtt.sn.console.IMqttsnConsole;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
 
-public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
+import java.util.List;
 
-    IMqttsnBackendService getBackendService();
+public interface IMqttsnCloudService {
 
-    IMqttsnConnector getConnector();
+    List<MqttsnConnectorDescriptor> getAvailableConnectors() throws MqttsnCloudServiceException;
 
-    IMqttsnGatewaySessionService getGatewaySessionService();
+    int getConnectedServiceCount() throws MqttsnCloudServiceException;
 
-    IMqttsnGatewayAdvertiseService getGatewayAdvertiseService();
+    boolean hasCloudConnectivity();
 
-    IMqttsnGatewayClusterService getGatewayClusterService();
+    boolean hasCloudAccount();
 
-    IMqttsnConsole getConsole();
+    void updateAccessKey(String accountKey) throws MqttsnCloudServiceException;
+
 
 }

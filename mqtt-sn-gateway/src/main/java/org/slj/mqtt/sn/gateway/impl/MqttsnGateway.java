@@ -58,7 +58,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         //-- start the network last
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendConnectionFactory());
+        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getConnector());
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
 
         //-- start discovery
@@ -154,7 +154,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callShutdown(runtime.getSecurityService());
 
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendConnectionFactory());
+        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getConnector());
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
 
         //-- ensure we stop all the startable services

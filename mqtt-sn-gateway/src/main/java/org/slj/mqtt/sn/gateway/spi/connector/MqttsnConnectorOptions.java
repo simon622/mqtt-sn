@@ -36,7 +36,6 @@ public class MqttsnConnectorOptions {
     public static final int DEFAULT_MQTT_TLS_PORT = 8883;
     public static final String DEFAULT_MQTT_PROTOCOL = "tcp";
     public static final String DEFAULT_MQTT_TLS_PROTOCOL = "ssl";
-
     private boolean connectOnStartup = DEFAULT_CONNECT_ON_STARTUP;
     private boolean managedConnections = DEFAULT_MANAGED_CONNECTIONS;
     private String username;
@@ -194,7 +193,7 @@ public class MqttsnConnectorOptions {
 
     @Override
     public String toString() {
-        return "MqttsnBrokerOptions{" +
+        return "MqttsnConnectorOptions{" +
                 "connectOnStartup=" + connectOnStartup +
                 ", managedConnections=" + managedConnections +
                 ", username='" + username + '\'' +

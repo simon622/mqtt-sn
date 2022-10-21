@@ -1,0 +1,47 @@
+[
+  {
+    "serviceName" : "ConnectorListing",
+    "serviceDisplayName" : "Connector Listing",
+    "serviceEndpoint" : "http://mqtt-sn.cloud/api/connectors.json",
+    "serviceDescription" : "A listing of the available connectors on the cloud",
+    "serviceVersion" : "1.0",
+    "requiresAuthToken" : false,
+    "serviceMethod" : "GET"
+  } ,
+  {
+    "serviceName" : "AccountCreate",
+    "serviceDisplayName" : "Account Creator",
+    "serviceEndpoint" : "http://mqtt-sn.cloud/api/account-create.php",
+    "serviceDescription" : "Create a new cloud account",
+    "serviceVersion" : "1.0",
+    "requiresAuthToken" : false,
+    "serviceMethod" : "POST"
+  } ,
+  {
+    "serviceName" : "AccountAuthorize",
+    "serviceDisplayName" : "Account Authorizor",
+    "serviceEndpoint" : "http://mqtt-sn.cloud/api/account-authorize.php",
+    "serviceDescription" : "Generate an auth token from a key",
+    "serviceVersion" : "1.0",
+    "requiresAuthToken" : false,
+    "serviceMethod" : "POST"
+  } ,
+  {
+    "serviceName" : "AccountDetails",
+    "serviceDisplayName" : "Account Details",
+    "serviceEndpoint" : "http://mqtt-sn.cloud/api/account-details.php",
+    "serviceDescription" : "Obtain account details from auth token",
+    "serviceVersion" : "1.0",
+    "requiresAuthToken" : true,
+    "serviceMethod" : "GET"
+  } ,
+  {
+    "serviceName" : "TestService",
+    "serviceDisplayName" : "Test Service",
+    "serviceEndpoint" : "http://mqtt-sn.cloud/api/test.php",
+    "serviceDescription" : "A service used to test the cloud",
+    "serviceVersion" : "1.0",
+    "requiresAuthToken" : false,
+    "serviceMethod" : "GET"
+  }
+]

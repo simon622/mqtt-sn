@@ -63,7 +63,7 @@ public class LoopbackGatewayInteractiveMain {
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions)options).
-                        withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
+                        withBrokerConnectionFactory(new LoopbackMqttsnConnector()).
                         withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport(storageService));
 

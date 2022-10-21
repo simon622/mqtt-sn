@@ -22,9 +22,11 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.connector;
+package org.slj.mqtt.sn.cloud;
 
-public class ConnectorBean {
+import java.io.Serializable;
+
+public class MqttsnConnectorDescriptor implements Serializable {
 
     private String name;
     private String description;
@@ -35,8 +37,9 @@ public class ConnectorBean {
     private String developer;
     private String imageUrl;
     private String companyName;
+    private String author;
 
-    public ConnectorBean(){
+    public MqttsnConnectorDescriptor(){
     }
 
     public String getName() {
@@ -111,7 +114,31 @@ public class ConnectorBean {
         this.companyName = companyName;
     }
 
-    public void copyFrom(ConnectorBean impl){
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnConnectorDescriptor{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", documentationLink='" + documentationLink + '\'' +
+                ", homeLink='" + homeLink + '\'' +
+                ", className='" + className + '\'' +
+                ", version='" + version + '\'' +
+                ", developer='" + developer + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", companyName='" + companyName + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
+
+    public void copyFrom(MqttsnConnectorDescriptor impl){
         setClassName(impl.getClassName());
         setCompanyName(impl.getCompanyName());
         setDescription(impl.getDescription());
@@ -121,20 +148,6 @@ public class ConnectorBean {
         setImageUrl(impl.getImageUrl());
         setVersion(impl.getVersion());
         setName(impl.getName());
+        setAuthor(impl.getAuthor());
     }
 }
-
-
-/*
-
-"mame" : "",
-  "description" : "",
-  "documentationLink" : "",
-  "homeLink" : "",
-  "className" : "",
-  "version" : "",
-  "developer" : "",
-  "imageUrl" : "",
-  "fields" : []
-
- */

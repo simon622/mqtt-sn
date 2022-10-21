@@ -28,12 +28,12 @@ import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 
-public class LoopbackMqttsnBrokerConnectionFactory implements IMqttsnConnector<LoopbackMqttsnBrokerConnection> {
+public class LoopbackMqttsnConnector implements IMqttsnConnector<LoopbackMqttsnConnectorConnection> {
 
     @Override
-    public LoopbackMqttsnBrokerConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
+    public LoopbackMqttsnConnectorConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
         try {
-            LoopbackMqttsnBrokerConnection connection = new LoopbackMqttsnBrokerConnection(options, clientId);
+            LoopbackMqttsnConnectorConnection connection = new LoopbackMqttsnConnectorConnection(options, clientId);
             if(options.getConnectOnStartup()) connection.connect();
             return connection;
         } catch(Exception e){

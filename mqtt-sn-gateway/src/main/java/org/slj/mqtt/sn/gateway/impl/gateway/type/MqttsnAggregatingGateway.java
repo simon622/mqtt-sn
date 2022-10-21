@@ -255,7 +255,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             //-- in aggregation mode connect with the gatewayId as the clientId on the broker side
             synchronized (this){
                 if(connection == null){
-                    connection = getRegistry().getBackendConnectionFactory().createConnection(options,
+                    connection = getRegistry().getConnector().createConnection(options,
                             registry.getOptions().getContextId());
                     if(connection instanceof AbstractMqttsnBackendConnection){
                         ((AbstractMqttsnBackendConnection)connection).setBrokerService(this);

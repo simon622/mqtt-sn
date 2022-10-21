@@ -22,14 +22,22 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi;
+package org.slj.mqtt.sn.cloud.client;
 
-import org.slj.mqtt.sn.gateway.spi.connector.ConnectorBean;
+public class MqttsnCloudServiceException extends Exception {
 
-import java.util.List;
+    public MqttsnCloudServiceException() {
+    }
 
-public interface IMqttsnCloudService {
+    public MqttsnCloudServiceException(String message) {
+        super(message);
+    }
 
-    List<ConnectorBean> getAvailableConnectors();
+    public MqttsnCloudServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
+    public MqttsnCloudServiceException(Throwable cause) {
+        super(cause);
+    }
 }

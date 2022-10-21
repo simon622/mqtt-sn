@@ -22,9 +22,14 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.broker;
+package org.slj.mqtt.sn.gateway.spi;
 
-public interface IMqttsnBackendConnectionFactory<T extends IMqttsnBackendConnection> {
+import org.slj.mqtt.sn.gateway.spi.connector.ConnectorBean;
 
-    T createConnection(MqttsnBackendOptions options, String clientId) throws MqttsnBackendException;
+import java.util.List;
+
+public interface IMqttsnCloudService {
+
+    List<ConnectorBean> getAvailableConnectors();
+
 }

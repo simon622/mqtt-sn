@@ -25,15 +25,15 @@
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
 import org.slj.mqtt.sn.console.IMqttsnConsole;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
 
     IMqttsnBackendService getBackendService();
 
-    IMqttsnBackendConnectionFactory getBackendConnectionFactory();
+    IMqttsnConnector getBackendConnectionFactory();
 
     IMqttsnGatewaySessionService getGatewaySessionService();
 

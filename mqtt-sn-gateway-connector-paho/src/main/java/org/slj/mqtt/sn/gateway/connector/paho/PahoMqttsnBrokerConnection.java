@@ -32,13 +32,11 @@ import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.SubscribeResult;
 import org.slj.mqtt.sn.gateway.spi.UnsubscribeResult;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
 
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -54,15 +52,15 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
 
     private Logger logger = Logger.getLogger(PahoMqttsnBrokerConnection.class.getName());
     private volatile MqttClient client = null;
-    protected MqttsnBackendOptions options;
+    protected MqttsnConnectorOptions options;
     protected final String clientId;
 
-    public PahoMqttsnBrokerConnection(MqttsnBackendOptions options, String clientId) {
+    public PahoMqttsnBrokerConnection(MqttsnConnectorOptions options, String clientId) {
         this.options = options;
         this.clientId = clientId;
     }
 
-    public void connect() throws MqttsnBackendException {
+    public void connect() throws MqttsnConnectorException {
         if(client == null){
             synchronized (this){
                 if(client == null){
@@ -82,7 +80,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
                             onClientConnected(client);
                         }
                     } catch(MqttException e){
-                        throw new MqttsnBackendException(e);
+                        throw new MqttsnConnectorException(e);
                     }
                 }
             }
@@ -96,7 +94,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
 
     }
 
-    protected MqttConnectOptions createConnectOptions(MqttsnBackendOptions options) throws MqttsnBackendException {
+    protected MqttConnectOptions createConnectOptions(MqttsnConnectorOptions options) throws MqttsnConnectorException {
         MqttConnectOptions connectOptions = new MqttConnectOptions();
         connectOptions.setAutomaticReconnect(false);
         if(options.getPassword() != null) connectOptions.setPassword(options.getPassword().toCharArray());
@@ -106,15 +104,15 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
         return connectOptions;
     }
 
-    protected String createClientId(MqttsnBackendOptions options) throws MqttsnBackendException {
+    protected String createClientId(MqttsnConnectorOptions options) throws MqttsnConnectorException {
         return clientId;
     }
 
-    protected String createConnectionString(MqttsnBackendOptions options) throws MqttsnBackendException {
+    protected String createConnectionString(MqttsnConnectorOptions options) throws MqttsnConnectorException {
         return String.format("%s://%s:%s", options.getProtocol(), options.getHost(), options.getPort());
     }
 
-    protected MqttClient createClient(MqttsnBackendOptions options) throws MqttsnBackendException {
+    protected MqttClient createClient(MqttsnConnectorOptions options) throws MqttsnConnectorException {
         try {
             String clientId = createClientId(options);
             String connectionStr = createConnectionString(options);
@@ -124,7 +122,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
             client.setTimeToWait(options.getConnectionTimeout() * 1000);
             return client;
         } catch(MqttException e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
@@ -157,7 +155,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
+    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             int QoS = message == null ? MqttsnConstants.QoS2 : backendService.getRegistry().getCodec().getQoS(message, true);
             if(isConnected()) {
@@ -167,12 +165,12 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
             }
             return new SubscribeResult(Result.STATUS.NOOP);
         } catch(MqttException e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException {
+    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             logger.log(Level.INFO, String.format("unsubscribing connection from [%s]", topicPath));
             if(isConnected()){
@@ -181,12 +179,12 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
             }
             return new UnsubscribeResult(Result.STATUS.NOOP);
         } catch(MqttException e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
            if(isConnected()){
                client.publish(topicPath.toString(), payload, qos, retained);
@@ -194,7 +192,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
            }
             return new PublishResult(Result.STATUS.NOOP);
         } catch(Exception e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 

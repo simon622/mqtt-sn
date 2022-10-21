@@ -24,20 +24,20 @@
 
 package org.slj.mqtt.sn.gateway.impl.connector;
 
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 
-public class LoopbackMqttsnBrokerConnectionFactory implements IMqttsnBackendConnectionFactory<LoopbackMqttsnBrokerConnection> {
+public class LoopbackMqttsnBrokerConnectionFactory implements IMqttsnConnector<LoopbackMqttsnBrokerConnection> {
 
     @Override
-    public LoopbackMqttsnBrokerConnection createConnection(MqttsnBackendOptions options, String clientId) throws MqttsnBackendException {
+    public LoopbackMqttsnBrokerConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
         try {
             LoopbackMqttsnBrokerConnection connection = new LoopbackMqttsnBrokerConnection(options, clientId);
             if(options.getConnectOnStartup()) connection.connect();
             return connection;
         } catch(Exception e){
-            throw new MqttsnBackendException("error creating connection;", e);
+            throw new MqttsnConnectorException("error creating connection;", e);
         }
     }
 }

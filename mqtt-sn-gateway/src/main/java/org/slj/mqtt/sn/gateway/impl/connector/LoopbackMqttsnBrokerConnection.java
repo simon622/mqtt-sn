@@ -27,8 +27,8 @@ package org.slj.mqtt.sn.gateway.impl.connector;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -42,22 +42,22 @@ import java.util.logging.Logger;
 public class LoopbackMqttsnBrokerConnection extends AbstractMqttsnBackendConnection {
 
     private Logger logger = Logger.getLogger(LoopbackMqttsnBrokerConnection.class.getName());
-    protected MqttsnBackendOptions options;
+    protected MqttsnConnectorOptions options;
     protected final String clientId;
 
     volatile boolean connected = false;
 
-    public LoopbackMqttsnBrokerConnection(MqttsnBackendOptions options, String clientId) {
+    public LoopbackMqttsnBrokerConnection(MqttsnConnectorOptions options, String clientId) {
         this.options = options;
         this.clientId = clientId;
     }
 
-    public void connect() throws MqttsnBackendException {
+    public void connect() throws MqttsnConnectorException {
         connected  = true;
     }
 
     @Override
-    public boolean isConnected() throws MqttsnBackendException {
+    public boolean isConnected() throws MqttsnConnectorException {
         return connected;
     }
 
@@ -68,7 +68,7 @@ public class LoopbackMqttsnBrokerConnection extends AbstractMqttsnBackendConnect
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             if(connected){
                 receive(topicPath.toString(), qos, retained, payload);
@@ -76,7 +76,7 @@ public class LoopbackMqttsnBrokerConnection extends AbstractMqttsnBackendConnect
             }
             return new PublishResult(Result.STATUS.ERROR);
         } catch(Exception e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 }

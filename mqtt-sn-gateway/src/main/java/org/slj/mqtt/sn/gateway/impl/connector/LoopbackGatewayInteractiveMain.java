@@ -29,7 +29,7 @@ import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayPerformanceProfile;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
@@ -42,7 +42,7 @@ public class LoopbackGatewayInteractiveMain {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
 
-                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions(){
+                MqttsnConnectorOptions brokerOptions = new MqttsnConnectorOptions(){
                     @Override
                     public boolean validConnectionDetails() {
                         return true;
@@ -64,7 +64,7 @@ public class LoopbackGatewayInteractiveMain {
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions)options).
                         withBrokerConnectionFactory(new LoopbackMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
+                        withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport(storageService));
 
             }

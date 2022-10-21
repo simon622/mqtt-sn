@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.gateway.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
@@ -200,11 +200,11 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         }
     }
 
-    protected void poke() throws MqttsnBackendException {
+    protected void poke() throws MqttsnConnectorException {
         getRuntimeRegistry().getBackendService().pokeQueue();
     }
 
-    protected void reinit() throws MqttsnBackendException {
+    protected void reinit() throws MqttsnConnectorException {
         getRuntimeRegistry().getBackendService().reinit();
     }
 

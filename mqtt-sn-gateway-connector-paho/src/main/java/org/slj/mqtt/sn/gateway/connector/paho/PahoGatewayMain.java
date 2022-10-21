@@ -28,7 +28,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
@@ -61,7 +61,7 @@ public class PahoGatewayMain {
         MqttsnFilesystemStorageService filesystemStorageService =
                 new MqttsnFilesystemStorageService();
 
-        MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
+        MqttsnConnectorOptions brokerOptions = new MqttsnConnectorOptions().
                 withHost(host).
                 withPort(port).
                 withUsername(username).
@@ -77,7 +77,7 @@ public class PahoGatewayMain {
         //-- construct the registry of controllers and config
         AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(filesystemStorageService, gatewayOptions).
                 withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
+                withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

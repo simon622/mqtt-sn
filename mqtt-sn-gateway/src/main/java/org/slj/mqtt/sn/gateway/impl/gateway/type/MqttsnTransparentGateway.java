@@ -25,9 +25,9 @@
 package org.slj.mqtt.sn.gateway.impl.gateway.type;
 
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 
 /**
@@ -35,7 +35,7 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
  */
 public class MqttsnTransparentGateway extends AbstractMqttsnBackendService {
 
-    public MqttsnTransparentGateway(MqttsnBackendOptions options) {
+    public MqttsnTransparentGateway(MqttsnConnectorOptions options) {
         super(options);
     }
 
@@ -50,27 +50,27 @@ public class MqttsnTransparentGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    protected void close(IMqttsnBackendConnection connection) throws MqttsnBackendException {
+    protected void close(IMqttsnConnectorConnection connection) throws MqttsnConnectorException {
 
     }
 
     @Override
-    protected IMqttsnBackendConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBackendException {
+    protected IMqttsnConnectorConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
         return null;
     }
 
     @Override
-    public boolean isConnected(IMqttsnContext context) throws MqttsnBackendException {
+    public boolean isConnected(IMqttsnContext context) throws MqttsnConnectorException {
         return false;
     }
 
     @Override
-    public void reinit() throws MqttsnBackendException {
+    public void reinit() throws MqttsnConnectorException {
 
     }
 
     @Override
-    public void pokeQueue() throws MqttsnBackendException {
+    public void pokeQueue() throws MqttsnConnectorException {
 
     }
 }

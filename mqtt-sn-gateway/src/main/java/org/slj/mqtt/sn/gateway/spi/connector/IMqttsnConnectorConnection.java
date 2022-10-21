@@ -22,7 +22,7 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.broker;
+package org.slj.mqtt.sn.gateway.spi.connector;
 
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IMqttsnContext;
@@ -31,21 +31,21 @@ import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.Closeable;
 
-public interface IMqttsnBackendConnection extends Closeable {
+public interface IMqttsnConnectorConnection extends Closeable {
 
-    boolean isConnected() throws MqttsnBackendException;
+    boolean isConnected() throws MqttsnConnectorException;
 
     void close();
 
-    DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
+    DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException;
+    ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+    SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnBackendException;
+    UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException;
+    PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException;
+    boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException;
 }

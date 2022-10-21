@@ -30,9 +30,9 @@ import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnection;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
@@ -55,7 +55,7 @@ import java.util.logging.Level;
  */
 public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
 
-    private volatile IMqttsnBackendConnection connection;
+    private volatile IMqttsnConnectorConnection connection;
     private volatile boolean stopped = false;
     private Thread publishingThread = null;
     private final Object monitor = new Object();
@@ -64,7 +64,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
 
-    public MqttsnAggregatingGateway(MqttsnBackendOptions options){
+    public MqttsnAggregatingGateway(MqttsnConnectorOptions options){
         super(options);
     }
 
@@ -83,7 +83,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             logger.log(Level.INFO, "aggregating backend connecting during startup requested..");
             try {
                 getBrokerConnection(null);
-            } catch(MqttsnBackendException e){
+            } catch(MqttsnConnectorException e){
                 logger.log(Level.SEVERE, "encountered error attempting broker connect..", e);
                 throw new MqttsnException("encountered error attempting broker connect..",e);
             }
@@ -112,7 +112,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
         super.stop();
         try {
             close(connection);
-        } catch(MqttsnBackendException e){
+        } catch(MqttsnConnectorException e){
             logger.log(Level.WARNING, "error encountered shutting down broker connection;", e);
         } finally {
             synchronized (monitor){
@@ -130,12 +130,12 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public boolean isConnected(IMqttsnContext context) throws MqttsnBackendException {
+    public boolean isConnected(IMqttsnContext context) throws MqttsnConnectorException {
         return !stopped && connection != null && connection.isConnected();
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             if(isConnected(context)){
                 if(!connection.canAccept(context, topicPath, payload, message)){
@@ -168,7 +168,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             }
 
         } catch(Exception e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
@@ -193,8 +193,8 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    protected IMqttsnBackendConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnBackendException {
-        if(stopped) throw new MqttsnBackendException("broker service is in the process or shutting down");
+    protected IMqttsnConnectorConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
+        if(stopped) throw new MqttsnConnectorException("broker service is in the process or shutting down");
         initConnection();
         return connection;
     }
@@ -250,7 +250,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
         publishingThread.start();
     }
 
-    protected void initConnection() throws MqttsnBackendException {
+    protected void initConnection() throws MqttsnConnectorException {
         if(connection == null){
             //-- in aggregation mode connect with the gatewayId as the clientId on the broker side
             synchronized (this){
@@ -267,7 +267,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                                 paths.forEach(path -> {
                                     try {
                                         connection.subscribe(null, new TopicPath(path), null);
-                                    } catch (MqttsnBackendException e) {
+                                    } catch (MqttsnConnectorException e) {
                                         e.printStackTrace();
                                         logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
                                     }
@@ -275,7 +275,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                             }
                         } catch (MqttsnException e) {
                             logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
-                            throw new MqttsnBackendException(e);
+                            throw new MqttsnConnectorException(e);
                         }
                     }
                 }
@@ -284,7 +284,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    protected void close(IMqttsnBackendConnection connection) throws MqttsnBackendException {
+    protected void close(IMqttsnConnectorConnection connection) throws MqttsnConnectorException {
         if(connection != null && connection.isConnected()){
             connection.close();
         }
@@ -295,7 +295,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
         return queue.size();
     }
 
-    public void reinit() throws MqttsnBackendException {
+    public void reinit() throws MqttsnConnectorException {
         if(connection != null){
             close(connection);
         }

@@ -22,22 +22,24 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.connector.paho;
+package org.slj.mqtt.sn.gateway.spi.connector;
 
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
-public class PahoMqttsnBrokerConnectionFactory implements IMqttsnConnector<PahoMqttsnBrokerConnection> {
+public class MqttsnConnectorException extends MqttsnException {
 
-    @Override
-    public PahoMqttsnBrokerConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
-        try {
-            PahoMqttsnBrokerConnection connection = new PahoMqttsnBrokerConnection(options, clientId);
-            if(options.getConnectOnStartup()) connection.connect();
-            return connection;
-        } catch(Exception e){
-            throw new MqttsnConnectorException("error creating connection;", e);
-        }
+    public MqttsnConnectorException() {
+    }
+
+    public MqttsnConnectorException(String message) {
+        super(message);
+    }
+
+    public MqttsnConnectorException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MqttsnConnectorException(Throwable cause) {
+        super(cause);
     }
 }

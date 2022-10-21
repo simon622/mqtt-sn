@@ -29,7 +29,7 @@ import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -42,14 +42,14 @@ public class PahoGatewayInteractiveMain {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
 
                 int port = storageService.getIntegerPreference(PORT, null);
-                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
+                MqttsnConnectorOptions brokerOptions = new MqttsnConnectorOptions().
                         withHost(storageService.getStringPreference(HOSTNAME, null)).
                         withPort(port).
                         withUsername(storageService.getStringPreference(USERNAME, null)).
                         withPassword(storageService.getStringPreference(PASSWORD, null));
 
-                if(port == MqttsnBackendOptions.DEFAULT_MQTT_TLS_PORT){
-                    brokerOptions.withProtocol(MqttsnBackendOptions.DEFAULT_MQTT_TLS_PROTOCOL);
+                if(port == MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PORT){
+                    brokerOptions.withProtocol(MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PROTOCOL);
                 }
 
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
@@ -57,7 +57,7 @@ public class PahoGatewayInteractiveMain {
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
                         withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
+                        withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
                         withTransport(createTransport(storageService));
 
             }

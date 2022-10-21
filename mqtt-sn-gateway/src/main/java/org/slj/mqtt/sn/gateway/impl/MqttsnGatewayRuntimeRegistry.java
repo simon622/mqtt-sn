@@ -28,8 +28,8 @@ import org.slj.mqtt.sn.console.IMqttsnConsole;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.console.impl.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendConnectionFactory;
-import org.slj.mqtt.sn.gateway.spi.broker.IMqttsnBackendService;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.gateway.*;
 import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
@@ -42,7 +42,7 @@ import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
     private IMqttsnGatewayAdvertiseService advertiseService;
     private IMqttsnBackendService brokerService;
-    private IMqttsnBackendConnectionFactory connectionFactory;
+    private IMqttsnConnector connectionFactory;
     private IMqttsnGatewaySessionService sessionService;
     private IMqttsnGatewayClusterService clusterService;
     private IMqttsnConsole console;
@@ -96,7 +96,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return this;
     }
 
-    public MqttsnGatewayRuntimeRegistry withBrokerConnectionFactory(IMqttsnBackendConnectionFactory connectionFactory){
+    public MqttsnGatewayRuntimeRegistry withBrokerConnectionFactory(IMqttsnConnector connectionFactory){
         this.connectionFactory = connectionFactory;
         return this;
     }
@@ -106,7 +106,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return this;
     }
 
-    public MqttsnGatewayRuntimeRegistry withBrokerService(IMqttsnBackendService brokerService){
+    public MqttsnGatewayRuntimeRegistry withBackendService(IMqttsnBackendService brokerService){
         this.brokerService = brokerService;
         return this;
     }
@@ -122,7 +122,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     }
 
     @Override
-    public IMqttsnBackendConnectionFactory getBackendConnectionFactory() {
+    public IMqttsnConnector getBackendConnectionFactory() {
         return connectionFactory;
     }
 

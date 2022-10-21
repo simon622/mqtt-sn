@@ -22,11 +22,11 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.broker;
+package org.slj.mqtt.sn.gateway.spi.connector;
 
 import java.util.Objects;
 
-public class MqttsnBackendOptions {
+public class MqttsnConnectorOptions {
 
     public static final boolean DEFAULT_CONNECT_ON_STARTUP = true;
     public static final boolean DEFAULT_MANAGED_CONNECTIONS = true;
@@ -54,76 +54,76 @@ public class MqttsnBackendOptions {
     private String certificateFileLocation = null;
     private String privateKeyFileLocation = null;
 
-    public MqttsnBackendOptions(){
+    public MqttsnConnectorOptions(){
 
     }
 
-    public MqttsnBackendOptions withCertificateFileLocation(String certificateFileLocation){
+    public MqttsnConnectorOptions withCertificateFileLocation(String certificateFileLocation){
         this.certificateFileLocation = certificateFileLocation;
         return this;
     }
 
-    public MqttsnBackendOptions withPrivateKeyFileLocation(String privateKeyFileLocation){
+    public MqttsnConnectorOptions withPrivateKeyFileLocation(String privateKeyFileLocation){
         this.privateKeyFileLocation = privateKeyFileLocation;
         return this;
     }
 
-    public MqttsnBackendOptions withKeystoreLocation(String keystoreLocation){
+    public MqttsnConnectorOptions withKeystoreLocation(String keystoreLocation){
         this.keystoreLocation = keystoreLocation;
         return this;
     }
 
-    public MqttsnBackendOptions withKeystorePassword(String keystorePassword){
+    public MqttsnConnectorOptions withKeystorePassword(String keystorePassword){
         this.keystorePassword = keystorePassword;
         return this;
     }
 
-    public MqttsnBackendOptions withKeyPassword(String keyPassword){
+    public MqttsnConnectorOptions withKeyPassword(String keyPassword){
         this.keyPassword = keyPassword;
         return this;
     }
 
-    public MqttsnBackendOptions withConnectOnStartup(boolean connectOnStartup){
+    public MqttsnConnectorOptions withConnectOnStartup(boolean connectOnStartup){
         this.connectOnStartup = connectOnStartup;
         return this;
     }
 
-    public MqttsnBackendOptions withManagedConnections(boolean managedConnections){
+    public MqttsnConnectorOptions withManagedConnections(boolean managedConnections){
         this.managedConnections = managedConnections;
         return this;
     }
 
-    public MqttsnBackendOptions withProtocol(String protocol){
+    public MqttsnConnectorOptions withProtocol(String protocol){
         this.protocol = protocol;
         return this;
     }
 
-    public MqttsnBackendOptions withUsername(String username){
+    public MqttsnConnectorOptions withUsername(String username){
         this.username = username;
         return this;
     }
 
-    public MqttsnBackendOptions withPassword(String password){
+    public MqttsnConnectorOptions withPassword(String password){
         this.password = password;
         return this;
     }
 
-    public MqttsnBackendOptions withKeepAlive(int keepAlive){
+    public MqttsnConnectorOptions withKeepAlive(int keepAlive){
         this.keepAlive = keepAlive;
         return this;
     }
 
-    public MqttsnBackendOptions withConnectionTimeout(int connectionTimeout){
+    public MqttsnConnectorOptions withConnectionTimeout(int connectionTimeout){
         this.connectionTimeout = connectionTimeout;
         return this;
     }
 
-    public MqttsnBackendOptions withHost(String host){
+    public MqttsnConnectorOptions withHost(String host){
         this.host = host;
         return this;
     }
 
-    public MqttsnBackendOptions withPort(int port){
+    public MqttsnConnectorOptions withPort(int port){
         this.port = port;
         return this;
     }

@@ -32,7 +32,6 @@
                 <tr>
                     <th scope="col">Topic Filter</th>
                     <th scope="col">Subscription Count</th>
-                    <th scope="col">Description</th>
                 </tr>
                 </thead>
                 <tbody id="normalRoot">
@@ -51,7 +50,7 @@
 
             var root = document.getElementById('normalRoot');
             removeChildren(root);
-            data['normalTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.subscriptionCount}</td><td>${element.description}</td></tr>`));
+            data['normalTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.subscriptionCount}</td></tr>`));
         })
     }
 

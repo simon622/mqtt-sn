@@ -22,24 +22,9 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.broker;
+package org.slj.mqtt.sn.gateway.spi.connector;
 
-import org.slj.mqtt.sn.spi.MqttsnException;
+public interface IMqttsnConnector<T extends IMqttsnConnectorConnection> {
 
-public class MqttsnBackendException extends MqttsnException {
-
-    public MqttsnBackendException() {
-    }
-
-    public MqttsnBackendException(String message) {
-        super(message);
-    }
-
-    public MqttsnBackendException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MqttsnBackendException(Throwable cause) {
-        super(cause);
-    }
+    T createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException;
 }

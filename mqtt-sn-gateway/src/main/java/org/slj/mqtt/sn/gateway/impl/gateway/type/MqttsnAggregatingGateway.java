@@ -63,6 +63,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     private volatile RateLimiter rateLimiter = null;
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
+    private volatile boolean metricsLoaded = false;
 
     public MqttsnAggregatingGateway(MqttsnConnectorOptions options){
         super(options);
@@ -70,12 +71,32 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-        super.start(runtime);
-        double limiter = ((MqttsnGatewayOptions)runtime.getOptions()).
-                getMaxBrokerPublishesPerSecond();
-        rateLimiter = limiter == 0d ? null : RateLimiter.create(limiter);
-        connectOnStartup();
-        initPublisher();
+        if(!running){
+            super.start(runtime);
+            double limiter = ((MqttsnGatewayOptions)runtime.getOptions()).
+                    getMaxBrokerPublishesPerSecond();
+            rateLimiter = limiter == 0d ? null : RateLimiter.create(limiter);
+            stopped = false;
+            connectOnStartup();
+            initPublisher();
+        }
+    }
+
+    @Override
+    public void stop() throws MqttsnException {
+        if(!stopped){
+            stopped = true;
+            super.stop();
+            try {
+                close(connection);
+            } catch(MqttsnConnectorException e){
+                logger.log(Level.WARNING, "error encountered shutting down broker connector;", e);
+            } finally {
+                synchronized (monitor){
+                    monitor.notifyAll();
+                }
+            }
+        }
     }
 
     protected void connectOnStartup() throws MqttsnException{
@@ -90,7 +111,10 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             logger.log(Level.INFO, "connection complete, backend service ready.");
         }
 
-        if(registry.getMetrics() != null){
+logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
+
+        if(registry.getMetrics() != null && !metricsLoaded){
+
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH,
                     "The number of mqtt application messages published through the backend connector.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
@@ -103,21 +127,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE,
                     "The number of mqtt application messages waiting to be published to the backend.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> queue.size()));
-        }
-    }
-
-    @Override
-    public void stop() throws MqttsnException {
-        stopped = true;
-        super.stop();
-        try {
-            close(connection);
-        } catch(MqttsnConnectorException e){
-            logger.log(Level.WARNING, "error encountered shutting down broker connection;", e);
-        } finally {
-            synchronized (monitor){
-                monitor.notifyAll();
-            }
+            metricsLoaded = true;
         }
     }
 
@@ -175,7 +185,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     @Override
     protected long doWork() {
         try {
-            if(options.getManagedConnections()){
+            if(running && options.getManagedConnections()){
                 logger.log(Level.FINE, "checking status of managed connection..");
                 if(connection != null){
                     if(!connection.isConnected()){
@@ -240,7 +250,12 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                             }
                         }
                     }
-                } catch(Exception e){
+                }
+                catch(InterruptedException e){
+                    Thread.currentThread().interrupt();
+                    logger.log(Level.WARNING, String.format("backend publishing thread interrupted;"));
+                }
+                catch(Exception e){
                     logger.log(Level.SEVERE, String.format("error publishing via queue publisher;"), e);
                 }
             } while(running && !stopped);

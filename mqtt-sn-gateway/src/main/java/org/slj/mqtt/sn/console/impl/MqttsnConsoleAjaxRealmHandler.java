@@ -26,18 +26,19 @@ package org.slj.mqtt.sn.console.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 public abstract class MqttsnConsoleAjaxRealmHandler extends AbstractHttpRequestResponseHandler {
 
-    protected IMqttsnRuntimeRegistry registry;
+    protected IMqttsnGatewayRuntimeRegistry registry;
 
     public MqttsnConsoleAjaxRealmHandler(ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
         super(mapper);
-        this.registry = registry;
+        this.registry = (IMqttsnGatewayRuntimeRegistry) registry;
     }
 
-    protected IMqttsnRuntimeRegistry getRegistry(){
+    protected IMqttsnGatewayRuntimeRegistry getRegistry(){
         return registry;
     }
 }

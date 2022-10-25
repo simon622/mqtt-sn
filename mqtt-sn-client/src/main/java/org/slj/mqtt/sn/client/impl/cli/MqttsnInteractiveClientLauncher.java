@@ -29,13 +29,12 @@ import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 
 import java.io.PrintStream;
 import java.util.Scanner;
-import java.util.logging.LogManager;
 
 public class MqttsnInteractiveClientLauncher {
     static final String DEBUG = "debug";
     public static void launch(MqttsnInteractiveClient interactiveClient) throws Exception {
-        boolean debug = Boolean.getBoolean(DEBUG);
-        if(!debug) LogManager.getLogManager().reset();
+//        boolean debug = Boolean.getBoolean(DEBUG);
+//        if(!debug) LogManager.getLogManager().reset();
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
             interactiveClient.init(input, output);

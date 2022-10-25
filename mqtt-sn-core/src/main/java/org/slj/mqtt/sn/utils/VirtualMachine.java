@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.utils;
 
 import java.lang.management.ManagementFactory;
 
-public class SystemUtils {
+public class VirtualMachine {
 
     public static long getThreadCount(){
         try {

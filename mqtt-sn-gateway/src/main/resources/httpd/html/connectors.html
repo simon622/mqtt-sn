@@ -1,0 +1,99 @@
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Connectors</h5>
+            <p>Using color to add meaning only provides a visual indication, which will not be conveyed to users of assistive technologies – such as screen readers. Ensure that information denoted by the color is either obvious from the content itself (e.g. the visible text), or is included through alternative means, such as additional text hidden with the <code>.visually-hidden</code> class.
+            </p>
+            <div class="align-items-center flex-wrap">
+                <span id="connectorInfo"></span>
+            </div>
+            <div class="align-items-center flex-wrap">
+                <span id="connectorStatus"></span>
+                <span id="connectionStatus"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="connectors" class="row row-cols-4">
+</div>
+
+<script>
+    function update(){
+        $.getJSON("/console/connectors", function(data) {
+            var root = document.getElementById('connectors');
+            removeChildren(root);
+            console.log(JSON.stringify(data));
+            data['connectors'].forEach(function(element, i) {
+
+                var stopButtonDisabled = "";
+                var startButtonDisabled = "";
+                var configButtonDisabled = "";
+                var configButton = "";
+                var ribbon = "";
+                var startLink = `onclick=start(\"${element.className}\")`;
+                var stopLink = `onclick=stop(\"${element.className}\")`;
+                var configLink = `onclick=config(\"${element.className}\")`;
+
+                if(element.running){
+                    startButtonDisabled = "disabled";
+                } else {
+                    stopButtonDisabled = "disabled";
+                }
+
+                if(!element.available){
+                    startButtonDisabled = "disabled";
+                    stopButtonDisabled = "disabled";
+                    configButtonDisabled = "disabled";
+                }
+
+                if(element.ribbon !== null){
+                    ribbon = `<div class="ribbon red"><span>${element.ribbon}</span></div>`;
+                }
+
+                if(element.hasOwnProperty("properties")){
+                    configButton = `<button type="button" class="btn btn-info" ${configLink} ${configButtonDisabled}>Config</button>`
+                }
+
+                root.insertAdjacentHTML('afterbegin', `<div class="col"><div class="card mb-3" style="min-height: 380px;">${ribbon}<div class="d-flex align-items-center"><img src="${element.imageUrl}" class="img-fluid card-img-top" /></div><div class="card-body"><h5 class="card-title">${element.name}</h5><p class="card-text"><small class="text-muted">${element.companyName} - Version ${element.version}</small></p><p class="card-text">${element.description}</p></div><div class="card-footer justify-content-between"><div class="btn-group btn-group-sm" role="group" aria-label=""><button type="button" class="btn btn-success" ${startLink} ${startButtonDisabled}>Start</button>${configButton}<button type="button" class="btn btn-danger" ${stopLink} ${stopButtonDisabled}>Stop</button></div></div></div></div>`);
+            });
+        })
+    }
+    update();
+
+
+
+    updateHtmlElementUrlTimerById("connectorInfo", 2000, "/console/connectors?action=connectorInfo");
+    updateHtmlElementUrlTimerById("connectorStatus", 2000, "/console/connectors?action=connectorStatus");
+    updateHtmlElementUrlTimerById("connectionStatus", 2000, "/console/connectors?action=connectionStatus");
+
+    function start(className){
+        $.ajax({
+            type: "GET",
+            url: "/console/connectors?action=start&connector=" + encodeURIComponent(className),
+            encode: true,
+        }).
+        done(function (data) {
+            renderMessage(data);
+            update();
+        });
+    }
+
+    function stop(className){
+        $.ajax({
+            type: "GET",
+            url: "/console/connectors?action=stop&connector=" + encodeURIComponent(className),
+            encode: true,
+        }).
+        done(function (data) {
+            renderMessage(data);
+            update();
+        });
+    }
+
+    function config(className){
+        alert("config " + className);
+    }
+</script>
+

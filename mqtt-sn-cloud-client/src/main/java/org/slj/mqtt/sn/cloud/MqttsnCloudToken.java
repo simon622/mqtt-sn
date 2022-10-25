@@ -24,22 +24,34 @@
 
 package org.slj.mqtt.sn.cloud;
 
-import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
+import java.util.Date;
 
-import java.util.List;
+public class MqttsnCloudToken {
 
-public interface IMqttsnCloudService {
+    protected String token;
+    protected Date expires;
 
-    List<MqttsnConnectorDescriptor> getAvailableConnectors() throws MqttsnCloudServiceException;
+    public MqttsnCloudToken(String token, Date expires) {
+        this.token = token;
+        this.expires = expires;
+    }
 
-    int getConnectedServiceCount() throws MqttsnCloudServiceException;
+    public MqttsnCloudToken() {
+    }
 
-    boolean hasCloudConnectivity();
+    public String getToken() {
+        return token;
+    }
 
-    boolean isAuthorized();
+    public void setToken(String token) {
+        this.token = token;
+    }
 
-    MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException ;
+    public Date getExpires() {
+        return expires;
+    }
 
-    MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account) throws MqttsnCloudServiceException;
-
+    public void setExpires(Date expires) {
+        this.expires = expires;
+    }
 }

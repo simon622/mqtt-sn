@@ -29,12 +29,12 @@ import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 
 import java.io.PrintStream;
 import java.util.Scanner;
-import java.util.logging.LogManager;
 
 public class MqttsnInteractiveGatewayLauncher {
     static final String DEBUG = "debug";
     public static void launch(MqttsnInteractiveGateway interactiveGateway, boolean needsBroker, String welcome) throws Exception {
-        if(!Boolean.getBoolean(DEBUG)) LogManager.getLogManager().reset();
+//        boolean debug = Boolean.getBoolean(DEBUG);
+//        if(!debug) LogManager.getLogManager().reset();
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
             interactiveGateway.init(needsBroker, input, output);

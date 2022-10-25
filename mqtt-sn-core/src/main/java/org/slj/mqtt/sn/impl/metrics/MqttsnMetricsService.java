@@ -55,7 +55,7 @@ public class MqttsnMetricsService extends MqttsnService implements IMqttsnMetric
         if(metricName == null) throw new MqttsnRuntimeException("cannot get a <null> metric");
         IMqttsnMetric m = metrics.get(metricName);
         if(m == null)
-            throw new MqttsnRuntimeException("cannot find a metric by name");
+            throw new MqttsnRuntimeException("cannot find a metric by name " + metricName);
         return m;
     }
 

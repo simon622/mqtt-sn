@@ -60,6 +60,10 @@ public class Html {
         return String.format("<h2>%s</h2>", title);
     }
 
+    public static String heading(String title, int size) {
+        return String.format("<h"+size+">%s</h"+size+">", title);
+    }
+
     public static String subheading(String title) {
         return String.format("<h4>%s</h4>", title);
     }

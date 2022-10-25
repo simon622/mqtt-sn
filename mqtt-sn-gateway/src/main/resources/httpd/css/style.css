@@ -218,3 +218,13 @@ th {
     padding: 0.3rem .3rem;
     border-bottom-width: 1px;
 }
+
+.card-img-top {
+    width: 100%;
+    height: 12vh;
+    object-fit: scale-down;
+}
+
+.btn.disabled, .btn:disabled, fieldset:disabled .btn {
+    opacity: 25%;
+}

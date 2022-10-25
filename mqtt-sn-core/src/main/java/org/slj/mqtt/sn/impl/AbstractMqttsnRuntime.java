@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.utils.SystemUtils;
+import org.slj.mqtt.sn.utils.VirtualMachine;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
@@ -76,16 +76,20 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void start(IMqttsnRuntimeRegistry reg, boolean join) throws MqttsnException {
         if(!running){
-            startedAt = System.currentTimeMillis();
+            startedAt = java.lang.System.currentTimeMillis();
             registry = reg;
             startupLatch = new CountDownLatch(1);
             registry.setRuntime(this);
             registry.init();
 
-            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", System.identityHashCode(this),
+            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", java.lang.System.identityHashCode(this),
                     getRegistry().getStorageService().getClass().getSimpleName()));
             registry.getStorageService().updateRuntimeOptionsFromFilesystem(registry.getOptions());
-            setupEnvironment(reg.getOptions());
+            try {
+                setupEnvironment(reg.getOptions());
+            } catch(IOException e){
+                throw new MqttsnException("error on environment setup;", e);
+            }
 
             running = true;
 
@@ -97,7 +101,7 @@ public abstract class AbstractMqttsnRuntime {
             startupServices(registry);
             postStartupTasks();
             startupLatch.countDown();
-            logger.log(Level.INFO, String.format("mqttsn-environment started successfully in [%s]", System.currentTimeMillis() - startedAt));
+            logger.log(Level.INFO, String.format("mqttsn-environment started successfully in [%s]", java.lang.System.currentTimeMillis() - startedAt));
             if(join){
                 while(running){
                     synchronized (monitor){
@@ -115,7 +119,7 @@ public abstract class AbstractMqttsnRuntime {
 
     public final void stop() throws MqttsnException {
         if(running){
-            logger.log(Level.INFO, String.format("stopping mqttsn-environment [%s]", System.identityHashCode(this)));
+            logger.log(Level.INFO, String.format("stopping mqttsn-environment [%s]", java.lang.System.identityHashCode(this)));
             try {
                 stopServices(registry);
             } finally {
@@ -167,7 +171,7 @@ public abstract class AbstractMqttsnRuntime {
             IMqttsnService snService =  (IMqttsnService) service;
             if(!snService.running()){
                 if(logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, String.format("starting [%s] for runtime (%s)", service.getClass().getName(), System.identityHashCode(this)));
+                    logger.log(Level.INFO, String.format("starting [%s] for runtime (%s)", service.getClass().getName(), java.lang.System.identityHashCode(this)));
                 }
                 snService.start(registry);
                 activeServices.add(snService);
@@ -180,7 +184,7 @@ public abstract class AbstractMqttsnRuntime {
             IMqttsnService snService =  (IMqttsnService) service;
             if(snService.running()){
                 if(logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, String.format("stopping [%s] for runtime (%s)", service.getClass().getName(), System.identityHashCode(this)));
+                    logger.log(Level.INFO, String.format("stopping [%s] for runtime (%s)", service.getClass().getName(), java.lang.System.identityHashCode(this)));
                 }
                 snService.stop();
                 activeServices.remove(snService);
@@ -195,27 +199,27 @@ public abstract class AbstractMqttsnRuntime {
         startupLatch.await(60, TimeUnit.SECONDS);
     }
 
-    public static void setupEnvironment(MqttsnOptions options){
-
+    public static void setupEnvironment(MqttsnOptions options) throws IOException {
         initializeLogging(options);
     }
 
-    public static void initializeLogging(MqttsnOptions options) {
-        if (System.getProperty("java.util.logging.config.file") == null) {
+    public static void initializeLogging(MqttsnOptions options) throws IOException {
+        if (java.lang.System.getProperty("java.util.logging.config.file") == null) {
+            Logger.getAnonymousLogger().log(Level.INFO, "trying to apply logging from classpath...");
+            boolean applied = false;
             try (InputStream stream = AbstractMqttsnRuntime.class.getResourceAsStream("/logging.properties")) {
                 if (null != stream) {
+                    Logger.getAnonymousLogger().log(Level.INFO, "applying logging from config found on classpath");
                     LogManager.getLogManager().reset();
                     LogManager.getLogManager().readConfiguration(stream);
-                    Logger.getAnonymousLogger().log(Level.INFO, "applying logging config from resource");
-                } else {
-                    Logger.getAnonymousLogger().log(Level.SEVERE, "unable to initialise logging, applying fallback");
-                    String pattern = options.getLogPattern();
-                    pattern = pattern == null ? "[%1$tc] %4$s %2$s - %5$s %6$s%n" : pattern;
-                    System.setProperty("java.util.logging.SimpleFormatter.format", pattern);
+                    applied = true;
                 }
-            } catch (IOException e) {
-                // ignored for now
-                e.printStackTrace();
+            }
+            if(!applied){
+                Logger.getAnonymousLogger().log(Level.SEVERE, "unable to initialise logging, applying fallback");
+                String pattern = options.getLogPattern();
+                pattern = pattern == null ? "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n" : pattern;
+                java.lang.System.setProperty("java.util.logging.SimpleFormatter.format", pattern);
             }
         }
     }
@@ -445,9 +449,9 @@ public abstract class AbstractMqttsnRuntime {
 
             //-- snapshot metrics are self-managed
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, "The amount of memory available to the virtual machine (kb).",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> SystemUtils.getUsedMemoryKb()));
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getUsedMemoryKb()));
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_THREADS_USED, "The number of threads in the virtual machine.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> SystemUtils.getThreadCount()));
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getThreadCount()));
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, "The number of entries in the network registry.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
 

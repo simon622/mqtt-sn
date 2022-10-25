@@ -24,15 +24,7 @@
 
 package org.slj.mqtt.sn.console.http;
 
-import com.sun.deploy.net.HttpResponse;
-import org.slj.mqtt.sn.utils.Files;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;

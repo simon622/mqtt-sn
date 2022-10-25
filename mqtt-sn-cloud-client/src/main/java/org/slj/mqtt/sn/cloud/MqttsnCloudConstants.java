@@ -24,22 +24,9 @@
 
 package org.slj.mqtt.sn.cloud;
 
-import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
+public interface MqttsnCloudConstants {
 
-import java.util.List;
-
-public interface IMqttsnCloudService {
-
-    List<MqttsnConnectorDescriptor> getAvailableConnectors() throws MqttsnCloudServiceException;
-
-    int getConnectedServiceCount() throws MqttsnCloudServiceException;
-
-    boolean hasCloudConnectivity();
-
-    boolean isAuthorized();
-
-    MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException ;
-
-    MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account) throws MqttsnCloudServiceException;
-
+    //-- use simple bearer tokens
+    String AUTHORIZATION_HEADER = "Authorization";
+    String BEARER_TOKEN_HEADER = "Bearer %s";
 }

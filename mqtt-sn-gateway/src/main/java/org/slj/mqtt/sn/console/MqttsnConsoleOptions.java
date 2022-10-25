@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.console;
 
+import org.slj.mqtt.sn.cloud.MqttsnCloudAccount;
+
 public class MqttsnConsoleOptions {
 
     /**
@@ -43,6 +45,13 @@ public class MqttsnConsoleOptions {
     private int serverThreads = DEFAULT_SERVER_THREADS;
     private String userName = DEFAULT_CONSOLE_USERNAME;
     private String password = DEFAULT_CONSOLE_PASSWORD;
+
+    private MqttsnCloudAccount cloudAccount;
+
+    public MqttsnConsoleOptions withCloudAccount(MqttsnCloudAccount cloudAccount){
+        this.cloudAccount = cloudAccount;
+        return this;
+    }
 
     public MqttsnConsoleOptions withConsolePort(int consolePort){
         this.consolePort = consolePort;
@@ -105,6 +114,10 @@ public class MqttsnConsoleOptions {
 
     public String getPassword() {
         return password;
+    }
+
+    public MqttsnCloudAccount getCloudAccount() {
+        return cloudAccount;
     }
 
     @Override

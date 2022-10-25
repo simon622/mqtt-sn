@@ -76,7 +76,9 @@ function removeChildren(el){
 }
 
 function renderMessage(msg){
-    message(msg.title == null ? (msg.success ? "Success" : "Error") : msg.title, msg.message, msg.success ? "success" : "danger");
+    if(msg !== null && msg.hasOwnProperty("message")){
+        message(msg.title == null ? (msg.success ? "Success" : "Error") : msg.title, msg.message, msg.success ? "success" : "danger");
+    }
 }
 
 function message(title, msg, level){

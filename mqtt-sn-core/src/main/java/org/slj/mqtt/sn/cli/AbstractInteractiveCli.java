@@ -35,7 +35,7 @@ import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
 import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
-import org.slj.mqtt.sn.utils.SystemUtils;
+import org.slj.mqtt.sn.utils.VirtualMachine;
 import org.slj.mqtt.sn.utils.ThreadDump;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -53,13 +53,6 @@ public abstract class AbstractInteractiveCli {
     protected static final String PORT = "port";
     protected static final String PROTOCOL_VERSION = "protocolVersion";
     protected boolean colors = false;
-    protected boolean useHistory = false;
-
-//    protected String hostName;
-//    protected Integer port;
-//    protected String clientId;
-//    protected Integer protocolVersion = 1;
-
     protected AbstractMqttsnRuntimeRegistry runtimeRegistry;
     protected AbstractMqttsnRuntime runtime;
     protected IMqttsnStorageService storageService;
@@ -73,7 +66,7 @@ public abstract class AbstractInteractiveCli {
     public void init(Scanner input, PrintStream output){
         this.input = input;
         this.output = output;
-        colors = !System.getProperty("os.name").contains("Windows");
+        colors = !java.lang.System.getProperty("os.name").contains("Windows");
     }
 
     public void start(IMqttsnStorageService storageService) throws Exception {
@@ -118,7 +111,6 @@ public abstract class AbstractInteractiveCli {
         });
         enableOutput();
         message("Adding runtime listeners.. DONE");
-
         runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
             try {
                 int QoS = runtimeRegistry.getCodec().getQoS(message, true);
@@ -382,7 +374,7 @@ public abstract class AbstractInteractiveCli {
                 message_nochev(String.format("Current Lost Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_LOST_REGISTRY_COUNT))));
                 message_nochev("");
                 message_nochev("======== System Stats ========");
-                message_nochev(String.format("JVM Used Memory: %s", SystemUtils.getMemoryString(getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED)))));
+                message_nochev(String.format("JVM Used Memory: %s", VirtualMachine.getMemoryString(getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED)))));
                 message_nochev(String.format("JVM Threads: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_THREADS_USED))));
             } else {
                 message("metrics disabled by service");
@@ -412,11 +404,11 @@ public abstract class AbstractInteractiveCli {
                 message(String.format("Session expiry interval (seconds):  %s", session.getSessionExpiryInterval()));
 
                 if(session.getSessionStarted() != null){
-                    message(String.format("Time since connect (seconds):  %s", ((System.currentTimeMillis() - session.getSessionStarted().getTime()) / 1000)));
+                    message(String.format("Time since connect (seconds):  %s", ((java.lang.System.currentTimeMillis() - session.getSessionStarted().getTime()) / 1000)));
                 }
 
                 if(session.getLastSeen() != null){
-                    message(String.format("Time since last seen (seconds):  %s", ((System.currentTimeMillis() - session.getLastSeen().getTime()) / 1000)));
+                    message(String.format("Time since last seen (seconds):  %s", ((java.lang.System.currentTimeMillis() - session.getLastSeen().getTime()) / 1000)));
                 }
 
                 message(String.format("State:  %s", getColorForState(session.getClientState())));

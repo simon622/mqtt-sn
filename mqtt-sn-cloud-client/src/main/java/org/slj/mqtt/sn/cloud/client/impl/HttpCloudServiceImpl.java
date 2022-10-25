@@ -25,17 +25,16 @@
 package org.slj.mqtt.sn.cloud.client.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
-import org.slj.mqtt.sn.cloud.MqttsnCloudServiceDescriptor;
-import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
+import org.slj.mqtt.sn.cloud.*;
 import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.cloud.client.http.HttpClient;
 import org.slj.mqtt.sn.cloud.client.http.HttpResponse;
+import org.slj.mqtt.sn.utils.General;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.io.InputStream;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +42,8 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
     static Logger logger = Logger.getLogger(HttpCloudServiceImpl.class.getName());
 
-    protected String accountKey;
+    protected MqttsnCloudToken cloudToken;
+
     protected String serviceDiscoveryEndpoint;
     protected int connectTimeoutMillis;
     protected int readTimeoutMillis;
@@ -60,7 +60,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
         //check connectivity quietly
         try {
-            HttpResponse response = HttpClient.head(serviceDiscoveryEndpoint, readTimeoutMillis);
+            HttpResponse response = HttpClient.head(getHeaders(), serviceDiscoveryEndpoint, readTimeoutMillis);
             hasConnectivity = !response.isError();
             logger.log(Level.INFO, String.format("successfully established connection to cloud provider [%s], online", serviceDiscoveryEndpoint));
         } catch(IOException e){
@@ -70,9 +70,14 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     }
 
     @Override
-    public void updateAccessKey(String accountKey)
+    public MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account)
             throws MqttsnCloudServiceException {
-        this.accountKey = accountKey;
+        //-- ALWAYS re-authenticates with the cloud service
+        cloudToken = httpGet(
+                loadDescriptor(
+                        MqttsnCloudServiceDescriptor.ACCOUNT_AUTHORIZE).getServiceEndpoint(),
+                MqttsnCloudToken.class);
+        return cloudToken;
     }
 
     @Override
@@ -89,6 +94,24 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     public int getConnectedServiceCount() throws MqttsnCloudServiceException {
         checkConnectivity();
         return getServiceDescriptors().size();
+    }
+
+    public MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException {
+
+        if(!General.validEmailAddress(emailAddress))
+            throw new MqttsnCloudServiceException("invalid email entered; must confrom to OWASP guidelines");
+
+        AccountCreate create = new AccountCreate();
+        create.emailAddress = emailAddress;
+        create.companyName = companyName;
+        create.firstName = firstName;
+        create.lastName = lastName;
+
+        MqttsnCloudAccount account = httpPost(
+                loadDescriptor(
+                        MqttsnCloudServiceDescriptor.ACCOUNT_CREATE).getServiceEndpoint(),
+                MqttsnCloudAccount.class, create);
+        return account;
     }
 
 
@@ -115,34 +138,8 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
                 }
             }
         }
+        logger.log(Level.INFO, "mqtt-sn cloud provider has " + descriptors.size() + " available");
         return descriptors;
-    }
-
-    protected  <T> List<T> httpGetList(String url, Class<? extends T> cls) throws MqttsnCloudServiceException {
-        try {
-            HttpResponse response =
-                    HttpClient.get(url, connectTimeoutMillis, readTimeoutMillis);
-            logger.log(Level.INFO, String.format("obtaining cloud service list from [%s] -> [%s]", url, response));
-            checkResponse(response, true);
-            return mapper.readValue(response.getResponseBody(),
-                    mapper.getTypeFactory().constructCollectionType(List.class, cls));
-        } catch(IOException e){
-            throw new MqttsnCloudServiceException("error in http socket connection", e);
-        }
-    }
-
-    protected  <T> T httpGet(String url, Class<? extends T> cls) throws MqttsnCloudServiceException {
-        try {
-            HttpResponse response =
-                    HttpClient.get(url, connectTimeoutMillis, readTimeoutMillis);
-            logger.log(Level.INFO, String.format("obtaining cloud service object from [%s] -> [%s]", url, response));
-            checkResponse(response, true);
-
-//System.err.println(new String(response.getResponseBody()));
-            return mapper.readValue(response.getResponseBody(), cls);
-        } catch(IOException e){
-            throw new MqttsnCloudServiceException("error in http socket connection", e);
-        }
     }
 
     protected void checkResponse(HttpResponse response, boolean expectPayload) throws MqttsnCloudServiceException {
@@ -157,6 +154,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
     protected void checkConnectivity() throws MqttsnCloudServiceException {
         if(!hasConnectivity){
+            logger.log(Level.WARNING, "mqtt-sn cloud provider is offline");
             throw new MqttsnCloudServiceException("mqtt-sn cloud provider is unavailable at this time");
         }
     }
@@ -167,7 +165,63 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     }
 
     @Override
-    public boolean hasCloudAccount() {
-        return hasConnectivity;
+    public boolean isAuthorized() {
+        return cloudToken != null;
+    }
+
+    protected  <T> List<T> httpGetList(String url, Class<? extends T> cls) throws MqttsnCloudServiceException {
+        try {
+            HttpResponse response =
+                    HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
+            logger.log(Level.INFO, String.format("obtaining cloud service list from [%s] -> [%s]", url, response));
+            checkResponse(response, true);
+            return mapper.readValue(response.getResponseBody(),
+                    mapper.getTypeFactory().constructCollectionType(List.class, cls));
+        } catch(IOException e){
+            throw new MqttsnCloudServiceException("error in http socket connection", e);
+        }
+    }
+
+    protected  <T> T httpGet(String url, Class<? extends T> cls) throws MqttsnCloudServiceException {
+        try {
+            HttpResponse response =
+                    HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
+            logger.log(Level.INFO, String.format("obtaining cloud service object from [%s] -> [%s]", url, response));
+            checkResponse(response, true);
+            return mapper.readValue(response.getResponseBody(), cls);
+        } catch(IOException e){
+            throw new MqttsnCloudServiceException("error in http socket connection", e);
+        }
+    }
+
+    protected  <T> T httpPost(String url, Class<? extends T> cls, Object jsonPostObject) throws MqttsnCloudServiceException {
+        try {
+            String jsonBody = mapper.writeValueAsString(jsonPostObject);
+            try (InputStream is = new ByteArrayInputStream(jsonBody.getBytes())) {
+                HttpResponse response =
+                        HttpClient.post(getHeaders(), url, is, connectTimeoutMillis, readTimeoutMillis);
+                logger.log(Level.INFO, String.format("posting to cloud service object from [%s] -> [%s]", url, response));
+                checkResponse(response, true);
+                return mapper.readValue(response.getResponseBody(), cls);
+            }
+        } catch(IOException e){
+            throw new MqttsnCloudServiceException("error in http socket connection", e);
+        }
+    }
+
+    protected Map<String, String> getHeaders(){
+        Map<String, String> map = new HashMap<>();
+        if(cloudToken != null){
+            map.put(MqttsnCloudConstants.AUTHORIZATION_HEADER,
+                    String.format(MqttsnCloudConstants.BEARER_TOKEN_HEADER, cloudToken.getToken()));
+        }
+        return map;
+    }
+
+    class AccountCreate {
+        public String emailAddress;
+        public String companyName;
+        public String firstName;
+        public String lastName;
     }
 }

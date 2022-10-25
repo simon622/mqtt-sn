@@ -35,6 +35,7 @@
     <script src="/console/js/autocomplete.js"></script>
 
     <link href="/console/css/style.css" rel="stylesheet">
+    <link href="/console/css/ribbon.css" rel="stylesheet">
 </head>
 <body>
 
@@ -81,9 +82,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#" id="backendLink">
+                            <a class="nav-link" href="#" id="connectorsLink">
                                 <span data-feather="package"></span>
-                                Backend (Connectors)
+                                Connectors
                             </a>
                         </li>
                         <li class="nav-item">
@@ -157,7 +158,7 @@
     bindClick('#clusterLink', "cluster.html");
     bindClick('#settingsLink', "settings.html");
     bindClick('#docsLink', "docs.html");
-    bindClick('#backendLink', "backend.html");
+    bindClick('#connectorsLink', "connectors.html");
     bindClick('#systemLink', "system.html");
 
     function bindClick(selector, page, loadnow = false){
@@ -188,6 +189,16 @@
         });
     }
 
+    function updateHtmlElementUrlTimerById(id, refreshRate, url){
+        updateHtmlElementUrlTimer(document.getElementById(id), refreshRate, url);
+    }
+
+    function updateHtmlElementUrlTimer(el, refreshRate, url){
+        pageTimer(refreshRate, function(){
+            updateHtmlElementUrl(el, url);
+        });
+    }
+
     function pageTimer(refreshRate, f){
         var id = setInterval(f, refreshRate);
         timerIds.push(id);
@@ -201,9 +212,13 @@
     }
 
     function updateHtmlElement(el){
+        updateHtmlElementUrl(el, "/console/metrics/field?field=" + el.id);
+    }
+
+    function updateHtmlElementUrl(el, url){
         $.ajax({
             dataType: "html",
-            url: "/console/metrics/field?field=" + el.id,
+            url: url,
             type: "GET",
             success: function (data,status,xhr) {   // success callback function
                 $(el).html(data);

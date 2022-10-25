@@ -51,8 +51,16 @@ public abstract class AbstractMqttsnBackendService
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-        super.start(runtime);
-        validateBrokerConnectionDetails();
+        if(!running){
+            super.start(runtime);
+            validateBrokerConnectionDetails();
+        }
+    }
+
+    public void stop() throws MqttsnException {
+        if(running){
+            super.stop();
+        }
     }
 
     protected void validateBrokerConnectionDetails(){

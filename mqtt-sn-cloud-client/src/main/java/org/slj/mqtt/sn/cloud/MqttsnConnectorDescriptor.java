@@ -25,21 +25,33 @@
 package org.slj.mqtt.sn.cloud;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class MqttsnConnectorDescriptor implements Serializable {
 
     private String name;
     private String description;
-    private String documentationLink;
-    private String homeLink;
-    private String className;
+    private String signupLink;
+    private String url;
     private String version;
     private String developer;
     private String imageUrl;
     private String companyName;
-    private String author;
+    private String className;
+    private String protocol;
+    private String ribbon;
+    private List<MqttsnConnectorDescriptorProperty> properties;
+
 
     public MqttsnConnectorDescriptor(){
+    }
+
+    public List<MqttsnConnectorDescriptorProperty> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(List<MqttsnConnectorDescriptorProperty> properties) {
+        this.properties = properties;
     }
 
     public String getName() {
@@ -58,20 +70,36 @@ public class MqttsnConnectorDescriptor implements Serializable {
         this.description = description;
     }
 
-    public String getDocumentationLink() {
-        return documentationLink;
+    public String getSignupLink() {
+        return signupLink;
     }
 
-    public void setDocumentationLink(String documentationLink) {
-        this.documentationLink = documentationLink;
+    public void setSignupLink(String signupLink) {
+        this.signupLink = signupLink;
     }
 
-    public String getHomeLink() {
-        return homeLink;
+    public String getUrl() {
+        return url;
     }
 
-    public void setHomeLink(String homeLink) {
-        this.homeLink = homeLink;
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+
+    public String getRibbon() {
+        return ribbon;
+    }
+
+    public void setRibbon(String ribbon) {
+        this.ribbon = ribbon;
     }
 
     public String getClassName() {
@@ -114,27 +142,20 @@ public class MqttsnConnectorDescriptor implements Serializable {
         this.companyName = companyName;
     }
 
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
     @Override
     public String toString() {
         return "MqttsnConnectorDescriptor{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", documentationLink='" + documentationLink + '\'' +
-                ", homeLink='" + homeLink + '\'' +
-                ", className='" + className + '\'' +
+                ", signupLink='" + signupLink + '\'' +
+                ", url='" + url + '\'' +
                 ", version='" + version + '\'' +
                 ", developer='" + developer + '\'' +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", companyName='" + companyName + '\'' +
-                ", author='" + author + '\'' +
+                ", className='" + className + '\'' +
+                ", protocol='" + protocol + '\'' +
+                ", ribbon='" + ribbon + '\'' +
                 '}';
     }
 
@@ -143,11 +164,13 @@ public class MqttsnConnectorDescriptor implements Serializable {
         setCompanyName(impl.getCompanyName());
         setDescription(impl.getDescription());
         setDeveloper(impl.getDeveloper());
-        setHomeLink(impl.getHomeLink());
-        setDocumentationLink(impl.getDocumentationLink());
+        setUrl(impl.getUrl());
+        setSignupLink(impl.getSignupLink());
         setImageUrl(impl.getImageUrl());
         setVersion(impl.getVersion());
         setName(impl.getName());
-        setAuthor(impl.getAuthor());
+        setProtocol(impl.getProtocol());
+        setRibbon(impl.getRibbon());
+        setProperties(impl.getProperties());
     }
 }

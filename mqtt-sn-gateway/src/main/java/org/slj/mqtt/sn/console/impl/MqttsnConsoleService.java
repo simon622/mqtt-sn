@@ -25,6 +25,8 @@
 package org.slj.mqtt.sn.console.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
+import org.slj.mqtt.sn.cloud.client.impl.HttpCloudServiceImpl;
 import org.slj.mqtt.sn.console.IMqttsnConsole;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.console.http.impl.handlers.AsyncContentHandler;
@@ -43,6 +45,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
     private SunHttpServerBootstrap server;
     private MqttsnConsoleOptions options;
     private ObjectMapper jsonMapper;
+    private IMqttsnCloudService cloudService;
 
     public MqttsnConsoleService(MqttsnConsoleOptions options){
         this.options = options;
@@ -55,6 +58,8 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
         if(options.isConsoleEnabled()){
             jsonMapper = new ObjectMapper();
             logger.log(Level.INFO, String.format("starting console service with - %s", options));
+            cloudService = new HttpCloudServiceImpl(jsonMapper,
+                    "http://mqtt-sn.cloud/api/services.json", 5000, 5000);
             startWebServer(options);
         }
     }
@@ -70,6 +75,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
         try {
 
             logger.log(Level.INFO, String.format("starting console server listening on [%s] -> [%s]", options.getHostName(), options.getConsolePort()));
+
             server = new SunHttpServerBootstrap(
                     new InetSocketAddress(options.getHostName(), options.getConsolePort()),
                     options.getServerThreads(), options.getTcpBacklog());
@@ -83,9 +89,9 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/console/config", new ConfigHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/topic", new TopicHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/client/access", new ClientAccessHandler(getJsonMapper(), getRegistry()));
-
+            server.registerContext("/console/connectors", new ConnectorHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/async", new AsyncContentHandler(getJsonMapper(), "httpd/html/",
-                    "dashboard.html", "clients.html",  "session.html", "backend.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "backend.html", "system.html"));
+                    "dashboard.html", "clients.html",  "session.html", "connectors.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "system.html"));
             server.startServer();
             logger.log(Level.INFO, String.format("console server started..."));
         } catch(Exception e){

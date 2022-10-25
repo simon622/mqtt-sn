@@ -31,6 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Super quick HTTP client implementation using the inbuild HttpUrlConnection in the .net packages.
@@ -38,7 +42,9 @@ import java.net.URL;
  */
 public class HttpClient {
 
-    public static HttpResponse head(String url, int readTimeout) throws IOException {
+    static final int READ_BUFFER_SIZE = 1024;
+
+    public static HttpResponse head(Map<String, String> headers, String url, int readTimeout) throws IOException {
         HttpURLConnection connection = null;
         URL serverAddress = null;
         try {
@@ -46,8 +52,9 @@ public class HttpClient {
             connection = null;
             connection = (HttpURLConnection) serverAddress.openConnection();
             connection.setRequestMethod("HEAD");
-            connection.setDoOutput(true);
+            connection.setDoOutput(false);
             connection.setReadTimeout(readTimeout);
+            writeRequestHeaders(headers, connection);
             connection.connect();
             return createResponse(url, connection, false);
         } finally {
@@ -55,7 +62,7 @@ public class HttpClient {
         }
     }
 
-    public static HttpResponse get(String url, int connectTimeoutMillis, int readTimeoutMillis)
+    public static HttpResponse get(Map<String, String> headers, String url, int connectTimeoutMillis, int readTimeoutMillis)
             throws IOException {
 
         HttpURLConnection connection = null;
@@ -69,6 +76,7 @@ public class HttpClient {
             connection.setDoOutput(true);
             connection.setReadTimeout(readTimeoutMillis);
             connection.setConnectTimeout(connectTimeoutMillis);
+            writeRequestHeaders(headers, connection);
             connection.connect();
             return createResponse(url, connection, true);
         } finally {
@@ -77,25 +85,35 @@ public class HttpClient {
         }
     }
 
-    public static HttpResponse post(String url, InputStream is, int connectTimeoutMillis, int readTimeoutMillis)
+    public static HttpResponse post(Map<String, String> headers, String url, InputStream is, int connectTimeoutMillis, int readTimeoutMillis)
             throws IOException {
 
         HttpURLConnection connection = null;
         URL serverAddress = null;
         try {
             serverAddress = new URL(url);
-            connection = null;
             connection = (HttpURLConnection) serverAddress.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setReadTimeout(readTimeoutMillis);
             connection.setConnectTimeout(connectTimeoutMillis);
-            Files.copy(is, connection.getOutputStream(), 1024);
+            writeRequestHeaders(headers, connection);
+            Files.copy(is, connection.getOutputStream(), READ_BUFFER_SIZE);
             connection.connect();
             return createResponse(url, connection, true);
         } finally {
             try {connection.disconnect();} catch(Throwable t) {}
             try {is.close();} catch(Throwable t) {}
+        }
+    }
+
+    private static void writeRequestHeaders(Map<String, String> headers, HttpURLConnection connection){
+        if(headers != null){
+            Iterator<String> keys = headers.keySet().iterator();
+            while(keys.hasNext()){
+                String k = keys.next();
+                connection.setRequestProperty(k, headers.get(k));
+            }
         }
     }
 
@@ -107,6 +125,19 @@ public class HttpClient {
         response.setStatusCode(connection.getResponseCode());
         response.setStatusMessage(connection.getResponseMessage());
         response.setContentEncoding(connection.getContentEncoding());
+
+        Map<String, String> headers = new HashMap<>();
+        for (int i = 0;; i++) {
+            String headerName = connection.getHeaderFieldKey(i);
+            String headerValue = connection.getHeaderField(i);
+            if (headerName == null && headerValue == null) {
+                //no more headers
+                break;
+            }
+            headers.put(headerName, headerValue);
+        }
+        response.setResponseHeaders(Collections.unmodifiableMap(headers));
+
         if(readBody){
             InputStream is = null;
             try {
@@ -116,13 +147,15 @@ public class HttpClient {
                 } else {
                     is = connection.getInputStream();
                 }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1){
-                    baos.write(buffer, 0, bytesRead);
+                if(is != null){
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[READ_BUFFER_SIZE];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1){
+                        baos.write(buffer, 0, bytesRead);
+                    }
+                    response.setResponseBody(baos.toByteArray());
                 }
-                response.setResponseBody(baos.toByteArray());
             }
             finally {
                 try {

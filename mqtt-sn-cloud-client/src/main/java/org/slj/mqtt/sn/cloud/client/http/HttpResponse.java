@@ -24,8 +24,11 @@
 
 package org.slj.mqtt.sn.cloud.client.http;
 
+import java.util.Map;
+
 public class HttpResponse {
 
+    Map<String, String> responseHeaders;
     String requestUrl;
     String statusMessage;
     String contentEncoding;
@@ -92,6 +95,14 @@ public class HttpResponse {
 
     public void setRequestUrl(String requestUrl) {
         this.requestUrl = requestUrl;
+    }
+
+    public Map<String, String> getResponseHeaders() {
+        return responseHeaders;
+    }
+
+    public void setResponseHeaders(Map<String, String> responseHeaders) {
+        this.responseHeaders = responseHeaders;
     }
 
     @Override

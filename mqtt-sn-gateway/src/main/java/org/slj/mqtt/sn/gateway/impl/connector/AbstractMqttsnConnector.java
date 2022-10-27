@@ -22,22 +22,37 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.connector.paho;
+package org.slj.mqtt.sn.gateway.impl.connector;
 
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 
-public class PahoMqttsnBrokerConnectionFactory implements IMqttsnConnector<PahoMqttsnBrokerConnection> {
+public abstract class AbstractMqttsnConnector<T extends IMqttsnConnectorConnection>
+        implements IMqttsnConnector<T> {
+
+    protected MqttsnConnectorDescriptor descriptor;
+    protected MqttsnConnectorOptions options;
+
+    public AbstractMqttsnConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) {
+        this.descriptor = descriptor;
+        this.options = options;
+    }
 
     @Override
-    public PahoMqttsnBrokerConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
-        try {
-            PahoMqttsnBrokerConnection connection = new PahoMqttsnBrokerConnection(options, clientId);
-            if(options.getConnectOnStartup()) connection.connect();
-            return connection;
-        } catch(Exception e){
-            throw new MqttsnConnectorException("error creating connection;", e);
-        }
+    public MqttsnConnectorDescriptor getDescriptor() {
+        return descriptor;
+    }
+
+    @Override
+    public MqttsnConnectorOptions getDefaultOptions() {
+        return options;
+    }
+
+    @Override
+    public T createConnection(String clientId) throws MqttsnConnectorException {
+        return createConnection(getDefaultOptions(), clientId);
     }
 }

@@ -24,18 +24,13 @@
 
 package org.slj.mqtt.sn.gateway.impl.backend;
 
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.spi.*;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.logging.Level;
@@ -43,17 +38,13 @@ import java.util.logging.Level;
 public abstract class AbstractMqttsnBackendService
         extends AbstractMqttsnBackoffThreadService implements IMqttsnBackendService {
 
-    protected MqttsnConnectorOptions options;
-
-    public AbstractMqttsnBackendService(MqttsnConnectorOptions options){
-        this.options = options;
+    public AbstractMqttsnBackendService(){
     }
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         if(!running){
             super.start(runtime);
-            validateBrokerConnectionDetails();
         }
     }
 
@@ -63,15 +54,32 @@ public abstract class AbstractMqttsnBackendService
         }
     }
 
-    protected void validateBrokerConnectionDetails(){
-        if(!options.validConnectionDetails()){
-            throw new MqttsnRuntimeException("invalid broker connection details!");
+    public synchronized boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException {
+        try {
+            if(connectorAvailable(descriptor)){
+                if(running()){
+                    stop();
+                }
+                logger.log(Level.INFO, String.format("starting new instance of connector [%s] using [%s]", descriptor.getClassName(), options));
+                IMqttsnConnector connector = getConnectorClass(descriptor).getConstructor(
+                                MqttsnConnectorDescriptor.class, MqttsnConnectorOptions.class).
+                        newInstance(descriptor, options);
+
+                getRegistry().withConnector(connector);
+                start(getRegistry());
+                return true;
+            } else {
+                return false;
+            }
+        }
+        catch (Exception e){
+            throw new MqttsnException("unable to initialize connector;", e);
         }
     }
 
     @Override
     public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
-        IMqttsnConnectorConnection connection = getBrokerConnection(context);
+        IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
         }
@@ -81,7 +89,7 @@ public abstract class AbstractMqttsnBackendService
 
     @Override
     public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
-        IMqttsnConnectorConnection connection = getBrokerConnection(context);
+        IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
         }
@@ -91,7 +99,7 @@ public abstract class AbstractMqttsnBackendService
 
     @Override
     public PublishResult publish(IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
-        IMqttsnConnectorConnection connection = getBrokerConnection(context);
+        IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
         }
@@ -101,7 +109,7 @@ public abstract class AbstractMqttsnBackendService
 
     @Override
     public SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
-        IMqttsnConnectorConnection connection = getBrokerConnection(context);
+        IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
         }
@@ -111,7 +119,7 @@ public abstract class AbstractMqttsnBackendService
 
     @Override
     public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
-        IMqttsnConnectorConnection connection = getBrokerConnection(context);
+        IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
         }
@@ -119,9 +127,9 @@ public abstract class AbstractMqttsnBackendService
         return res;
     }
 
-    protected IMqttsnConnectorConnection getBrokerConnection(IMqttsnContext context) throws MqttsnConnectorException {
+    protected IMqttsnConnectorConnection getConnection(IMqttsnContext context) throws MqttsnConnectorException {
         synchronized (this){
-            IMqttsnConnectorConnection connection = getBrokerConnectionInternal(context);
+            IMqttsnConnectorConnection connection = getConnectionInternal(context);
             if(!connection.isConnected()){
                 throw new MqttsnConnectorException("underlying broker connection was not connected");
             }
@@ -151,8 +159,39 @@ public abstract class AbstractMqttsnBackendService
         return 0;
     }
 
+    @Override
+    public boolean connectorAvailable(MqttsnConnectorDescriptor descriptor) {
+        try {
+            return getConnectorClass(descriptor) != null;
+        } catch(MqttsnNotFoundException e){
+            return false;
+        }
+    }
+
+    @Override
+    public boolean matchesRunningConnector(MqttsnConnectorDescriptor descriptor) {
+        return descriptor.getClassName().equals(
+                getRegistry().getConnector().getClass().getName());
+    }
+
+    protected Class<? extends IMqttsnConnector> getConnectorClass(MqttsnConnectorDescriptor descriptor) throws MqttsnNotFoundException {
+        String className = descriptor.getClassName();
+        if(className != null && !className.isEmpty()){
+            try {
+                return (Class<? extends IMqttsnConnector>) Class.forName(className);
+            } catch(ClassNotFoundException e){
+                //-- check the context classloader
+                try {
+                    ClassLoader cls = Thread.currentThread().getContextClassLoader();
+                    return (Class<? extends IMqttsnConnector>)  cls.loadClass(className);
+                } catch(ClassNotFoundException E){
+                }
+            }
+        }
+        throw new MqttsnNotFoundException("unable to load connector from runtime <" + className + ">");
+    }
 
     protected abstract void close(IMqttsnConnectorConnection connection) throws MqttsnConnectorException;
 
-    protected abstract IMqttsnConnectorConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException;
+    protected abstract IMqttsnConnectorConnection getConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException;
 }

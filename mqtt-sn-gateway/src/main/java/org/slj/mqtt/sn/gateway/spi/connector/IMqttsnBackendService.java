@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.spi.connector;
 
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
@@ -65,5 +66,11 @@ public interface IMqttsnBackendService {
     void stop() throws MqttsnException;
 
     boolean running();
+
+    boolean connectorAvailable(MqttsnConnectorDescriptor descriptor);
+
+    boolean matchesRunningConnector(MqttsnConnectorDescriptor descriptor);
+
+    boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException ;
 
 }

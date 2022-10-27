@@ -24,20 +24,23 @@
 
 package org.slj.mqtt.sn.console.impl;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptorProperty;
 import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.console.http.*;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
+import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
 
@@ -48,6 +51,7 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
     static final String CONNECTOR_STATUS = "connectorStatus";
     static final String CONNECTION_STATUS = "connectionStatus";
     static final String CONNECTOR_INFO = "connectorInfo";
+    static final String CONNECTOR_DETAILS = "connectorDetails";
 
     protected IMqttsnCloudService cloudService;
 
@@ -56,10 +60,38 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
         this.cloudService = cloudService;
     }
 
+    protected void handleHttpPost(IHttpRequestResponse request) throws HttpException, IOException {
+        try {
+            PropertyForm form = readRequestBody(request, PropertyForm.class);
+            Iterator<String> itr = form.getProperties().keySet().iterator();
+            MqttsnConnectorDescriptor descriptor = getDescriptorById(form.getProperties().get("connectorId"));
+            IMqttsnStorageService storageService = getRegistry().getStorageService().getPreferenceNamespace(descriptor);
+            while(itr.hasNext()){
+                String key = itr.next();
+                String value = form.getProperties().get(key);
+                storageService.setStringPreference(key, value);
+            }
+
+            //-- restart the server
+            MqttsnConnectorOptions options = new MqttsnConnectorOptions();
+            storageService.initializeFieldsFromStorage(options);
+            getRegistry().getBackendService().initializeConnector(descriptor, options);
+
+            writeMessageBeanResponse(request, HttpConstants.SC_OK,
+                    new Message("Connector successfully initialised", true));
+
+        } catch(MqttsnCloudServiceException| MqttsnException e){
+            e.printStackTrace();
+            writeMessageBeanResponse(request, HttpConstants.SC_INTERNAL_SERVER_ERROR,
+                    new Message("Error starting connector", e.getMessage(), false));
+        }
+    }
+
     @Override
     protected void handleHttpGet(IHttpRequestResponse request) throws HttpException, IOException {
         try {
 
+            MqttsnConnectorDescriptor descriptor = getInstalledDescriptor();
             String action = null;
             if((action = getParameter(request, ACTION)) != null){
                 String connectorId = null;
@@ -72,19 +104,21 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
                     getRegistry().getBackendService().start(getRegistry());
                     writeSimpleOKResponse(request);
                 }
+                else if(CONNECTOR_DETAILS.equals(action)){
+                    connectorId = getMandatoryParameter(request, CONNECTOR);
+                    writeJSONBeanResponse(request, HttpConstants.SC_OK, getDescriptorById(connectorId));
+                }
                 else if(CONNECTOR_STATUS.equals(action)){
                     boolean status = getRegistry().getBackendService().running();
                     String text = status ? "Connector is running" : "Connector is stopped";
                     writeHTMLResponse(request, HttpConstants.SC_OK, status(status, text));
                 }
                 else if(CONNECTION_STATUS.equals(action)){
-                    MqttsnConnectorDescriptor descriptor = getInstalledDescriptor();
                     boolean status = getRegistry().getBackendService().isConnected(null);
-                    String text = status ? descriptor.getProtocol() + "  connection established" : descriptor.getProtocol()+" unavailable";
+                    String text = status ? descriptor.getProtocol() + "  connection established" : descriptor.getProtocol()+" connection unavailable";
                     writeHTMLResponse(request, HttpConstants.SC_OK, status(status, text));
                 }
                 else if(CONNECTOR_INFO.equals(action)){
-                    MqttsnConnectorDescriptor descriptor = getInstalledDescriptor();
                     writeHTMLResponse(request, HttpConstants.SC_OK,
                             Html.span("Currently Installed:", Html.BLACK, false) + Html.linespace(3) +
                                     Html.span(descriptor.getName(), Html.BLACK, true));
@@ -124,50 +158,65 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
             MqttsnConnectorDescriptor bean = itr.next();
             RuntimeConnectorBean runtimeBean = new RuntimeConnectorBean(bean);
             try {
-                Class.forName(runtimeBean.getClassName());
-                runtimeBean.available = true;
-            } catch(Exception e){
-                // not available on runtime
+                applyRuntimeStatus(runtimeBean);
+                runtimeConnectors.add(runtimeBean);
+            } catch(MqttsnConnectorException e){
+                //ignore
             }
-
-            try {
-                IMqttsnConnector connector =
-                        getRegistry().getConnector();
-                runtimeBean.running =
-                        connector.getClass().getName().equals(runtimeBean.getClassName()) &&
-                     getRegistry().getBackendService().running();
-            } catch(Exception e){
-                // not available on runtime
-            }
-            runtimeConnectors.add(runtimeBean);
         }
-
         return runtimeConnectors;
     }
 
+    private void applyRuntimeStatus(RuntimeConnectorBean runtimeBean) throws MqttsnConnectorException{
+
+        runtimeBean.available = getRegistry().getBackendService().connectorAvailable(runtimeBean);
+        runtimeBean.running = getRegistry().getBackendService().matchesRunningConnector(runtimeBean) &&
+                getRegistry().getBackendService().isConnected(null);
+        //-- check if its running
+        if(runtimeBean.available){
+            //-- decorate the properties with those that would be used
+            List<MqttsnConnectorDescriptorProperty> properties = runtimeBean.getProperties();
+            IMqttsnStorageService storageService = getRegistry().getStorageService();
+            if(properties != null){
+                //load the connector specific settings and read back to the global ones
+                properties.stream().forEach(p -> p.setValue(
+                        storageService.getPreferenceNamespace(runtimeBean).
+                                getStringPreference(p.getName(),
+                                        storageService.getStringPreference(p.getName(), null))));
+                properties.stream().filter(p -> p.getDefaultValue() != null).
+                        forEach(p -> p.setValue(p.getDefaultValue()));
+            }
+        }
+    }
+
     private MqttsnConnectorDescriptor getInstalledDescriptor() throws MqttsnCloudServiceException {
+        return getDescriptorById(getRegistry().getConnector().getClass().getName());
+    }
+
+    private MqttsnConnectorDescriptor getDescriptorById(String connectorId) throws MqttsnCloudServiceException {
         BeanList beanList = runtimeConnectors();
         Optional<MqttsnConnectorDescriptor> descriptor = beanList.connectors.stream().
-                filter(c -> c.getClassName().equals(getRegistry().getConnector().getClass().getName())).findAny();
+                filter(c -> c.getClassName().equals(connectorId)).findAny();
         if(descriptor.isPresent()) return descriptor.get();
-        throw new MqttsnRuntimeException("unable to find running descriptor in cloud list");
+        throw new MqttsnRuntimeException("unable to find running descriptor in cloud list " + connectorId);
     }
 
     private static String status(boolean status, String text){
         String statusStr = null;
         if(status){
-            statusStr = "<button class=\"btn btn-success\" type=\"button\" style=\"opacity: 100%\" disabled>\n" +
+            statusStr = "<button class=\"btn btn-sm btn-success\" type=\"button\" style=\"opacity: 100%\" disabled>\n" +
                     "                <span class=\"spinner-grow spinner-grow-sm\" role=\"status\" aria-hidden=\"true\"></span>\n" +
                     "                "+text+"\n" +
                     "            </button>";
         } else {
-            statusStr = "<button class=\"btn btn-danger\" type=\"button\" style=\"opacity: 100%\" disabled>\n" +
+            statusStr = "<button class=\"btn btn-sm btn-danger\" type=\"button\" style=\"opacity: 100%\" disabled>\n" +
                     "                "+text+"\n" +
                     "            </button>";
         }
 
         return statusStr;
     }
+
 
 
 
@@ -183,4 +232,24 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
             copyFrom(bean);
         }
     }
+
+
+    static class PropertyForm {
+
+        public PropertyForm() {
+        }
+
+        private Map<String, String> properties = new HashMap<>();
+
+        @JsonAnyGetter
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        @JsonAnySetter
+        public void setProperty(String property, String value){
+            properties.put(property, value);
+        }
+    }
 }
+

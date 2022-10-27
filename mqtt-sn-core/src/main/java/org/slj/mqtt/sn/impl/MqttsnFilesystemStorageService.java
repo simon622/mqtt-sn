@@ -24,12 +24,15 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
 import org.slj.mqtt.sn.model.MqttsnClientCredentials;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.Files;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
@@ -273,5 +276,209 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
             }
         }
         throw new MqttsnRuntimeException("unable to initialise filesystem with null reader");
+    }
+
+    public <T> T getPreferenceValue(String key, Class<T> type) {
+        if(String.class.isAssignableFrom(type)){
+            return (T) getStringPreference(key, null);
+        }
+        else if(Integer.class.isAssignableFrom(type) || int.class.isAssignableFrom(type)){
+            return (T) getIntegerPreference(key, null);
+        }
+        else if(Long.class.isAssignableFrom(type) || long.class.isAssignableFrom(type)){
+            return (T) getLongPreference(key, null);
+        }
+        else if(Date.class.isAssignableFrom(type)){
+            return (T) getDatePreference(key, null);
+        }
+        else if(Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type)){
+            return (T) getBooleanPreference(key, null);
+        }
+        throw new MqttsnRuntimeException("unsupported preference type " + type);
+    }
+
+    protected String getNamespacePrefix(IMqttsnPreferenceNamespace namespace, String key){
+        String space = namespace.getNamespace() + "-";
+        if(key != null){
+            space = space += key;
+        }
+        return space;
+    }
+
+    protected void initializeFieldsFromStorageInternal(String prefix, Object configurableBean) throws MqttsnRuntimeException {
+        try {
+            Class c = configurableBean.getClass();
+            Field[] fields = c.getDeclaredFields();
+            for(Field field : fields){
+                if(!Modifier.isStatic(field.getModifiers())){
+                    field.setAccessible(true);
+                    if(supportedValueType(field.getType())) {
+                        Object value = null;
+                        if(prefix == null){
+                            value = getPreferenceValue(field.getName(), field.getType());
+                        } else {
+                            value = getPreferenceValue(prefix + field.getName(), field.getType());
+                        }
+
+                        //-- only set the value from storage is not null
+                        if(value != null)
+                            field.set(configurableBean, value);
+                    }
+                    field.setAccessible(false);
+                }
+            }
+        } catch(IllegalAccessException e){
+            throw new MqttsnRuntimeException(e);
+        }
+    }
+
+    protected void writeFieldsToStorageInternal(String prefix, Object configurableBean) throws MqttsnRuntimeException {
+        try {
+            Class c = configurableBean.getClass();
+            Field[] fields = c.getDeclaredFields();
+            for(Field field : fields){
+                if(!Modifier.isStatic(field.getModifiers())) {
+                    field.setAccessible(true);
+                    if (supportedValueType(field.getType())) {
+                        Object value = field.get(configurableBean);
+                        if (value != null) {
+                            if (prefix == null) {
+                                setStringPreference(field.getName(), String.valueOf(value));
+                            } else {
+                                setStringPreference(prefix + field.getName(), String.valueOf(value));
+                            }
+                        }
+                    }
+                    field.setAccessible(false);
+                }
+            }
+        } catch(IllegalAccessException e){
+            throw new MqttsnRuntimeException(e);
+        }
+    }
+
+    protected boolean supportedValueType(Class cls){
+        return cls == String.class || cls == Integer.class || cls == Long.class || cls == Date.class || cls == Boolean.class
+        || cls == int.class || cls == long.class || cls == boolean.class;
+    }
+
+    public void initializeFieldsFromStorage(Object configurableBean) throws MqttsnRuntimeException {
+        initializeFieldsFromStorageInternal(null, configurableBean);
+    }
+
+    public void writeFieldsToStorage(Object configurableBean) throws MqttsnRuntimeException {
+        writeFieldsToStorageInternal(null, configurableBean);
+    }
+
+    @Override
+    public IMqttsnStorageService getPreferenceNamespace(final IMqttsnPreferenceNamespace namespace) {
+        return new IMqttsnStorageService() {
+            @Override
+            public <T> T getPreferenceValue(String key, Class<T> type) {
+                return MqttsnFilesystemStorageService.this.getPreferenceValue(getNamespacePrefix(namespace, key), type);
+            }
+
+            @Override
+            public void setStringPreference(String key, String value) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.setStringPreference(getNamespacePrefix(namespace, key), value);
+            }
+
+            @Override
+            public String getStringPreference(String key, String defaultValue) {
+                return MqttsnFilesystemStorageService.this.getStringPreference(getNamespacePrefix(namespace, key), defaultValue);
+            }
+
+            @Override
+            public void setIntegerPreference(String key, Integer value) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.setIntegerPreference(getNamespacePrefix(namespace, key), value);
+            }
+
+            @Override
+            public void setLongPreference(String key, Long value) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.setLongPreference(getNamespacePrefix(namespace, key), value);
+            }
+
+            @Override
+            public Long getLongPreference(String key, Long defaultValue) {
+                return MqttsnFilesystemStorageService.this.getLongPreference(getNamespacePrefix(namespace, key), defaultValue);
+            }
+
+            @Override
+            public void setBooleanPreference(String key, Boolean value) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.setBooleanPreference(getNamespacePrefix(namespace, key), value);
+            }
+
+            @Override
+            public Boolean getBooleanPreference(String key, Boolean defaultValue) {
+                return MqttsnFilesystemStorageService.this.getBooleanPreference(getNamespacePrefix(namespace, key), defaultValue);
+            }
+
+            @Override
+            public Integer getIntegerPreference(String key, Integer defaultValue) {
+                return MqttsnFilesystemStorageService.this.getIntegerPreference(getNamespacePrefix(namespace, key), defaultValue);
+            }
+
+            @Override
+            public void setDatePreference(String key, Date value) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.setDatePreference(getNamespacePrefix(namespace, key), value);
+            }
+
+            @Override
+            public Date getDatePreference(String key, Date defaultValue) {
+                return MqttsnFilesystemStorageService.this.getDatePreference(getNamespacePrefix(namespace, key), defaultValue);
+            }
+
+            @Override
+            public void saveFile(String fileName, byte[] arr) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.saveFile(fileName, arr);
+            }
+
+            @Override
+            public Optional<byte[]> loadFileIfExists(String fileName) throws MqttsnException {
+                return MqttsnFilesystemStorageService.this.loadFileIfExists(fileName);
+            }
+
+            @Override
+            public void updateRuntimeOptionsFromFilesystem(MqttsnOptions options) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.updateRuntimeOptionsFromFilesystem(options);
+            }
+
+            @Override
+            public void writeRuntimeOptions(MqttsnOptions options) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.writeRuntimeOptions(options);
+            }
+
+            @Override
+            public IMqttsnStorageService getPreferenceNamespace(final IMqttsnPreferenceNamespace namespace) {
+                return MqttsnFilesystemStorageService.this.getPreferenceNamespace(namespace);
+            }
+
+            @Override
+            public void writeFieldsToStorage(Object configurableBean) throws MqttsnRuntimeException {
+                MqttsnFilesystemStorageService.this.writeFieldsToStorageInternal(
+                        getNamespacePrefix(namespace, null), configurableBean);
+            }
+
+            @Override
+            public void initializeFieldsFromStorage(Object configurableBean) throws MqttsnRuntimeException {
+                MqttsnFilesystemStorageService.this.initializeFieldsFromStorageInternal(
+                        getNamespacePrefix(namespace, null), configurableBean);
+            }
+
+            @Override
+            public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
+                throw new UnsupportedOperationException("cannot start via wrapper");
+            }
+
+            @Override
+            public void stop() throws MqttsnException {
+                throw new UnsupportedOperationException("cannot stop via wrapper");
+            }
+
+            @Override
+            public boolean running() {
+                return MqttsnFilesystemStorageService.this.running();
+            }
+        };
     }
 }

@@ -24,24 +24,27 @@
 
 package org.slj.mqtt.sn.cloud;
 
+import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
+
 import java.io.Serializable;
 import java.util.List;
 
-public class MqttsnConnectorDescriptor implements Serializable {
-
+public class MqttsnConnectorDescriptor implements Serializable, IMqttsnPreferenceNamespace {
     private String name;
     private String description;
     private String signupLink;
     private String url;
     private String version;
     private String developer;
-    private String imageUrl;
+    private String imageUrl = "/console/img/logo-no-background-round.png";
     private String companyName;
     private String className;
     private String protocol;
     private String ribbon;
-    private List<MqttsnConnectorDescriptorProperty> properties;
+    private int rateLimit;
+    private boolean remote;
 
+    private List<MqttsnConnectorDescriptorProperty> properties;
 
     public MqttsnConnectorDescriptor(){
     }
@@ -142,6 +145,22 @@ public class MqttsnConnectorDescriptor implements Serializable {
         this.companyName = companyName;
     }
 
+    public int getRateLimit() {
+        return rateLimit;
+    }
+
+    public void setRateLimit(int rateLimit) {
+        this.rateLimit = rateLimit;
+    }
+
+    public boolean isRemote() {
+        return remote;
+    }
+
+    public void setRemote(boolean remote) {
+        this.remote = remote;
+    }
+
     @Override
     public String toString() {
         return "MqttsnConnectorDescriptor{" +
@@ -156,7 +175,15 @@ public class MqttsnConnectorDescriptor implements Serializable {
                 ", className='" + className + '\'' +
                 ", protocol='" + protocol + '\'' +
                 ", ribbon='" + ribbon + '\'' +
+                ", rateLimit=" + rateLimit +
+                ", remote=" + remote +
+                ", properties=" + properties +
                 '}';
+    }
+
+    @Override
+    public String getNamespace() {
+        return getClassName();
     }
 
     public void copyFrom(MqttsnConnectorDescriptor impl){
@@ -172,5 +199,7 @@ public class MqttsnConnectorDescriptor implements Serializable {
         setProtocol(impl.getProtocol());
         setRibbon(impl.getRibbon());
         setProperties(impl.getProperties());
+        setRateLimit(impl.getRateLimit());
+        setRemote(impl.isRemote());
     }
 }

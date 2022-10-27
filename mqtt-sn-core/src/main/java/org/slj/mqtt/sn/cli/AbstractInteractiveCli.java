@@ -48,10 +48,6 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractInteractiveCli {
     protected static final int MAX_ALLOWED_CLIENTID_LENGTH = 255;
-    protected static final String HOSTNAME = "hostName";
-    protected static final String CLIENTID = "clientId";
-    protected static final String PORT = "port";
-    protected static final String PROTOCOL_VERSION = "protocolVersion";
     protected boolean colors = false;
     protected AbstractMqttsnRuntimeRegistry runtimeRegistry;
     protected AbstractMqttsnRuntime runtime;
@@ -124,6 +120,10 @@ public abstract class AbstractInteractiveCli {
         message("Runtime successfully initialised.");
     }
 
+    protected IMqttsnStorageService getStorageService() {
+        return storageService;
+    }
+
     public void enableOutput(){
         enableOutput = true;
         message("console messaging output enabled");
@@ -155,7 +155,7 @@ public abstract class AbstractInteractiveCli {
     }
 
     public void runWizard() throws MqttsnException {
-        String clientId = storageService.getStringPreference(CLIENTID, null);
+        String clientId = getStorageService().getStringPreference(RuntimeConfig.CLIENTID, null);
         boolean useWizard = clientId == null;
         if(!useWizard) {
             useWizard = !captureMandatoryBoolean(input, output,
@@ -170,54 +170,30 @@ public abstract class AbstractInteractiveCli {
         if(needsHostname()){
             String hostName;
             do{
-                hostName = captureMandatoryString(input, output, "Please enter a valid host name or ip address");
+                hostName = captureMandatoryString(input, output, "Please enter a valid remote hostName or ip address");
             } while(!validHost(hostName));
-            storageService.setStringPreference(HOSTNAME, hostName);
+            getStorageService().setStringPreference(RuntimeConfig.HOSTNAME, hostName);
         }
 
         if(needsPort()){
-            storageService.setIntegerPreference(PORT,
+            getStorageService().setIntegerPreference(RuntimeConfig.PORT,
                     captureMandatoryInt(input, output, "Please enter a remote port", null));
         }
 
         if(needsClientId()){
             String clientId;
             do{
-                clientId = captureString(input, output,  "Please enter a valid client or gateway Id");
+                clientId = captureString(input, output,  "Please enter a valid client Id");
             } while(!validClientId(clientId, MAX_ALLOWED_CLIENTID_LENGTH));
-            storageService.setStringPreference(CLIENTID, clientId);
+            getStorageService().setStringPreference(RuntimeConfig.CLIENTID, clientId);
         }
 
         int protocolVersion;
         do{
             protocolVersion = captureMandatoryInt(input, output,  "Please enter a protocol version (1 for 1.2 or 2 for 2.0)", new int[] {1, 2});
         } while(!validProtocolVersion(protocolVersion));
-        storageService.setIntegerPreference(PROTOCOL_VERSION, protocolVersion);
+        getStorageService().setIntegerPreference(RuntimeConfig.PROTOCOL_VERSION, protocolVersion);
     }
-
-//    protected void loadFromSettings() throws MqttsnException {
-//        hostName = storageService.getStringPreference(HOSTNAME, null);
-//        port = storageService.getIntegerPreference(PORT, null);
-//        protocolVersion = storageService.getIntegerPreference(PROTOCOL_VERSION, null);
-//        clientId = storageService.getStringPreference(CLIENTID, null);
-//    }
-//
-//    protected void saveToSettings() throws MqttsnException {
-//        storageService.setStringPreference(HOSTNAME, hostName);
-//        storageService.setIntegerPreference(PORT, port);
-//        storageService.setIntegerPreference(PROTOCOL_VERSION, protocolVersion);
-//        storageService.setStringPreference(CLIENTID, clientId);
-//    }
-
-//    protected boolean configOk(){
-//        if(needsHostname()){
-//            if(hostName == null) return false;
-//        }
-//        if(needsPort()){
-//            if(port == 0) return false;
-//        }
-//        return validProtocolVersion();
-//    }
 
     public void asyncmessage(String message) {
         StringBuilder sb = new StringBuilder("\t** ");
@@ -627,7 +603,7 @@ public abstract class AbstractInteractiveCli {
     protected abstract AbstractMqttsnRuntime createRuntime(AbstractMqttsnRuntimeRegistry registry, MqttsnOptions options);
 
     protected IMqttsnCodec createCodec(IMqttsnStorageService storageService){
-        int protocolVersion = storageService.getIntegerPreference(PROTOCOL_VERSION, 1);
+        int protocolVersion = storageService.getIntegerPreference(RuntimeConfig.PROTOCOL_VERSION, 1);
         return protocolVersion == 1 ? MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2 :
                 MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0;
     }

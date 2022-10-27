@@ -24,19 +24,22 @@
 
 package org.slj.mqtt.sn.gateway.impl.gateway.type;
 
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
 /**
  * TODO finish ME
  */
 public class MqttsnTransparentGateway extends AbstractMqttsnBackendService {
 
-    public MqttsnTransparentGateway(MqttsnConnectorOptions options) {
-        super(options);
+    @Override
+    public boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException {
+        return false;
     }
 
     @Override
@@ -55,7 +58,7 @@ public class MqttsnTransparentGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    protected IMqttsnConnectorConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
+    protected IMqttsnConnectorConnection getConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
         return null;
     }
 

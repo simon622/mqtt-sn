@@ -36,8 +36,8 @@ import org.slj.mqtt.sn.gateway.spi.ConnectResult;
 import org.slj.mqtt.sn.gateway.spi.DisconnectResult;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
@@ -68,12 +68,12 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
 
     static final int TOKEN_EXPIRY_MINUTES = 60;
 
-    public GoogleIoTCoreMqttsnBrokerConnection(MqttsnBackendOptions options, String clientId) {
+    public GoogleIoTCoreMqttsnBrokerConnection(MqttsnConnectorOptions options, String clientId) {
         super(options, clientId);
     }
 
     @Override
-    protected String createClientId(MqttsnBackendOptions options) {
+    protected String createClientId(MqttsnConnectorOptions options) {
         final String mqttClientId =
                 String.format(
                         "projects/%s/locations/%s/registries/%s/devices/%s",
@@ -86,10 +86,10 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
     }
 
     @Override
-    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException {
+    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         if(isConnected()){
             logger.log(Level.INFO, String.format("attaching [%s] device by clientId", context.getId()));
-            IMqttsnMessageFactory factory = backendService.getRuntimeRegistry().getCodec().createMessageFactory();
+            IMqttsnMessageFactory factory = backendService.getRegistry().getCodec().createMessageFactory();
             //-- tell IoT core we are attaching a device & register for device changes
             String topicPath = String.format("/devices/%s/attach", context.getId());
             IMqttsnMessage publish =
@@ -106,10 +106,10 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnBackendException {
+    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         if(isConnected()){
             logger.log(Level.INFO, String.format("detaching gateway device " + context.getId()));
-            IMqttsnMessageFactory factory = backendService.getRuntimeRegistry().getCodec().createMessageFactory();
+            IMqttsnMessageFactory factory = backendService.getRegistry().getCodec().createMessageFactory();
             String topicPath = String.format("/devices/%s/detach", context.getId());
             IMqttsnMessage publish =
                     factory.createPublish(1, false, false, topicPath, new byte[0]);
@@ -120,7 +120,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) throws MqttsnBackendException {
+    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) throws MqttsnConnectorException {
         return super.publish(context, topicPath, qos, retained, data, message);
     }
 
@@ -154,12 +154,12 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
     }
 
     @Override
-    protected String createConnectionString(MqttsnBackendOptions options) throws MqttsnBackendException {
+    protected String createConnectionString(MqttsnConnectorOptions options) {
         return "ssl://mqtt.googleapis.com:8883";
     }
 
     @Override
-    protected MqttConnectOptions createConnectOptions(MqttsnBackendOptions options) throws MqttsnBackendException {
+    protected MqttConnectOptions createConnectOptions(MqttsnConnectorOptions options) throws MqttsnConnectorException {
         try {
             MqttConnectOptions connectOptions = super.createConnectOptions(options);
             connectOptions.setUserName("unused"); //per the GGL documents
@@ -178,7 +178,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
             logger.log(Level.INFO, new String(connectOptions.getPassword()));
             return connectOptions;
         } catch(Exception e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
@@ -220,7 +220,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
         return jwtBuilder.signWith(SignatureAlgorithm.ES256, kf.generatePrivate(spec)).compact();
     }
 
-    protected String getGoogleIoTProjectId(MqttsnBackendOptions options){
+    protected String getGoogleIoTProjectId(MqttsnConnectorOptions options){
         final String projectId = System.getProperty("projectId");
         if(projectId == null){
             throw new IllegalArgumentException("please specify -DprojectId=<gglProjectId>");
@@ -228,7 +228,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
         return projectId;
     }
 
-    protected String getGoogleIoTGatewayId(MqttsnBackendOptions options){
+    protected String getGoogleIoTGatewayId(MqttsnConnectorOptions options){
         final String gatewayId = System.getProperty("gatewayId");
         if(gatewayId == null){
             throw new IllegalArgumentException("please specify -DprojectId=<gatewayId>");
@@ -236,7 +236,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
         return gatewayId;
     }
 
-    protected String getGoogleIoTRegistryId(MqttsnBackendOptions options){
+    protected String getGoogleIoTRegistryId(MqttsnConnectorOptions options){
         final String registryId = System.getProperty("registryId");
         if(registryId == null){
             throw new IllegalArgumentException("please specify -DregistryId=<registryId>");
@@ -244,7 +244,7 @@ public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnect
         return registryId;
     }
 
-    protected String getGoogleIoTCloudRegion(MqttsnBackendOptions options){
+    protected String getGoogleIoTCloudRegion(MqttsnConnectorOptions options){
         final String cloudRegion = System.getProperty("cloudRegion");
         if(cloudRegion == null){
             throw new IllegalArgumentException("please specify -DcloudRegion=<cloudRegion>");

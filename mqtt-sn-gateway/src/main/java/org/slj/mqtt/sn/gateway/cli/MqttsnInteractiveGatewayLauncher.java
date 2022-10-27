@@ -31,10 +31,8 @@ import java.io.PrintStream;
 import java.util.Scanner;
 
 public class MqttsnInteractiveGatewayLauncher {
-    static final String DEBUG = "debug";
+
     public static void launch(MqttsnInteractiveGateway interactiveGateway, boolean needsBroker, String welcome) throws Exception {
-//        boolean debug = Boolean.getBoolean(DEBUG);
-//        if(!debug) LogManager.getLogManager().reset();
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
             interactiveGateway.init(needsBroker, input, output);

@@ -53,11 +53,9 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     private Logger logger = Logger.getLogger(PahoMqttsnBrokerConnection.class.getName());
     private volatile MqttClient client = null;
     protected MqttsnConnectorOptions options;
-    protected final String clientId;
 
-    public PahoMqttsnBrokerConnection(MqttsnConnectorOptions options, String clientId) {
+    public PahoMqttsnBrokerConnection(MqttsnConnectorOptions options) {
         this.options = options;
-        this.clientId = clientId;
     }
 
     public void connect() throws MqttsnConnectorException {
@@ -104,12 +102,19 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
         return connectOptions;
     }
 
-    protected String createClientId(MqttsnConnectorOptions options) throws MqttsnConnectorException {
-        return clientId;
+    protected String createClientId(MqttsnConnectorOptions options) {
+        return options.getClientId();
     }
 
-    protected String createConnectionString(MqttsnConnectorOptions options) throws MqttsnConnectorException {
-        return String.format("%s://%s:%s", options.getProtocol(), options.getHost(), options.getPort());
+    protected String createConnectionString(MqttsnConnectorOptions options) {
+
+        String protocol = options.getProtocol();
+        protocol = protocol == null ? options.getPort() ==
+                MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PORT ?
+                MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PROTOCOL : MqttsnConnectorOptions.DEFAULT_MQTT_PROTOCOL :
+                protocol;
+
+        return String.format("%s://%s:%s", protocol, options.getHostName(), options.getPort());
     }
 
     protected MqttClient createClient(MqttsnConnectorOptions options) throws MqttsnConnectorException {

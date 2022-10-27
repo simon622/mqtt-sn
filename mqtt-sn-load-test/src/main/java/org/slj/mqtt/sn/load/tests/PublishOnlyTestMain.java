@@ -37,7 +37,7 @@ public class PublishOnlyTestMain {
 //            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
 //            LogManager.getLogManager().reset();
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 100, 20);
+                    new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 10, 20);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(60, TimeUnit.SECONDS);

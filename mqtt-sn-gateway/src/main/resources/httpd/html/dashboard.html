@@ -2,29 +2,35 @@
 <div class="row">
     <div class="col">
         <div class="bd-callout bd-callout-info">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-y">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-5 py-y">
                 <div class="col d-flex align-items-start">
                     <div>
-                        <h3 class="fw-bold mb-0 fs-4">Current Sessions</h3>
+                        <h5 class="fw-bold mb-0 fs-5">Current Sessions</h5>
                         <span class="metric"><span id="currentSessions"></span> / <span id="totalSessions"></span></span>
                     </div>
                 </div>
                 <div class="col d-flex align-items-start">
                     <div>
-                        <h3 class="fw-bold mb-0 fs-4">MQTT-SN Publish Out</h3>
+                        <h5 class="fw-bold mb-0 fs-5">MQTT-SN Out</h5>
                         <span class="metric"><span id="currentEgress"></span> Mp/s</span>
                     </div>
                 </div>
                 <div class="col d-flex align-items-start">
                     <div>
-                        <h3 class="fw-bold mb-0 fs-4">MQTT-SN Publish In</h3>
+                        <h5 class="fw-bold mb-0 fs-5">MQTT-SN In</h5>
                         <span class="metric"><span id="currentIngress"></span> Mp/s</span>
                     </div>
                 </div>
                 <div class="col d-flex align-items-start">
                     <div>
-                        <h3 class="fw-bold mb-0 fs-4">MQTT Publish Out</h3>
+                        <h5 class="fw-bold mb-0 fs-5">Connector Out</h5>
                         <span class="metric"><span id="currentConnector"></span> / <span id="totalConnector"></span> Mp/s</span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h5 class="fw-bold mb-0 fs-5">Connector In</h5>
+                        <span class="metric"><span id="currentConnectorIn"></span> Mp/s</span>
                     </div>
                 </div>
             </div>
@@ -53,7 +59,7 @@
                             <canvas id="backendMetrics" height="80"></canvas>
                         </div>
                         <div class="card-body">
-                            <h6 class="card-title">MQTT (Backend) Publish Operations</h6>
+                            <h6 class="card-title">Connector Operations</h6>
                             <p class="card-text">Statistics relating to the backend connector performance.</p>
                         </div>
                     </div>
@@ -146,5 +152,7 @@
     updateHtmlElementTimerById("currentIngress", fieldRefreshTime);
     updateHtmlElementTimerById("currentConnector", fieldRefreshTime);
     updateHtmlElementTimerById("totalConnector", fieldRefreshTime);
+    updateHtmlElementTimerById("currentConnectorIn", fieldRefreshTime);
+
 
 </script>

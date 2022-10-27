@@ -56,6 +56,8 @@ public class ConsoleAsyncMetricFieldHandler extends AsyncFieldHandler {
                 return safeValue(registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).getLastSample().getLongValue());
             case "currentConnector":
                 return safeValue(registry.getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH).getLastSample().getLongValue());
+            case "currentConnectorIn":
+                return safeValue(registry.getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE).getLastSample().getLongValue());
             case "totalConnector":
                 double permits = ((MqttsnGatewayOptions)registry.getOptions()).getMaxBrokerPublishesPerSecond();
                 return permits == 0 ? "&infin;" : safeValue(new Long((int) permits));

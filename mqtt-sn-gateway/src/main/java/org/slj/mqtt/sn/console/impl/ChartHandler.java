@@ -280,9 +280,9 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         LineOptions options = new LineOptions();
         lineChart.setOptions(options);
         lineChart.setData(new LineData()
-                .addDataset(ChartJSUtils.createLineDataset("MQTT Publish Sent", ChartJSUtils.getColorForIndex(0), publish))
-                .addDataset(ChartJSUtils.createLineDataset("MQTT Publish Received", ChartJSUtils.getColorForIndex(1), recieve))
-                .addDataset(ChartJSUtils.createLineDataset("Publish Queue", ChartJSUtils.getColorForIndex(2), queuesize))
+                .addDataset(ChartJSUtils.createLineDataset("Connector Sent", ChartJSUtils.getColorForIndex(0), publish))
+                .addDataset(ChartJSUtils.createLineDataset("Connector Received", ChartJSUtils.getColorForIndex(1), recieve))
+                .addDataset(ChartJSUtils.createLineDataset("Connector Queue", ChartJSUtils.getColorForIndex(2), queuesize))
                 .addLabels(ChartJSUtils.timestampsToStr(arr)));
         writeJSONResponse(request, HttpConstants.SC_OK,
                 ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));

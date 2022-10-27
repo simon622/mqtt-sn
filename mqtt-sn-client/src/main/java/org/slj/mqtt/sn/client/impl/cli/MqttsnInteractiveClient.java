@@ -35,10 +35,7 @@ import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
-import org.slj.mqtt.sn.spi.IMqttsnStorageService;
-import org.slj.mqtt.sn.spi.IMqttsnTransport;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
@@ -190,7 +187,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     status();
                     break;
                 case SESSION:
-                    String sessionId = storageService.getStringPreference(CLIENTID, null);
+                    String sessionId = storageService.getStringPreference(RuntimeConfig.CLIENTID, null);
                     if(sessionId == null){
                         sessionId = captureMandatoryString(input, output, "Could not determine clientId from runtime, please supply to view session?");
                     }
@@ -399,9 +396,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
 
     protected void status() {
         MqttsnClient client = (MqttsnClient) getRuntime();
-        message(String.format("Remote Host: %s", storageService.getStringPreference(HOSTNAME, null)));
-        message(String.format("Remote Port: %s", storageService.getIntegerPreference(PORT, null)));
-        message(String.format("Client Id: %s", storageService.getStringPreference(CLIENTID, null)));
+        message(String.format("Remote Host: %s", storageService.getStringPreference(RuntimeConfig.HOSTNAME, null)));
+        message(String.format("Remote Port: %s", storageService.getIntegerPreference(RuntimeConfig.PORT, null)));
+        message(String.format("Client Id: %s", storageService.getStringPreference(RuntimeConfig.CLIENTID, null)));
         if(client != null){
             if(runtimeRegistry != null) {
                 if (runtimeRegistry.getOptions() != null) {
@@ -437,10 +434,10 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected MqttsnOptions createOptions(IMqttsnStorageService storageService) {
         try {
             MqttsnOptions options = new MqttsnOptions();
-            String clientId = storageService.getStringPreference(CLIENTID, null);
+            String clientId = storageService.getStringPreference(RuntimeConfig.CLIENTID, null);
             options.withNetworkAddressEntry(clientId,
-                    NetworkAddress.from(storageService.getIntegerPreference(PORT, null),
-                            storageService.getStringPreference(HOSTNAME, null)));
+                    NetworkAddress.from(storageService.getIntegerPreference(RuntimeConfig.PORT, null),
+                            storageService.getStringPreference(RuntimeConfig.HOSTNAME, null)));
             options.withContextId(clientId);
             options.withMaxProtocolMessageSize(4096);
             return options;

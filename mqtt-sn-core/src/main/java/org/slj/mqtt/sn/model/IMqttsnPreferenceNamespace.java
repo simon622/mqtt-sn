@@ -22,17 +22,9 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.spi.connector;
+package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
+public interface IMqttsnPreferenceNamespace {
 
-public interface IMqttsnConnector<T extends IMqttsnConnectorConnection> {
-
-    T createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException;
-
-    T createConnection(String clientId) throws MqttsnConnectorException;
-
-    MqttsnConnectorDescriptor getDescriptor();
-
-    MqttsnConnectorOptions getDefaultOptions();
+    String getNamespace();
 }

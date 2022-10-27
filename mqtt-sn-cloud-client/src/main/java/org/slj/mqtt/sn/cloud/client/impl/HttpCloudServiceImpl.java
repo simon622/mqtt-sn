@@ -138,7 +138,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
                 }
             }
         }
-        logger.log(Level.INFO, "mqtt-sn cloud provider has " + descriptors.size() + " available");
+        logger.log(Level.FINE, "mqtt-sn cloud provider has " + descriptors.size() + " available");
         return descriptors;
     }
 
@@ -173,7 +173,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         try {
             HttpResponse response =
                     HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
-            logger.log(Level.INFO, String.format("obtaining cloud service list from [%s] -> [%s]", url, response));
+            logger.log(Level.FINE, String.format("obtaining cloud service list from [%s] -> [%s]", url, response));
             checkResponse(response, true);
             return mapper.readValue(response.getResponseBody(),
                     mapper.getTypeFactory().constructCollectionType(List.class, cls));
@@ -186,7 +186,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         try {
             HttpResponse response =
                     HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
-            logger.log(Level.INFO, String.format("obtaining cloud service object from [%s] -> [%s]", url, response));
+            logger.log(Level.FINE, String.format("obtaining cloud service object from [%s] -> [%s]", url, response));
             checkResponse(response, true);
             return mapper.readValue(response.getResponseBody(), cls);
         } catch(IOException e){
@@ -200,7 +200,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
             try (InputStream is = new ByteArrayInputStream(jsonBody.getBytes())) {
                 HttpResponse response =
                         HttpClient.post(getHeaders(), url, is, connectTimeoutMillis, readTimeoutMillis);
-                logger.log(Level.INFO, String.format("posting to cloud service object from [%s] -> [%s]", url, response));
+                logger.log(Level.FINE, String.format("posting to cloud service object from [%s] -> [%s]", url, response));
                 checkResponse(response, true);
                 return mapper.readValue(response.getResponseBody(), cls);
             }

@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.gateway.connector.paho;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
+import org.slj.mqtt.sn.gateway.connector.custom.CustomMqttBrokerConnector;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
@@ -41,23 +42,16 @@ public class PahoGatewayInteractiveMain {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
 
-                int port = storageService.getIntegerPreference(PORT, null);
-                MqttsnConnectorOptions brokerOptions = new MqttsnConnectorOptions().
-                        withHost(storageService.getStringPreference(HOSTNAME, null)).
-                        withPort(port).
-                        withUsername(storageService.getStringPreference(USERNAME, null)).
-                        withPassword(storageService.getStringPreference(PASSWORD, null));
-
-                if(port == MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PORT){
-                    brokerOptions.withProtocol(MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PROTOCOL);
-                }
+                IMqttsnStorageService namespacePreferences = storageService.getPreferenceNamespace(CustomMqttBrokerConnector.DESCRIPTOR);
+                MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
+                storageService.initializeFieldsFromStorage(connectorOptions);
+                namespacePreferences.initializeFieldsFromStorage(connectorOptions);
 
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
-                ((MqttsnGatewayOptions) options).withMaxConnectedClients(500);
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
-                        withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                        withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
+                        withConnector(new CustomMqttBrokerConnector(CustomMqttBrokerConnector.DESCRIPTOR, connectorOptions)).
+                        withBackendService(new MqttsnAggregatingGateway()).
                         withTransport(createTransport(storageService));
 
             }

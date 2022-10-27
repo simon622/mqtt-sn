@@ -33,6 +33,8 @@ public class MqttsnConnectorDescriptorProperty implements Serializable {
     private String name;
     private String type;
     private boolean required;
+    private String value;
+    private String defaultValue;
 
     public MqttsnConnectorDescriptorProperty() {
     }
@@ -59,6 +61,22 @@ public class MqttsnConnectorDescriptorProperty implements Serializable {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     @Override

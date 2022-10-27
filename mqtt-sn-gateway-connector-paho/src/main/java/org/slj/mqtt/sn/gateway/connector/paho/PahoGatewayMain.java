@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.connector.paho;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
+import org.slj.mqtt.sn.gateway.connector.custom.CustomMqttBrokerConnector;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
@@ -61,8 +62,8 @@ public class PahoGatewayMain {
         MqttsnFilesystemStorageService filesystemStorageService =
                 new MqttsnFilesystemStorageService();
 
-        MqttsnConnectorOptions brokerOptions = new MqttsnConnectorOptions().
-                withHost(host).
+        MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions().
+                withHostName(host).
                 withPort(port).
                 withUsername(username).
                 withPassword(password);
@@ -76,8 +77,8 @@ public class PahoGatewayMain {
 
         //-- construct the registry of controllers and config
         AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(filesystemStorageService, gatewayOptions).
-                withBrokerConnectionFactory(new PahoMqttsnBrokerConnectionFactory()).
-                withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
+                withConnector(new CustomMqttBrokerConnector(connectorOptions)).
+                withBackendService(new MqttsnAggregatingGateway()).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

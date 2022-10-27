@@ -32,7 +32,6 @@ import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
@@ -65,8 +64,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
     private volatile boolean metricsLoaded = false;
 
-    public MqttsnAggregatingGateway(MqttsnConnectorOptions options){
-        super(options);
+    public MqttsnAggregatingGateway(){
     }
 
     @Override
@@ -100,18 +98,14 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     protected void connectOnStartup() throws MqttsnException{
-        if(options.getConnectOnStartup()){
-            logger.log(Level.INFO, "aggregating backend connecting during startup requested..");
-            try {
-                getBrokerConnection(null);
-            } catch(MqttsnConnectorException e){
-                logger.log(Level.SEVERE, "encountered error attempting broker connect..", e);
-                throw new MqttsnException("encountered error attempting broker connect..",e);
-            }
-            logger.log(Level.INFO, "connection complete, backend service ready.");
-        }
 
-logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
+        logger.log(Level.INFO, "aggregating backend connecting during startup requested..");
+        try {
+            getConnection(null);
+        } catch(MqttsnConnectorException e){
+            logger.log(Level.SEVERE, "encountered error attempting connect..", e);
+            throw new MqttsnException("encountered error attempting connect..",e);
+        }
 
         if(registry.getMetrics() != null && !metricsLoaded){
 
@@ -134,9 +128,7 @@ logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
     @Override
     protected void initThread() {
         //-- only start deamon process if we are managing the connections
-        if(options.getManagedConnections()){
-            super.initThread();
-        }
+        super.initThread();
     }
 
     @Override
@@ -185,7 +177,7 @@ logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
     @Override
     protected long doWork() {
         try {
-            if(running && options.getManagedConnections()){
+            if(running){
                 logger.log(Level.FINE, "checking status of managed connection..");
                 if(connection != null){
                     if(!connection.isConnected()){
@@ -203,7 +195,7 @@ logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
     }
 
     @Override
-    protected IMqttsnConnectorConnection getBrokerConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
+    protected IMqttsnConnectorConnection getConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
         if(stopped) throw new MqttsnConnectorException("broker service is in the process or shutting down");
         initConnection();
         return connection;
@@ -270,8 +262,8 @@ logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
             //-- in aggregation mode connect with the gatewayId as the clientId on the broker side
             synchronized (this){
                 if(connection == null){
-                    connection = getRegistry().getConnector().createConnection(options,
-                            registry.getOptions().getContextId());
+                    //-- no need for custom options per connection in aggregating mode
+                    connection = getRegistry().getConnector().createConnection(registry.getOptions().getContextId());
                     if(connection instanceof AbstractMqttsnBackendConnection){
                         ((AbstractMqttsnBackendConnection)connection).setBrokerService(this);
                         //-- ensure we subscribe the connection to any existing subscriptions
@@ -325,7 +317,7 @@ logger.log(Level.INFO, "registering backend metrics.."  + !metricsLoaded);
 
     @Override
     protected String getDaemonName() {
-        return "gateway-backend-managed-connection";
+        return "gateway-backend-managed-connector";
     }
 
     static class BrokerPublishOperation {

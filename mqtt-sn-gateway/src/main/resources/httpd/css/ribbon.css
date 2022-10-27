@@ -33,7 +33,7 @@
     text-align: right;
 }
 .ribbon span {
-    font-size: 0.8rem;
+    font-size: 0.6rem;
     color: #fff;
     text-transform: uppercase;
     text-align: center;
@@ -93,10 +93,6 @@ right: -29px; // change this, if no border
 .blue span::after {
     border-right-color: #1e5799;
     border-top-color: #1e5799;
-}
-
-.foo {
-    clear: both;
 }
 
 .baz {

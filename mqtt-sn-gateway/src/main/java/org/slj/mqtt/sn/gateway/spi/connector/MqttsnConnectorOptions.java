@@ -24,37 +24,35 @@
 
 package org.slj.mqtt.sn.gateway.spi.connector;
 
-import java.util.Objects;
-
 public class MqttsnConnectorOptions {
 
-    public static final boolean DEFAULT_CONNECT_ON_STARTUP = true;
-    public static final boolean DEFAULT_MANAGED_CONNECTIONS = true;
     public static final int DEFAULT_KEEPALIVE = 30 * 10;
     public static final int DEFAULT_CONNECTION_TIMEOUT = 30;
     public static final int DEFAULT_MQTT_PORT = 1883;
     public static final int DEFAULT_MQTT_TLS_PORT = 8883;
     public static final String DEFAULT_MQTT_PROTOCOL = "tcp";
     public static final String DEFAULT_MQTT_TLS_PROTOCOL = "ssl";
-    private boolean connectOnStartup = DEFAULT_CONNECT_ON_STARTUP;
-    private boolean managedConnections = DEFAULT_MANAGED_CONNECTIONS;
-    private String username;
-    private String password;
     private int keepAlive = DEFAULT_KEEPALIVE;
     private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-    private String host;
     private int port = DEFAULT_MQTT_PORT;
-    private String protocol = DEFAULT_MQTT_PROTOCOL;
-
+    private String protocol;
+    private String username;
+    private String password;
+    private String hostName;
     private String keystoreLocation = null;
     private String keystorePassword = null;
     private String keyPassword = null;
-
     private String certificateFileLocation = null;
     private String privateKeyFileLocation = null;
+    private String clientId = null;
 
     public MqttsnConnectorOptions(){
 
+    }
+
+    public MqttsnConnectorOptions withClientId(String clientId){
+        this.clientId = clientId;
+        return this;
     }
 
     public MqttsnConnectorOptions withCertificateFileLocation(String certificateFileLocation){
@@ -79,16 +77,6 @@ public class MqttsnConnectorOptions {
 
     public MqttsnConnectorOptions withKeyPassword(String keyPassword){
         this.keyPassword = keyPassword;
-        return this;
-    }
-
-    public MqttsnConnectorOptions withConnectOnStartup(boolean connectOnStartup){
-        this.connectOnStartup = connectOnStartup;
-        return this;
-    }
-
-    public MqttsnConnectorOptions withManagedConnections(boolean managedConnections){
-        this.managedConnections = managedConnections;
         return this;
     }
 
@@ -117,18 +105,14 @@ public class MqttsnConnectorOptions {
         return this;
     }
 
-    public MqttsnConnectorOptions withHost(String host){
-        this.host = host;
+    public MqttsnConnectorOptions withHostName(String hostName){
+        this.hostName = hostName;
         return this;
     }
 
     public MqttsnConnectorOptions withPort(int port){
         this.port = port;
         return this;
-    }
-
-    public boolean getManagedConnections() {
-        return managedConnections;
     }
 
     public String getUsername() {
@@ -147,12 +131,8 @@ public class MqttsnConnectorOptions {
         return connectionTimeout;
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public boolean getConnectOnStartup() {
-        return connectOnStartup;
+    public String getHostName() {
+        return hostName;
     }
 
     public int getPort() {
@@ -161,10 +141,6 @@ public class MqttsnConnectorOptions {
 
     public String getProtocol() {
         return protocol;
-    }
-
-    public boolean validConnectionDetails(){
-        return !nonEmpty(protocol) && !nonEmpty(host) && port > 0;
     }
 
     public String getKeystoreLocation() {
@@ -187,20 +163,19 @@ public class MqttsnConnectorOptions {
         return privateKeyFileLocation;
     }
 
-    static boolean nonEmpty(String val){
-        return !Objects.isNull(val) && "".equals(val.trim());
+    public String getClientId() {
+        return clientId;
     }
 
     @Override
     public String toString() {
         return "MqttsnConnectorOptions{" +
-                "connectOnStartup=" + connectOnStartup +
-                ", managedConnections=" + managedConnections +
+                "clientId='" + clientId + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", keepAlive=" + keepAlive +
                 ", connectionTimeout=" + connectionTimeout +
-                ", host='" + host + '\'' +
+                ", hostName='" + hostName + '\'' +
                 ", port=" + port +
                 ", protocol='" + protocol + '\'' +
                 ", keystoreLocation='" + keystoreLocation + '\'' +

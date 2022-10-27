@@ -22,35 +22,41 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.gateway.impl.connector;
+package org.slj.mqtt.sn.gateway.connector.thingstream;
 
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
+import org.slj.mqtt.sn.gateway.connector.paho.PahoMqttsnBrokerConnection;
+import org.slj.mqtt.sn.gateway.impl.connector.AbstractMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 
-public class LoopbackMqttsnConnector
-        extends AbstractMqttsnConnector<LoopbackMqttsnConnectorConnection>
-            implements IMqttsnConnector<LoopbackMqttsnConnectorConnection> {
+public class ThingstreamConnector extends AbstractMqttsnConnector<PahoMqttsnBrokerConnection>
+        implements IMqttsnConnector<PahoMqttsnBrokerConnection> {
 
-    static final MqttsnConnectorDescriptor DESCRIPTOR = new MqttsnConnectorDescriptor();
+    public static final MqttsnConnectorDescriptor DESCRIPTOR = new MqttsnConnectorDescriptor();
     static {
-        DESCRIPTOR.setClassName(LoopbackMqttsnConnector.class.getName());
-        DESCRIPTOR.setCompanyName("SLJ");
-        DESCRIPTOR.setProtocol("Native");
-        DESCRIPTOR.setDescription("The loopback connector puts the gateway into standalone mode. It needs no remote MQTT broker to connect to, instead it will service the MQTT-SN clients directly, acting as a broker itself, using the MQTT-SN protocol.");
-        DESCRIPTOR.setName("Loopback Gateway Connector");
-        DESCRIPTOR.setDeveloper("Simon Johnson");
+        DESCRIPTOR.setClassName(ThingstreamConnector.class.getName());
+        DESCRIPTOR.setCompanyName("ublox");
+        DESCRIPTOR.setProtocol("MQTT");
+        DESCRIPTOR.setImageUrl("https://thingstream.io/thingstream-logo.svg");
+        DESCRIPTOR.setDescription("Connects into the Thingstream cloud platform using an MQTT Now connection.");
+        DESCRIPTOR.setName("u-blox Thingstream Connector");
+        DESCRIPTOR.setDeveloper("Thingstream ublox");
     }
 
-    public LoopbackMqttsnConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) {
+    public ThingstreamConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) {
         super(descriptor, options);
     }
 
+    public ThingstreamConnector(MqttsnConnectorOptions options) {
+        super(DESCRIPTOR, options);
+    }
+
     @Override
-    public LoopbackMqttsnConnectorConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
+    public PahoMqttsnBrokerConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
         try {
-            LoopbackMqttsnConnectorConnection connection = new LoopbackMqttsnConnectorConnection(options, clientId);
+            PahoMqttsnBrokerConnection connection = new PahoMqttsnBrokerConnection(options);
             connection.connect();
             return connection;
         } catch(Exception e){

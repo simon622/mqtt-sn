@@ -42,7 +42,7 @@ import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
     private IMqttsnGatewayAdvertiseService advertiseService;
     private IMqttsnBackendService brokerService;
-    private IMqttsnConnector connectionFactory;
+    private IMqttsnConnector connector;
     private IMqttsnGatewaySessionService sessionService;
     private IMqttsnGatewayClusterService clusterService;
     private IMqttsnConsole console;
@@ -96,8 +96,8 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return this;
     }
 
-    public MqttsnGatewayRuntimeRegistry withBrokerConnectionFactory(IMqttsnConnector connectionFactory){
-        this.connectionFactory = connectionFactory;
+    public MqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector){
+        this.connector = connector;
         return this;
     }
 
@@ -123,7 +123,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
 
     @Override
     public IMqttsnConnector getConnector() {
-        return connectionFactory;
+        return connector;
     }
 
     @Override
@@ -146,7 +146,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
 
         super.validateOnStartup();
         if(brokerService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
-        if(connectionFactory == null) throw new MqttsnRuntimeException("connection factory must be bound for valid runtime");
+        if(connector == null) throw new MqttsnRuntimeException("connector must be bound for valid runtime");
         if(sessionService == null) throw new MqttsnRuntimeException("session service must be bound for valid runtime");
         if(clientIdFactory == null) throw new MqttsnRuntimeException("clientIdFactory must be bound for valid runtime");
     }

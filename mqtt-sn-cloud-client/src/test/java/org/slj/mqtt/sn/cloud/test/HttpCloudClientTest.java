@@ -98,7 +98,7 @@ public class HttpCloudClientTest {
         System.err.println(descriptor);
         Assert.assertEquals("Loopback Gateway Connector", descriptor.getName());
         Assert.assertEquals("Connector Listing", descriptor.getDescription());
-        Assert.assertEquals("https://github.com/simon622/mqtt-sn", descriptor.getDocumentationLink());
+        Assert.assertEquals("https://github.com/simon622/mqtt-sn", descriptor.getUrl());
         Assert.assertEquals("org.slj.mqtt.sn.gateway.impl.connector.LoopbackMqttsnConnector", descriptor.getClassName());
         Assert.assertEquals("Simon Johnson", descriptor.getDeveloper());
         Assert.assertEquals("1.0", descriptor.getVersion());

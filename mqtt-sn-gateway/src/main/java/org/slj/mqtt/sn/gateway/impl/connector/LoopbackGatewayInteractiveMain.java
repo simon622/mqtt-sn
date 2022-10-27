@@ -42,29 +42,15 @@ public class LoopbackGatewayInteractiveMain {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGateway() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
 
-                MqttsnConnectorOptions brokerOptions = new MqttsnConnectorOptions(){
-                    @Override
-                    public boolean validConnectionDetails() {
-                        return true;
-                    }
-                };
-
-                if(needsBroker){
-                    String hostName = storageService.getStringPreference(HOSTNAME, null);
-                    String password = storageService.getStringPreference(PASSWORD, null);
-                    String username = storageService.getStringPreference(USERNAME, null);
-                    Integer port = storageService.getIntegerPreference(PORT, null);
-                    brokerOptions.withHost(hostName).
-                            withPort(port).
-                            withUsername(username).
-                            withPassword(password);
-                }
+                MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
+                IMqttsnStorageService namespacePreferences = storageService.getPreferenceNamespace(LoopbackMqttsnConnector.DESCRIPTOR);
+                namespacePreferences.initializeFieldsFromStorage(connectorOptions);
 
                 ((MqttsnGatewayOptions)options).withPerformanceProfile(MqttsnGatewayPerformanceProfile.EGRESS_CLOUD);
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions)options).
-                        withBrokerConnectionFactory(new LoopbackMqttsnConnector()).
-                        withBackendService(new MqttsnAggregatingGateway(brokerOptions)).
+                        withConnector(new LoopbackMqttsnConnector(LoopbackMqttsnConnector.DESCRIPTOR, connectorOptions)).
+                        withBackendService(new MqttsnAggregatingGateway()).
                         withTransport(createTransport(storageService));
 
             }

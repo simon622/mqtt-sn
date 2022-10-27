@@ -31,10 +31,7 @@ import java.io.PrintStream;
 import java.util.Scanner;
 
 public class MqttsnInteractiveClientLauncher {
-    static final String DEBUG = "debug";
     public static void launch(MqttsnInteractiveClient interactiveClient) throws Exception {
-//        boolean debug = Boolean.getBoolean(DEBUG);
-//        if(!debug) LogManager.getLogManager().reset();
         try (Scanner input = new Scanner(System.in)) {
             PrintStream output = System.out;
             interactiveClient.init(input, output);

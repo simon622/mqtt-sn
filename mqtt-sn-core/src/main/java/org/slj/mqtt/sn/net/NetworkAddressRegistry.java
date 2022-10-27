@@ -35,10 +35,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
@@ -112,7 +110,6 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     public void putContext(INetworkContext context) {
         synchronized (networkRegistry){
             networkRegistry.put(context.getNetworkAddress(), context);
-            logger.log(Level.INFO, String.format("adding network context to RAM registry - [%s]", context));
             synchronized(mutex){
                 mutex.notifyAll();
             }
@@ -121,7 +118,6 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
     @Override
     public void bindContexts(INetworkContext context, IMqttsnContext sessionContext) {
-        logger.log(Level.INFO, String.format("binding network to session contexts - [%s] -> [%s]", context, sessionContext));
         synchronized (networkRegistry){
             mqttsnContextRegistry.put(sessionContext, context);
             networkContextRegistry.put(context, sessionContext);

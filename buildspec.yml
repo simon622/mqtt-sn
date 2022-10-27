@@ -11,8 +11,6 @@ phases:
       - mvn -f mqtt-sn-core clean install
       - mvn -f mqtt-sn-gateway clean install
 
-      - mvn -f mqtt-sn-gateway-artefact clean package
-
 artifacts:
   files:
     - mqtt-sn-gateway-artefact/target/mqtt-sn-gateway-1.0.0.jar

@@ -22,22 +22,22 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.cloud.client;
+package org.slj.mqtt.sn.cloud;
 
-public class MqttsnCloudServiceException extends Exception {
+import java.util.List;
 
-    public MqttsnCloudServiceException() {
-    }
+public interface IMqttsnCloudService {
 
-    public MqttsnCloudServiceException(String message) {
-        super(message);
-    }
+    List<MqttsnConnectorDescriptor> getAvailableConnectors() throws MqttsnCloudServiceException;
 
-    public MqttsnCloudServiceException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    int getConnectedServiceCount() throws MqttsnCloudServiceException;
 
-    public MqttsnCloudServiceException(Throwable cause) {
-        super(cause);
-    }
+    boolean hasCloudConnectivity();
+
+    boolean isAuthorized();
+
+    MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException ;
+
+    MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account) throws MqttsnCloudServiceException;
+
 }

@@ -26,7 +26,6 @@ package org.slj.mqtt.sn.cloud.client.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.cloud.*;
-import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.cloud.client.http.HttpClient;
 import org.slj.mqtt.sn.cloud.client.http.HttpResponse;
 import org.slj.mqtt.sn.utils.General;

@@ -28,8 +28,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
+import org.slj.mqtt.sn.cloud.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
-import org.slj.mqtt.sn.cloud.client.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.cloud.client.impl.HttpCloudServiceImpl;
 
 import java.util.List;

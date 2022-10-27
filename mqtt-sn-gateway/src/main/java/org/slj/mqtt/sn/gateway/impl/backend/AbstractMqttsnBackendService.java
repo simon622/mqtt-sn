@@ -30,7 +30,10 @@ import org.slj.mqtt.sn.gateway.spi.connector.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnNotFoundException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.logging.Level;

@@ -82,14 +82,15 @@ public abstract class AbstractMqttsnRuntime {
             registry.setRuntime(this);
             registry.init();
 
-            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", java.lang.System.identityHashCode(this),
-                    getRegistry().getStorageService().getClass().getSimpleName()));
-            registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
             try {
                 setupEnvironment(reg.getOptions());
             } catch(IOException e){
                 throw new MqttsnException("error on environment setup;", e);
             }
+
+            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", java.lang.System.identityHashCode(this),
+                    getRegistry().getStorageService().getClass().getSimpleName()));
+            registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
 
             running = true;
 
@@ -204,15 +205,17 @@ public abstract class AbstractMqttsnRuntime {
     }
 
     public static void initializeLogging(MqttsnOptions options) throws IOException {
+
         if (java.lang.System.getProperty("java.util.logging.config.file") == null) {
-            Logger.getAnonymousLogger().log(Level.INFO, "trying to apply logging from classpath...");
+            LogManager.getLogManager().reset();
             boolean applied = false;
             try (InputStream stream = AbstractMqttsnRuntime.class.getResourceAsStream("/logging.properties")) {
                 if (null != stream) {
                     Logger.getAnonymousLogger().log(Level.INFO, "applying logging from config found on classpath");
-                    LogManager.getLogManager().reset();
                     LogManager.getLogManager().readConfiguration(stream);
                     applied = true;
+                } else {
+                    throw new IOException("unable to read logging properties");
                 }
             }
             if(!applied){

@@ -84,7 +84,7 @@ public abstract class AbstractMqttsnRuntime {
 
             logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", java.lang.System.identityHashCode(this),
                     getRegistry().getStorageService().getClass().getSimpleName()));
-            registry.getStorageService().updateRuntimeOptionsFromFilesystem(registry.getOptions());
+            registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
             try {
                 setupEnvironment(reg.getOptions());
             } catch(IOException e){

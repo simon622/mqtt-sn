@@ -67,7 +67,7 @@ public interface IMqttsnStorageService extends IMqttsnService {
 
     Optional<byte[]> loadFileIfExists(String fileName) throws MqttsnException ;
 
-    void updateRuntimeOptionsFromFilesystem(MqttsnOptions options) throws MqttsnException ;
+    void updateRuntimeOptionsFromStorage(MqttsnOptions options) throws MqttsnException ;
 
     void writeRuntimeOptions(MqttsnOptions options) throws MqttsnException ;
 

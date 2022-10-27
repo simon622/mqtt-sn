@@ -241,7 +241,7 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
     }
 
     @Override
-    public void updateRuntimeOptionsFromFilesystem(MqttsnOptions options) throws MqttsnException {
+    public void updateRuntimeOptionsFromStorage(MqttsnOptions options) throws MqttsnException {
         if(firstRun){
             if(options.getClientCredentials() != null){
                 writeCredentials(options.getClientCredentials());
@@ -439,8 +439,8 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
             }
 
             @Override
-            public void updateRuntimeOptionsFromFilesystem(MqttsnOptions options) throws MqttsnException {
-                MqttsnFilesystemStorageService.this.updateRuntimeOptionsFromFilesystem(options);
+            public void updateRuntimeOptionsFromStorage(MqttsnOptions options) throws MqttsnException {
+                MqttsnFilesystemStorageService.this.updateRuntimeOptionsFromStorage(options);
             }
 
             @Override

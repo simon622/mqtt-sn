@@ -30,12 +30,11 @@ import org.slj.mqtt.sn.gateway.spi.connector.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnNotFoundException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
 public abstract class AbstractMqttsnBackendService
@@ -54,29 +53,6 @@ public abstract class AbstractMqttsnBackendService
     public void stop() throws MqttsnException {
         if(running){
             super.stop();
-        }
-    }
-
-    public synchronized boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException {
-        try {
-            if(connectorAvailable(descriptor)){
-                if(running()){
-                    stop();
-                }
-                logger.log(Level.INFO, String.format("starting new instance of connector [%s] using [%s]", descriptor.getClassName(), options));
-                IMqttsnConnector connector = getConnectorClass(descriptor).getConstructor(
-                                MqttsnConnectorDescriptor.class, MqttsnConnectorOptions.class).
-                        newInstance(descriptor, options);
-
-                getRegistry().withConnector(connector);
-                start(getRegistry());
-                return true;
-            } else {
-                return false;
-            }
-        }
-        catch (Exception e){
-            throw new MqttsnException("unable to initialize connector;", e);
         }
     }
 
@@ -192,6 +168,40 @@ public abstract class AbstractMqttsnBackendService
             }
         }
         throw new MqttsnNotFoundException("unable to load connector from runtime <" + className + ">");
+    }
+
+    public synchronized boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException {
+        try {
+            if(connectorAvailable(descriptor)){
+                if(running()){
+                    stop();
+                }
+                logger.log(Level.INFO, String.format("starting new instance of connector [%s] using [%s]", descriptor.getClassName(), options));
+                IMqttsnConnector connector = getConnectorClass(descriptor).getConstructor(
+                                MqttsnConnectorDescriptor.class, MqttsnConnectorOptions.class).
+                        newInstance(descriptor, options);
+                getRegistry().withConnector(connector);
+                start(getRegistry());
+                return true;
+            } else {
+                return false;
+            }
+        }
+        catch (Exception e){
+            throw new MqttsnException("unable to initialize connector;", e);
+        }
+    }
+
+    public MqttsnConnectorDescriptor getInstalledDescriptor(List<MqttsnConnectorDescriptor> descriptors) {
+        return getDescriptorById(descriptors, getRegistry().getConnector().getClass().getName());
+    }
+
+    public MqttsnConnectorDescriptor getDescriptorById(List<MqttsnConnectorDescriptor> descriptors, String connectorId){
+
+        Optional<MqttsnConnectorDescriptor> descriptor = descriptors.stream().
+                filter(c -> c.getClassName().equals(connectorId)).findAny();
+        if(descriptor.isPresent()) return descriptor.get();
+        throw new MqttsnRuntimeException("unable to find running descriptor in list " + connectorId);
     }
 
     protected abstract void close(IMqttsnConnectorConnection connection) throws MqttsnConnectorException;

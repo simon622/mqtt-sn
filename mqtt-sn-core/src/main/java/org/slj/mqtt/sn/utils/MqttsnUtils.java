@@ -169,4 +169,35 @@ public class MqttsnUtils {
         else
             return false;
     }
+
+    public static String splitCamelCase(String s) {
+        return s.replaceAll(
+                String.format("%s|%s|%s",
+                        "(?<=[A-Z])(?=[A-Z][a-z])",
+                        "(?<=[^A-Z])(?=[A-Z])",
+                        "(?<=[A-Za-z])(?=[^A-Za-z])"
+                ),
+                " "
+        );
+    }
+
+    public static String upperCaseFirst(String str){
+        if(str == null) return null;
+        char[] chars = str.toCharArray();
+        chars[0] = Character.toUpperCase(chars[0]);
+        return new String(chars);
+    }
+
+    public static String upperCaseWords(String str){
+        if(str == null) return null;
+        str = str.toLowerCase();
+        String[] words = str.split(" ");
+        StringBuffer buff = new StringBuffer();
+        for (int i = 0; i < words.length; i++) {
+            buff.append(upperCaseFirst(words[i].trim()));
+            if(i < words.length -1)
+                buff.append(" ");
+        }
+        return buff.toString();
+    }
 }

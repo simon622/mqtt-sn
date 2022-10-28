@@ -5,7 +5,7 @@
   <artifactId>mqtt-sn-gateway-connector-paho</artifactId>
   <version>1.0.0</version>
   <build>
-    <finalName>mqtt-sn-gateway-${version}</finalName>
+    <finalName>mqtt-sn-gateway-${project.version}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>

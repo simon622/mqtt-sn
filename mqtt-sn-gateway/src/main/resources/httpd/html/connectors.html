@@ -7,14 +7,12 @@
                 Use connectors to connect your gateway to your cloud environment or other gateways. You can select to start any of the installed connectors, alternatively, when connected
                 to the cloud, you can see a list of all available connectors that you may choose to install.
             </p>
-            <div class="align-items-center flex-wrap">
-                <span id="connectorInfo"></span>
-            </div>
-            <div class="align-items-center flex-wrap">
-                <span id="connectorStatus"></span>
-                <span id="connectionStatus"></span>
-            </div>
         </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col" id="connectorStatus">
     </div>
 </div>
 
@@ -60,12 +58,13 @@
     })
 
     form.addEventListener('submit', (event) => {
+        var btn = document.querySelector('#formbtn');
         if (!form.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
+            buttonReset(btn);
         } else {
             var formData = formToJSON(form.elements);
-console.log(JSON.stringify(formData));
             $.ajax({
                 type: "POST",
                 url: "/console/connectors",
@@ -73,12 +72,17 @@ console.log(JSON.stringify(formData));
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 encode: false,
-            }).
-            done(function (data) {
+            }).done(function (data, textStatus, jqXHR) {
                 var myModalEl = document.getElementById('propertyModal');
                 var modal = bootstrap.Modal.getInstance(myModalEl)
                 modal.hide();
-                buttonReset(document.querySelector('#formbtn'));
+                buttonReset(btn);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                buttonReset(btn);
+                btn.textContent = " ! "+jqXHR.responseText+", Try again";
+                btn.classList.add("btn-danger");
+                btn.classList.remove("btn-success");
+            }).always(function(jqXHR, textStatus, errorThrown) {
                 update();
             });
         }
@@ -96,6 +100,8 @@ console.log(JSON.stringify(formData));
         removeChildren(btn);
         btn.insertAdjacentHTML('afterbegin', ` <span className="">&nbsp;Yes, start the connector</span>`);
         btn.disabled = false;
+        btn.classList.remove("btn-danger");
+        btn.classList.add("btn-success");
     }
 
     function update(){
@@ -129,22 +135,14 @@ console.log(JSON.stringify(formData));
                 if(element.hasOwnProperty("properties")){
                 }
 
-                root.insertAdjacentHTML('afterbegin', `<div class="col"><div class="card mb-3" style="min-height: 400px;">${ribbon}<div class="d-flex align-items-center"><img src="${element.imageUrl}" class="img-fluid card-img-top" /></div><div class="card-body"><h5 class="card-title">${element.name}</h5><p class="card-text"><small class="text-muted">${element.companyName} - Version ${element.version}</small><br/><small class="text-muted">Protocol: ${element.protocol}</small><br/><small class="text-muted">Max throughput (m/ps): ${element.rateLimit}</small></p><p class="card-text">${element.description}</p></div><div class="card-footer justify-content-between"><div class="btn-group btn-group-sm" role="group" aria-label=""><button type="button" class="btn btn-success clik" ${startLink} ${startButtonDisabled}>Start</button><button type="button" class="btn btn-danger clik" ${stopLink} ${stopButtonDisabled}>Stop</button></div></div></div></div>`);
+                root.insertAdjacentHTML('afterbegin', `<div class="col"><div class="card mb-3" style="min-height: 400px;">${ribbon}<div class="d-flex align-items-center"><img src="${element.imageUrl}" class="img-fluid card-img-top" /></div><div class="card-body"><h5 class="card-title">${element.name}</h5><p class="card-text"><small class="text-muted">${element.companyName} - Version ${element.version}</small><br/><small class="text-muted">Protocol: ${element.protocol}</small><br/><small class="text-muted">Max throughput (m/ps): ${element.rateLimit}</small></p><p class="card-text">${element.description}</p></div><div class="card-footer justify-content-between"><div class="btn-group btn-group-sm" role="group" aria-label=""><button type="button" class="btn btn-success" id="${element.className}-start" ${startLink} ${startButtonDisabled}>Start</button><button type="button" class="btn btn-danger" id="${element.className}-stop" ${stopLink} ${stopButtonDisabled}>Stop</button></div></div></div></div>`);
             });
-        })
-
-        document.querySelectorAll('.clik').forEach(function (el){
-            buttonClickListener(el);
         })
     }
     update();
-
-    updateHtmlElementUrlTimerById("connectorInfo", 2000, "/console/connectors?action=connectorInfo");
-    updateHtmlElementUrlTimerById("connectorStatus", 2000, "/console/connectors?action=connectorStatus");
-    updateHtmlElementUrlTimerById("connectionStatus", 2000, "/console/connectors?action=connectionStatus");
+    updateHtmlElementUrlTimerById("connectorStatus", fieldRefreshTime, "/console/connector/status");
 
     function start(className){
-
         //modal
         $.ajax({
             type: "GET",
@@ -154,17 +152,23 @@ console.log(JSON.stringify(formData));
         done(function (data) {
             var form = document.getElementById("propsForm");
             removeChildren(form);
-            form.insertAdjacentHTML('afterbegin', `<input type="hidden" class="form-control" name="connectorId" value="${className}">`);
+            form.insertAdjacentHTML('afterbegin', `<input type="hidden" name="connectorId" value="${className}">`);
             $("#propertyModal").modal('show');
             if(data.hasOwnProperty("properties")){
                 data.properties.forEach(function (property){
-                    form.insertAdjacentHTML('afterbegin', `<div class="mb-3"><label for="${property.name}" class="col-form-label">${property.name}:</label><input type="text" class="form-control" id="${property.name}" name="${property.name}" value="${property.value}"></div>`);
+                    var required = property.required ? " required" : "";
+                    form.insertAdjacentHTML('afterbegin', `<div class="mb-3"><div class="form-floating"><input type="text" class="form-control" id="${property.name}" name="${property.name}" value="${property.value}" ${required}><label for="${property.name}" class="col-form-label">${property.displayName}</label></div></div>`);
+
                 });
             }
         });
     }
 
-    function stop(className){
+    function stop(className, el){
+
+        var el = document.getElementById(className + "-stop");
+        el.disabled = true;
+
         $.ajax({
             type: "GET",
             url: "/console/connectors?action=stop&connector=" + encodeURIComponent(className),

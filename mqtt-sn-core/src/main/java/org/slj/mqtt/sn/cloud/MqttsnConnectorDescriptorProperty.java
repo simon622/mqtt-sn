@@ -35,8 +35,26 @@ public class MqttsnConnectorDescriptorProperty implements Serializable {
     private boolean required;
     private String value;
     private String defaultValue;
+    private String description;
+    private String displayName;
 
     public MqttsnConnectorDescriptorProperty() {
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getName() {
@@ -79,12 +97,17 @@ public class MqttsnConnectorDescriptorProperty implements Serializable {
         this.defaultValue = defaultValue;
     }
 
+
     @Override
     public String toString() {
         return "MqttsnConnectorDescriptorProperty{" +
                 "name='" + name + '\'' +
                 ", type='" + type + '\'' +
                 ", required=" + required +
+                ", value='" + value + '\'' +
+                ", defaultValue='" + defaultValue + '\'' +
+                ", description='" + description + '\'' +
+                ", displayName='" + displayName + '\'' +
                 '}';
     }
 }

@@ -90,6 +90,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/console/topic", new TopicHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/client/access", new ClientAccessHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/connectors", new ConnectorHandler(cloudService, getJsonMapper(), getRegistry()));
+            server.registerContext("/console/connector/status", new ConnectorStatusHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/async", new AsyncContentHandler(getJsonMapper(), "httpd/html/",
                     "dashboard.html", "clients.html",  "session.html", "connectors.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "system.html"));
             server.startServer();

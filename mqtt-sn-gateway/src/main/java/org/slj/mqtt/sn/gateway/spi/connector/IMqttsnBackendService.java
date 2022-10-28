@@ -33,6 +33,8 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
+import java.util.List;
+
 /**
  * The backend service determines the TYPE of behaviour of the gateway (ie. AGGREGATING, TRANSPARENT, FORWARDING), and is responsible
  * for passing the traffic on in the associated pattern to the installed and running connector
@@ -73,4 +75,7 @@ public interface IMqttsnBackendService {
 
     boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException ;
 
+    MqttsnConnectorDescriptor getDescriptorById(List<MqttsnConnectorDescriptor> descriptors, String connectorId);
+
+    MqttsnConnectorDescriptor getInstalledDescriptor(List<MqttsnConnectorDescriptor> descriptors);
 }

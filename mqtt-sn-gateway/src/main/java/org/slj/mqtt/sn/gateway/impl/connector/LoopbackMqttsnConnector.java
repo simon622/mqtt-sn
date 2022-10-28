@@ -57,4 +57,10 @@ public class LoopbackMqttsnConnector
             throw new MqttsnConnectorException("error creating connection;", e);
         }
     }
+
+    @Override
+    public String getConnectionString() {
+        return "java@localhost";
+    }
 }
+

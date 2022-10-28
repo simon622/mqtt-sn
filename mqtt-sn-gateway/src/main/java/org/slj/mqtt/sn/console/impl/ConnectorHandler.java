@@ -31,13 +31,17 @@ import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
 import org.slj.mqtt.sn.cloud.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptorProperty;
-import org.slj.mqtt.sn.console.http.*;
+import org.slj.mqtt.sn.console.http.HttpConstants;
+import org.slj.mqtt.sn.console.http.HttpException;
+import org.slj.mqtt.sn.console.http.HttpInternalServerError;
+import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
+import org.slj.mqtt.sn.utils.General;
+import org.slj.mqtt.sn.utils.MqttsnUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -48,9 +52,6 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
     static final String CONNECTOR = "connector";
     static final String START = "start";
     static final String STOP = "stop";
-    static final String CONNECTOR_STATUS = "connectorStatus";
-    static final String CONNECTION_STATUS = "connectionStatus";
-    static final String CONNECTOR_INFO = "connectorInfo";
     static final String CONNECTOR_DETAILS = "connectorDetails";
 
     protected IMqttsnCloudService cloudService;
@@ -64,7 +65,9 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
         try {
             PropertyForm form = readRequestBody(request, PropertyForm.class);
             Iterator<String> itr = form.getProperties().keySet().iterator();
-            MqttsnConnectorDescriptor descriptor = getDescriptorById(form.getProperties().get("connectorId"));
+            List<MqttsnConnectorDescriptor> descriptors = runtimeConnectors().connectors;
+            MqttsnConnectorDescriptor descriptor = getRegistry().getBackendService().getDescriptorById(
+                    descriptors, form.getProperties().get("connectorId"));
             IMqttsnStorageService storageService = getRegistry().getStorageService().getPreferenceNamespace(descriptor);
             while(itr.hasNext()){
                 String key = itr.next();
@@ -80,10 +83,9 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
             writeMessageBeanResponse(request, HttpConstants.SC_OK,
                     new Message("Connector successfully initialised", true));
 
-        } catch(MqttsnCloudServiceException| MqttsnException e){
-            e.printStackTrace();
-            writeMessageBeanResponse(request, HttpConstants.SC_INTERNAL_SERVER_ERROR,
-                    new Message("Error starting connector", e.getMessage(), false));
+        } catch(MqttsnCloudServiceException | MqttsnException e){
+            writeHTMLResponse(request, HttpConstants.SC_INTERNAL_SERVER_ERROR,
+                    General.getRootCauseMessage(e));
         }
     }
 
@@ -91,7 +93,9 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
     protected void handleHttpGet(IHttpRequestResponse request) throws HttpException, IOException {
         try {
 
-            MqttsnConnectorDescriptor descriptor = getInstalledDescriptor();
+            List<MqttsnConnectorDescriptor> descriptors = runtimeConnectors().connectors;
+            MqttsnConnectorDescriptor descriptor = getRegistry().getBackendService().getInstalledDescriptor(descriptors);
+
             String action = null;
             if((action = getParameter(request, ACTION)) != null){
                 String connectorId = null;
@@ -106,22 +110,8 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
                 }
                 else if(CONNECTOR_DETAILS.equals(action)){
                     connectorId = getMandatoryParameter(request, CONNECTOR);
-                    writeJSONBeanResponse(request, HttpConstants.SC_OK, getDescriptorById(connectorId));
-                }
-                else if(CONNECTOR_STATUS.equals(action)){
-                    boolean status = getRegistry().getBackendService().running();
-                    String text = status ? "Connector is running" : "Connector is stopped";
-                    writeHTMLResponse(request, HttpConstants.SC_OK, status(status, text));
-                }
-                else if(CONNECTION_STATUS.equals(action)){
-                    boolean status = getRegistry().getBackendService().isConnected(null);
-                    String text = status ? descriptor.getProtocol() + "  connection established" : descriptor.getProtocol()+" connection unavailable";
-                    writeHTMLResponse(request, HttpConstants.SC_OK, status(status, text));
-                }
-                else if(CONNECTOR_INFO.equals(action)){
-                    writeHTMLResponse(request, HttpConstants.SC_OK,
-                            Html.span("Currently Installed:", Html.BLACK, false) + Html.linespace(3) +
-                                    Html.span(descriptor.getName(), Html.BLACK, true));
+                    writeJSONBeanResponse(request, HttpConstants.SC_OK,
+                            getRegistry().getBackendService().getDescriptorById(descriptors, connectorId));
                 }
             } else {
                 //return the connector bean list
@@ -179,26 +169,21 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
             IMqttsnStorageService storageService = getRegistry().getStorageService();
             if(properties != null){
                 //load the connector specific settings and read back to the global ones
-                properties.stream().forEach(p -> p.setValue(
-                        storageService.getPreferenceNamespace(runtimeBean).
-                                getStringPreference(p.getName(),
-                                        storageService.getStringPreference(p.getName(), null))));
-                properties.stream().filter(p -> p.getDefaultValue() != null).
-                        forEach(p -> p.setValue(p.getDefaultValue()));
+                for(MqttsnConnectorDescriptorProperty p : properties){
+                    p.setValue(
+                            storageService.getPreferenceNamespace(runtimeBean).
+                                    getStringPreference(p.getName(),
+                                            storageService.getStringPreference(p.getName(), null)));
+                    if(p.getDefaultValue() != null){
+                        p.setValue(p.getDefaultValue());
+                    }
+
+                    p.setDisplayName(
+                            MqttsnUtils.upperCaseWords(
+                            MqttsnUtils.splitCamelCase(p.getName())));
+                }
             }
         }
-    }
-
-    private MqttsnConnectorDescriptor getInstalledDescriptor() throws MqttsnCloudServiceException {
-        return getDescriptorById(getRegistry().getConnector().getClass().getName());
-    }
-
-    private MqttsnConnectorDescriptor getDescriptorById(String connectorId) throws MqttsnCloudServiceException {
-        BeanList beanList = runtimeConnectors();
-        Optional<MqttsnConnectorDescriptor> descriptor = beanList.connectors.stream().
-                filter(c -> c.getClassName().equals(connectorId)).findAny();
-        if(descriptor.isPresent()) return descriptor.get();
-        throw new MqttsnRuntimeException("unable to find running descriptor in cloud list " + connectorId);
     }
 
     private static String status(boolean status, String text){

@@ -63,4 +63,12 @@ public class ThingstreamConnector extends AbstractMqttsnConnector<PahoMqttsnBrok
             throw new MqttsnConnectorException("error creating connection;", e);
         }
     }
+
+    @Override
+    public String getConnectionString() {
+        return String.format("%s@%s:%s",
+                options.getClientId(),
+                options.getHostName(),
+                options.getPort());
+    }
 }

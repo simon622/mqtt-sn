@@ -135,15 +135,14 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected void writeASCIIResponse(IHttpRequestResponse request, int responseCode, String message) throws IOException {
-        writeResponseInternal(request, responseCode, HttpConstants.PLAIN_MIME_TYPE, message.getBytes(StandardCharsets.UTF_8));
+        writeResponseInternal(request, responseCode, HttpConstants.PLAIN_MIME_TYPE, message != null ? message.getBytes(StandardCharsets.UTF_8) : new byte[0]);
     }
 
     protected void writeHTMLResponse(IHttpRequestResponse request, int responseCode, String html) throws IOException {
-        writeResponseInternal(request, responseCode, HttpConstants.HTML_MIME_TYPE, html.getBytes(StandardCharsets.UTF_8));
+        writeResponseInternal(request, responseCode, HttpConstants.HTML_MIME_TYPE, html != null ? html.getBytes(StandardCharsets.UTF_8) : new byte[0]);
     }
 
     protected void writeJSONResponse(IHttpRequestResponse request, int responseCode, byte[] bytes) throws IOException {
-//System.err.println(new String(bytes));
         writeResponseInternal(request, responseCode, HttpConstants.JSON_MIME_TYPE, bytes);
     }
 

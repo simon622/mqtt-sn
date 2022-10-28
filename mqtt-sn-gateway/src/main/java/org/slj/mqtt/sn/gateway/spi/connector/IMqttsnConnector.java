@@ -32,6 +32,8 @@ public interface IMqttsnConnector<T extends IMqttsnConnectorConnection> {
 
     T createConnection(String clientId) throws MqttsnConnectorException;
 
+    String getConnectionString();
+
     MqttsnConnectorDescriptor getDescriptor();
 
     MqttsnConnectorOptions getDefaultOptions();

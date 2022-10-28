@@ -51,4 +51,28 @@ public class General {
         if(emailAddress == null || emailAddress.isEmpty() || emailAddress.length() < 3) return false;
         return Pattern.compile(OWASP_EMAIL_REGEX).matcher(emailAddress).matches();
     }
+
+    public static Throwable getRootCause(Throwable t){
+        if(t == null) return null;
+        Throwable child = null;
+        do {
+            child = t;
+            t = t.getCause();
+        }
+        while(t != null);
+        return child;
+    }
+
+    public static String getRootCauseMessage(Throwable t){
+        if(t == null) return null;
+        String msg = null;
+        do {
+            if(t.getMessage() != null){
+                msg = t.getMessage();
+            }
+            t = t.getCause();
+        }
+        while(t != null);
+        return msg;
+    }
 }

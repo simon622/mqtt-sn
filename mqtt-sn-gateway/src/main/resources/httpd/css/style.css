@@ -228,3 +228,32 @@ th {
 .btn.disabled, .btn:disabled, fieldset:disabled .btn {
     opacity: 25%;
 }
+
+#connectorStatus {
+    margin-bottom: 1.25rem;
+    color: #333333;
+    text-align: center;
+}
+
+.connector-status {
+    color: #333333;
+    font-size: 1.5rem;
+}
+
+.bg-connected {
+    background-color: #f0fdf0 !important;
+    border: 1px solid green;
+    padding: 5px;
+}
+
+.bg-disconnected {
+    background-color: #fff0ec !important;
+    border: 1px solid red;
+    padding: 5px;
+}
+
+.bg-partial {
+    background-color: #fdf3de !important;
+    border: 1px solid orange;
+    padding: 5px;
+}

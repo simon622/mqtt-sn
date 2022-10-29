@@ -38,6 +38,7 @@ import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
 import org.slj.mqtt.sn.utils.tree.PathTriesTree;
 
 import java.util.Set;
+import java.util.logging.Level;
 
 public class MqttsnInMemorySubscriptionRegistry
         extends AbstractSubscriptionRegistry {
@@ -100,6 +101,13 @@ public class MqttsnInMemorySubscriptionRegistry
             tree.removeMemberFromPath(subscription.getTopicPath().toString(), session.getContext());
         }
         return removed;
+    }
+
+    @Override
+    public boolean hasSubscription(String topicPath) {
+        boolean exists = tree.hasMembers(topicPath);
+        logger.log(Level.INFO, String.format("subscription exists ? [%s] -> [%s]", topicPath, exists));
+        return exists;
     }
 
     @Override

@@ -140,6 +140,45 @@ public class TriesTreeTests {
         Assert.assertEquals("wildcard should match", 0, tree.searchMembers("foo/bar/is/bad").size());
     }
 
+    @Test
+    public void testPathExistenceInBigTree() throws TriesTreeLimitExceededException, InterruptedException {
+
+        PathTriesTree<Integer> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        String search = "some/member";
+        String searchNoMem = "/some/member";
+
+        //-- rememeber the / is a token
+        tree.setMaxPathSegments(tree.getMaxPathSegments() * 2 + 1);
+        tree.setMaxPathSize(1024 * 4);
+
+        for (int i = 0; i < 200_000; i++){
+            String topic = generateRandomTopic(5);
+            if(i % 2 == 0){
+                tree.addPath(topic,
+                        ThreadLocalRandom.current().nextInt(0, 1000));
+            } else {
+                tree.addPath(topic);
+            }
+        }
+
+        tree.addPath(search,
+                ThreadLocalRandom.current().nextInt(0, 1000));
+        tree.addPath(searchNoMem);
+
+//        System.err.println(tree.toTree(System.lineSeparator()));
+
+        Assert.assertTrue("this path should exist", tree.hasPath(search));
+        Assert.assertTrue("this path should exist", tree.hasPath(searchNoMem));
+
+        Assert.assertTrue("this path should have members", tree.hasMembers(search));
+        Assert.assertFalse("this path should not have members", tree.hasMembers(searchNoMem));
+
+        Assert.assertFalse("this path should not not exist", tree.hasPath("/doesnt/exits"));
+        Assert.assertFalse("this path should not not exist nor have members", tree.hasMembers("/doesnt/exits"));
+
+        Assert.assertEquals("path count should match", 200_002, tree.countDistinctPaths(false));
+    }
+
     public static String generateRandomTopic(int segments){
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < segments; i++){

@@ -45,7 +45,7 @@
                 <div class="col">
                     <div class="card card-metric">
                         <div class="card-chart">
-                            <canvas id="publishMetrics" height="80"></canvas>
+                            <canvas id="publishMetrics" height="90"></canvas>
                         </div>
                         <div class="card-body">
                             <h6 class="card-title">MQTT-SN Publish Operations</h6>
@@ -56,11 +56,11 @@
                 <div class="col">
                     <div class="card card-metric">
                         <div class="card-chart">
-                            <canvas id="backendMetrics" height="80"></canvas>
+                            <canvas id="backendMetrics" height="90"></canvas>
                         </div>
                         <div class="card-body">
                             <h6 class="card-title">Connector Operations</h6>
-                            <p class="card-text">Statistics relating to the backend connector performance.</p>
+                            <p class="card-text">Statistics relating to the backend connector performance. Includes snapshot queue size.</p>
                         </div>
                     </div>
                 </div>
@@ -70,22 +70,22 @@
                 <div class="col">
                     <div class="card card-metric">
                         <div class="card-chart">
-                            <canvas id="sessionMetrics" height="80"></canvas>
+                            <canvas id="sessionMetrics" height="90"></canvas>
                         </div>
                         <div class="card-body">
                             <h6 class="card-title">MQTT-SN Sessions</h6>
-                            <p class="card-text">The number of sessions in each state over time.</p>
+                            <p class="card-text">The number of sessions in any one of the possible 5 states plotted over time.</p>
                         </div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="card card-metric">
                         <div class="card-chart">
-                            <canvas id="systemMetrics" height="80"></canvas>
+                            <canvas id="systemMetrics" height="90"></canvas>
                         </div>
                         <div class="card-body">
                             <h6 class="card-title">System</h6>
-                            <p class="card-text">View information about the virtual machine and networking layers.</p>
+                            <p class="card-text">System information about the virtual machine memory and thread usage and networking layers.</p>
                         </div>
                     </div>
                 </div>
@@ -97,7 +97,6 @@
 <script>
 
     var maxEntries = 100;
-
 
     bindChart('publishMetrics', "/console/chart?chartId=");
     // bindChart('networkMetrics', "/console/chart?chartId=");
@@ -111,7 +110,7 @@
             var ctx = document.getElementById(el).getContext("2d");
             var chart = new Chart(ctx, chartConfig);
             var epoch = Date.now();
-            pageTimer(updateTime, function(){
+            pageTimer(updateTime, true, function(){
                 $.getJSON(d + el + "&requestType=update&epoch=" + epoch, function (update){
                     // console.log(JSON.stringify(update));
                     if(update.labels.length > 0){

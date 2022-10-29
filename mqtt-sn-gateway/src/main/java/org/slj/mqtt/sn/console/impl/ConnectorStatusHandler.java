@@ -58,22 +58,24 @@ public class ConnectorStatusHandler extends MqttsnConsoleAjaxRealmHandler {
 
             StringBuilder sb = new StringBuilder();
             String cssClass = connected ? "connected" : status ? "partial" : "disconnected";
-            sb.append("<div class=\"p bg-"+cssClass+" rounded\">");
-            sb.append("<figure class=\"text-center\">");
-            sb.append("<p style=\"font-size: 1.25rem\">");
+            sb.append("<div class=\"bg-"+cssClass+" connector-status\">");
+
             if(connected){
-                sb.append("Connected: "+descriptor.getName());
-            } else {
-                sb.append("NOT Connected: "+descriptor.getName());
+//                sb.append("<div class=\"spinner-grow text-success\" style=\"width: 3rem; height: 3rem;\" role=\"status\"><span class=\"visually-hidden\">..</span></div>");
             }
-            sb.append("</p>");
+
             sb.append("<p>");
-            sb.append(descriptor.getDescription());
-            sb.append("</p>");
-            sb.append("<figcaption class=\"blockquote-footer\">");
+            sb.append("<span class=\"text-lg\">");
+            if(connected){
+                sb.append("Connected to "+ descriptor.getName());
+            } else {
+                sb.append("Disconnected from "+ descriptor.getName());
+            }
+            sb.append("</span><br/>");
+            sb.append("<span class=\"text-sm\">");
             sb.append(connectionString);
-            sb.append("</figcaption>");
-            sb.append("</figure>");
+            sb.append("</span>");
+            sb.append("</p>");
             sb.append("</div>");
             writeHTMLResponse(request, HttpConstants.SC_OK, sb.toString());
 

@@ -1,4 +1,3 @@
-
 <div class="row">
     <div class="col">
         <div class="bd-callout bd-callout-info">
@@ -8,11 +7,6 @@
                 to the cloud, you can see a list of all available connectors that you may choose to install.
             </p>
         </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col" id="connectorStatus">
     </div>
 </div>
 
@@ -135,12 +129,11 @@
                 if(element.hasOwnProperty("properties")){
                 }
 
-                root.insertAdjacentHTML('afterbegin', `<div class="col"><div class="card mb-3" style="min-height: 400px;">${ribbon}<div class="d-flex align-items-center"><img src="${element.imageUrl}" class="img-fluid card-img-top" /></div><div class="card-body"><h5 class="card-title">${element.name}</h5><p class="card-text"><small class="text-muted">${element.companyName} - Version ${element.version}</small><br/><small class="text-muted">Protocol: ${element.protocol}</small><br/><small class="text-muted">Max throughput (m/ps): ${element.rateLimit}</small></p><p class="card-text">${element.description}</p></div><div class="card-footer justify-content-between"><div class="btn-group btn-group-sm" role="group" aria-label=""><button type="button" class="btn btn-success" id="${element.className}-start" ${startLink} ${startButtonDisabled}>Start</button><button type="button" class="btn btn-danger" id="${element.className}-stop" ${stopLink} ${stopButtonDisabled}>Stop</button></div></div></div></div>`);
+                root.insertAdjacentHTML('afterbegin', `<div class="col mb-2"><div class="card" style="height: 100%;">${ribbon}<div class="d-flex align-items-center"><img src="${element.imageUrl}" class="img-fluid card-img-top" /></div><div class="card-body"><h5 class="card-title">${element.name}</h5><p class="card-text"><small class="text-muted">${element.companyName} - Version ${element.version}</small><br/><small class="text-muted">Protocol: ${element.protocol}</small><br/><small class="text-muted">Max throughput (m/ps): ${element.rateLimit}</small></p><p class="card-text">${element.description}</p></div><div class="card-footer justify-content-between"><div class="btn-group btn-group-sm" role="group" aria-label=""><button type="button" class="btn btn-success" id="${element.className}-start" ${startLink} ${startButtonDisabled}>Start</button><button type="button" class="btn btn-danger" id="${element.className}-stop" ${stopLink} ${stopButtonDisabled}>Stop</button></div></div></div></div>`);
             });
         })
     }
     update();
-    updateHtmlElementUrlTimerById("connectorStatus", fieldRefreshTime, "/console/connector/status");
 
     function start(className){
         //modal

@@ -27,9 +27,7 @@ package org.slj.mqtt.sn.gateway.impl.gateway.type;
 import com.google.common.util.concurrent.RateLimiter;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
-import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
-import org.slj.mqtt.sn.gateway.spi.PublishResult;
-import org.slj.mqtt.sn.gateway.spi.Result;
+import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
@@ -40,6 +38,7 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -288,6 +287,39 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 }
             }
         }
+    }
+
+    @Override
+    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
+
+        try {
+            if(!getRegistry().getSubscriptionRegistry().
+                    hasSubscription(topic.toString())) {
+                return super.subscribe(context, topic, message);
+            } else {
+                logger.log(Level.INFO, String.format("subscription already existed, not need to subscribe again"));
+                return new SubscribeResult(Result.STATUS.NOOP);
+            }
+        } catch(MqttsnIllegalFormatException | MqttsnException e){
+            throw new MqttsnConnectorException(e);
+        }
+    }
+
+    @Override
+    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
+        try {
+            //-- only need to unsubscribe if we will NO LONGER have any subscriptions
+            if(getRegistry().getSubscriptionRegistry().
+                    hasSubscription(topic.toString())) {
+                return super.unsubscribe(context, topic, message);
+            } else {
+                logger.log(Level.INFO, String.format("more subscriptions existed, do not unsubscribe"));
+                return new UnsubscribeResult(Result.STATUS.NOOP);
+            }
+        } catch(MqttsnIllegalFormatException | MqttsnException e){
+            throw new MqttsnConnectorException(e);
+        }
+
     }
 
     @Override

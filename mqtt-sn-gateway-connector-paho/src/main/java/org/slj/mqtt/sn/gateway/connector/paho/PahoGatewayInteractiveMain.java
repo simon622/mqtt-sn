@@ -47,6 +47,8 @@ public class PahoGatewayInteractiveMain {
                 storageService.initializeFieldsFromStorage(connectorOptions);
                 namespacePreferences.initializeFieldsFromStorage(connectorOptions);
 
+                ((MqttsnGatewayOptions)options).withMaxNetworkAddressEntries(100000);
+                ((MqttsnGatewayOptions)options).withMaxConnectedClients(100000);
                 ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).

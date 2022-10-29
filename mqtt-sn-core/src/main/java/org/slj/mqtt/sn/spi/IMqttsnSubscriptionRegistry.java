@@ -27,9 +27,7 @@ package org.slj.mqtt.sn.spi;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -96,4 +94,10 @@ public interface IMqttsnSubscriptionRegistry extends IMqttsnRegistry {
     Set<String> readAllSubscribedTopicPaths() throws MqttsnException;
 
     void clear(IMqttsnSession session) throws MqttsnException;
+
+    /**
+     * This is used by an aggregating gateway to track if a subscription exists anywhere
+     * in the system for this topic, if it does, it should not be resubscribed
+     */
+    boolean hasSubscription(String topicPath) throws MqttsnException, MqttsnIllegalFormatException ;
 }

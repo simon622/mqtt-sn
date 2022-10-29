@@ -142,7 +142,7 @@ body {
     background-color: var(--secondary-background-color) !important;
     border-color: var(--primary-border-color);
     margin-bottom: 5px;
-    /*height: 300px;*/
+    height: 300px;
 }
 
 .metric {
@@ -195,15 +195,6 @@ h1, h2, h3, h4, h5, h6 {
     /*text-decoration: underline;*/
 }
 
-.label {
-
-}
-
-.value {
-    /*font-weight: bold;*/
-    /*color: var(--primary-border-color) !important;*/
-}
-
 
 th {
     text-align: inherit;
@@ -230,30 +221,49 @@ th {
 }
 
 #connectorStatus {
-    margin-bottom: 1.25rem;
-    color: #333333;
     text-align: center;
+    width: 100% !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
 }
 
 .connector-status {
-    color: #333333;
-    font-size: 1.5rem;
+    color: #777777;
+    border-radius: 0px 0px 15px 15px;
 }
 
 .bg-connected {
-    background-color: #f0fdf0 !important;
-    border: 1px solid green;
-    padding: 5px;
+    background-color: #f4fff4 !important;
+    border-top-width: 0px;
+    border-bottom: 1px solid green;
+    border-right: 1px solid green;
+    border-left: 1px solid green;
+    padding: 1px;
 }
 
 .bg-disconnected {
-    background-color: #fff0ec !important;
-    border: 1px solid red;
-    padding: 5px;
+    background-color: #fff6f4 !important;
+    border-top-width: 0px;
+    border-bottom: 1px solid red;
+    border-right: 1px solid red;
+    border-left: 1px solid red;
+    padding: 1px;
 }
 
 .bg-partial {
-    background-color: #fdf3de !important;
-    border: 1px solid orange;
-    padding: 5px;
+    background-color: #fff9ef !important;
+    border-top-width: 0px;
+    border-bottom: 1px solid orange;
+    border-right: 1px solid orange;
+    border-left: 1px solid orange;
+    padding: 1px;
+}
+
+.text-lg {
+    font-size: 1.25em;
+    font-weight: normal;
+}
+.text-sm {
+    font-size: 0.85em;
+    font-weight: lighter;
 }

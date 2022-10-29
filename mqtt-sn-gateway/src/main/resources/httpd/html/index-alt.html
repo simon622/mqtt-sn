@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Simon Johnson">
+    <title>..:: MQTT-SN ::..</title>
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/console/img/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/console/img/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/console/img/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/console/img/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/console/img/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/console/img/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/console/img/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/console/img/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/console/img/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/console/img/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/console/img/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/console/img/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/console/img/favicon/mstile-310x310.png" />
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script src="/console/js/autocomplete.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" rel="stylesheet">
+    <link href="/console/css/style.css" rel="stylesheet">
+    <link href="/console/css/ribbon.css" rel="stylesheet">
+</head>
+
+<body id="body-pd">
+<header class="header" id="header">
+    <div class="header_toggle"> <i class='bx bx-menu' id="header-toggle"></i> </div>
+    <div class="header_img"> <img src="https://i.imgur.com/hczKIze.jpg" alt=""> </div>
+</header>
+<div class="l-navbar" id="nav-bar">
+    <nav class="nav">
+        <div> <a href="#" class="nav_logo"> <i class='bx bx-layer nav_logo-icon'></i> <span class="nav_logo-name">BBBootstrap</span> </a>
+            <div class="nav_list"> <a href="#" class="nav_link active"> <i class='bx bx-grid-alt nav_icon'></i> <span class="nav_name">Dashboard</span> </a> <a href="#" class="nav_link"> <i class='bx bx-user nav_icon'></i> <span class="nav_name">Users</span> </a> <a href="#" class="nav_link"> <i class='bx bx-message-square-detail nav_icon'></i> <span class="nav_name">Messages</span> </a> <a href="#" class="nav_link"> <i class='bx bx-bookmark nav_icon'></i> <span class="nav_name">Bookmark</span> </a> <a href="#" class="nav_link"> <i class='bx bx-folder nav_icon'></i> <span class="nav_name">Files</span> </a> <a href="#" class="nav_link"> <i class='bx bx-bar-chart-alt-2 nav_icon'></i> <span class="nav_name">Stats</span> </a> </div>
+        </div> <a href="#" class="nav_link"> <i class='bx bx-log-out nav_icon'></i> <span class="nav_name">SignOut</span> </a>
+    </nav>
+</div>
+<!--Container Main start-->
+<div class="height-100 bg-light">
+    <h4>Main Components</h4>
+</div>
+<!--Container Main end-->
+
+<footer>
+
+</footer>
+
+
+
+<style>
+    :root{--header-height: 3rem;--nav-width: 68px;--first-color: #4723D9;--first-color-light: #AFA5D9;--white-color: #F7F6FB;--body-font: 'Nunito', sans-serif;--normal-font-size: 1rem;--z-fixed: 100}*,::before,::after{box-sizing: border-box}body{position: relative;margin: var(--header-height) 0 0 0;padding: 0 1rem;font-family: var(--body-font);font-size: var(--normal-font-size);transition: .5s}a{text-decoration: none}.header{width: 100%;height: var(--header-height);position: fixed;top: 0;left: 0;display: flex;align-items: center;justify-content: space-between;padding: 0 1rem;background-color: var(--white-color);z-index: var(--z-fixed);transition: .5s}.header_toggle{color: var(--first-color);font-size: 1.5rem;cursor: pointer}.header_img{width: 35px;height: 35px;display: flex;justify-content: center;border-radius: 50%;overflow: hidden}.header_img img{width: 40px}.l-navbar{position: fixed;top: 0;left: -30%;width: var(--nav-width);height: 100vh;background-color: var(--first-color);padding: .5rem 1rem 0 0;transition: .5s;z-index: var(--z-fixed)}.nav{height: 100%;display: flex;flex-direction: column;justify-content: space-between;overflow: hidden}.nav_logo, .nav_link{display: grid;grid-template-columns: max-content max-content;align-items: center;column-gap: 1rem;padding: .5rem 0 .5rem 1.5rem}.nav_logo{margin-bottom: 2rem}.nav_logo-icon{font-size: 1.25rem;color: var(--white-color)}.nav_logo-name{color: var(--white-color);font-weight: 700}.nav_link{position: relative;color: var(--first-color-light);margin-bottom: 1.5rem;transition: .3s}.nav_link:hover{color: var(--white-color)}.nav_icon{font-size: 1.25rem}.show{left: 0}.body-pd{padding-left: calc(var(--nav-width) + 1rem)}.active{color: var(--white-color)}.active::before{content: '';position: absolute;left: 0;width: 2px;height: 32px;background-color: var(--white-color)}.height-100{height:100vh}@media screen and (min-width: 768px){body{margin: calc(var(--header-height) + 1rem) 0 0 0;padding-left: calc(var(--nav-width) + 2rem)}.header{height: calc(var(--header-height) + 1rem);padding: 0 2rem 0 calc(var(--nav-width) + 2rem)}.header_img{width: 40px;height: 40px}.header_img img{width: 45px}.l-navbar{left: 0;padding: 1rem 1rem 0 0}.show{width: calc(var(--nav-width) + 156px)}.body-pd{padding-left: calc(var(--nav-width) + 188px)}}
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+
+        const showNavbar = (toggleId, navId, bodyId, headerId) =>{
+            const toggle = document.getElementById(toggleId),
+                nav = document.getElementById(navId),
+                bodypd = document.getElementById(bodyId),
+                headerpd = document.getElementById(headerId)
+
+// Validate that all variables exist
+            if(toggle && nav && bodypd && headerpd){
+                toggle.addEventListener('click', ()=>{
+// show navbar
+                    nav.classList.toggle('show')
+// change icon
+                    toggle.classList.toggle('bx-x')
+// add padding to body
+                    bodypd.classList.toggle('body-pd')
+// add padding to header
+                    headerpd.classList.toggle('body-pd')
+                })
+            }
+        }
+
+        showNavbar('header-toggle','nav-bar','body-pd','header')
+
+        /*===== LINK ACTIVE =====*/
+        const linkColor = document.querySelectorAll('.nav_link')
+
+        function colorLink(){
+            if(linkColor){
+                linkColor.forEach(l=> l.classList.remove('active'))
+                this.classList.add('active')
+            }
+        }
+        linkColor.forEach(l=> l.addEventListener('click', colorLink))
+
+        // Your code to run since DOM is loaded and ready
+    });
+</script>
+
+<script>
+
+    var sessionId;
+    var timerIds = [];
+
+    // bindClick('#dashboardLink', "dashboard.html", true);
+    // bindClick('#clientsLink', "clients.html");
+    // bindClick('#configLink', "config.html");
+    // bindClick('#topicsLink', "topics.html");
+    // bindClick('#clusterLink', "cluster.html");
+    // bindClick('#settingsLink', "settings.html");
+    // bindClick('#docsLink', "docs.html");
+    // bindClick('#connectorsLink', "connectors.html");
+    // bindClick('#systemLink', "system.html");
+    //
+    // function bindClick(selector, page, loadnow = false){
+    //     $(selector).click(function() {
+    //         clearTimers();
+    //         $("#messages").html('');
+    //         $.ajax({
+    //             url: "/console/async?page=" + page,
+    //             success: function( result ) {
+    //                 $("#dyna").html(result);
+    //             }
+    //         });
+    //         $('.nav li a').removeClass('active');
+    //         $(this).toggleClass('active');
+    //     });
+    //     if(loadnow){
+    //         $(selector).click();
+    //     }
+    // }
+    //
+    // function updateHtmlElementTimerById(id, refreshRate){
+    //     updateHtmlElementTimer(document.getElementById(id), refreshRate);
+    // }
+    //
+    // function updateHtmlElementTimer(el, refreshRate){
+    //     pageTimer(refreshRate, function(){
+    //         updateHtmlElement(el);
+    //     });
+    // }
+    //
+    // function updateHtmlElementUrlTimerById(id, refreshRate, url){
+    //     updateHtmlElementUrlTimer(document.getElementById(id), refreshRate, url);
+    // }
+    //
+    // function updateHtmlElementUrlTimer(el, refreshRate, url){
+    //     pageTimer(refreshRate, function(){
+    //         updateHtmlElementUrl(el, url);
+    //     });
+    // }
+    //
+    // function pageTimer(refreshRate, f){
+    //     var id = setInterval(f, refreshRate);
+    //     timerIds.push(id);
+    // }
+    //
+    // function clearTimers(){
+    //     timerIds.forEach(function(id) {
+    //         clearInterval(id);
+    //     });
+    //     timerIds = [];
+    // }
+    //
+    // function updateHtmlElement(el){
+    //     updateHtmlElementUrl(el, "/console/metrics/field?field=" + el.id);
+    // }
+    //
+    // function updateHtmlElementUrl(el, url){
+    //     $.ajax({
+    //         dataType: "html",
+    //         url: url,
+    //         type: "GET",
+    //         success: function (data,status,xhr) {   // success callback function
+    //             $(el).html(data);
+    //         },
+    //         error: function (jqXhr, textStatus, errorMessage) { // error callback
+    //             $(el).html("Unavailable");
+    //         }
+    //     });
+    // }
+    //
+    // const field = document.getElementById('searchField');
+    // const ac = new Autocomplete(field, {
+    //     data: [{label: "", value: ""}],
+    //     maximumItems: 20,
+    //     threshold: 2,
+    //     onSelectItem: ({label, value}) => {
+    //         sessionId = value;
+    //         $.ajax({
+    //             url: "/console/async?page=session.html&clientId=" + sessionId,
+    //             success: function( result ) {
+    //                 $("#dyna").html(result);
+    //             }
+    //         });
+    //         field.value = '';
+    //     },
+    //     onInput: (value) => {
+    //         $.getJSON("/console/search?searchTerm=" + value, function (update){
+    //             // console.log("user input: " + JSON.stringify(update));
+    //             ac.setData(update);
+    //             ac.renderIfNeeded();
+    //         });
+    //     }
+    // });
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="/console/js/script.js"></script>
+<script>
+    feather.replace();
+</script>
+</body>
+</html>

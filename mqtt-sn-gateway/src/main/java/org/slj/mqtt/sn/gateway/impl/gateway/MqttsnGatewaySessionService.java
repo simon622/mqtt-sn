@@ -32,8 +32,12 @@ import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
-import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.session.*;
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
+import org.slj.mqtt.sn.model.TopicInfo;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -42,7 +46,6 @@ import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadService
@@ -238,11 +241,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     QoS = Math.min(getRegistry().getAuthorizationService().allowedMaximumQoS(context, topicPath), QoS);
                 }
 
-                SubscribeResult result = null;
+                //-- ensure we call subscribe on the backend first - else the aggreating gw will never know we need to subscribe
+                SubscribeResult result = getRegistry().
+                        getBackendService().subscribe(context, new TopicPath(topicPath), message);
 
                 try {
                     if(getRegistry().getSubscriptionRegistry().subscribe(session, topicPath, QoS)){
-                        result = getRegistry().getBackendService().subscribe(context, new TopicPath(topicPath), message);
                         result.setTopicInfo(info);
                         result.setGrantedQoS(QoS);
                     } else {

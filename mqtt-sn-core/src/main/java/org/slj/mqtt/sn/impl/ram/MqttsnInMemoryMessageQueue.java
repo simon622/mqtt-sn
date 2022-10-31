@@ -30,7 +30,6 @@ import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnMessageQueue;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.util.logging.Level;
@@ -44,11 +43,26 @@ public class MqttsnInMemoryMessageQueue
     }
 
     @Override
-    public MqttsnWaitToken offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    public void offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
+        offerInternal(session, message);
+    }
+
+    @Override
+    public MqttsnWaitToken offerWithToken(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+            throws MqttsnException, MqttsnQueueAcceptException {
+
+        MqttsnWaitToken token = MqttsnWaitToken.from(message);
+        offerInternal(session, message);
+        if(token != null) message.setToken(token);
+        return token;
+    }
+
+    protected void offerInternal(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+            throws MqttsnException, MqttsnQueueAcceptException {
         try {
-            int size = 0;
+            int size;
             if((size = getSessionBean(session).getQueueSize()) >= getMaxQueueSize()){
                 if(logger.isLoggable(Level.FINE)){
                     logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", session, size));
@@ -59,10 +73,6 @@ public class MqttsnInMemoryMessageQueue
             if(logger.isLoggable(Level.FINE)){
                 logger.log(Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, session, size));
             }
-            MqttsnWaitToken token = MqttsnWaitToken.from(message);
-            message.setToken(token);
-            return token;
-
         } finally {
             if(registry.getMessageStateService() != null)
                 registry.getMessageStateService().scheduleFlush(session.getContext());

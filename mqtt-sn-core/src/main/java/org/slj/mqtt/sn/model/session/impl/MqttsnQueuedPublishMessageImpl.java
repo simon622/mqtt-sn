@@ -44,6 +44,7 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
     private IMqttsnDataRef dataRefId;
     private int packetId;
     private transient MqttsnWaitToken token;
+    private int grantedQoS;
 
     public MqttsnQueuedPublishMessageImpl() {
     }
@@ -92,13 +93,24 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
     }
 
     @Override
+    public int getGrantedQoS() {
+        return grantedQoS;
+    }
+
+    public void setGrantedQoS(int grantedQoS) {
+        this.grantedQoS = grantedQoS;
+    }
+
+    @Override
     public String toString() {
-        return "QueuedPublishMessage{" +
+        return "MqttsnQueuedPublishMessageImpl{" +
                 "data=" + data +
                 ", created=" + created +
                 ", retryCount=" + retryCount +
-                ", messageId=" + dataRefId +
+                ", dataRefId=" + dataRefId +
+                ", packetId=" + packetId +
                 ", token=" + token +
+                ", grantedQoS=" + grantedQoS +
                 '}';
     }
 

@@ -24,10 +24,11 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.*;
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.InflightMessage;
+import org.slj.mqtt.sn.model.MqttsnWaitToken;
+import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 
 import java.util.Optional;
 

@@ -70,6 +70,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         HELO("Send a HELO message to gateway", new String[0]),
         PREDEFINE("Add a predefined topic alias", new String[]{"String* topicName",  "int16 topicAlias"}),
         HELP("List this message", new String[0]),
+        GC("Run the garbage collector", new String[0]),
         QUIT("Quit the application", new String[0]),
         EXIT("Quit the application", new String[0], true),
         QC("Quick connect configuration", new String[0], true),
@@ -130,6 +131,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     break;
                 case TD:
                     threadDump();
+                    break;
+                case GC:
+                    gc();
                     break;
                 case QC:
                     quickConnect();

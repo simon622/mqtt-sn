@@ -226,7 +226,7 @@ public abstract class AbstractMqttsnMessageStateService
                     length == 2 ? (byte) topicPath.charAt(1) : 0x00);
         }
 
-        IMqttsnMessage publish = registry.getMessageFactory().createPublish(queuedPublishMessage.getData().getQos(),
+        IMqttsnMessage publish = registry.getMessageFactory().createPublish(queuedPublishMessage.getGrantedQoS(),
                 isDUPDelivery(queuedPublishMessage),
                 queuedPublishMessage.getData().isRetained(), type, topicId,
                 payload);

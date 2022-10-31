@@ -310,7 +310,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         }
         PublishData publishData = new PublishData(topicName, QoS, retained);
         IMqttsnDataRef dataRef = registry.getMessageRegistry().add(data);
-        return registry.getMessageQueue().offer(session,
+        return registry.getMessageQueue().offerWithToken(session,
                 new MqttsnQueuedPublishMessageImpl(
                         dataRef, publishData));
     }

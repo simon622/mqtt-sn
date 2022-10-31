@@ -33,6 +33,7 @@ public interface IMqttsnQueuedPublishMessage {
     PublishData getData();
     long getCreated();
     int getRetryCount();
+    int getGrantedQoS();
     IMqttsnDataRef getDataRefId();
     int getPacketId();
     MqttsnWaitToken getToken();

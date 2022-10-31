@@ -60,11 +60,10 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
 
         logger.log(Level.FINE, String.format("receiving broker side message into [%s] sessions", recipients.size()));
 
-        //if we only have 1 receiver remove message after read
-        IMqttsnDataRef messageId = getRegistry().getMessageRegistry().add(payload);
+        IMqttsnDataRef dataId = getRegistry().getMessageRegistry().add(payload);
         int successfulExpansion = 0;
+        PublishData data = new PublishData(topicPath, qos, retained);
 
-        //TODO - optimise here - pass around the same instance of the PublishData
         for (IMqttsnContext context : recipients){
             try {
                 IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
@@ -73,16 +72,16 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
                             payload.length + 9 > session.getMaxPacketSize()){
                         logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, context));
                     } else {
-
-                        int grantedQos = registry.getSubscriptionRegistry().getQos(session, topicPath);
-                        int q = Math.min(grantedQos,qos);
-
-                        PublishData data = new PublishData(topicPath, q, retained);
                         try {
-                            registry.getMessageQueue().offer(session, new MqttsnQueuedPublishMessageImpl(messageId, data));
+                            int grantedQos = registry.getSubscriptionRegistry().getQos(session, topicPath);
+                            grantedQos = Math.min(grantedQos,qos);
+                            MqttsnQueuedPublishMessageImpl impl = new MqttsnQueuedPublishMessageImpl(dataId, data);
+                            impl.setGrantedQoS(grantedQos);
+                            registry.getMessageQueue().offer(session, impl);
                             successfulExpansion++;
                         } catch(MqttsnQueueAcceptException e){
                             //-- the queue was full nothing to be done here
+                            //TODO dead-letter queue here
                         }
                     }
                 } else {
@@ -96,7 +95,7 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
         getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE).increment(1);
 
         if(successfulExpansion == 0){
-            registry.getMessageRegistry().remove(messageId);
+            registry.getMessageRegistry().remove(dataId);
         }
     }
 }

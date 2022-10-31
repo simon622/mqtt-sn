@@ -49,10 +49,20 @@ public interface IMqttsnMessageQueue<T extends IMqttsnRuntimeRegistry> extends I
      * Offer the queue or a context a new message to add to the tail.
      * @param session  - the session whose queue youd like to append
      * @param message - the message metadata to queue
+     * @throws MqttsnException - an error occurred, most likely the queue was full
+     */
+    void offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+            throws MqttsnException, MqttsnQueueAcceptException;
+
+    /**
+     * Offer the queue or a context a new message to add to the tail.
+     * @param session  - the session whose queue youd like to append
+     * @param message - the message metadata to queue
      * @return - token if the message was added
      * @throws MqttsnException - an error occurred, most likely the queue was full
      */
-    MqttsnWaitToken offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message) throws MqttsnException, MqttsnQueueAcceptException;
+    MqttsnWaitToken offerWithToken(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+            throws MqttsnException, MqttsnQueueAcceptException;
 
     /**
      * Pop a message from the head of the queue. This removes and returns the message at the Head.

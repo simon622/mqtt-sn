@@ -65,6 +65,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         SESSION("Obtain the status of a client", new String[]{"String* clientId"}),
         STATUS("Obtain the status of the runtime", new String[0]),
         PREDEFINE("Add a predefined topic alias", new String[]{"String* topicName",  "int16 topicAlias"}),
+        GC("Run the garbage collector", new String[0]),
         HELP("List this message", new String[0]),
         QUIT("Quit the application", new String[0]),
         EXIT("Quit the application", new String[0], true),
@@ -138,6 +139,9 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                     break;
                 case POKE:
                     poke();
+                    break;
+                case GC:
+                    gc();
                     break;
                 case SESSION:
                     session(captureMandatoryString(input, output, "Please supply the clientId whose session you would like to see"));

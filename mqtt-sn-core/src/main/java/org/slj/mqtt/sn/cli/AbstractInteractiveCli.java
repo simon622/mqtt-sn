@@ -327,6 +327,11 @@ public abstract class AbstractInteractiveCli {
         }
     }
 
+    protected void gc() {
+        System.gc();
+        message("DONE - requesting system garbage collection");
+    }
+
     protected void stats() {
         //-- enabled by metrics
         if(runtimeRegistry.getOptions().isMetricsEnabled()){

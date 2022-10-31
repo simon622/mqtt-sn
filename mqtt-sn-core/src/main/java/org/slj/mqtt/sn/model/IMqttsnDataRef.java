@@ -22,23 +22,9 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model.session;
+package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.PublishData;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
-import org.slj.mqtt.sn.model.MqttsnWaitToken;
+public interface IMqttsnDataRef<T> {
 
-public interface IMqttsnQueuedPublishMessage {
-
-    PublishData getData();
-    long getCreated();
-    int getRetryCount();
-    IMqttsnDataRef getDataRefId();
-    int getPacketId();
-    MqttsnWaitToken getToken();
-    void setToken(MqttsnWaitToken token);
-    void incrementRetry();
-    void setPacketId(int packetId);
-    void setRetryCount(int retryCount);
-
+    T getId();
 }

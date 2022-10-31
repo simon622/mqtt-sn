@@ -25,19 +25,13 @@
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.*;
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
-import java.util.Optional;
-
 public interface IMqttsnGatewaySessionService extends IMqttsnService {
-
-    void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException ;
 
     void markSessionLost(IMqttsnSession state) throws MqttsnException;
 

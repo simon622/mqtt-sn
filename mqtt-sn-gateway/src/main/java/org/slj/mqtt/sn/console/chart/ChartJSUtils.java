@@ -136,7 +136,7 @@ public class ChartJSUtils {
         BarDataset dataset = new BarDataset()
                 .setLabel("sample chart")
                 .setData(65, 59, 80, 81, 56, 55, 40)
-                .addBackgroundColors(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE, Color.GRAY, Color.BLACK)
+                .addBackgroundColors(Color.RED, Color.GREEN, Color.BLUE, Color.DARK_CYAN, Color.ORANGE, Color.GRAY, Color.BLACK)
                 .setBorderWidth(2);
 
         BarData data = new BarData()
@@ -146,7 +146,7 @@ public class ChartJSUtils {
     }
 
     static Color[] colors = new Color[]{
-            new Color(36, 73, 146), new Color(76, 129, 120), new Color(248, 53, 68), Color.YELLOW, Color.ORANGE, Color.GRAY, Color.BLACK
+            new Color(36, 73, 146), new Color(76, 129, 120), new Color(248, 53, 68), Color.DARK_SALMON, Color.ORANGE, Color.GRAY, Color.BLACK
     };
 
     public static Color getColorForIndex(int idx){

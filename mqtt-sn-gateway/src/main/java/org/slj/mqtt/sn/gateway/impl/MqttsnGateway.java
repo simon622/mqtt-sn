@@ -52,11 +52,13 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         callStartup(runtime.getQueueProcessor());
         callStartup(runtime.getContextFactory());
         callStartup(runtime.getSessionRegistry());
+
         if (runtime.getMetrics() != null) callStartup(runtime.getMetrics());
         if (runtime.getAuthenticationService() != null) callStartup(runtime.getAuthenticationService());
         if (runtime.getAuthorizationService() != null) callStartup(runtime.getAuthorizationService());
 
         //-- start the network last
+        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getExpansionHandler());
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getConnector());
         callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
@@ -84,12 +86,12 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         });
 
         //-- notify the backend of confirmed message
-        registerPublishSentListener((context, messageId, topicPath, qos, retained, data, message) ->  {
-            try {
-                registry.getMessageRegistry().removeWhenCommitted(messageId);
-            } catch (MqttsnException e) {
-                logger.log(Level.SEVERE, "error publishing message to backend", e);
-            }
+        registerPublishSentListener((context, topicPath, qos, retained, data, message) ->  {
+//            try {
+//                registry.getMessageRegistry().removeWhenCommitted(messageId);
+//            } catch (MqttsnException e) {
+//                logger.log(Level.SEVERE, "error publishing message to backend", e);
+//            }
         });
 
         registerConnectionListener(new IMqttsnConnectionStateListener() {
@@ -153,6 +155,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         callShutdown(runtime.getSecurityService());
 
+        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getExpansionHandler());
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getConnector());
         callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());

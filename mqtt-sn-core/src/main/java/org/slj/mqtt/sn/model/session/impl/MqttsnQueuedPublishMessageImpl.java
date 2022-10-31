@@ -25,11 +25,11 @@
 package org.slj.mqtt.sn.model.session.impl;
 
 import org.slj.mqtt.sn.PublishData;
+import org.slj.mqtt.sn.model.IMqttsnDataRef;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 /**
  * Lightweight meta-data reference to a message which will reside in client queues. NOTE: the payload of
@@ -41,26 +41,26 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
     private PublishData data;
     private long created;
     private int retryCount;
-    private UUID messageId;
+    private IMqttsnDataRef dataRefId;
     private int packetId;
     private transient MqttsnWaitToken token;
 
     public MqttsnQueuedPublishMessageImpl() {
     }
 
-    public MqttsnQueuedPublishMessageImpl(UUID messageId, PublishData data) {
+    public MqttsnQueuedPublishMessageImpl(IMqttsnDataRef dataRefId, PublishData data) {
         this.created = System.currentTimeMillis();
-        this.messageId = messageId;
+        this.dataRefId = dataRefId;
         this.data = data;
         this.retryCount = 0;
     }
 
-    public UUID getMessageId() {
-        return messageId;
+    public IMqttsnDataRef getDataRefId() {
+        return dataRefId;
     }
 
-    public void setMessageId(UUID messageId) {
-        this.messageId = messageId;
+    public void setDataRefId(IMqttsnDataRef dataRefId) {
+        this.dataRefId = dataRefId;
     }
 
     public int getRetryCount() {
@@ -97,7 +97,7 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
                 "data=" + data +
                 ", created=" + created +
                 ", retryCount=" + retryCount +
-                ", messageId=" + messageId +
+                ", messageId=" + dataRefId +
                 ", token=" + token +
                 '}';
     }

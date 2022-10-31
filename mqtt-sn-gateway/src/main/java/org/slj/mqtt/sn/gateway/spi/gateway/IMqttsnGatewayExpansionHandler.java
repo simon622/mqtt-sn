@@ -22,23 +22,11 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model.session;
+package org.slj.mqtt.sn.gateway.spi.gateway;
 
-import org.slj.mqtt.sn.PublishData;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
-import org.slj.mqtt.sn.model.MqttsnWaitToken;
+import org.slj.mqtt.sn.spi.MqttsnException;
 
-public interface IMqttsnQueuedPublishMessage {
+public interface IMqttsnGatewayExpansionHandler {
 
-    PublishData getData();
-    long getCreated();
-    int getRetryCount();
-    IMqttsnDataRef getDataRefId();
-    int getPacketId();
-    MqttsnWaitToken getToken();
-    void setToken(MqttsnWaitToken token);
-    void incrementRetry();
-    void setPacketId(int packetId);
-    void setRetryCount(int retryCount);
-
+    void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException ;
 }

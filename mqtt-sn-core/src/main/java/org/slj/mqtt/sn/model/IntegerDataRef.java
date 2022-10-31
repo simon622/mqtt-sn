@@ -22,23 +22,31 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model.session;
+package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.PublishData;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
-import org.slj.mqtt.sn.model.MqttsnWaitToken;
+public class IntegerDataRef implements IMqttsnDataRef<Integer>{
 
-public interface IMqttsnQueuedPublishMessage {
+    final Integer value;
 
-    PublishData getData();
-    long getCreated();
-    int getRetryCount();
-    IMqttsnDataRef getDataRefId();
-    int getPacketId();
-    MqttsnWaitToken getToken();
-    void setToken(MqttsnWaitToken token);
-    void incrementRetry();
-    void setPacketId(int packetId);
-    void setRetryCount(int retryCount);
+    public IntegerDataRef(Integer value) {
+        this.value = value;
+    }
 
+    @Override
+    public Integer getId() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        IntegerDataRef that = (IntegerDataRef) o;
+        return value != null ? value.equals(that.value) : that.value == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return value != null ? value.hashCode() : 0;
+    }
 }

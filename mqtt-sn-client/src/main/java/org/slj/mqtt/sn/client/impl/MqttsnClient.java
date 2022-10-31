@@ -32,7 +32,7 @@ import org.slj.mqtt.sn.client.impl.examples.Example;
 import org.slj.mqtt.sn.client.spi.IMqttsnClient;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.session.*;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 import org.slj.mqtt.sn.spi.*;
@@ -40,10 +40,7 @@ import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnHelo;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -312,10 +309,10 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             startProcessing(true);
         }
         PublishData publishData = new PublishData(topicName, QoS, retained);
-        UUID messageId = registry.getMessageRegistry().add(data, getMessageExpiry());
+        IMqttsnDataRef dataRef = registry.getMessageRegistry().add(data);
         return registry.getMessageQueue().offer(session,
                 new MqttsnQueuedPublishMessageImpl(
-                        messageId, publishData));
+                        dataRef, publishData));
     }
 
     @Override
@@ -765,13 +762,6 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             }
         }
         return 0;
-    }
-
-    private Date getMessageExpiry(){
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        c.add(Calendar.HOUR, +1);
-        return c.getTime();
     }
 
     public IMqttsnSession getSessionState(){

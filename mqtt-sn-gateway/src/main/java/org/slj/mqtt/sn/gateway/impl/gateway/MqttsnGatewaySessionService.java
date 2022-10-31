@@ -26,7 +26,6 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
-import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
@@ -34,18 +33,17 @@ import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnWillData;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.logging.Level;
 
 public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadService
@@ -336,63 +334,6 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     "gateway has reached capacity");
         }
         return null;
-    }
-
-    @Override
-    public void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {
-        //-- expand the message onto the gateway connected device queues
-        Set<IMqttsnContext> recipients = null;
-        try {
-            recipients = getRegistry().getSubscriptionRegistry().matches(topicPath);
-        } catch(MqttsnIllegalFormatException e){
-            throw new MqttsnException("illegal format supplied", e);
-        }
-
-        logger.log(Level.FINE, String.format("receiving broker side message into [%s] sessions", recipients.size()));
-
-        //if we only have 1 receiver remove message after read
-        UUID messageId = recipients.size() > 1 ?
-                getRegistry().getMessageRegistry().add(payload, calculateExpiry()) :
-                getRegistry().getMessageRegistry().add(payload, true) ;
-
-        int successfulExpansion = 0;
-        for (IMqttsnContext context : recipients){
-            try {
-                IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
-                if(session != null){
-                    if(session.getMaxPacketSize() != 0 &&
-                            payload.length + 9 > session.getMaxPacketSize()){
-                        logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, context));
-                    } else {
-
-                        int grantedQos = registry.getSubscriptionRegistry().getQos(session, topicPath);
-                        int q = Math.min(grantedQos,qos);
-
-                        PublishData data = new PublishData(topicPath, q, retained);
-                        try {
-                            registry.getMessageQueue().offer(session, new MqttsnQueuedPublishMessageImpl(messageId, data));
-                            successfulExpansion++;
-                        } catch(MqttsnQueueAcceptException e){
-                            //-- the queue was full nothing to be done here
-                        }
-                    }
-                } else {
-                    logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", context));
-                }
-            } catch(MqttsnException e){
-                logger.log(Level.WARNING, String.format("detected subscription issue for session receipt.. ignore client (%s)", context));
-            }
-        }
-        if(successfulExpansion == 0){
-            registry.getMessageRegistry().remove(messageId);
-        }
-    }
-
-    protected Date calculateExpiry(){
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.add(Calendar.YEAR, 1);
-        return cal.getTime();
     }
 
     @Override

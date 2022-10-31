@@ -120,8 +120,7 @@ public abstract class AbstractMqttsnBackendService
     public void receive(String topicPath, int qos, boolean retained, byte[] payload) {
         registry.getRuntime().async(() -> {
             try {
-                getRegistry().getGatewaySessionService().receiveToSessions(topicPath,qos, retained, payload);
-                getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE).increment(1);
+                getRegistry().getExpansionHandler().receiveToSessions(topicPath,qos, retained, payload);
             } catch(Exception e){
                 logger.log(Level.SEVERE, "error receiving to sessions;", e);
             }

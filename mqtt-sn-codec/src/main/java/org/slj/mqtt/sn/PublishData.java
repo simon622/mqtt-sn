@@ -26,10 +26,10 @@ package org.slj.mqtt.sn;
 
 public class PublishData {
 
-    boolean retained;
-    String topicPath;
-    int qos;
-    byte[] data;
+    private final boolean retained;
+    private String topicPath;
+    private final int qos;
+    private byte[] data;
 
     public PublishData(int qos, boolean retained, byte[] data) {
         this.qos = qos;
@@ -66,16 +66,8 @@ public class PublishData {
         return retained;
     }
 
-    public void setRetained(boolean retained) {
-        this.retained = retained;
-    }
-
     public void setTopicPath(String topicPath) {
         this.topicPath = topicPath;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
     }
 
     public void setData(byte[] data) {

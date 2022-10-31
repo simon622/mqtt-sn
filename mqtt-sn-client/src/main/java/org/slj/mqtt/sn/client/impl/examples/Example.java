@@ -39,7 +39,6 @@ import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -87,7 +86,7 @@ public class Example {
             });
 
             //-- register any publish sent listeners you require
-            client.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+            client.registerPublishSentListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 System.err.println(String.format("sent message [%s]",
                         new String(data, MqttsnConstants.CHARSET)));
             });

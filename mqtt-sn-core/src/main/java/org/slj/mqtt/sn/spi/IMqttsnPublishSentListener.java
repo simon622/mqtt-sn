@@ -27,9 +27,7 @@ package org.slj.mqtt.sn.spi;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.UUID;
-
 public interface IMqttsnPublishSentListener {
 
-    void sent(IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message);
+    void sent(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message);
 }

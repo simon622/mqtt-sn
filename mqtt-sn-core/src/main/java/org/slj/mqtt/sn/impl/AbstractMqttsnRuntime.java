@@ -31,15 +31,14 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.utils.VirtualMachine;
 import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.utils.VirtualMachine;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -234,18 +233,18 @@ public abstract class AbstractMqttsnRuntime {
         receivedListeners.forEach(p -> p.receive(context, topicPath, qos, retained, data, message));
     }
 
-    protected final void messageSent(IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
+    protected final void messageSent(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
         if(logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, String.format("sent confirmed by application [%s], notifying [%s] listeners", topicPath, sentListeners.size()));
         }
-        sentListeners.forEach(p -> p.sent(context, messageId, topicPath, qos, retained, data, message));
+        sentListeners.forEach(p -> p.sent(context, topicPath, qos, retained, data, message));
     }
 
-    protected final void messageSendFailure(IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
+    protected final void messageSendFailure(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
         if(logger.isLoggable(Level.FINE)) {
             logger.log(Level.FINE, String.format("message failed sending [%s], notifying [%s] listeners", topicPath, sendFailureListeners.size()));
         }
-        sendFailureListeners.forEach(p -> p.sendFailure(context, messageId, topicPath, qos, retained, data, message, retryCount));
+        sendFailureListeners.forEach(p -> p.sendFailure(context, topicPath, qos, retained, data, message, retryCount));
     }
 
     public void registerPublishReceivedListener(IMqttsnPublishReceivedListener listener) {
@@ -457,6 +456,8 @@ public abstract class AbstractMqttsnRuntime {
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getThreadCount()));
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, "The number of entries in the network registry.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
+            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT, "The number of messages residing in the application message data store.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getMessageRegistry().size()));
 
             //-- these require managing externally
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN, "The number of mqtt-sn publish messages received (ingress) in the time period.",
@@ -472,7 +473,7 @@ public abstract class AbstractMqttsnRuntime {
             registerPublishReceivedListener((context, topicPath, qos, retained, data, message) ->
                     registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).increment(1));
 
-            registerPublishSentListener((context, messageId, topicPath, qos, retained, data, message) ->
+            registerPublishSentListener((context, topicPath, qos, retained, data, message) ->
                     registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT).increment(1));
             registerTrafficListener(new IMqttsnTrafficListener() {
                 @Override

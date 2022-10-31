@@ -43,6 +43,8 @@ public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
 
     IMqttsnConsole getConsole();
 
+    IMqttsnGatewayExpansionHandler getExpansionHandler();
+
     IMqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector);
 
 }

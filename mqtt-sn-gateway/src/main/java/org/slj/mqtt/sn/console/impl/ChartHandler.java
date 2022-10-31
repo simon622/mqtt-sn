@@ -212,7 +212,8 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         List<MqttsnMetricSample> in = getSamplesForMetric(IMqttsnMetrics.SYSTEM_VM_THREADS_USED);
         List<MqttsnMetricSample> out = getSamplesForMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED);
         List<MqttsnMetricSample> netRegSamples = getSamplesForMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT);
-        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples);
+        List<MqttsnMetricSample> messRegSamples = getSamplesForMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT);
+        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples, messRegSamples);
         LineChart lineChart = new LineChart();
         LineOptions options = new LineOptions();
         lineChart.setOptions(options);
@@ -220,6 +221,7 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
                 .addDataset(ChartJSUtils.createLineDataset("VM Thread", ChartJSUtils.getColorForIndex(0), in))
                 .addDataset(ChartJSUtils.createLineDataset("VM Memory Used (kb)", ChartJSUtils.getColorForIndex(1), out))
                 .addDataset(ChartJSUtils.createLineDataset("Network Registry Entries", ChartJSUtils.getColorForIndex(2), netRegSamples))
+                .addDataset(ChartJSUtils.createLineDataset("Message Registry Entries", ChartJSUtils.getColorForIndex(3), messRegSamples))
                 .addLabels(ChartJSUtils.timestampsToStr(arr)));
         writeJSONResponse(request, HttpConstants.SC_OK,
                 ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));
@@ -229,12 +231,14 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         List<MqttsnMetricSample> in = getSamplesForMetricSince(IMqttsnMetrics.SYSTEM_VM_THREADS_USED, since);
         List<MqttsnMetricSample> out = getSamplesForMetricSince(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, since);
         List<MqttsnMetricSample> netRegSamples = getSamplesForMetricSince(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, since);
-        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples);
+        List<MqttsnMetricSample> messRegSamples = getSamplesForMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT);
+        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples, messRegSamples);
         String[] labels = ChartJSUtils.timestampsToStr(arr);
         Update u = new Update();
         u.labels = labels;
         u.data = new int [][]{
                 ChartJSUtils.values(in), ChartJSUtils.values(out), ChartJSUtils.values(netRegSamples)
+                , ChartJSUtils.values(messRegSamples)
         };
         String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,

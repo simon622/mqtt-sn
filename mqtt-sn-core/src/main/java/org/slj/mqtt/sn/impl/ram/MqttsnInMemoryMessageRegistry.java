@@ -25,62 +25,72 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageRegistry;
-import org.slj.mqtt.sn.impl.AbstractTopicRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IMqttsnDataRef;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 
 public class MqttsnInMemoryMessageRegistry
         extends AbstractMqttsnMessageRegistry {
 
-    protected Map<UUID, MessageImpl> messageLookup;
+    protected Map<IMqttsnDataRef, MessageImpl> messageLookup;
 
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-        messageLookup = Collections.synchronizedMap(new HashMap<>());
+        //all the messages to drop naturally using weak referencing
+        messageLookup = new WeakHashMap<>();
         super.start(runtime);
     }
 
     @Override
-    public boolean remove(UUID messageId) throws MqttsnException {
-        return messageLookup.remove(messageId) != null;
+    public boolean remove(IMqttsnDataRef messageId) throws MqttsnException {
+        synchronized(messageLookup){
+            return messageLookup.remove(messageId) != null;
+        }
     }
 
     @Override
-    protected UUID storeInternal(MessageImpl message) throws MqttsnException {
-        messageLookup.put(message.getMessageId(), message);
-        return message.getMessageId();
+    protected IMqttsnDataRef storeInternal(IMqttsnDataRef ref, MessageImpl message) {
+        synchronized(messageLookup){
+            messageLookup.put(ref, message);
+            return ref;
+        }
     }
 
     @Override
-    protected MessageImpl readInternal(UUID messageId) throws MqttsnException {
+    protected MessageImpl readInternal(IMqttsnDataRef messageId) {
         return messageLookup.get(messageId);
     }
 
     @Override
-    public void clearAll() throws MqttsnException {
-        messageLookup.clear();
+    public void clearAll() {
+        synchronized (messageLookup){
+            messageLookup.clear();
+        }
     }
 
     @Override
-    public long size() throws MqttsnException {
+    public long size() {
         return messageLookup.size();
     }
 
     @Override
-    public void tidy() throws MqttsnException {
-        Date d = new Date();
+    public void tidy() {
+        long now = System.currentTimeMillis();
         synchronized (messageLookup){
-            Iterator<UUID> itr = messageLookup.keySet().iterator();
+            Iterator<IMqttsnDataRef> itr = messageLookup.keySet().iterator();
             while(itr.hasNext()){
-                UUID id = itr.next();
-                MessageImpl m = messageLookup.get(id);
-                if(m.getExpires() != null && m.getExpires().before(d)){
-                    logger.log(Level.INFO, String.format("expiring message [%s]", id));
-                    itr.remove();
+                IMqttsnDataRef id = itr.next();
+                if(id != null){
+                    MessageImpl m = messageLookup.get(id);
+                    if(m.getExpires() < now){
+                        logger.log(Level.INFO, String.format("expiring message [%s]", id));
+                        itr.remove();
+                    }
                 }
             }
         }

@@ -97,7 +97,7 @@ public abstract class AbstractInteractiveCli {
                 e.printStackTrace();
             }
         });
-        runtime.registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+        runtime.registerPublishSentListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
                 if(enableOutput) asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
                         data.length, topic, context.getId(), new String(data)));
@@ -107,7 +107,7 @@ public abstract class AbstractInteractiveCli {
         });
         enableOutput();
         message("Adding runtime listeners.. DONE");
-        runtime.registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
+        runtime.registerPublishFailedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
             try {
                 int QoS = runtimeRegistry.getCodec().getQoS(message, true);
                 asyncmessage(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] \"%s\"",

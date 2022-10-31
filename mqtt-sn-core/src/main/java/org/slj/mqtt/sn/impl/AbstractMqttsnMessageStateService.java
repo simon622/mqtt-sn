@@ -208,7 +208,7 @@ public abstract class AbstractMqttsnMessageStateService
     @Override
     public MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
 
-        byte[] payload = registry.getMessageRegistry().get(queuedPublishMessage.getMessageId());
+        byte[] payload = registry.getMessageRegistry().get(queuedPublishMessage.getDataRefId());
 
         if(registry.getSecurityService().payloadIntegrityEnabled()){
             INetworkContext networkContext = registry.getNetworkRegistry().getContext(context);
@@ -300,7 +300,7 @@ public abstract class AbstractMqttsnMessageStateService
             if(!requiresResponse && registry.getCodec().isPublish(message)){
                 PublishData data = registry.getCodec().getData(message);
                 CommitOperation op = CommitOperation.outbound(context,
-                        queuedPublishMessage.getMessageId(), data, message);
+                        queuedPublishMessage.getDataRefId(), data, message);
                 op.data.setTopicPath(queuedPublishMessage.getData().getTopicPath());
 
                 //-- wait until the transport confirms the send else the confirm could happen before the backpressure is relieved
@@ -474,7 +474,7 @@ public abstract class AbstractMqttsnMessageStateService
                                 if(m.getRetryCount() >= registry.getOptions().getMaxErrorRetries()){
                                     logger.log(Level.WARNING, String.format("publish message [%s] exceeded max retries [%s], discard and notify application", registry.getOptions().getMaxErrorRetries(), m));
                                     PublishData data = registry.getCodec().getData(confirmedMessage);
-                                    registry.getRuntime().messageSendFailure(context, m.getMessageId(),
+                                    registry.getRuntime().messageSendFailure(context,
                                             new TopicPath(m.getData().getTopicPath()), data.getQos(), data.isRetained(),
                                             data.getData(), confirmedMessage, m.getRetryCount());
                                 } else {
@@ -504,7 +504,7 @@ public abstract class AbstractMqttsnMessageStateService
                         if (registry.getCodec().isPuback(message)) {
                             RequeueableInflightMessage rim = (RequeueableInflightMessage) inflight;
                             PublishData data = registry.getCodec().getData(confirmedMessage);
-                            CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getMessageId(), data, confirmedMessage);
+                            CommitOperation op = CommitOperation.outbound(context, rim.getQueuedPublishMessage().getDataRefId(), data, confirmedMessage);
                             op.data.setTopicPath(rim.getQueuedPublishMessage().getData().getTopicPath());
                             confirmPublish(op);
                         }
@@ -520,7 +520,7 @@ public abstract class AbstractMqttsnMessageStateService
                 if(inflight != null && registry.getCodec().isPubRec(message)){
                     PublishData data = registry.getCodec().getData(inflight.getMessage());
                     CommitOperation op = CommitOperation.outbound(context,
-                            ((RequeueableInflightMessage) inflight).getQueuedPublishMessage().getMessageId(),
+                            ((RequeueableInflightMessage) inflight).getQueuedPublishMessage().getDataRefId(),
                             data, inflight.getMessage());
                     op.data.setTopicPath(((RequeueableInflightMessage) inflight).
                             getQueuedPublishMessage().getData().getTopicPath());
@@ -583,7 +583,6 @@ public abstract class AbstractMqttsnMessageStateService
                         operation.message);
             } else {
                 registry.getRuntime().messageSent(context,
-                        operation.messageId,
                         new TopicPath(operation.data.getTopicPath()),
                         operation.data.getQos(),
                         operation.data.isRetained(),
@@ -595,11 +594,6 @@ public abstract class AbstractMqttsnMessageStateService
 
     protected MqttsnWaitToken markInflight(IMqttsnOriginatingMessageSource source, IMqttsnContext context, IMqttsnMessage message, IMqttsnQueuedPublishMessage queuedPublishMessage)
             throws MqttsnException {
-
-//        IMqttsnOriginatingMessageSource source = message instanceof MqttsnPublish ?
-//                                        queuedPublishMessage == null ? IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL :
-//                                    registry.getMessageHandler().isPartOfOriginatingMessage(message) ?
-//                                            IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
 
         //may have old inbound messages kicking around depending on reap settings, to just allow these to come in
         if(countInflight(context, source) >=
@@ -829,7 +823,7 @@ public abstract class AbstractMqttsnMessageStateService
         protected IMqttsnMessage message;
         protected IMqttsnContext context;
         protected long timestamp;
-        protected UUID messageId;
+        protected IMqttsnDataRef messageId;
         //-- TODO this should encapsulate the source enum for consistency
         protected boolean inbound;
 
@@ -845,7 +839,7 @@ public abstract class AbstractMqttsnMessageStateService
             return new CommitOperation(context, data, message, true);
         }
 
-        public static CommitOperation outbound(IMqttsnContext context, UUID messageId, PublishData data, IMqttsnMessage message){
+        public static CommitOperation outbound(IMqttsnContext context, IMqttsnDataRef messageId, PublishData data, IMqttsnMessage message){
             CommitOperation c = new CommitOperation(context, data, message, false);
             c.messageId = messageId;
             return c;

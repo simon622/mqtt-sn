@@ -44,6 +44,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     private IMqttsnBackendService brokerService;
     private IMqttsnConnector connector;
     private IMqttsnGatewaySessionService sessionService;
+    private IMqttsnGatewayExpansionHandler expansionHandler;
     private IMqttsnGatewayClusterService clusterService;
     private IMqttsnConsole console;
 
@@ -54,6 +55,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     public static MqttsnGatewayRuntimeRegistry defaultConfiguration(IMqttsnStorageService storageService, MqttsnGatewayOptions options){
         final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry) new MqttsnGatewayRuntimeRegistry(storageService, options).
                 withGatewaySessionService(new MqttsnGatewaySessionService()).
+                withExpansionHandler(new MqttsnGatewayExpansionHandler()).
                 withGatewayAdvertiseService(new MqttsnGatewayAdvertiseService()).
                 withMessageHandler(new MqttsnGatewayMessageHandler()).
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).
@@ -111,6 +113,11 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return this;
     }
 
+    public MqttsnGatewayRuntimeRegistry withExpansionHandler(IMqttsnGatewayExpansionHandler handler){
+        this.expansionHandler = handler;
+        return this;
+    }
+
     @Override
     public IMqttsnGatewaySessionService getGatewaySessionService() {
         return sessionService;
@@ -141,11 +148,16 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return console;
     }
 
+    public IMqttsnGatewayExpansionHandler getExpansionHandler() {
+        return expansionHandler;
+    }
+
     @Override
     protected void validateOnStartup() throws MqttsnRuntimeException {
 
         super.validateOnStartup();
         if(brokerService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
+        if(expansionHandler == null) throw new MqttsnRuntimeException("expansion handler must be bound for valid runtime");
         if(connector == null) throw new MqttsnRuntimeException("connector must be bound for valid runtime");
         if(sessionService == null) throw new MqttsnRuntimeException("session service must be bound for valid runtime");
         if(clientIdFactory == null) throw new MqttsnRuntimeException("clientIdFactory must be bound for valid runtime");

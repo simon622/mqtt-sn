@@ -24,8 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import java.util.Date;
-import java.util.UUID;
+import org.slj.mqtt.sn.model.IMqttsnDataRef;
 
 /**
  * The message registry is a normalised view of transiting messages, it context the raw payload of publish operations
@@ -41,15 +40,15 @@ public interface IMqttsnMessageRegistry <T extends IMqttsnRuntimeRegistry> exten
 
     void tidy() throws MqttsnException ;
 
-    UUID add(byte[] data, boolean removeAfterRead) throws MqttsnException ;
+    IMqttsnDataRef add(byte[] data) throws MqttsnException ;
 
-    UUID add(byte[] data, Date expires) throws MqttsnException;
+//    Integer add(byte[] data, Date expires) throws MqttsnException;
 
-    boolean remove(UUID messageId) throws MqttsnException;
+    boolean remove(IMqttsnDataRef messageId) throws MqttsnException;
 
-    boolean removeWhenCommitted(UUID messageId) throws MqttsnException;
+//    boolean removeWhenCommitted(Integer messageId) throws MqttsnException;
 
-    byte[] get(UUID messageId) throws MqttsnException;
+    byte[] get(IMqttsnDataRef messageId) throws MqttsnException;
 
-    long size() throws MqttsnException;
+    long size();
 }

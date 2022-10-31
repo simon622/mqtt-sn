@@ -24,114 +24,98 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.*;
-
-import java.util.Date;
-import java.util.UUID;
-import java.util.logging.Level;
+import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IntegerDataRef;
+import org.slj.mqtt.sn.spi.IMqttsnMessageRegistry;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
 public abstract class AbstractMqttsnMessageRegistry
         extends MqttsnService implements IMqttsnMessageRegistry {
 
+    private volatile int lastId = 0;
+    private Object lock = new Object();
+
     @Override
-    public UUID add(byte[] data, boolean removeAfterRead) throws MqttsnException {
-        UUID messageId = UUID.randomUUID();
-        MessageImpl impl = new MessageImpl(messageId, data, removeAfterRead);
-        return storeInternal(impl);
+    public IMqttsnDataRef add(byte[] data) throws MqttsnException {
+        IMqttsnDataRef ref =  createNextMessageId();
+        MessageImpl impl = new MessageImpl(data);
+        storeInternal(ref, impl);
+        return ref;
     }
 
     @Override
-    public UUID add(byte[] data, Date expires) throws MqttsnException {
-        UUID messageId = UUID.randomUUID();
-        MessageImpl impl = new MessageImpl(messageId, data, expires);
-        return storeInternal(impl);
-    }
+    public byte[] get(IMqttsnDataRef messageId) throws MqttsnException {
 
-    @Override
-    public byte[] get(UUID messageId) throws MqttsnException {
-
+        long now = System.currentTimeMillis();
         MessageImpl impl = readInternal(messageId);
         if(impl != null){
-            Date expires = impl.getExpires();
-            if(expires != null && expires.before(new Date())){
+            long expires = impl.getExpires();
+            if(expires < now){
                 remove(messageId);
                 impl = null;
             }
         }
-        if(impl == null) throw new MqttsnExpectationFailedException("unable to read message by id, message not found in registry");
+        if(impl == null) throw new MqttsnExpectationFailedException("unable to read message by id ["+messageId+"], message not found in registry");
 
         return impl.getData();
     }
 
-    @Override
-    public boolean removeWhenCommitted(UUID messageId) throws MqttsnException{
-        MessageImpl msg = readInternal(messageId);
-        boolean val = false;
-        if(msg != null){
-            if(msg.isRemoveAfterRead()){
-                val = remove(messageId);
-            }
-        }
 
-        if(val) logger.log(Level.FINE, String.format("removed committed message [%s]", messageId));
-        return val;
+//    public boolean removeWhenCommitted(Integer messageId) throws MqttsnException{
+//        MessageImpl msg = readInternal(messageId);
+//        boolean val = false;
+//        if(msg != null){
+//            if(msg.isRemoveAfterRead()){
+//                val = remove(messageId);
+//            }
+//        }
+//
+//        if(val) logger.log(Level.FINE, String.format("removed committed message [%s]", messageId));
+//        return val;
+//    }
+
+    protected IMqttsnDataRef createNextMessageId(){
+        synchronized (lock){
+            return new IntegerDataRef(++lastId);
+        }
     }
 
-    protected abstract UUID storeInternal(MessageImpl message) throws MqttsnException;
+    protected abstract IMqttsnDataRef storeInternal(IMqttsnDataRef ref, MessageImpl message) throws MqttsnException;
 
-    protected abstract MessageImpl readInternal(UUID messageId) throws MqttsnException;
+    protected abstract MessageImpl readInternal(IMqttsnDataRef messageId) throws MqttsnException;
 
     protected static class MessageImpl {
 
-        Date created;
-        Date expires;
-        UUID messageId;
-        byte[] data;
-        boolean removeAfterRead = false;
+        private long created;
+        private long expires;
+        private byte[] data;
 
-        public MessageImpl(UUID messageId, byte[] data, boolean removeAfterRead) {
-            this(messageId, data, null);
-            this.removeAfterRead = removeAfterRead;
+        public MessageImpl(byte[] data) {
+            this(data, Long.MAX_VALUE);
         }
 
-        public MessageImpl(UUID messageId, byte[] data, Date expires) {
-            this.created = new Date();
+        public MessageImpl(byte[] data, long expires) {
+            this.created = System.currentTimeMillis();
             this.expires = expires;
-            this.messageId = messageId;
             this.data = data;
         }
 
-        public boolean isRemoveAfterRead() {
-            return removeAfterRead;
-        }
-
-        public void setRemoveAfterRead(boolean removeAfterRead) {
-            this.removeAfterRead = removeAfterRead;
-        }
-
-        public Date getCreated() {
+        public long getCreated() {
             return created;
         }
 
-        public void setCreated(Date created) {
+        public void setCreated(long created) {
             this.created = created;
         }
 
-        public Date getExpires() {
+        public long getExpires() {
             return expires;
         }
 
-        public void setExpires(Date expires) {
+        public void setExpires(long expires) {
             this.expires = expires;
-        }
-
-        public UUID getMessageId() {
-            return messageId;
-        }
-
-        public void setMessageId(UUID messageId) {
-            this.messageId = messageId;
         }
 
         public byte[] getData() {

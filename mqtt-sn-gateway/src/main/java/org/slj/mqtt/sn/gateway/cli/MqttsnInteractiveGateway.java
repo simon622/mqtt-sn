@@ -205,7 +205,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             throws MqttsnException {
 
         message("Enqueued publish to all subscribed sessions: " + topicName);
-        getRuntimeRegistry().getGatewaySessionService().receiveToSessions(topicName, qos, retained, payload.getBytes(StandardCharsets.UTF_8));
+        getRuntimeRegistry().getExpansionHandler().receiveToSessions(topicName, qos, retained, payload.getBytes(StandardCharsets.UTF_8));
     }
 
     protected void inflight(){

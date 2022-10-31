@@ -24,25 +24,44 @@
 
 package org.slj.mqtt.sn.gateway.connector.google.iotcore;
 
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.impl.connector.AbstractMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 
-public class GoogleIoTCoreMqttsnBrokerConnectionFactory
-        extends AbstractMqttsnConnector<GoogleIoTCoreMqttsnBrokerConnection>{
+public class GoogleIoTCoreMqttsnConnector
+        extends AbstractMqttsnConnector<GoogleIoTCoreMqttsnConnection>{
 
-    public GoogleIoTCoreMqttsnBrokerConnectionFactory(MqttsnConnectorOptions options) {
-        super(options);
+    public static final MqttsnConnectorDescriptor DESCRIPTOR = new MqttsnConnectorDescriptor();
+    static {
+        DESCRIPTOR.setClassName(GoogleIoTCoreMqttsnConnector.class.getName());
+        DESCRIPTOR.setCompanyName("Google");
+        DESCRIPTOR.setProtocol("MQTT");
+        DESCRIPTOR.setDescription("This connector is deprecated");
+        DESCRIPTOR.setName("AWS IoT Core Connector (Deprecated)");
+        DESCRIPTOR.setDeveloper("Goodle");
+    }
+
+    public GoogleIoTCoreMqttsnConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) {
+        super(descriptor, options);
     }
 
     @Override
-    public GoogleIoTCoreMqttsnBrokerConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
+    public GoogleIoTCoreMqttsnConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
         try {
-            GoogleIoTCoreMqttsnBrokerConnection connection = new GoogleIoTCoreMqttsnBrokerConnection(options, clientId);
+            GoogleIoTCoreMqttsnConnection connection = new GoogleIoTCoreMqttsnConnection(options);
             connection.connect();
             return connection;
         } catch(Exception e){
             throw new MqttsnConnectorException("error creating connection;", e);
         }
+    }
+
+    @Override
+    public String getConnectionString() {
+        return String.format("%s@%s:%s",
+                options.getClientId(),
+                options.getHostName(),
+                options.getPort());
     }
 }

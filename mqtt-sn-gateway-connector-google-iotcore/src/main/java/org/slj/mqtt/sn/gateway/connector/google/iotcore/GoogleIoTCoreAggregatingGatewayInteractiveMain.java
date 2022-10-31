@@ -24,27 +24,32 @@
 
 package org.slj.mqtt.sn.gateway.connector.google.iotcore;
 
+import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
+import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayWithKeystore;
+import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
+import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
+import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
+import org.slj.mqtt.sn.spi.IMqttsnTransport;
+
 public class GoogleIoTCoreAggregatingGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
-//        MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGatewayWithKeystore() {
-//            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
-//
-//                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
-//                        withHost(hostName).
-//                        withPort(1). //unused
-//                        withUsername(username).
-//                        withPassword(password).
-//                        withCertificateFileLocation(certificateLocation).
-//                        withPrivateKeyFileLocation(privateKeyLocation).
-//                        withKeystorePassword(keyStorePassword).
-//                        withKeystoreLocation(keystoreLocation).
-//                        withKeyPassword(keyPassword);
-//
-//                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
-//                        withBrokerConnectionFactory(new GoogleIoTCoreMqttsnBrokerConnectionFactory()).
-//                        withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
-//                        withTransport(createTransport());
-//            }
-//        }, true, "Welcome to the Google IoT Core version of the gateway. You will need to connect your gateway to your Google IoT via the credentials available in your Google console.");
+        MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGatewayWithKeystore() {
+            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
+
+                IMqttsnStorageService namespacePreferences = storageService.getPreferenceNamespace(GoogleIoTCoreMqttsnConnector.DESCRIPTOR);
+                MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
+                storageService.initializeFieldsFromStorage(connectorOptions);
+                namespacePreferences.initializeFieldsFromStorage(connectorOptions);
+
+                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
+                        withConnector(new GoogleIoTCoreMqttsnConnector(GoogleIoTCoreMqttsnConnector.DESCRIPTOR, connectorOptions)).
+                        withBackendService(new MqttsnAggregatingGateway()).
+                        withTransport(createTransport(storageService));
+            }
+        }, true, "Welcome to the Google IoT Core version of the gateway. You will need to connect your gateway to your Google IoT via the credentials available in your Google console.");
     }
 }

@@ -29,31 +29,29 @@ import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayWithKeystore;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
 public class AWSIoTCoreAggregatingGatewayInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveGatewayLauncher.launch(new MqttsnInteractiveGatewayWithKeystore() {
-            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(MqttsnOptions options, IMqttsnTransport transport) {
+            protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService,MqttsnOptions options, IMqttsnTransport transport) {
 
-                MqttsnBackendOptions brokerOptions = new MqttsnBackendOptions().
-                        withHost(hostName).
-                        withPort(1). //unused
-                        withUsername(username).
-                        withPassword(password).
-                        withCertificateFileLocation(certificateLocation).
-                        withPrivateKeyFileLocation(privateKeyLocation).
-                        withKeystorePassword(keyStorePassword).
-                        withKeystoreLocation(keystoreLocation).
-                        withKeyPassword(keyPassword);
+                IMqttsnStorageService namespacePreferences = storageService.getPreferenceNamespace(
+                        AWSIoTCoreMqttsnConnector.DESCRIPTOR);
+                MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
+                storageService.initializeFieldsFromStorage(connectorOptions);
+                namespacePreferences.initializeFieldsFromStorage(connectorOptions);
 
-                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(options).
-                        withBrokerConnectionFactory(new AWSIoTCoreMqttsnBrokerConnectionFactory()).
-                        withBrokerService(new MqttsnAggregatingGateway(brokerOptions)).
-                        withTransport(createTransport()).
+                return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
+                        withConnector(new AWSIoTCoreMqttsnConnector(
+                                AWSIoTCoreMqttsnConnector.DESCRIPTOR, connectorOptions)).
+                        withBackendService(new MqttsnAggregatingGateway()).
+                        withTransport(createTransport(storageService)).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
             }
         }, true, "Welcome to the AWS IoT Core version of the gateway. You will need to connect your gateway to your AWS IoT via the credentials available in your AWS console.");

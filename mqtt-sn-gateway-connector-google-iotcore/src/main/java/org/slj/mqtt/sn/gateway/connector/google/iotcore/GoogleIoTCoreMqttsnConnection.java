@@ -59,17 +59,17 @@ import java.util.logging.Logger;
  *
  * Uses the AWS SDK (which in turn uses PAHO) to connect to the AWS IoT Core
  */
-public class GoogleIoTCoreMqttsnBrokerConnection extends PahoMqttsnBrokerConnection {
+public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
 
-    private Logger logger = Logger.getLogger(GoogleIoTCoreMqttsnBrokerConnection.class.getName());
+    private Logger logger = Logger.getLogger(GoogleIoTCoreMqttsnConnection.class.getName());
 
     static final String ALG_RSA = "RS256";
     static final String ALG_ES = "ES256";
 
     static final int TOKEN_EXPIRY_MINUTES = 60;
 
-    public GoogleIoTCoreMqttsnBrokerConnection(MqttsnConnectorOptions options, String clientId) {
-        super(options, clientId);
+    public GoogleIoTCoreMqttsnConnection(MqttsnConnectorOptions options) {
+        super(options);
     }
 
     @Override

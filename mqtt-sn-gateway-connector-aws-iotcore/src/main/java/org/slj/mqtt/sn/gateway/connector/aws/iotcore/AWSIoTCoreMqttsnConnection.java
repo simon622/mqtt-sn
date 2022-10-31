@@ -27,12 +27,11 @@ package org.slj.mqtt.sn.gateway.connector.aws.iotcore;
 import com.amazonaws.services.iot.client.*;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.*;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendException;
-import org.slj.mqtt.sn.gateway.spi.broker.MqttsnBackendOptions;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
 
 import java.io.File;
@@ -50,26 +49,27 @@ import java.util.logging.Logger;
  *
  * Uses the AWS SDK (which in turn uses PAHO) to connect to the AWS IoT Core
  */
-public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConnection {
+public class AWSIoTCoreMqttsnConnection
+        extends AbstractMqttsnBackendConnection {
 
-    private Logger logger = Logger.getLogger(AWSIoTCoreMqttsnBrokerConnection.class.getName());
+    private Logger logger = Logger.getLogger(AWSIoTCoreMqttsnConnection.class.getName());
 
     static int MIN_TIMEOUT = 5000;
 
     private volatile AWSIotMqttClient client = null;
-    private MqttsnBackendOptions options;
+    private MqttsnConnectorOptions options;
     private final String clientId;
 
-    public AWSIoTCoreMqttsnBrokerConnection(MqttsnBackendOptions options, String clientId) {
+    public AWSIoTCoreMqttsnConnection(MqttsnConnectorOptions options) {
         this.options = options;
-        this.clientId = clientId;
+        this.clientId = options.getClientId();
     }
 
     protected int getOperationTimeout(){
         return Math.max(options.getConnectionTimeout() * 1000, MIN_TIMEOUT);
     }
 
-    public void connect() throws MqttsnBackendException {
+    public void connect() throws MqttsnConnectorException {
         if(client == null || !isConnected()){
             synchronized (this){
                 if(client == null || !isConnected()){
@@ -82,7 +82,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
                         logger.log(Level.INFO, String.format("connecting new AWS client with username [%s] and keepAlive [%s]",
                                 options.getUsername(), options.getKeepAlive()));
                     } catch(Exception e){
-                        throw new MqttsnBackendException(e);
+                        throw new MqttsnConnectorException(e);
                     }
                 }
             }
@@ -104,7 +104,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
                 String keyStorePassword = options.getKeystorePassword();
                 String keyPassword = options.getKeyPassword();
                 KeyStore store = loadKeyStore(keystoreFile, keyStorePassword);
-                client = new AWSIotMqttClient(options.getHost(), clientId, store, keyPassword);
+                client = new AWSIotMqttClient(options.getHostName(), clientId, store, keyPassword);
 
             } else {
 
@@ -120,7 +120,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
 
                 logger.log(Level.INFO, String.format("loading keystore from certificate [%s] and private-key [%s]", certFile, keyFile));
                 AwsCertUtils.KeyStorePasswordPair pair = AwsCertUtils.getKeyStorePasswordPair(certFile, keyFile);
-                client = new AWSIotMqttClient(options.getHost(), clientId, pair.keyStore, pair.keyPassword);
+                client = new AWSIotMqttClient(options.getHostName(), clientId, pair.keyStore, pair.keyPassword);
             }
 
             client.setKeepAliveInterval(options.getKeepAlive());
@@ -163,7 +163,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
 
     @Override
     public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
-            throws MqttsnBackendException {
+            throws MqttsnConnectorException {
         try {
             if(isConnected()){
                 int QoS = ((MqttsnSubscribe)message).getQoS();
@@ -184,13 +184,13 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
             }
             return new SubscribeResult(Result.STATUS.NOOP);
         } catch(AWSIotException e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
     @Override
     public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
-            throws MqttsnBackendException {
+            throws MqttsnConnectorException {
         try {
             if(isConnected()){
                 logger.log(Level.INFO, String.format("unsubscribing broker from [%s]", topicPath));
@@ -199,13 +199,13 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
             }
             return new UnsubscribeResult(Result.STATUS.NOOP);
         } catch(AWSIotException e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 
     @Override
     public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message)
-            throws MqttsnBackendException {
+            throws MqttsnConnectorException {
         try {
            if(isConnected()){
                try {
@@ -218,7 +218,7 @@ public class AWSIoTCoreMqttsnBrokerConnection extends AbstractMqttsnBackendConne
            }
            return new PublishResult(Result.STATUS.NOOP);
         } catch(Exception e){
-            throw new MqttsnBackendException(e);
+            throw new MqttsnConnectorException(e);
         }
     }
 

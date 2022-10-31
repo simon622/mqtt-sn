@@ -42,7 +42,6 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     static Logger logger = Logger.getLogger(HttpCloudServiceImpl.class.getName());
 
     protected MqttsnCloudToken cloudToken;
-
     protected String serviceDiscoveryEndpoint;
     protected int connectTimeoutMillis;
     protected int readTimeoutMillis;
@@ -72,6 +71,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     public MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account)
             throws MqttsnCloudServiceException {
         //-- ALWAYS re-authenticates with the cloud service
+        checkConnectivity();
         cloudToken = httpGet(
                 loadDescriptor(
                         MqttsnCloudServiceDescriptor.ACCOUNT_AUTHORIZE).getServiceEndpoint(),
@@ -96,6 +96,8 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     }
 
     public MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException {
+
+        checkConnectivity();
 
         if(!General.validEmailAddress(emailAddress))
             throw new MqttsnCloudServiceException("invalid email entered; must confrom to OWASP guidelines");

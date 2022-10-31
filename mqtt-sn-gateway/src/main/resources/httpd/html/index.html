@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="Simon Johnson">
-    <title>..:: MQTT-SN ::..</title>
+    <title>MQTT-SN</title>
 
     <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/console/img/favicon/apple-touch-icon-57x57.png" />
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/console/img/favicon/apple-touch-icon-114x114.png" />
@@ -47,7 +47,7 @@
                     <div class="position-sticky pt-3">
                         <ul class="nav nav-pills flex-column">
                             <li class="nav-item" style="text-align: center">
-                                <img src="/console/img/logo-no-background-round.png" alt="" height="180">
+                                <img src="/console/img/logo-no-background.png" alt="" height="180">
                             </li>
                             <hr>
                             <li class="nav-item" style="padding: 12px">
@@ -60,37 +60,37 @@
                             <hr>
                             <li class="nav-item">
                                 <a class="nav-link active" aria-current="page" href="#" id="dashboardLink">
-                                    <span data-feather="activity"></span>
+                                    <i class="fs-6 bi-activity"></i>
                                     Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" id="clientsLink">
-                                    <span data-feather="radio"></span>
+                                    <i class="fs-6 bi-lock"></i>
                                    Client Access & Security
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" id="configLink">
-                                    <span data-feather="edit"></span>
+                                    <i class="fs-6 bi-journal-text"></i>
                                     Configuration
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" id="topicsLink">
-                                    <span data-feather="hash"></span>
+                                    <i class="fs-6 bi-hash"></i>
                                     Topics
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" id="connectorsLink">
-                                    <span data-feather="package"></span>
+                                    <i class="fs-6 bi-bezier"></i>
                                     Connectors
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" id="settingsLink">
-                                    <span data-feather="settings"></span>
+                                    <i class="fs-6 bi-gear"></i>
                                     Settings
                                 </a>
                             </li>
@@ -99,40 +99,39 @@
 
                             <li class="nav-item">
                                 <a class="nav-link cloud" href="#">
-        <!--                            <span data-feather="cloud"></span>-->
-                                    <img src="/console/img/cloud-logo-no-background.png" height="24"/>
+                                    <i class="fs-6 bi-cloud"></i>
                                     Mqtt-sn Cloud
                                 </a>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link disabled" href="#" id="clusterLink" disabled>
-                                    <span data-feather="share-2"></span>
+                                    <i class="fs-6 bi-globe"></i>
                                     Cluster
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link disabled" href="#" id="notificationsLink" disabled>
-                                    <span data-feather="send"></span>
+                                    <i class="fs-6 bi-bell"></i>
                                     Notifications
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link disabled" href="#" id="alarmsLink" disabled>
-                                    <span data-feather="bell"></span>
+                                    <i class="fs-6 bi-alarm"></i>
                                     Alarms
                                 </a>
                             </li>
                             <hr>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" id="docsLink">
-                                    <span data-feather="file-text"></span>
+                                    <i class="fs-6 bi-journals"></i>
                                     Documentation
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="https://github.com/simon622/mqtt-sn" id="" target="_blank">
-                                    <span data-feather="github"></span>
+                                    <i class="fs-6 bi-github"></i>
                                     GitHub
                                 </a>
                             </li>
@@ -265,12 +264,9 @@
 </script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="/console/js/script.js"></script>
-<script>
-    feather.replace();
-</script>
 </body>
 </html>

@@ -1,26 +1,26 @@
+@import url('https://fonts.googleapis.com/css?family=JetBrains+Mono');
+
 :root {
-    --primary-color: #244992;
-    --secondary-color: #d3dbe9;
-    --primary-background-color: #f8f9fa;
+    /*--primary-color: #244992;*/
+    --primary-color: rgb(255,107,104);
+    --secondary-color: #ffffff;
+    --primary-background-color: rgb(43,43,43);
+    --primary-background-color-lighter: #91979f;
     --secondary-background-color: #ffffff;
-    --primary-border-color: #c6c6c6;
-    --font-family-main:  Tahoma, sans-serif;
+    --primary-border-color: rgb(187,187,187);
+    --font-family-main: 'JetBrains Mono',Helvetica,Arial,sans-serif;
+    --font-color: rgb(187,187,187);
 }
 
 body {
-    font-size: .875rem;
+    font-size: .750rem;
     font-family: var(--font-family-main);
+    color: var(--font-color);
 }
 
 .bg-dark {
     /*background-color: #000 !important;*/
     background-color: #c6c6c6 !important;
-}
-
-.feather {
-    width: 16px;
-    height: 16px;
-    vertical-align: text-bottom;
 }
 
 /*
@@ -30,15 +30,13 @@ body {
 .sidebar {
     position: fixed;
     top: 0;
-    /* rtl:raw:
-    right: 0;
-    */
     bottom: 0;
-    /* rtl:remove */
     left: 0;
     z-index: 100; /* Behind the navbar */
     padding: 0px 0 0; /* Height of navbar */
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    /*box-shadow: inset -1px 0 0 var(--primary-border-color);*/
+    background-color: var(--primary-background-color) !important;
+    border-right: 1px solid var(--primary-border-color);
 }
 
 @media (max-width: 767.98px) {
@@ -58,12 +56,7 @@ body {
 
 .sidebar .nav-link {
     font-weight: 500;
-    color: #333;
-}
-
-.sidebar .nav-link .feather {
-    margin-right: 4px;
-    color: #727272;
+    color: var(--font-color);
 }
 
 .sidebar .nav-link:hover .feather,
@@ -93,6 +86,10 @@ body {
     right: 1rem;
 }
 
+.form-control {
+    font-size: 0.8rem;
+}
+
 .navbar .form-control {
     padding: .75rem 1rem;
     border-width: 0;
@@ -100,11 +97,16 @@ body {
 }
 
 .nav-link.disabled {
-    color: #BEBEBE !important;
+    color: #4d4d4d !important;
 }
 
 .sidebar .nav-link.active {
     color: var(--primary-color); !important;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--secondary-background-color) !important;
+    color: var(--primary-background-color) !important;
 }
 
 .form-control-dark {
@@ -118,6 +120,10 @@ body {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
 }
 
+.form-control:focus {
+    border-color: var(--primary-color);
+}
+
 .bd-callout {
     padding: 1.25rem;
     margin-top: 1.25rem;
@@ -126,12 +132,17 @@ body {
     border-left-color: var(--primary-color); !important;
     border-left-width: 2.25rem;
     border-radius: .25rem;
+    background-color: var(--primary-background-color) !important;
 }
 
 .navbar-brand {
     padding-top: 0rem;
     padding-bottom: 0rem;
     padding-left: .75rem;
+}
+.card {
+    border-color: var(--primary-border-color);
+    color: var(--primary-background-color);
 }
 
 .card-chart {
@@ -145,10 +156,12 @@ body {
     height: 300px;
 }
 
+.card-footer {
+    background-color: var(--primary-background-color-lighter) !important;
+}
+
 .metric {
-    /*color: var(--primary-border-color);*/
-    font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.0rem;
 }
 
 .nav-pills .nav-link {
@@ -190,7 +203,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cloud {
-    color: #801542 !important;
+    /*color: #801542 !important;*/
     /*text-align: center;*/
     /*text-decoration: underline;*/
 }
@@ -208,6 +221,12 @@ th {
 .table>:not(caption)>*>* {
     padding: 0.3rem .3rem;
     border-bottom-width: 1px;
+}
+td {
+    color: var(--font-color);
+}
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+    color: var(--font-color);
 }
 
 .card-img-top {
@@ -229,7 +248,7 @@ th {
 
 .connector-status {
     color: #777777;
-    border-radius: 0px 0px 15px 15px;
+    border-radius: 0px 0px .25rem .25rem;
 }
 
 .bg-connected {
@@ -258,7 +277,9 @@ th {
     border-left: 1px solid orange;
     padding: 1px;
 }
-
+.btn-danger {
+    background-color: var(--primary-color);
+}
 .text-lg {
     font-size: 1.25em;
     font-weight: normal;
@@ -266,4 +287,29 @@ th {
 .text-sm {
     font-size: 0.85em;
     font-weight: lighter;
+}
+
+hr {
+    color: var(--primary-border-color);
+    opacity: 100%;
+}
+
+code {
+    color: var(--primary-color);
+}
+
+.modal-header {
+    background-color: var(--primary-background-color);
+}
+.modal-footer {
+    background-color: var(--primary-background-color);
+}
+.modal-body {
+    color: var(--primary-background-color);
+}
+a {
+    color: var(--primary-color);
+}
+a:hover {
+    color: var(--font-color);
 }

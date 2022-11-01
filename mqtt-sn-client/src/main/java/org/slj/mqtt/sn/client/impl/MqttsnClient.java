@@ -143,6 +143,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         callStartup(registry.getTopicRegistry());
         callStartup(registry.getWillRegistry());
         callStartup(registry.getSecurityService());
+        callStartup(registry.getDeadLetterQueue());
         callStartup(registry.getQueueProcessor());
         callStartup(registry.getTransport());
 
@@ -162,6 +163,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         callShutdown(registry.getWillRegistry());
         callShutdown(registry.getSubscriptionRegistry());
         callShutdown(registry.getTopicRegistry());
+        callShutdown(registry.getDeadLetterQueue());
     }
 
     @Override

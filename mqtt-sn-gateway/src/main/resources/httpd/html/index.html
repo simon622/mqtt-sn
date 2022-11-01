@@ -7,26 +7,13 @@
     <meta name="author" content="Simon Johnson">
     <title>MQTT-SN</title>
 
-    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/console/img/favicon/apple-touch-icon-57x57.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/console/img/favicon/apple-touch-icon-114x114.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/console/img/favicon/apple-touch-icon-72x72.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/console/img/favicon/apple-touch-icon-144x144.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/console/img/favicon/apple-touch-icon-60x60.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/console/img/favicon/apple-touch-icon-120x120.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/console/img/favicon/apple-touch-icon-76x76.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/console/img/favicon/apple-touch-icon-152x152.png" />
-    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-196x196.png" sizes="196x196" />
-    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-16x16.png" sizes="16x16" />
-    <link rel="icon" type="image/png" href="/console/img/favicon/favicon-128.png" sizes="128x128" />
-    <meta name="application-name" content="&nbsp;"/>
-    <meta name="msapplication-TileColor" content="#FFFFFF" />
-    <meta name="msapplication-TileImage" content="/console/img/favicon/mstile-144x144.png" />
-    <meta name="msapplication-square70x70logo" content="/console/img/favicon/mstile-70x70.png" />
-    <meta name="msapplication-square150x150logo" content="/console/img/favicon/mstile-150x150.png" />
-    <meta name="msapplication-wide310x150logo" content="/console/img/favicon/mstile-310x150.png" />
-    <meta name="msapplication-square310x310logo" content="/console/img/favicon/mstile-310x310.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/console/img/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/console/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/console/img/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/console/img/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/console/img/favicon/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
 
     <!-- Bootstrap core CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
@@ -38,12 +25,12 @@
     <link href="/console/css/ribbon.css" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100">
-<header class="navbar sticky-top bg-light header-left  flex-md-nowrap p-0 shadow">
+<header class="navbar sticky-top header-left flex-md-nowrap p-0">
     <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#"></a>
     <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search" id="searchField">
+    <input class="form-control form-control-dark w-100 rounded-0 border-0 border-bottom" type="text" placeholder="Search sessions by Client Identifier" aria-label="Search" id="searchField">
     <div id="searchHistory"></div>
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
@@ -60,13 +47,6 @@
                         <img src="/console/img/logo-no-background.png" alt="" height="180">
                     </li>
                     <!--hr-->
-                    <!--li class="nav-item" style="padding: 12px">
-                        <form class="d-flex" role="search">
-                            <input class="form-control me-2" type="text" id="searchField" placeholder="Find sessions by clientId..." aria-label="Search" autocomplete="off" aria-describedby="basic-addon1">
-                        </form>
-                        <div id="searchHistory"></div>
-                    </li-->
-
                     <hr>
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="#" id="dashboardLink">
@@ -77,7 +57,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#" id="clientsLink">
                             <i class="fs-6 bi-lock"></i>
-                           Client Access & Security
+                           Client Access
                         </a>
                     </li>
                     <li class="nav-item">
@@ -101,7 +81,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#" id="dlqLink">
                             <i class="fs-6 bi-envelope-exclamation"></i>
-                            Dead Letter Queue
+                            Dead Letter
                         </a>
                     </li>
                     <li class="nav-item">
@@ -156,12 +136,12 @@
         </nav>
         <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div style="margin-top: 20px;" id="messages"></div>
-            <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="dyna">
+            <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px; margin-bottom: 53px;" id="dyna">
             </div>
         </div>
     </div>
 </main>
-<footer class="footer mt-auto py-3 bg-light">
+<footer class="footer mt-auto py-3 bg-light fixed-bottom">
     <div class="container">
         <div class="float-start" style="margin-left: 190px;"><a href="#">SLJ MQTT-SN Gateway</a> - licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2</a></div>
         <div class="float-end"><div id="connectorStatus"></div></div>

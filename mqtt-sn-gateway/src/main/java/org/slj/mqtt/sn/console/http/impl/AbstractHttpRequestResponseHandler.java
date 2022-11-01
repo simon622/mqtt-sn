@@ -52,7 +52,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
 
         long start = System.currentTimeMillis();
         try {
-            UsernamePassword credentials = getRequiredCredentials();
+            UsernamePassword credentials = getRequiredCredentials(httpRequestResponse);
             if(credentials != null){
                 if(!handleBasicHttpAuthentication(credentials, httpRequestResponse)){
                     return;
@@ -244,7 +244,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
         return false;
     }
 
-    protected UsernamePassword getRequiredCredentials(){
+    protected UsernamePassword getRequiredCredentials(IHttpRequestResponse request){
         return null;
     }
 

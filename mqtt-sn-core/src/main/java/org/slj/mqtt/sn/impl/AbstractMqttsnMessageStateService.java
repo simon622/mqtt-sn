@@ -715,12 +715,15 @@ public abstract class AbstractMqttsnMessageStateService
                 message, context, MqttsnUtils.getDurationString(System.currentTimeMillis() - inflight.getTime())));
 
         MqttsnWaitToken token = inflight.getToken();
-        synchronized (token){
-            if(!token.isComplete()){
-                token.markError("timed out waiting for reply");
+        if(token != null){
+            synchronized (token){
+                if(!token.isComplete()){
+                    token.markError("timed out waiting for reply");
+                }
+                token.notifyAll();
             }
-            token.notifyAll();
         }
+
 
         //-- requeue if its a PUBLISH and we have a message queue bound
         if(inflight instanceof RequeueableInflightMessage){

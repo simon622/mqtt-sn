@@ -54,6 +54,7 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
         this.dataRefId = dataRefId;
         this.data = data;
         this.retryCount = 0;
+        this.grantedQoS = data.getQos();
     }
 
     public IMqttsnDataRef getDataRefId() {

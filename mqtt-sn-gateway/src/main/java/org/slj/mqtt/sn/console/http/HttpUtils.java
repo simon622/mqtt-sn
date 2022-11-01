@@ -45,6 +45,13 @@ public class HttpUtils {
         return resource.replaceAll("//+", "/");
     }
 
+    public static String getFileExtension(String requestUri){
+        if(requestUri.contains(".")){
+            return requestUri.substring(requestUri.lastIndexOf(".") + 1);
+        }
+        return null;
+    }
+
     public static String combinePaths(String context, String resource){
         if(context.endsWith("/") && resource.startsWith("/")){
             resource = resource.substring(1);

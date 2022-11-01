@@ -25,6 +25,8 @@
 package org.slj.mqtt.sn.console.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slj.mqtt.sn.console.http.HttpUtils;
+import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.console.http.UsernamePassword;
 import org.slj.mqtt.sn.console.http.impl.handlers.StaticFileHandler;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
@@ -41,11 +43,15 @@ public class MqttsnStaticWebsiteHandler extends StaticFileHandler {
     }
 
     @Override
-    protected UsernamePassword getRequiredCredentials() {
-        String userName = ((MqttsnGatewayOptions)registry.getOptions()).getConsoleOptions().getUserName();
-        String password = ((MqttsnGatewayOptions)registry.getOptions()).getConsoleOptions().getPassword();
-        if(userName != null) {
-            return new UsernamePassword(userName, password, "mqtt-sn-gateway");
+    protected UsernamePassword getRequiredCredentials(IHttpRequestResponse request) {
+
+        //-- only protect html resources, else basic auth will be mandated on resources like CSS
+        if(HttpUtils.getFileExtension(request.getHttpRequestUri().getPath()).equals("html")){
+            String userName = ((MqttsnGatewayOptions)registry.getOptions()).getConsoleOptions().getUserName();
+            String password = ((MqttsnGatewayOptions)registry.getOptions()).getConsoleOptions().getPassword();
+            if(userName != null) {
+                return new UsernamePassword(userName, password, "mqtt-sn-gateway");
+            }
         }
         return null;
     }

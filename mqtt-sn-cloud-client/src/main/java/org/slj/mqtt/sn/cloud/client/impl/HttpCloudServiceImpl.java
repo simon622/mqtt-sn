@@ -40,32 +40,62 @@ import java.util.logging.Logger;
 public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
     static Logger logger = Logger.getLogger(HttpCloudServiceImpl.class.getName());
-
+    static final int DEFAULT_CLOUD_MONITOR_TIMEOUT = 10000;
     protected MqttsnCloudToken cloudToken;
     protected String serviceDiscoveryEndpoint;
     protected int connectTimeoutMillis;
     protected int readTimeoutMillis;
+    protected int cloudMonitorTimeoutMillis;
+
+    protected long lastRequestTime;
+
     protected ObjectMapper mapper;
     protected volatile boolean hasConnectivity;
-
     private volatile List<MqttsnCloudServiceDescriptor> descriptors;
+    private Thread cloudClientMonitor;
+    private volatile boolean running = false;
+    private Object monitor = new Object();
 
     public HttpCloudServiceImpl(ObjectMapper mapper, String serviceDiscoveryEndpoint, int connectTimeoutMillis, int readTimeoutMillis){
+        this(mapper, serviceDiscoveryEndpoint, connectTimeoutMillis, readTimeoutMillis, DEFAULT_CLOUD_MONITOR_TIMEOUT);
+    }
+
+    public HttpCloudServiceImpl(ObjectMapper mapper, String serviceDiscoveryEndpoint, int connectTimeoutMillis, int readTimeoutMillis, int cloudMonitorTimeoutMillis){
         this.mapper = mapper;
         this.serviceDiscoveryEndpoint = serviceDiscoveryEndpoint;
         this.connectTimeoutMillis = connectTimeoutMillis;
         this.readTimeoutMillis = readTimeoutMillis;
-
-        //check connectivity quietly
-        try {
-            HttpResponse response = HttpClient.head(getHeaders(), serviceDiscoveryEndpoint, readTimeoutMillis);
-            hasConnectivity = !response.isError();
-            logger.log(Level.INFO, String.format("successfully established connection to cloud provider [%s], online", serviceDiscoveryEndpoint));
-        } catch(IOException e){
-            hasConnectivity = false;
-            logger.log(Level.WARNING, String.format("connection to cloud provider [%s] could not be established, offline", serviceDiscoveryEndpoint));
-        }
+        this.cloudMonitorTimeoutMillis = Math.max(2000, cloudMonitorTimeoutMillis);
+        initMonitor();
     }
+
+    protected void initMonitor(){
+        cloudClientMonitor = new Thread(() -> {
+            while(running){
+                try {
+                    checkCloudStatus();
+                    synchronized (monitor){
+                        monitor.wait(cloudMonitorTimeoutMillis);
+                    }
+                } catch(InterruptedException e){
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }, "mqtt-sn-cloud-monitor");
+        cloudClientMonitor.setDaemon(true);
+        cloudClientMonitor.setPriority(Thread.MIN_PRIORITY);
+        cloudClientMonitor.start();
+        running = true;
+    }
+
+    public void stop(){
+        running = false;
+        synchronized (monitor){
+            monitor.notifyAll();
+        }
+        cloudClientMonitor = null;
+    }
+
 
     @Override
     public MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account)
@@ -160,6 +190,10 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         }
     }
 
+    public void refreshCloudConnectivity(){
+        checkCloudStatus();
+    }
+
     @Override
     public boolean hasCloudConnectivity() {
         return hasConnectivity;
@@ -180,6 +214,8 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
                     mapper.getTypeFactory().constructCollectionType(List.class, cls));
         } catch(IOException e){
             throw new MqttsnCloudServiceException("error in http socket connection", e);
+        } finally {
+            updateLastAttempt();
         }
     }
 
@@ -192,6 +228,8 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
             return mapper.readValue(response.getResponseBody(), cls);
         } catch(IOException e){
             throw new MqttsnCloudServiceException("error in http socket connection", e);
+        } finally {
+            updateLastAttempt();
         }
     }
 
@@ -207,7 +245,26 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
             }
         } catch(IOException e){
             throw new MqttsnCloudServiceException("error in http socket connection", e);
+        } finally {
+            updateLastAttempt();
         }
+    }
+
+    protected void checkCloudStatus(){
+        try {
+            HttpResponse response = HttpClient.head(getHeaders(), serviceDiscoveryEndpoint, readTimeoutMillis);
+            hasConnectivity = !response.isError();
+            logger.log(Level.INFO, String.format("successfully established connection to cloud provider [%s], online", serviceDiscoveryEndpoint));
+        } catch(IOException e){
+            hasConnectivity = false;
+            logger.log(Level.WARNING, String.format("connection to cloud provider [%s] could not be established, offline", serviceDiscoveryEndpoint));
+        }  finally {
+            updateLastAttempt();
+        }
+    }
+
+    protected void updateLastAttempt(){
+        lastRequestTime = System.currentTimeMillis();
     }
 
     protected Map<String, String> getHeaders(){

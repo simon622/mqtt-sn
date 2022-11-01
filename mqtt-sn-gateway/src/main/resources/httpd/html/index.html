@@ -34,7 +34,7 @@
     <div id="searchHistory"></div>
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
-            <!--a class="nav-link px-3" href="#">Sign out</a-->
+            <span class="px-3 cloud-status">Cloud Status : <span id="cloudStatus"></span></span>
         </div>
     </div>
 </header>
@@ -236,6 +236,7 @@
     }
 
     updateHtmlElementUrlTimerByIdGlobal("connectorStatus", 2000, "/console/connector/status");
+    updateHtmlElementUrlTimerByIdGlobal("cloudStatus", 5000, "/console/cloud/status");
 
     const field = document.getElementById('searchField');
     const ac = new Autocomplete(field, {

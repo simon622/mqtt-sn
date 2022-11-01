@@ -251,8 +251,8 @@ td {
     font-weight: bold;
 }
 
-.partial {
-    color: orangered;
+.available {
+    color: #ffd500;
     font-weight: bold;
 }
 
@@ -299,6 +299,12 @@ footer {
     border-top: 1px solid var(--primary-border-color);
 }
 
-border-bottom {
+.border-bottom {
     border-bottom: 1px solid var(--primary-border-color);
 }
+
+.cloud-status {
+    color: var(--font-color);
+    font-weight: bold;
+}
+

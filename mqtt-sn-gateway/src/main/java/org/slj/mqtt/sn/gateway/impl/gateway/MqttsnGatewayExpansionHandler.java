@@ -29,6 +29,7 @@ import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayExpansionHandler;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
@@ -67,21 +68,24 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
         for (IMqttsnContext context : recipients){
             try {
                 IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+                int grantedQos = registry.getSubscriptionRegistry().getQos(session, topicPath);
+                grantedQos = Math.min(grantedQos,qos);
+                MqttsnQueuedPublishMessageImpl impl = new MqttsnQueuedPublishMessageImpl(dataId, data);
+                impl.setGrantedQoS(grantedQos);
+
                 if(session != null){
                     if(session.getMaxPacketSize() != 0 &&
                             payload.length + 9 > session.getMaxPacketSize()){
                         logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, context));
+                        getRegistry().getDeadLetterQueue().add(
+                                MqttsnDeadLetterQueueBean.REASON.MAX_SIZE_EXCEEDED,
+                                context, impl);
                     } else {
                         try {
-                            int grantedQos = registry.getSubscriptionRegistry().getQos(session, topicPath);
-                            grantedQos = Math.min(grantedQos,qos);
-                            MqttsnQueuedPublishMessageImpl impl = new MqttsnQueuedPublishMessageImpl(dataId, data);
-                            impl.setGrantedQoS(grantedQos);
                             registry.getMessageQueue().offer(session, impl);
                             successfulExpansion++;
                         } catch(MqttsnQueueAcceptException e){
                             //-- the queue was full nothing to be done here
-                            //TODO dead-letter queue here
                         }
                     }
                 } else {
@@ -91,7 +95,6 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
                 logger.log(Level.WARNING, String.format("detected subscription issue for session receipt.. ignore client (%s)", context));
             }
         }
-
         getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE).increment(1);
 
         if(successfulExpansion == 0){

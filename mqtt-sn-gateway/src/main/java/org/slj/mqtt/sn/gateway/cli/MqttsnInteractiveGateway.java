@@ -297,7 +297,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             while(sessionItr.hasNext()){
                 IMqttsnSession session = sessionItr.next();
                 allState.add(session);
-                queuedMessages += getRuntimeRegistry().getMessageQueue().size(session);
+                queuedMessages += getRuntimeRegistry().getMessageQueue().queueSize(session);
             }
 
             message(String.format("Network registry count: %s", getRuntimeRegistry().getNetworkRegistry().size()));

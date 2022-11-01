@@ -37,118 +37,136 @@
     <link href="/console/css/style.css" rel="stylesheet">
     <link href="/console/css/ribbon.css" rel="stylesheet">
 </head>
-<body class="d-flex flex-column h-100">
-<header></header>
+<body class="d-flex flex-column min-vh-100">
+<header class="navbar sticky-top bg-light header-left  flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#"></a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search" id="searchField">
+    <div id="searchHistory"></div>
+    <div class="navbar-nav">
+        <div class="nav-item text-nowrap">
+            <!--a class="nav-link px-3" href="#">Sign out</a-->
+        </div>
+    </div>
+</header>
 <main class="flex-shrink-0">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col">
-                <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                    <div class="position-sticky pt-3">
-                        <ul class="nav nav-pills flex-column">
-                            <li class="nav-item" style="text-align: center">
-                                <img src="/console/img/logo-no-background.png" alt="" height="180">
-                            </li>
-                            <hr>
-                            <li class="nav-item" style="padding: 12px">
-                                <form class="d-flex" role="search">
-                                    <input class="form-control me-2" type="text" id="searchField" placeholder="Find sessions by clientId..." aria-label="Search" autocomplete="off" aria-describedby="basic-addon1">
-                                </form>
-                                <div id="searchHistory"></div>
-                            </li>
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav nav-pills flex-column" style="margin-top: 28px">
+                    <li class="nav-item" style="text-align: center">
+                        <img src="/console/img/logo-no-background.png" alt="" height="180">
+                    </li>
+                    <!--hr-->
+                    <!--li class="nav-item" style="padding: 12px">
+                        <form class="d-flex" role="search">
+                            <input class="form-control me-2" type="text" id="searchField" placeholder="Find sessions by clientId..." aria-label="Search" autocomplete="off" aria-describedby="basic-addon1">
+                        </form>
+                        <div id="searchHistory"></div>
+                    </li-->
 
-                            <hr>
-                            <li class="nav-item">
-                                <a class="nav-link active" aria-current="page" href="#" id="dashboardLink">
-                                    <i class="fs-6 bi-activity"></i>
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" id="clientsLink">
-                                    <i class="fs-6 bi-lock"></i>
-                                   Client Access & Security
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" id="configLink">
-                                    <i class="fs-6 bi-journal-text"></i>
-                                    Configuration
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" id="topicsLink">
-                                    <i class="fs-6 bi-hash"></i>
-                                    Topics
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" id="connectorsLink">
-                                    <i class="fs-6 bi-bezier"></i>
-                                    Connectors
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" id="settingsLink">
-                                    <i class="fs-6 bi-gear"></i>
-                                    Settings
-                                </a>
-                            </li>
+                    <hr>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#" id="dashboardLink">
+                            <i class="fs-6 bi-activity"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="clientsLink">
+                            <i class="fs-6 bi-lock"></i>
+                           Client Access & Security
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="configLink">
+                            <i class="fs-6 bi-journal-text"></i>
+                            Configuration
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="topicsLink">
+                            <i class="fs-6 bi-hash"></i>
+                            Topics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="connectorsLink">
+                            <i class="fs-6 bi-bezier"></i>
+                            Connectors
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="dlqLink">
+                            <i class="fs-6 bi-envelope-exclamation"></i>
+                            Dead Letter Queue
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="settingsLink">
+                            <i class="fs-6 bi-gear"></i>
+                            Settings
+                        </a>
+                    </li>
 
-                            <hr>
+                    <hr>
 
-                            <li class="nav-item">
-                                <a class="nav-link cloud" href="#">
-                                    <i class="fs-6 bi-cloud"></i>
-                                    Mqtt-sn Cloud
-                                </a>
-                            </li>
+                    <li class="nav-item">
+                        <a class="nav-link cloud" href="#">
+                            <i class="fs-6 bi-cloud"></i>
+                            Mqtt-sn Cloud
+                        </a>
+                    </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#" id="clusterLink" disabled>
-                                    <i class="fs-6 bi-globe"></i>
-                                    Cluster
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#" id="notificationsLink" disabled>
-                                    <i class="fs-6 bi-bell"></i>
-                                    Notifications
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#" id="alarmsLink" disabled>
-                                    <i class="fs-6 bi-alarm"></i>
-                                    Alarms
-                                </a>
-                            </li>
-                            <hr>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" id="docsLink">
-                                    <i class="fs-6 bi-journals"></i>
-                                    Documentation
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="https://github.com/simon622/mqtt-sn" id="" target="_blank">
-                                    <i class="fs-6 bi-github"></i>
-                                    GitHub
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
-                <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                    <div id="connectorStatus"></div>
-                    <div style="margin-top: 20px;" id="messages"></div>
-                    <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="dyna">
-                    </div>
-                </div>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" id="clusterLink" disabled>
+                            <i class="fs-6 bi-globe"></i>
+                            Cluster
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" id="notificationsLink" disabled>
+                            <i class="fs-6 bi-bell"></i>
+                            Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#" id="alarmsLink" disabled>
+                            <i class="fs-6 bi-alarm"></i>
+                            Alarms
+                        </a>
+                    </li>
+                    <hr>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="docsLink">
+                            <i class="fs-6 bi-journals"></i>
+                            Documentation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/simon622/mqtt-sn" id="" target="_blank">
+                            <i class="fs-6 bi-github"></i>
+                            GitHub
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div style="margin-top: 20px;" id="messages"></div>
+            <div class="container align-items-center flex-wrap justify-content-between" style="margin-top: 20px;" id="dyna">
             </div>
         </div>
     </div>
 </main>
-
+<footer class="footer mt-auto py-3 bg-light">
+    <div class="container">
+        <div class="float-start" style="margin-left: 190px;"><a href="#">SLJ MQTT-SN Gateway</a> - licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2</a></div>
+        <div class="float-end"><div id="connectorStatus"></div></div>
+    </div>
+</footer>
 <script>
 
     var sessionId;
@@ -163,6 +181,7 @@
     bindClick('#docsLink', "docs.html");
     bindClick('#connectorsLink', "connectors.html");
     bindClick('#systemLink', "system.html");
+    bindClick('#dlqLink', "dead-letter.html");
 
     function bindClick(selector, page, loadnow = false){
         $(selector).click(function() {

@@ -24,9 +24,26 @@
 
 package org.slj.mqtt.sn.spi;
 
-public interface IMqttsnRegistry extends IMqttsnService {
+import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
+import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 
-    void clearAll() throws MqttsnException;
+import java.util.List;
 
+/**
+ * The dead letter queue serves as an area that undeliverable messages reside.
+ * This gives observability to failures in the runtime that may
+ * otherwise go unnoticed
+ */
+public interface IMqttsnDeadLetterQueue extends IMqttsnRegistry {
 
+    void add(MqttsnDeadLetterQueueBean.REASON reason, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage)
+            throws MqttsnException ;
+
+    void add(MqttsnDeadLetterQueueBean.REASON reason, String message, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage)
+            throws MqttsnException ;
+
+    List<MqttsnDeadLetterQueueBean> readMostRecent(int count);
+
+    long size();
 }

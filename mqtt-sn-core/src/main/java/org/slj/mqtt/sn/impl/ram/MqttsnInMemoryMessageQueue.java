@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnSessionBeanRegistry;
+import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
@@ -38,7 +39,7 @@ public class MqttsnInMemoryMessageQueue
         extends AbstractMqttsnSessionBeanRegistry implements IMqttsnMessageQueue {
 
     @Override
-    public int size(IMqttsnSession session) throws MqttsnException {
+    public long queueSize(IMqttsnSession session) throws MqttsnException {
         return getSessionBean(session).getQueueSize();
     }
 
@@ -67,6 +68,9 @@ public class MqttsnInMemoryMessageQueue
                 if(logger.isLoggable(Level.FINE)){
                     logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", session, size));
                 }
+                getRegistry().getDeadLetterQueue().add(
+                        MqttsnDeadLetterQueueBean.REASON.QUEUE_SIZE_EXCEEDED,
+                        session.getContext(), message);
                 throw new MqttsnQueueAcceptException("max queue size reached for client");
             }
             boolean b = getSessionBean(session).offer(message);

@@ -36,7 +36,7 @@ import org.slj.mqtt.sn.model.IMqttsnDataRef;
  * this data.
  *
  */
-public interface IMqttsnMessageRegistry <T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T>{
+public interface IMqttsnMessageRegistry extends IMqttsnRegistry {
 
     void tidy() throws MqttsnException ;
 

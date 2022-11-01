@@ -58,25 +58,23 @@ public class ConnectorStatusHandler extends MqttsnConsoleAjaxRealmHandler {
 
             StringBuilder sb = new StringBuilder();
             String cssClass = connected ? "connected" : status ? "partial" : "disconnected";
-            sb.append("<div class=\"bg-"+cssClass+" connector-status\">");
 
+            sb.append("<span class=\""+cssClass+"\">");
             if(connected){
-//                sb.append("<div class=\"spinner-grow text-success\" style=\"width: 3rem; height: 3rem;\" role=\"status\"><span class=\"visually-hidden\">..</span></div>");
-            }
-
-            sb.append("<p>");
-            sb.append("<span class=\"text-lg\">");
-            if(connected){
-                sb.append("Connected to "+ descriptor.getName());
+                sb.append("<div class=\"spinner-grow text-success\" style=\"width: 1rem; height: 1rem;\" role=\"status\"><span class=\"visually-hidden\">..</span></div>");
+                sb.append("&nbsp;&nbsp;Connector is online");
             } else {
-                sb.append("Disconnected from "+ descriptor.getName());
+
+                sb.append("<span class=\"bi-exclamation-triangle-fill\"> </span>");
+                sb.append("&nbsp;&nbsp;Connector is offline");
             }
-            sb.append("</span><br/>");
-            sb.append("<span class=\"text-sm\">");
-            sb.append(connectionString);
+
+            sb.append("<span style=\"font-size:0.6rem;\">");
+            sb.append(" ( " + connectionString  + " )");
             sb.append("</span>");
-            sb.append("</p>");
-            sb.append("</div>");
+
+            sb.append("</span>");
+
             writeHTMLResponse(request, HttpConstants.SC_OK, sb.toString());
 
         } catch(Exception e){

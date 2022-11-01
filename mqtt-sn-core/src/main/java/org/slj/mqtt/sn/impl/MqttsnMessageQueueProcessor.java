@@ -52,7 +52,7 @@ public class MqttsnMessageQueueProcessor
 
         //-- if the queue is empty, then something will happen to retrigger this process, ie. message in or out
         //-- so safe to remove
-        int count = registry.getMessageQueue().size(session);
+        long count = registry.getMessageQueue().queueSize(session);
 
         if(logger.isLoggable(Level.FINE)){
             logger.log(Level.FINE,
@@ -143,7 +143,7 @@ public class MqttsnMessageQueueProcessor
                     }
                 }
 
-                RESULT res = ((registry.getMessageQueue().size(session) > 0) ||
+                RESULT res = ((registry.getMessageQueue().queueSize(session) > 0) ||
                         queuedMessage.getData().getQos() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
                 if(logger.isLoggable(Level.FINE)){
                     logger.log(Level.FINE, String.format("sending complete returning [%s] for [%s]", res, context));

@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
@@ -36,7 +35,7 @@ import java.util.Set;
  * to use for a given remote context and topic combination. The topic registry will be cleared
  * according to session lifecycle rules.
  */
-public interface IMqttsnTopicRegistry<T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T> {
+public interface IMqttsnTopicRegistry extends IMqttsnRegistry {
 
     TopicInfo normalize(byte topicIdType, byte[] topicData, boolean normalAsLong) throws MqttsnException;
 

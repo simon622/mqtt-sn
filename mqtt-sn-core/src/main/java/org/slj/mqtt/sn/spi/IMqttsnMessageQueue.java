@@ -35,15 +35,14 @@ import org.slj.mqtt.sn.model.session.IMqttsnSession;
  *
  * Ideally the queue should be implemented to support FIFO where possible.
  */
-public interface IMqttsnMessageQueue<T extends IMqttsnRuntimeRegistry> extends IMqttsnRegistry<T> {
+public interface IMqttsnMessageQueue extends IMqttsnRegistry {
 
     /**
      * Return the size of the queue for a given context
      * @param session  - the session whose queue youd like to query
      * @return - the size of the queue for a given context
-     * @throws MqttsnException - an error occurred
      */
-    int size(IMqttsnSession session) throws MqttsnException;
+    long queueSize(IMqttsnSession session) throws MqttsnException;
 
     /**
      * Offer the queue or a context a new message to add to the tail.

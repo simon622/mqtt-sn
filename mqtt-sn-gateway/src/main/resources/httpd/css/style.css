@@ -27,6 +27,10 @@ body {
  * Sidebar
  */
 
+.header-left {
+    background-color: var(--primary-background-color) !important
+}
+
 .sidebar {
     position: fixed;
     top: 0;
@@ -34,7 +38,6 @@ body {
     left: 0;
     z-index: 100; /* Behind the navbar */
     padding: 0px 0 0; /* Height of navbar */
-    /*box-shadow: inset -1px 0 0 var(--primary-border-color);*/
     background-color: var(--primary-background-color) !important;
     border-right: 1px solid var(--primary-border-color);
 }
@@ -109,11 +112,11 @@ body {
     color: var(--primary-background-color) !important;
 }
 
-.form-control-dark {
-    color: #fff;
-    background-color: rgba(255, 255, 255, .1);
-    border-color: rgba(255, 255, 255, .1);
-}
+/*.form-control-dark {*/
+/*    color: #fff;*/
+/*    background-color: var(--primary-background-color);*/
+/*    border-color: rgba(255, 255, 255, .1);*/
+/*}*/
 
 .form-control-dark:focus {
     border-color: transparent;
@@ -172,18 +175,13 @@ body {
     background-color: var(--secondary-color);
 }
 
-.form-control-dark {
-    color: #fff;
-    background-color: rgba(255, 255, 255, .7);
-    border-color: rgba(255, 255, 255, .1);
-}
-
 h1, h2, h3, h4, h5, h6 {
     color: var(--primary-color) !important;
 }
 
 .dropdown-menu[data-bs-popper] {
-    margin-top: 0px;
+    margin-left: 180px;
+    width: 100%;
     background-color: var(--primary-background-color);
 }
 .dropdown-menu {
@@ -251,32 +249,21 @@ td {
     border-radius: 0px 0px .25rem .25rem;
 }
 
-.bg-connected {
-    background-color: #f4fff4 !important;
-    border-top-width: 0px;
-    border-bottom: 1px solid green;
-    border-right: 1px solid green;
-    border-left: 1px solid green;
-    padding: 1px;
+.connected {
+    color: green;
+    font-weight: bold;
 }
 
-.bg-disconnected {
-    background-color: #fff6f4 !important;
-    border-top-width: 0px;
-    border-bottom: 1px solid red;
-    border-right: 1px solid red;
-    border-left: 1px solid red;
-    padding: 1px;
+.disconnected {
+    color: red;
+    font-weight: bold;
 }
 
-.bg-partial {
-    background-color: #fff9ef !important;
-    border-top-width: 0px;
-    border-bottom: 1px solid orange;
-    border-right: 1px solid orange;
-    border-left: 1px solid orange;
-    padding: 1px;
+.partial {
+    color: orangered;
+    font-weight: bold;
 }
+
 .btn-danger {
     background-color: var(--primary-color);
 }

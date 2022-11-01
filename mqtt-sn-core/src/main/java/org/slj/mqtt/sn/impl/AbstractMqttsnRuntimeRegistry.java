@@ -69,6 +69,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnTopicModifier topicModifier;
     protected IMqttsnMetricsService metrics;
     protected IMqttsnStorageService storageService;
+    protected IMqttsnDeadLetterQueue deadLetterQueue;
     protected IMqttsnClientIdFactory clientIdFactory;
 
     protected volatile List<IMqttsnTrafficListener> trafficListeners;
@@ -416,6 +417,17 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return this;
     }
 
+    /**
+     * The dead letter queue to use for undeliverable application messages
+     *
+     * @param deadLetterQueue The instance
+     * @return This runtime registry
+     */
+    public AbstractMqttsnRuntimeRegistry withDeadLetterQueue(IMqttsnDeadLetterQueue deadLetterQueue){
+        this.deadLetterQueue = deadLetterQueue;
+        return this;
+    }
+
     @Override
     public MqttsnOptions getOptions() {
         return options;
@@ -520,10 +532,12 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return securityService;
     }
 
+    @Override
     public IMqttsnSessionRegistry getSessionRegistry() {
         return sessionRegistry;
     }
 
+    @Override
     public IMqttsnTopicModifier getTopicModifier() {
         return topicModifier;
     }
@@ -543,6 +557,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return clientIdFactory;
     }
 
+    @Override
+    public IMqttsnDeadLetterQueue getDeadLetterQueue() {
+        return deadLetterQueue;
+    }
+
     protected void validateOnStartup() throws MqttsnRuntimeException {
         if(storageService == null) throw new MqttsnRuntimeException("storage service must be found for a valid runtime");
         if(networkAddressRegistry == null) throw new MqttsnRuntimeException("network-registry must be bound for valid runtime");
@@ -559,5 +578,6 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         if(securityService == null) throw new MqttsnRuntimeException("security service must be bound for valid runtime");
         if(sessionRegistry == null) throw new MqttsnRuntimeException("sessionRegistry must be bound for valid runtime");
         if(topicModifier == null) throw new MqttsnRuntimeException("topicModifier must be bound for valid runtime");
+        if(deadLetterQueue == null) throw new MqttsnRuntimeException("deadLetterQueue must be bound for valid runtime");
     }
 }

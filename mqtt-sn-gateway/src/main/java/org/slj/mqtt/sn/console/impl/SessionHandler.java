@@ -84,7 +84,7 @@ public class SessionHandler extends MqttsnConsoleAjaxRealmHandler {
                     bean.timeSinceLastSeen = MqttsnUtils.getDurationString((System.currentTimeMillis() - session.getLastSeen().getTime()));
                 }
                 bean.sessionState = getColorForState(session.getClientState());
-                bean.queueSize = String.valueOf(registry.getMessageQueue().size(session));
+                bean.queueSize = String.valueOf(registry.getMessageQueue().queueSize(session));
                 bean.inflightEgress = String.valueOf(registry.getMessageStateService().countInflight(
                         session.getContext(), IMqttsnOriginatingMessageSource.LOCAL));
                 bean.inflightIngress = String.valueOf(registry.getMessageStateService().countInflight(

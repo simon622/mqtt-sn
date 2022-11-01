@@ -68,6 +68,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withSecurityService(new MqttsnSecurityService()).
                 withTopicRegistry(new MqttsnInMemoryTopicRegistry()).
                 withMetrics(new MqttsnMetricsService()).
+                withDeadLetterQueue(new MqttsnInMemoryDeadLetterQueue()).
                 withQueueProcessor(new MqttsnMessageQueueProcessor(false)).
                 withQueueProcessorStateCheck(new MqttsnGatewayQueueProcessorStateService()).
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).

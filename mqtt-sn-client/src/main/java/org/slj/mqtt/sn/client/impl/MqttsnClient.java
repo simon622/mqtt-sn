@@ -749,7 +749,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
     public long getQueueSize() throws MqttsnException {
         if(session != null){
-            return registry.getMessageQueue().size(session);
+            return registry.getMessageQueue().queueSize(session);
         }
         return 0;
     }

@@ -393,7 +393,7 @@ public abstract class AbstractInteractiveCli {
                 }
 
                 message(String.format("State:  %s", getColorForState(session.getClientState())));
-                message(String.format("Queue size:  %s", runtimeRegistry.getMessageQueue().size(session)));
+                message(String.format("Queue size:  %s", runtimeRegistry.getMessageQueue().queueSize(session)));
                 message(String.format("Inflight (Egress):  %s", runtimeRegistry.getMessageStateService().countInflight(
                         session.getContext(), IMqttsnOriginatingMessageSource.LOCAL)));
                 message(String.format("Inflight (Ingress):  %s", runtimeRegistry.getMessageStateService().countInflight(
@@ -440,7 +440,7 @@ public abstract class AbstractInteractiveCli {
             IMqttsnSession session = itr.next();
             INetworkContext networkContext = getRuntimeRegistry().getNetworkRegistry().getContext(session.getContext());
             tabmessage(String.format("%s (%s) [%s] -> %s", session.getContext().getId(),
-                    getRuntimeRegistry().getMessageQueue().size(session),
+                    getRuntimeRegistry().getMessageQueue().queueSize(session),
                     networkContext.getNetworkAddress(), getColorForState(session.getClientState())));
         }
     }

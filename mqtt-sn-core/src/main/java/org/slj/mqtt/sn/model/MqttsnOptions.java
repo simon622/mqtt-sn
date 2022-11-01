@@ -106,6 +106,11 @@ public class MqttsnOptions {
     public static final int DEFAULT_MAX_MESSAGE_IN_QUEUE = 100;
 
     /**
+     * By default, 1000 messages can reside in the DLQ
+     */
+    public static final int DEFAULT_MAX_MESSAGE_IN_DLQ = 1000;
+
+    /**
      * By default, timedout messages will be requeued
      */
     public static final boolean DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT = true;
@@ -212,6 +217,7 @@ public class MqttsnOptions {
     private int maxMessagesInflight = DEFAULT_MAX_MESSAGES_IN_FLIGHT;
     private int maxMessagesInQueue = DEFAULT_MAX_MESSAGE_IN_QUEUE;
     private boolean requeueOnInflightTimeout = DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT;
+    private int maxMessagesInDeadLetterQueue = DEFAULT_MAX_MESSAGE_IN_DLQ;
     private int maxNetworkAddressEntries = DEFAULT_MAX_NETWORK_ADDRESS_ENTRIES;
     private int maxWait = DEFAULT_MAX_WAIT;
     private int maxTimeInflight = DEFAULT_MAX_TIME_INFLIGHT;
@@ -257,6 +263,19 @@ public class MqttsnOptions {
      */
     public MqttsnOptions withRemoveDisconnectedSessionsSeconds(int removeDisconnectedSessionsSeconds) {
         this.removeDisconnectedSessionsSeconds = removeDisconnectedSessionsSeconds;
+        return this;
+    }
+
+    /**
+     * This number caps the allowed number of messages in the DLQ. When this number is exceeded, m
+     * message will be discarded in a FIFO manner.
+     *
+     * @param maxMessagesInDeadLetterQueue - Max messages to reside in the dead letter queue
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_MESSAGE_IN_DLQ}
+     */
+    public MqttsnOptions withMaxMessageInDeadLetterQueue(int maxMessagesInDeadLetterQueue) {
+        this.maxMessagesInDeadLetterQueue = maxMessagesInDeadLetterQueue;
         return this;
     }
 
@@ -855,6 +874,10 @@ public class MqttsnOptions {
 
     public boolean isMetricsEnabled() {
         return metricsEnabled;
+    }
+
+    public int getMaxMessagesInDeadLetterQueue() {
+        return maxMessagesInDeadLetterQueue;
     }
 
     public MqttsnClientCredentials getClientCredentials() {

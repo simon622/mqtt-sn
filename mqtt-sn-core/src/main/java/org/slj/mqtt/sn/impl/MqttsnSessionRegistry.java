@@ -122,7 +122,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
         }
 
         logger.log(Level.INFO, String.format(String.format("cleaning session state [%s], deepClean ? [%s], queueSize after clean [%s]",
-                session, deepClean, registry.getMessageQueue().size(session))));
+                session, deepClean, registry.getMessageQueue().queueSize(session))));
         return true;
     }
 

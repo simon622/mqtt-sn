@@ -88,11 +88,12 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/console/search", new SearchHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/config", new ConfigHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/topic", new TopicHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/dlq", new DLQHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/client/access", new ClientAccessHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/connectors", new ConnectorHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/connector/status", new ConnectorStatusHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/async", new AsyncContentHandler(getJsonMapper(), "httpd/html/",
-                    "dashboard.html", "clients.html",  "session.html", "connectors.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "system.html"));
+                    "dashboard.html", "clients.html",  "session.html", "connectors.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "system.html", "dead-letter.html"));
             server.startServer();
             logger.log(Level.INFO, String.format("console server started..."));
         } catch(Exception e){

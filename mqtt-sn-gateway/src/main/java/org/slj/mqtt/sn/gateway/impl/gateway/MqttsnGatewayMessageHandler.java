@@ -259,13 +259,13 @@ public class MqttsnGatewayMessageHandler
 
         IMqttsnSession session = getActiveSession(context);
         if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.ACTIVE)){
-            if(getRegistry().getMessageQueue().size(session) > 0){
+            if(getRegistry().getMessageQueue().queueSize(session) > 0){
                 getRegistry().getMessageStateService().scheduleFlush(context.getMqttsnContext());
             }
         }
         if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)){
             //-- only wake the client if there is messages outstanding
-            if(registry.getMessageQueue().size(session) > 0){
+            if(registry.getMessageQueue().queueSize(session) > 0){
                 if(session.getClientState() == MqttsnClientState.ASLEEP){
                     //-- this is the waking ping.. all is ok
                     getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.AWAKE);

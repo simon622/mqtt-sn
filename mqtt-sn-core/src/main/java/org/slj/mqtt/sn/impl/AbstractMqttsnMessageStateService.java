@@ -728,20 +728,23 @@ public abstract class AbstractMqttsnMessageStateService
             if(registry.getMessageQueue() != null &&
                     registry.getOptions().isRequeueOnInflightTimeout() &&
                     requeueableInflightMessage.getQueuedPublishMessage() != null) {
-                logger.log(Level.INFO, String.format("re-queuing publish message [%s] for client [%s]", context,
-                        ((RequeueableInflightMessage) inflight).getQueuedPublishMessage()));
                 IMqttsnQueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
                 queuedPublishMessage.setToken(null);
                 boolean maxRetries = queuedPublishMessage.getRetryCount() >= registry.getOptions().getMaxErrorRetries();
                 try {
                     if(maxRetries){
-                        //-- we're disconnecting the runtime, so reset counter for next active session and put payload back in
-                        //-- registry as we'll need it again on next connection
-                        queuedPublishMessage.setRetryCount(0);
-                    }
-                    IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
-                    if(session != null){
-                        registry.getMessageQueue().offer(session, queuedPublishMessage);
+                        logger.log(Level.INFO, String.format("max delivery attempts hit for context, dlq message [%s] for [%s]", context,
+                                queuedPublishMessage));
+                        getRegistry().getDeadLetterQueue().add(
+                                MqttsnDeadLetterQueueBean.REASON.RETRY_COUNT_EXCEEDED,
+                                context, queuedPublishMessage);
+                    } else {
+                        logger.log(Level.INFO, String.format("re-queuing publish message [%s] for [%s]", context,
+                                queuedPublishMessage));
+                        IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                        if(session != null){
+                            registry.getMessageQueue().offer(session, queuedPublishMessage);
+                        }
                     }
                 } catch(MqttsnQueueAcceptException e){
                     //queue is full cant put it there

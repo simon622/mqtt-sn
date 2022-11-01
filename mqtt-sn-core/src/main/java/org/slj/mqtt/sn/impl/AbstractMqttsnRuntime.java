@@ -458,6 +458,8 @@ public abstract class AbstractMqttsnRuntime {
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT, "The number of messages residing in the application message data store.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getMessageRegistry().size()));
+            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.DLQ_REGISTRY_COUNT, "The number of messages residing in the dead letter queue.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getDeadLetterQueue().size()));
 
             //-- these require managing externally
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN, "The number of mqtt-sn publish messages received (ingress) in the time period.",

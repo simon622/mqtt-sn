@@ -213,15 +213,17 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         List<MqttsnMetricSample> out = getSamplesForMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED);
         List<MqttsnMetricSample> netRegSamples = getSamplesForMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT);
         List<MqttsnMetricSample> messRegSamples = getSamplesForMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT);
-        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples, messRegSamples);
+        List<MqttsnMetricSample> dlqRegSamples = getSamplesForMetric(IMqttsnMetrics.DLQ_REGISTRY_COUNT);
+        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples, messRegSamples, dlqRegSamples);
         LineChart lineChart = new LineChart();
         LineOptions options = new LineOptions();
         lineChart.setOptions(options);
         lineChart.setData(new LineData()
-                .addDataset(ChartJSUtils.createLineDataset("VM Thread", ChartJSUtils.getColorForIndex(0), in))
+                .addDataset(ChartJSUtils.createLineDataset("VM Thread Count", ChartJSUtils.getColorForIndex(0), in))
                 .addDataset(ChartJSUtils.createLineDataset("VM Memory Used (kb)", ChartJSUtils.getColorForIndex(1), out))
-                .addDataset(ChartJSUtils.createLineDataset("Network Registry Entries", ChartJSUtils.getColorForIndex(2), netRegSamples))
-                .addDataset(ChartJSUtils.createLineDataset("Message Registry Entries", ChartJSUtils.getColorForIndex(3), messRegSamples))
+                .addDataset(ChartJSUtils.createLineDataset("Network Registry", ChartJSUtils.getColorForIndex(2), netRegSamples))
+                .addDataset(ChartJSUtils.createLineDataset("Message Registry", ChartJSUtils.getColorForIndex(3), messRegSamples))
+                .addDataset(ChartJSUtils.createLineDataset("Dead Letter Queue", ChartJSUtils.getColorForIndex(4), dlqRegSamples))
                 .addLabels(ChartJSUtils.timestampsToStr(arr)));
         writeJSONResponse(request, HttpConstants.SC_OK,
                 ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));
@@ -232,13 +234,14 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         List<MqttsnMetricSample> out = getSamplesForMetricSince(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, since);
         List<MqttsnMetricSample> netRegSamples = getSamplesForMetricSince(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, since);
         List<MqttsnMetricSample> messRegSamples = getSamplesForMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT);
-        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples, messRegSamples);
+        List<MqttsnMetricSample> dlqRegSamples = getSamplesForMetric(IMqttsnMetrics.DLQ_REGISTRY_COUNT);
+        long[] arr = ChartJSUtils.calculateLabels(in, out, netRegSamples, messRegSamples, dlqRegSamples);
         String[] labels = ChartJSUtils.timestampsToStr(arr);
         Update u = new Update();
         u.labels = labels;
         u.data = new int [][]{
                 ChartJSUtils.values(in), ChartJSUtils.values(out), ChartJSUtils.values(netRegSamples)
-                , ChartJSUtils.values(messRegSamples)
+                , ChartJSUtils.values(messRegSamples), ChartJSUtils.values(dlqRegSamples)
         };
         String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,

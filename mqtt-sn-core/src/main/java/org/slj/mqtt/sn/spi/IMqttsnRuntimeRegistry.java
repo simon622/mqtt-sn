@@ -85,4 +85,6 @@ public interface IMqttsnRuntimeRegistry {
 
     IMqttsnClientIdFactory getClientIdFactory();
 
+    IMqttsnDeadLetterQueue getDeadLetterQueue() ;
+
 }

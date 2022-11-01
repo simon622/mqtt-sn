@@ -78,7 +78,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         //in the queue but noone doing the work - this won't be needed 99% of the time
                         if(session.getClientState() == MqttsnClientState.ACTIVE){
                             try {
-                                if(getRegistry().getMessageQueue().size(session) > 0){
+                                if(getRegistry().getMessageQueue().queueSize(session) > 0){
                                     getRegistry().getMessageStateService().scheduleFlush(session.getContext());
                                 }
                             } catch(MqttsnException e){

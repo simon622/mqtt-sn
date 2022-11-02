@@ -47,7 +47,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
 
     static final String TEST_TOPIC = "test/topic";
     static final int TEST_PAUSE = 500;
-    static final int[] ALLOWED_QOS = new int[]{-1,0,1,2};
+
 
     enum COMMANDS {
         LOOP("Create <count> messages in a loop", new String[]{"int count", "String* topicName", "String* data", "int QoS"}),

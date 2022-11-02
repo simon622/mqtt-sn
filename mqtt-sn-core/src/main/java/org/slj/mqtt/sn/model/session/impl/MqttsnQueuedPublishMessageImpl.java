@@ -34,7 +34,7 @@ import java.io.Serializable;
 /**
  * Lightweight meta-data reference to a message which will reside in client queues. NOTE: the payload of
  * the message itself NOR the topic specification are included, this can be obtained JIT from the
- * appropriate registries so we dont duplicate data across many queues.
+ * appropriate registries so we don't duplicate data across many queues.
  */
 public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable, IMqttsnQueuedPublishMessage {
 

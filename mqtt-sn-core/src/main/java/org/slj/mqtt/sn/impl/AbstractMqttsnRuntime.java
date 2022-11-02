@@ -44,7 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-public abstract class AbstractMqttsnRuntime {
+public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionHandler {
 
     protected final Logger logger = Logger.getLogger(getClass().getName());
     protected IMqttsnRuntimeRegistry registry;
@@ -355,15 +355,17 @@ public abstract class AbstractMqttsnRuntime {
     }
 
     protected ThreadFactory createManagedThreadFactory(String name, int threadPriority){
-        return new ThreadFactory() {
+        ThreadFactory tf = new ThreadFactory() {
             volatile int count = 0;
             @Override
-            public Thread newThread(Runnable r) {
+            public synchronized Thread newThread(Runnable r) {
                 Thread t = new Thread(getThreadGroup(), r, name + ++count);
                 t.setPriority(Math.max(1, Math.min(threadPriority, Thread.MAX_PRIORITY)));
+                t.setUncaughtExceptionHandler(AbstractMqttsnRuntime.this);
                 return t;
             }
         };
+        return tf;
     }
 
     /**
@@ -374,8 +376,10 @@ public abstract class AbstractMqttsnRuntime {
         BlockingQueue<Runnable> linkedBlockingDeque
                 = new LinkedBlockingDeque<>(registry.getOptions().getQueueBackPressure());
         ExecutorService executorService = new ThreadPoolExecutor(1, Math.max(1, threadCount), 30,
-                TimeUnit.SECONDS, linkedBlockingDeque, createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1),
+                TimeUnit.SECONDS, linkedBlockingDeque,
+                createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1),
                 new ThreadPoolExecutor.CallerRunsPolicy());
+
         managedExecutorServices.add(executorService);
         return executorService;
     }
@@ -489,6 +493,12 @@ public abstract class AbstractMqttsnRuntime {
                 }
             });
         }
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        logger.log(Level.SEVERE,
+                String.format("uncaught error in thread-pool on [%s]", t.getName()), e);
     }
 
     public abstract void close() throws IOException ;

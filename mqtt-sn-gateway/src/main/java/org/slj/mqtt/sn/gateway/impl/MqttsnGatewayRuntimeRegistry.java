@@ -28,8 +28,8 @@ import org.slj.mqtt.sn.console.IMqttsnConsole;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.console.impl.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
-import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
+import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.gateway.*;
 import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
@@ -53,7 +53,8 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     }
 
     public static MqttsnGatewayRuntimeRegistry defaultConfiguration(IMqttsnStorageService storageService, MqttsnGatewayOptions options){
-        final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry) new MqttsnGatewayRuntimeRegistry(storageService, options).
+        final MqttsnGatewayRuntimeRegistry registry = (MqttsnGatewayRuntimeRegistry)
+                    new MqttsnGatewayRuntimeRegistry(storageService, options).
                 withGatewaySessionService(new MqttsnGatewaySessionService()).
                 withExpansionHandler(new MqttsnGatewayExpansionHandler()).
                 withGatewayAdvertiseService(new MqttsnGatewayAdvertiseService()).
@@ -62,7 +63,9 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).
                 withWillRegistry(new MqttsnInMemoryWillRegistry()).
                 withTopicModifier(new MqttsnDefaultTopicModifier()).
-                withMessageQueue(new MqttsnInMemoryMessageQueue()).
+//                withMessageQueue(new MqttsnInMemoryMessageQueue()).
+                withMessageQueue(new MqttsnFileBackedInMemoryMessageQueue(
+                        new MqttsnJacksonReaderWriter())).
                 withContextFactory(new MqttsnContextFactory()).
                 withSessionRegistry(new MqttsnSessionRegistry()).
                 withSecurityService(new MqttsnSecurityService()).

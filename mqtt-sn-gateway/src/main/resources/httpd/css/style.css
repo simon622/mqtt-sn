@@ -171,15 +171,15 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary-color) !important;
 }
 
-.dropdown-menu[data-bs-popper] {
-    margin-left: 180px;
-    width: 100%;
-    background-color: var(--primary-background-color);
-}
 .dropdown-menu {
+    margin-left: 280px;
+    width: 100%;
+    background-color: var(--secondary-color);
+    border-color: var(--primary-border-color);
     --bs-dropdown-border-radius: 0rem;
     --bs-dropdown-border-width: 0px;
 }
+
 .text-primary {
     color: var(--primary-color) !important;
 }

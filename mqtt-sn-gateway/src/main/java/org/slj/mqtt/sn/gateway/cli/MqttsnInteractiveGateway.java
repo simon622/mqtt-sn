@@ -50,6 +50,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     protected boolean needsBroker;
 
     enum COMMANDS {
+        LOOP("Create <count> messages in a loop", new String[]{"int count", "String* topicName", "String* data", "int QoS"}),
         POKE("Poke the queue", new String[0], true),
         INFLIGHT("List inflight messages", new String[0], false),
         REINIT("Reinit the backend broker connection", new String[0]),
@@ -149,6 +150,12 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 case SESSIONS:
                     sessions();
                     break;
+                case LOOP:
+                    loop(
+                            captureMandatoryInt(input, output, "How many messages would you like to send?", null),
+                            captureMandatoryString(input, output, "Which topic would you like to queue to?"),
+                            captureMandatoryInt(input, output, "At which QoS would you like to publish (-1,0,1,2)?", ALLOWED_QOS));
+                    break;
                 case NETWORK:
                     network();
                     break;
@@ -194,6 +201,18 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             }
         } catch(Exception e){
             error( "An error occurred running your command.", e);
+        }
+    }
+
+    protected void loop(int count, String topicPath, int qos)
+            throws IOException, MqttsnException {
+        for (int i = 0; i < count; i++){
+            queue(topicPath, "message " + (i + 1), false, qos);
+            try {
+                //the queue ordering is done using a natural order on
+                //timestamp so ensure we are always 1 ms between
+                Thread.sleep(1);
+            } catch(Exception e){}
         }
     }
 
@@ -321,10 +340,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         options.withMaxConnectedClients(100).
                 withGatewayId(101).
                 withContextId(storageService.getStringPreference(GatewayConfig.CLIENTID, null)).
-                withMaxMessagesInQueue(100).
                 withRemoveDisconnectedSessionsSeconds(60 * 60).
-                withTransportProtocolHandoffThreadCount(20).
-                withQueueProcessorThreadCount(2).
                 withMinFlushTime(5);
         return options;
     }

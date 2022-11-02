@@ -772,7 +772,10 @@ public abstract class AbstractMqttsnMessageStateService
         boolean canSend = inflight <
                 registry.getOptions().getMaxMessagesInflight();
         if(!canSend){
-            logger.log(Level.WARNING, String.format("[%s] number of inflight messages [%s] reached the configured max. [%s]", context, inflight, registry.getOptions().getMaxMessagesInflight()));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE,
+                        String.format("[%s] number of inflight messages [%s] reached the configured max. [%s]", context, inflight, registry.getOptions().getMaxMessagesInflight()));
+            }
         }
         return canSend;
     }

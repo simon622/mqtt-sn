@@ -61,6 +61,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     private volatile RateLimiter rateLimiter = null;
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
+    private static final long MAX_ERROR_RETRIES = 5;
     private volatile boolean metricsLoaded = false;
 
     public MqttsnAggregatingGateway(){
@@ -116,6 +117,9 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
             registry.getMetrics().registerMetric(new MqttsnCountingMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE,
                     "The number of mqtt application messages received through the backend connector.",
+                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+            registry.getMetrics().registerMetric(new MqttsnCountingMetric(GatewayMetrics.BACKEND_CONNECTOR_EXPANSION,
+                    "The number of mqtt application messages received into sessions.",
                     IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
             registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE,
                     "The number of mqtt application messages waiting to be published to the backend.",
@@ -213,10 +217,15 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                                 logger.log(Level.FINE, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
                                 PublishResult res = super.publish(op.context, op.topicPath, op.qos, op.retained, op.payload, op.initialMessage);
                                 if(res.isError()){
-                                    logger.log(Level.WARNING, String.format("error pushing message, dont deque, [%s] remaining", queue.size()));
-                                    queue.offer(op);
-                                    getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_ERROR).increment(1);
-                                    errorCount++;
+                                    if(++errorCount < MAX_ERROR_RETRIES){
+                                        logger.log(Level.WARNING, String.format("error sending message to backend, [%s] - requeue", queue.size()));
+                                        queue.offer(op);
+                                    }
+                                    else {
+                                        logger.log(Level.WARNING, String.format("error sending message to backend, retries exhausted - discard"));
+                                        getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_ERROR).increment(1);
+                                        errorCount = 0;
+                                    }
                                 } else {
                                     errorCount = 0;
                                     getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH).increment(1);

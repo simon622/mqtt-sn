@@ -47,39 +47,44 @@ public class MqttsnInMemoryMessageQueue
     public void offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
-        offerInternal(session, message);
+        checkQueueSizeRestrictions(session, message);
+
+        try {
+            offerInternal(session, message);
+        } finally {
+            if(registry.getMessageStateService() != null)
+                registry.getMessageStateService().scheduleFlush(session.getContext());
+        }
+
     }
 
     @Override
     public MqttsnWaitToken offerWithToken(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
-        MqttsnWaitToken token = MqttsnWaitToken.from(message);
-        offerInternal(session, message);
-        if(token != null) message.setToken(token);
-        return token;
+        checkQueueSizeRestrictions(session, message);
+
+        try {
+            MqttsnWaitToken token = MqttsnWaitToken.from(message);
+            offerInternal(session, message);
+            if (token != null) message.setToken(token);
+            return token;
+        } finally {
+            registry.getMessageStateService().scheduleFlush(session.getContext());
+        }
     }
 
-    protected void offerInternal(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    protected void checkQueueSizeRestrictions(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
-        try {
-            int size;
-            if((size = getSessionBean(session).getQueueSize()) >= getMaxQueueSize()){
-                if(logger.isLoggable(Level.FINE)){
-                    logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", session, size));
-                }
-                getRegistry().getDeadLetterQueue().add(
-                        MqttsnDeadLetterQueueBean.REASON.QUEUE_SIZE_EXCEEDED,
-                        session.getContext(), message);
-                throw new MqttsnQueueAcceptException("max queue size reached for client");
-            }
-            boolean b = getSessionBean(session).offer(message);
+        long size;
+        if((size = queueSize(session)) >= getMaxQueueSize()){
             if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("offered message to queue [%s] for [%s], queue size is [%s]", b, session, size));
+                logger.log(Level.FINE, String.format("max queue size reached for client [%s] >= [%s]", session, size));
             }
-        } finally {
-            if(registry.getMessageStateService() != null)
-                registry.getMessageStateService().scheduleFlush(session.getContext());
+            getRegistry().getDeadLetterQueue().add(
+                    MqttsnDeadLetterQueueBean.REASON.QUEUE_SIZE_EXCEEDED,
+                    session.getContext(), message);
+            throw new MqttsnQueueAcceptException("max queue size reached for client");
         }
     }
 
@@ -90,6 +95,11 @@ public class MqttsnInMemoryMessageQueue
         }
     }
 
+    protected void offerInternal(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+            throws MqttsnException, MqttsnQueueAcceptException {
+
+        getSessionBean(session).offer(message);
+    }
 
     @Override
     public IMqttsnQueuedPublishMessage poll(IMqttsnSession session) {

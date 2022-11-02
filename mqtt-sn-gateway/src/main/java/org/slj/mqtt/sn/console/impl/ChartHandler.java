@@ -282,14 +282,16 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         List<MqttsnMetricSample> publish = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH);
         List<MqttsnMetricSample> recieve = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE);
         List<MqttsnMetricSample> queuesize = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE);
-        long[] arr = ChartJSUtils.calculateLabels(publish, recieve, queuesize);
+        List<MqttsnMetricSample> expansion = getSamplesForMetric(GatewayMetrics.BACKEND_CONNECTOR_EXPANSION);
+        long[] arr = ChartJSUtils.calculateLabels(publish, recieve, queuesize, expansion);
         LineChart lineChart = new LineChart();
         LineOptions options = new LineOptions();
         lineChart.setOptions(options);
         lineChart.setData(new LineData()
-                .addDataset(ChartJSUtils.createLineDataset("Connector Sent", ChartJSUtils.getColorForIndex(0), publish))
-                .addDataset(ChartJSUtils.createLineDataset("Connector Received", ChartJSUtils.getColorForIndex(1), recieve))
+                .addDataset(ChartJSUtils.createLineDataset("Connector Out", ChartJSUtils.getColorForIndex(0), publish))
+                .addDataset(ChartJSUtils.createLineDataset("Connector In", ChartJSUtils.getColorForIndex(1), recieve))
                 .addDataset(ChartJSUtils.createLineDataset("Connector Queue", ChartJSUtils.getColorForIndex(2), queuesize))
+                .addDataset(ChartJSUtils.createLineDataset("Connector Expansion", ChartJSUtils.getColorForIndex(3), expansion))
                 .addLabels(ChartJSUtils.timestampsToStr(arr)));
         writeJSONResponse(request, HttpConstants.SC_OK,
                 ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));
@@ -299,13 +301,13 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         List<MqttsnMetricSample> publish = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH, since);
         List<MqttsnMetricSample> recieve = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE, since);
         List<MqttsnMetricSample> queuesize = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_QUEUE_SIZE, since);
-
-        long[] arr = ChartJSUtils.calculateLabels(publish, recieve, queuesize);
+        List<MqttsnMetricSample> expansion = getSamplesForMetricSince(GatewayMetrics.BACKEND_CONNECTOR_EXPANSION, since);
+        long[] arr = ChartJSUtils.calculateLabels(publish, recieve, queuesize, expansion);
         String[] labels = ChartJSUtils.timestampsToStr(arr);
         Update u = new Update();
         u.labels = labels;
         u.data = new int [][]{
-                ChartJSUtils.values(publish), ChartJSUtils.values(recieve), ChartJSUtils.values(queuesize)
+                ChartJSUtils.values(publish), ChartJSUtils.values(recieve), ChartJSUtils.values(queuesize), ChartJSUtils.values(expansion)
         };
         String json = mapper.writeValueAsString(u);
         writeJSONResponse(request, HttpConstants.SC_OK,

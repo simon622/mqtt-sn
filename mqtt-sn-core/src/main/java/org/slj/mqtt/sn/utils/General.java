@@ -75,4 +75,14 @@ public class General {
         while(t != null);
         return msg;
     }
+
+    public static void reverseInline(byte[] a){
+        int i;
+        int len = a.length;
+        for (i = 0; i < len / 2; i++) {
+            byte o = a[i];
+            a[i] = a[len - i - 1];
+            a[len - i - 1] = o;
+        }
+    }
 }

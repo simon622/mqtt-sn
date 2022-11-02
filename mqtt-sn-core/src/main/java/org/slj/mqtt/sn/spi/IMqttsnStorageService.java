@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.spi;
 import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 
+import java.io.File;
 import java.util.Date;
 import java.util.Optional;
 
@@ -76,4 +77,6 @@ public interface IMqttsnStorageService extends IMqttsnService {
     void writeFieldsToStorage(Object configurableBean) throws MqttsnRuntimeException ;
 
     void initializeFieldsFromStorage(Object configurableBean) throws MqttsnRuntimeException ;
+
+    File getWorkspaceRoot();
 }

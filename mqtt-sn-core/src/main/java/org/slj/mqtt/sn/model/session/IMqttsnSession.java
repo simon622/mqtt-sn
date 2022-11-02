@@ -44,16 +44,4 @@ public interface IMqttsnSession {
     int getKeepAlive();
 
     long getSessionExpiryInterval();
-
-//    void setClientState(MqttsnClientState state);
-//
-//    void setLastSeen(Date date);
-//
-//    void setKeepAlive(int keepAlive);
-//
-//    void setSessionExpiryInterval(long sessionExpiryInterval);
-//
-//    void setMaxPacketSize(int maxPacketSize);
-//
-//    void setWillData(IMqttsnWillData willData);
 }

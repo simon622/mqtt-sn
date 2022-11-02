@@ -24,12 +24,18 @@
 
 package org.slj.mqtt.sn;
 
-public class PublishData {
+import java.io.Serializable;
 
-    private final boolean retained;
+public class PublishData implements Serializable {
+
+    private static final long serialVersionUID = -1524505593526571492L;
+    private boolean retained;
     private String topicPath;
-    private final int qos;
+    private int qos;
     private byte[] data;
+
+    public PublishData() {
+    }
 
     public PublishData(int qos, boolean retained, byte[] data) {
         this.qos = qos;

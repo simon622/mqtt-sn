@@ -28,7 +28,6 @@ public interface IMqttsnMetrics {
 
     int DEFAULT_MAX_SAMPLES = 100;  // each metric will by default maintain this number of samples
     int DEFAULT_SAMPLES_TIME_MILLIS = 1000;  // each metric will by default maintain this number of samples
-
     int DEFAULT_SNAPSHOT_TIME_MILLIS = 30000;  // each metric will by default maintain this number of samples
 
     String NETWORK_BYTES_IN = "NETWORK_BYTES_IN";

@@ -53,6 +53,8 @@ public abstract class AbstractInteractiveCli {
     protected AbstractMqttsnRuntime runtime;
     protected IMqttsnStorageService storageService;
 
+    public static final int[] ALLOWED_QOS = new int[]{-1,0,1,2};
+
     protected PrintStream output;
     protected Scanner input;
     protected boolean enableOutput = true;

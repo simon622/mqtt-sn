@@ -26,15 +26,23 @@ package org.slj.mqtt.sn.model;
 
 public class IntegerDataRef implements IMqttsnDataRef<Integer>{
 
-    final Integer value;
+    private static final long serialVersionUID = -6335546138645330614L;
+    private Integer id;
+
+    public IntegerDataRef() {
+    }
 
     public IntegerDataRef(Integer value) {
-        this.value = value;
+        this.id = value;
     }
 
     @Override
     public Integer getId() {
-        return value;
+        return id;
+    }
+
+    public void setId(Integer value) {
+        this.id = value;
     }
 
     @Override
@@ -42,11 +50,11 @@ public class IntegerDataRef implements IMqttsnDataRef<Integer>{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IntegerDataRef that = (IntegerDataRef) o;
-        return value != null ? value.equals(that.value) : that.value == null;
+        return id != null ? id.equals(that.id) : that.id == null;
     }
 
     @Override
     public int hashCode() {
-        return value != null ? value.hashCode() : 0;
+        return id != null ? id.hashCode() : 0;
     }
 }

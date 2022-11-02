@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.console.http.HttpException;
 import org.slj.mqtt.sn.console.http.HttpInternalServerError;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.utils.Files;
 
 import java.io.IOException;
 import java.util.List;
@@ -74,6 +75,18 @@ public class ConnectorStatusHandler extends MqttsnConsoleAjaxRealmHandler {
             sb.append("</span>");
 
             sb.append("</span>");
+
+            sb.append("&nbsp;-&nbsp;<span class=\"storage\">");
+            long size = (Files.directorySize(
+                    getRegistry().getStorageService().getWorkspaceRoot()) / 1024 / 1024);
+            sb.append(size + " Mb Disk Used");
+            sb.append("</span>");
+
+            if(size > 0){
+                sb.append("<span style=\"font-size:0.6rem;\">");
+                sb.append(" ( <a href=\"#\" onclick=\"command('clear-cache')\">Clear Disk Cache</a> )");
+                sb.append("</span>");
+            }
 
             writeHTMLResponse(request, HttpConstants.SC_OK, sb.toString());
 

@@ -258,6 +258,11 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
 
         }
 
+        public Message(String message) {
+            this.message = message;
+            this.success = true;
+        }
+
         public Message(String message, boolean success) {
             this.message = message;
             this.success = success;

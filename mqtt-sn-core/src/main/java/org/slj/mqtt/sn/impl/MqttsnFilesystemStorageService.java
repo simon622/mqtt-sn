@@ -42,12 +42,14 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
 
     final String HOME_DIR = "user.dir";
     final String TMP_DIR = "java.io.tmpdir";
+
     static final String FIRSTRUN = "firstrun";
     private File settingsFile = null;
     private Properties properties = null;
     private File path;
     private String workspace;
     private boolean firstRun = false;
+
     private IMqttsnObjectReaderWriter readerWriter;
 
     public MqttsnFilesystemStorageService(IMqttsnObjectReaderWriter readerWriter, File path, String workspace) {
@@ -97,6 +99,12 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
         path = new File(path, workspace);
         if(!path.exists()){
             path.mkdirs();
+        }
+
+        try {
+            Files.createRuntimeLockFile(path);
+        } catch(IOException e){
+            throw new MqttsnSecurityException("workspace in use, cannot start");
         }
     }
 
@@ -223,7 +231,7 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
             if(fileName.contains(File.separator) || fileName.contains(".."))
                 throw new MqttsnSecurityException("only able to write to child of root storage");
             File f = new File(path, fileName);
-            Files.writeWithLock(f.getAbsolutePath(), bytes);
+            Files.writeWithLock(f, bytes);
         } catch(IOException e){
             throw new MqttsnException(e);
         }
@@ -371,6 +379,16 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
     }
 
     @Override
+    public File getWorkspaceRoot() {
+        if(path == null) throw new MqttsnRuntimeException("storage not initialised");
+        return path;
+    }
+
+    public void lockWorkspace(){
+
+    }
+
+    @Override
     public IMqttsnStorageService getPreferenceNamespace(final IMqttsnPreferenceNamespace namespace) {
         return new IMqttsnStorageService() {
             @Override
@@ -473,6 +491,11 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
             @Override
             public void stop() throws MqttsnException {
                 throw new UnsupportedOperationException("cannot stop via wrapper");
+            }
+
+            @Override
+            public File getWorkspaceRoot() {
+                return MqttsnFilesystemStorageService.this.getWorkspaceRoot();
             }
 
             @Override

@@ -202,6 +202,11 @@ public class MqttsnOptions {
      */
     public static final boolean DEFAULT_METRICS_ENABLED = true;
 
+    /**
+     * Percentage of message queue size that will overflow onto the disk if enabled
+     */
+    public static final int DEFAULT_MESSAGE_QUEUE_DISK_STORAGE_THRESHOLD = 5;
+
     private String contextId;
     private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
     private int transportPublishHandoffThreadCount = DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT;
@@ -235,11 +240,26 @@ public class MqttsnOptions {
     private int removeDisconnectedSessionsSeconds = DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS;
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
     private boolean metricsEnabled = DEFAULT_METRICS_ENABLED;
+
+    private int messageQueueDiskStorageThreshold = DEFAULT_MESSAGE_QUEUE_DISK_STORAGE_THRESHOLD;
     private MqttsnSecurityOptions securityOptions;
     private Map<String, Integer> predefinedTopics = new HashMap<>();
     private volatile Map<String, NetworkAddress> networkAddressEntries;
     private MqttsnClientCredentials clientCredentials =
             new MqttsnClientCredentials(true);
+
+    /**
+     * When enabled, at what percentage of fill do the message queues start
+     * to overflow onto disk
+     *
+     * @param messageQueueDiskStorageThreshold
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MESSAGE_QUEUE_DISK_STORAGE_THRESHOLD}
+     */
+    public MqttsnOptions withMessageQueueDiskStorageThreshold(int messageQueueDiskStorageThreshold) {
+        this.messageQueueDiskStorageThreshold = messageQueueDiskStorageThreshold;
+        return this;
+    }
 
     /**
      * Should the metrics system be enabled
@@ -878,6 +898,10 @@ public class MqttsnOptions {
 
     public int getMaxMessagesInDeadLetterQueue() {
         return maxMessagesInDeadLetterQueue;
+    }
+
+    public int getMessageQueueDiskStorageThreshold() {
+        return messageQueueDiskStorageThreshold;
     }
 
     public MqttsnClientCredentials getClientCredentials() {

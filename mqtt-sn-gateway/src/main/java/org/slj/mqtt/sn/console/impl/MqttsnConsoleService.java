@@ -38,6 +38,7 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 
 public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsole {
@@ -59,7 +60,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             jsonMapper = new ObjectMapper();
             logger.log(Level.INFO, String.format("starting console service with - %s", options));
             cloudService = new HttpCloudServiceImpl(jsonMapper,
-                    "http://mqtt-sn.cloud/api/services.json", 5000, 5000);
+                    "http://mqtt-sn.cloud/api/services.json", 5000, 5000, 30000);
             startWebServer(options);
         }
     }
@@ -76,9 +77,12 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
 
             logger.log(Level.INFO, String.format("starting console server listening on [%s] -> [%s]", options.getHostName(), options.getConsolePort()));
 
+            ExecutorService service = getRegistry().getRuntime().createManagedExecutorService("mqtt-sn-console-http-",
+                    options.getServerThreads());
+
             server = new SunHttpServerBootstrap(
                     new InetSocketAddress(options.getHostName(), options.getConsolePort()),
-                    options.getServerThreads(), options.getTcpBacklog());
+                    options.getTcpBacklog(), service);
             server.registerContext("/", new RedirectHandler(getJsonMapper(), "./console/html/index.html"));
             server.registerContext("/hello", new HelloWorldHandler(getJsonMapper()));
             server.registerContext("/console", new MqttsnStaticWebsiteHandler(getJsonMapper(), getRegistry()));
@@ -89,6 +93,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/console/config", new ConfigHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/topic", new TopicHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/dlq", new DLQHandler(getJsonMapper(), getRegistry()));
+            server.registerContext("/console/command", new CommandHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/client/access", new ClientAccessHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/connectors", new ConnectorHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/connector/status", new ConnectorStatusHandler(cloudService, getJsonMapper(), getRegistry()));

@@ -24,7 +24,9 @@
 
 package org.slj.mqtt.sn.model;
 
-public interface IMqttsnDataRef<T> {
+import java.io.Serializable;
+
+public interface IMqttsnDataRef<T> extends Serializable  {
 
     T getId();
 }

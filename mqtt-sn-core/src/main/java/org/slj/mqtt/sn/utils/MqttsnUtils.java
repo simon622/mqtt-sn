@@ -200,4 +200,8 @@ public class MqttsnUtils {
         }
         return buff.toString();
     }
+
+    public static void main(String[] args) {
+        MqttsnUtils.percentOf(30, 100);
+    }
 }

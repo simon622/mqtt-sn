@@ -33,7 +33,7 @@ public abstract class MqttsnTemporalMetric
 
     //-- keep this static as it can be shared across all samplers, dont want thread bloat
     protected static Timer timer =
-            new Timer("mqttsn-metrics-sampler", true);
+            new Timer("mqtt-sn-metrics-sampler", true);
 
     private volatile boolean running = false;
     private TimerTask task;

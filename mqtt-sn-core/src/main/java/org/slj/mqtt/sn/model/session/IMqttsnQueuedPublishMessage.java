@@ -28,7 +28,9 @@ import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.model.IMqttsnDataRef;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 
-public interface IMqttsnQueuedPublishMessage {
+import java.io.Serializable;
+
+public interface IMqttsnQueuedPublishMessage extends Serializable {
 
     PublishData getData();
     long getCreated();

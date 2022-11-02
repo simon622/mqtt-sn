@@ -76,7 +76,9 @@ public class MqttsnMessageQueueProcessor
 
         //-- this checks the inflight if its > 0 we cannot send
         if(!registry.getMessageStateService().canSend(context)) {
-            logger.log(Level.INFO, String.format("state service determined cant send at the moment [%s], remove process and allow protocol processor to schedule new check", context));
+            if(logger.isLoggable(Level.FINE)){
+                logger.log(Level.FINE, String.format("state service determined cant send at the moment [%s], remove process and allow protocol processor to schedule new check", context));
+            }
             return RESULT.BACKOFF_PROCESS;
         }
 

@@ -72,7 +72,6 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
                 grantedQos = Math.min(grantedQos,qos);
                 MqttsnQueuedPublishMessageImpl impl = new MqttsnQueuedPublishMessageImpl(dataId, data);
                 impl.setGrantedQoS(grantedQos);
-
                 if(session != null){
                     if(session.getMaxPacketSize() != 0 &&
                             payload.length + 9 > session.getMaxPacketSize()){
@@ -92,9 +91,12 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
                     logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", context));
                 }
             } catch(MqttsnException e){
-                logger.log(Level.WARNING, String.format("detected subscription issue for session receipt.. ignore client (%s)", context));
+                logger.log(Level.WARNING, String.format("detected issue for session receipt.. ignore client (%s)", context));
+            } finally {
+                getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_EXPANSION).increment(1);
             }
         }
+
         getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_RECEIVE).increment(1);
 
         if(successfulExpansion == 0){

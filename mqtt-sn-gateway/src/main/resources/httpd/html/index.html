@@ -235,6 +235,19 @@
         });
     }
 
+    function command(cmd){
+        $.ajax({
+            type: "GET",
+            url: "/console/command?_cmd=" + cmd,
+            encode: true
+        }).
+        done(function (data) {
+            if(data.hasOwnProperty("msg")){
+                renderMessage(data);
+            }
+        });
+    }
+
     updateHtmlElementUrlTimerByIdGlobal("connectorStatus", 2000, "/console/connector/status");
     updateHtmlElementUrlTimerByIdGlobal("cloudStatus", 5000, "/console/cloud/status");
 
@@ -245,13 +258,15 @@
         threshold: 2,
         onSelectItem: ({label, value}) => {
             sessionId = value;
-            $.ajax({
-                url: "/console/async?page=session.html&clientId=" + sessionId,
-                success: function( result ) {
-                    $("#dyna").html(result);
-                }
-            });
-            field.value = '';
+            if(sessionId !== null){
+                $.ajax({
+                    url: "/console/async?page=session.html&clientId=" + sessionId,
+                    success: function( result ) {
+                        $("#dyna").html(result);
+                    }
+                });
+                field.value = '';
+            }
         },
         onInput: (value) => {
             $.getJSON("/console/search?searchTerm=" + value, function (update){

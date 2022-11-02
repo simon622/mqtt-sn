@@ -29,8 +29,7 @@ import org.slj.mqtt.sn.console.http.IHttpRequestResponseHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,19 +43,18 @@ public class SunHttpServerBootstrap {
             Logger.getLogger(SunHttpServerBootstrap.class.getName());
     private InetSocketAddress bindAddress;
     private HttpServer server;
-    private ThreadPoolExecutor threadPoolExecutor;
+    private ExecutorService threadPoolExecutor;
     private volatile boolean running = false;
 
-    public SunHttpServerBootstrap(InetSocketAddress bindAddress, int tcpBacklog, int threads) throws IOException {
+    public SunHttpServerBootstrap(InetSocketAddress bindAddress, int tcpBacklog, ExecutorService httpExecutor) throws IOException {
         this.bindAddress = bindAddress;
-        init(tcpBacklog, threads);
+        init(httpExecutor, tcpBacklog);
     }
 
-    public synchronized void init(int tcpBacklog, int threads) throws IOException {
+    public synchronized void init(ExecutorService executor, int tcpBacklog) throws IOException {
         if(!running && server == null){
-            LOG.log(Level.INFO, String.format("bootstrapping sun-http-server to [%s], threads=%s, tcpBacklog=%s", bindAddress, threads, tcpBacklog));
+            LOG.log(Level.INFO, String.format("bootstrapping sun-http-server to [%s], tcpBacklog=%s", bindAddress, tcpBacklog));
             server = HttpServer.create(bindAddress, tcpBacklog);
-            threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
             server.setExecutor(threadPoolExecutor);
         }
     }

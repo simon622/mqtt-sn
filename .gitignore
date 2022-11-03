@@ -36,3 +36,12 @@ mqtt-sn-client-sec/
 /mqtt-sn-client/src/main/rust/
 /mqtt-sn-gateway-dtls/
 /mqtt-sn-gateway-connector-hivemq/
+/mqtt-sn-runtimes/mqtt-sn-client/.lck
+/mqtt-sn-runtimes/mqtt-sn-gateway/.lck
+/mqtt-sn-runtimes/mqtt-sn-client/mqtt-sn-client-credentials
+/mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-client-credentials
+/mqtt-sn-runtimes/mqtt-sn-load-test/mqtt-sn-client-credentials
+/mqtt-sn-runtimes/mqtt-sn-client/mqtt-sn-settings.xml
+/mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-settings.xml
+/mqtt-sn-runtimes/mqtt-sn-load-test/mqtt-sn-settings.xml
+/mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-settings-old.xml

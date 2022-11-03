@@ -25,6 +25,8 @@
 package org.slj.mqtt.sn.console.http.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.console.http.*;
 import org.slj.mqtt.sn.console.http.impl.handlers.StaticFileHandler;
 import org.slj.mqtt.sn.utils.Files;
@@ -35,12 +37,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class AbstractHttpRequestResponseHandler implements IHttpRequestResponseHandler {
-    protected final Logger LOG =
-            Logger.getLogger(getClass().getName());
+    protected final Logger logger =
+            LoggerFactory.getLogger(getClass().getName());
 
     protected final ObjectMapper mapper;
 
@@ -77,26 +77,26 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
             }
         }
         catch(HttpException e){
-            LOG.log(Level.WARNING, String.format("caught strong typed http exception, use code and message [%s -> %s]",
-                    e.getResponseCode(), e.getResponseMessage()), e);
+            logger.warn("caught strong typed http exception, use code and message [{} -> {}]",
+                    e.getResponseCode(), e.getResponseMessage());
             try {
                 writeASCIIResponse(httpRequestResponse, e.getResponseCode(), e.getResponseMessage());
             } catch (Exception ex){
-                LOG.log(Level.SEVERE, String.format("error sending internal server error request!", ex));
+                logger.error("error sending internal server error request!", ex);
             }
         }
         catch(Exception e){
             e.printStackTrace();
-            LOG.log(Level.SEVERE, "unhandled error", e);
+            logger.error("unhandled error", e);
             try {
                 writeASCIIResponse(httpRequestResponse, HttpConstants.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             } catch (Exception ex){
-                LOG.log(Level.SEVERE, String.format("error sending internal server error request!", ex));
+                logger.error("error sending internal server error request!", ex);
             }
         } finally {
-            LOG.log(Level.FINE, String.format("request [%s] [%s] (%s) -> [%s] done in [%s]",
+            logger.trace("request {} {} ({}) -> {} done in {}",
                     httpRequestResponse.getHttpRequestUri(), httpRequestResponse.getContextPath(),
-                    httpRequestResponse.getContextRelativePath(), httpRequestResponse.getResponseCode(), System.currentTimeMillis() - start));
+                    httpRequestResponse.getContextRelativePath(), httpRequestResponse.getResponseCode(), System.currentTimeMillis() - start);
         }
     }
 
@@ -119,14 +119,14 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected void sendBadRequestResponse(IHttpRequestResponse request, String message) throws IOException {
-        LOG.log(Level.INFO, String.format("resource not found [%s]", request));
+        logger.info("resource not found {}", request);
         writeHTMLResponse(request, HttpConstants.SC_BAD_REQUEST,
                 Html.getErrorMessage(HttpConstants.SC_BAD_REQUEST, message));
     }
 
     protected void sendRedirect(IHttpRequestResponse request, String resourceUri) throws IOException {
         try {
-            LOG.log(Level.INFO, String.format("sending client side redirect to [%s]", resourceUri));
+            logger.info("sending client side redirect to {}", resourceUri);
             request.addResponseHeader(HttpConstants.LOCATION_HEADER, resourceUri);
             request.sendResponseHeaders(HttpConstants.SC_MOVED_TEMPORARILY, 0);
         } finally {
@@ -208,7 +208,7 @@ public abstract class AbstractHttpRequestResponseHandler implements IHttpRequest
     }
 
     protected InputStream loadClasspathResource(String resource) {
-        LOG.log(Level.FINE, String.format("loading resource from path " + resource));
+        logger.trace("loading resource from path " + resource);
         return StaticFileHandler.class.getClassLoader().getResourceAsStream(resource);
     }
 

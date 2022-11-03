@@ -29,7 +29,6 @@ import org.slj.mqtt.sn.load.ExecutionProfile;
 import org.slj.mqtt.sn.load.LoadTestException;
 
 import java.util.concurrent.*;
-import java.util.logging.Level;
 
 public class ThreadPoolLoadTestRunner extends AbstractLoadTestRunner {
 
@@ -48,7 +47,7 @@ public class ThreadPoolLoadTestRunner extends AbstractLoadTestRunner {
             super.start(input);
         }
         catch(Exception e){
-            logger.log(Level.SEVERE, "error running tests;", e);
+            logger.error("error running tests;", e);
         }
         finally {
             try {
@@ -72,9 +71,9 @@ public class ThreadPoolLoadTestRunner extends AbstractLoadTestRunner {
             executorService = new ThreadPoolExecutor(THREAD_COUNT, THREAD_COUNT, 0, TimeUnit.MILLISECONDS, queue, this.factory, new RejectedExecutionHandler() {
                 public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
                     try {
-                        logger.log(Level.WARNING, "could not submit job to pooled service - queue and pool exhausted");
+                        logger.warn("could not submit job to pooled service - queue and pool exhausted");
                     } catch(Exception e) {
-                        logger.log(Level.SEVERE, "error tidying up no-run simulator", e);
+                        logger.error("error tidying up no-run simulator", e);
                     }
                 }
             });

@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.load.runner;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProfile;
 import org.slj.mqtt.sn.load.LoadTestException;
@@ -37,14 +39,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
 
     private final int rampSeconds;
     protected final Logger logger
-            = Logger.getLogger(getClass().getName());
+            = LoggerFactory.getLogger(getClass().getName());
     private Thread watchdog;
     private Long start;
     private CountDownLatch latch;
@@ -57,7 +57,7 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
 
     protected ThreadFactory factory = new ThreadFactory (){
         final ThreadGroup threadGroup = new ThreadGroup("mqtt-sn-load-group");
-        final Thread.UncaughtExceptionHandler handler = (t, e) -> logger.log(Level.SEVERE, String.format("thread %s failed with; ", t.getName()), e);
+        final Thread.UncaughtExceptionHandler handler = (t, e) -> logger.error("thread failed with; ", e);
         public Thread newThread(Runnable r) {
             Thread t = new Thread(threadGroup, r,
                     "mqtt-sn-load-thread-" + threadCount.incrementAndGet());
@@ -75,7 +75,7 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
 
     public void start(ExecutionInput input) throws LoadTestException {
 
-        logger.log(Level.INFO, String.format("creating [%s] load test profiles with ramp up of [%s] seconds", numInstances, rampSeconds));
+        logger.info("creating {} load test profiles with ramp up of {} seconds", numInstances, rampSeconds);
         start = System.currentTimeMillis();
         latch = new CountDownLatch(numInstances);
         List<ExecutionProfile> executingProfiles = new ArrayList<>();
@@ -99,13 +99,11 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
 
         try {
             if(latch.await(input.getMaxWait(), input.getMaxWaitUnit())){
-                logger.log(Level.INFO,
-                                String.format("simulation finished in [%s] seconds, final status ([%s] finished, of [%s] (%s errors))",
-                                        (System.currentTimeMillis() - start) / 1000L, completeCount.get(), numInstances, errorCount.get()));
+                logger.info("simulation finished in {} seconds, final status ({} finished, of {} ({} errors))",
+                                        (System.currentTimeMillis() - start) / 1000L, completeCount.get(), numInstances, errorCount.get());
             } else {
-                logger.log(Level.WARNING,
-                        String.format("simulations still running after cooldown - interrupting tests [%s] seconds",
-                                input.getMaxWaitUnit().toSeconds(input.getMaxWait())));
+                logger.warn("simulations still running after cooldown - interrupting tests {} seconds",
+                                input.getMaxWaitUnit().toSeconds(input.getMaxWait()));
             }
         } catch(InterruptedException e){
             throw new LoadTestException(e);
@@ -115,22 +113,21 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
     protected synchronized void startWatchdog() {
         if(watchdog == null) {
             String watchdogName = "watchdog";
-            final Logger watchdogLog = Logger.getLogger(watchdogName);
+            final Logger watchdogLog = LoggerFactory.getLogger(watchdogName);
             watchdog = new Thread(() -> {
                 while(!interrupt.get()) {
                     try {
                        synchronized (interrupt){
                            interrupt.wait(5000);
-                           watchdogLog.log(Level.INFO,
-                                   String.format("running for [%s] seconds, current status [%s] of [%s] (%s%%) profiles alive - ([%s] finished, of [%s] (%s errors))",
+                           watchdogLog.info("running for {} seconds, current status {} of {} ({}%) profiles alive - ({} finished, of {} ({} errors))",
                                            (System.currentTimeMillis() - start) / 1000L, runningCount.get(), latch.getCount(),
-                                           Numbers.round2_display(Numbers.percent(runningCount.get(), latch.getCount())), completeCount.get(), numInstances, errorCount.get()));
+                                           Numbers.round2_display(Numbers.percent(runningCount.get(), latch.getCount())), completeCount.get(), numInstances, errorCount.get());
                        }
                     } catch(InterruptedException e) {
-                        watchdogLog.log(Level.INFO, "watchdog was interrupted");
+                        watchdogLog.info("watchdog was interrupted");
                     }
                 }
-                watchdogLog.log(Level.INFO, "watchdog has switched off");
+                watchdogLog.info("watchdog has switched off");
             });
             watchdog.setName(watchdogName);
             watchdog.setDaemon(true);
@@ -163,16 +160,14 @@ public abstract class AbstractLoadTestRunner extends AbstractLoadTest {
                     profile.executeProfile();
                     profile.getProgress().waitForCompletion();
                 } catch(Exception e){
-                    logger.log(Level.SEVERE, "error executing test profile;", e);
+                    logger.error("error executing test profile;", e);
                 } finally {
                     try {
                         profile.shutdownProfile();
-                        logger.log(!profile.getProgress().isError() ?
-                                Level.INFO : Level.WARNING, String.format("finished load test profile [%s] in [%s] - success ? [%s]",
-                                    profile.getProfileName(), System.currentTimeMillis() - start, !profile.getProgress().isError()));
+                        logger.info("finished load test profile {} in {} - success ? {}",
+                                    profile.getProfileName(), System.currentTimeMillis() - start, !profile.getProgress().isError());
                     } catch (Exception e) {
-                        logger.log(Level.WARNING, String.format("error finishing load test profile [%s] in [%s]",
-                                profile.getProfileName(), System.currentTimeMillis() - start), e);
+                        logger.warn("error finishing load test profile", e);
                     } finally {
                         runningCount.decrementAndGet();
                         completeCount.incrementAndGet();

@@ -289,6 +289,8 @@ public class Files {
 
     private static byte[] trimNewLines(byte[] a){
 
+        if(a.length == 0) return a;
+
         if(a[0] == NEW_LINE_DECIMAL){
             byte[] trim = new byte[a.length - 1];
             System.arraycopy(a, 1, trim, 0, a.length - 1);

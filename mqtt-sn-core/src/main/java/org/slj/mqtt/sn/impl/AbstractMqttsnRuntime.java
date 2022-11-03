@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
@@ -35,18 +37,14 @@ import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.utils.VirtualMachine;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionHandler {
 
-    protected final Logger logger = Logger.getLogger(getClass().getName());
+    protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
     protected IMqttsnRuntimeRegistry registry;
 
     protected final List<IMqttsnPublishReceivedListener> receivedListeners
@@ -87,8 +85,9 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
                 throw new MqttsnException("error on environment setup;", e);
             }
 
-            logger.log(Level.INFO, String.format("starting mqttsn-environment [%s], initializing options from storage using [%s]", java.lang.System.identityHashCode(this),
-                    getRegistry().getStorageService().getClass().getSimpleName()));
+            logger.info("starting mqttsn-environment {}, initializing options from storage using {}",
+                    java.lang.System.identityHashCode(this),
+                    getRegistry().getStorageService().getClass().getSimpleName());
             registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
 
             running = true;
@@ -96,12 +95,13 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
             if(reg.getTrafficListeners() != null && !reg.getTrafficListeners().isEmpty()){
                 trafficListeners.addAll(reg.getTrafficListeners());
             }
-            generalUseExecutorService = createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
+            generalUseExecutorService =
+                    createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
             bindShutdownHook();
             startupServices(registry);
             postStartupTasks();
             startupLatch.countDown();
-            logger.log(Level.INFO, String.format("mqttsn-environment started successfully in [%s]", java.lang.System.currentTimeMillis() - startedAt));
+            logger.info("mqttsn-environment started successfully in {}", java.lang.System.currentTimeMillis() - startedAt);
             if(join){
                 while(running){
                     synchronized (monitor){
@@ -119,7 +119,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 
     public final void stop() throws MqttsnException {
         if(running){
-            logger.log(Level.INFO, String.format("stopping mqttsn-environment [%s]", java.lang.System.identityHashCode(this)));
+            logger.info("stopping mqttsn-environment {}", java.lang.System.identityHashCode(this));
             try {
                 stopServices(registry);
             } finally {
@@ -161,7 +161,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
             try {
                 AbstractMqttsnRuntime.this.stop();
             } catch(Exception e){
-                logger.log(Level.SEVERE, "encountered error executing shutdown hook", e);
+                logger.error("encountered error executing shutdown hook", e);
             }
         }, "mqtt-sn-finalizer"));
     }
@@ -170,9 +170,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         if(service instanceof IMqttsnService){
             IMqttsnService snService =  (IMqttsnService) service;
             if(!snService.running()){
-                if(logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, String.format("starting [%s] for runtime (%s)", service.getClass().getName(), java.lang.System.identityHashCode(this)));
-                }
+                logger.info("starting {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
                 snService.start(registry);
                 activeServices.add(snService);
             }
@@ -183,9 +181,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         if(service instanceof IMqttsnService){
             IMqttsnService snService =  (IMqttsnService) service;
             if(snService.running()){
-                if(logger.isLoggable(Level.INFO)) {
-                    logger.log(Level.INFO, String.format("stopping [%s] for runtime (%s)", service.getClass().getName(), java.lang.System.identityHashCode(this)));
-                }
+                logger.info("stopping {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
                 snService.stop();
                 activeServices.remove(snService);
             }
@@ -205,45 +201,39 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 
     public static void initializeLogging(MqttsnOptions options) throws IOException {
 
-        if (java.lang.System.getProperty("java.util.logging.config.file") == null) {
-            LogManager.getLogManager().reset();
-            boolean applied = false;
-            try (InputStream stream = AbstractMqttsnRuntime.class.getResourceAsStream("/logging.properties")) {
-                if (null != stream) {
-                    Logger.getAnonymousLogger().log(Level.INFO, "applying logging from config found on classpath");
-                    LogManager.getLogManager().readConfiguration(stream);
-                    applied = true;
-                } else {
-                    throw new IOException("unable to read logging properties");
-                }
-            }
-            if(!applied){
-                Logger.getAnonymousLogger().log(Level.SEVERE, "unable to initialise logging, applying fallback");
-                String pattern = options.getLogPattern();
-                pattern = pattern == null ? "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n" : pattern;
-                java.lang.System.setProperty("java.util.logging.SimpleFormatter.format", pattern);
-            }
-        }
+//        if (java.lang.System.getProperty("java.util.logging.config.file") == null) {
+//            LogManager.getLogManager().reset();
+//            boolean applied = false;
+//            try (InputStream stream = AbstractMqttsnRuntime.class.getResourceAsStream("/logging.properties")) {
+//                if (null != stream) {
+//                    Logger.getAnonymousLogger().log(Level.INFO, "applying logging from config found on classpath");
+//                    LogManager.getLogManager().readConfiguration(stream);
+//                    applied = true;
+//                } else {
+//                    throw new IOException("unable to read logging properties");
+//                }
+//            }
+//            if(!applied){
+//                Logger.getAnonymousLogger().log(Level.SEVERE, "unable to initialise logging, applying fallback");
+//                String pattern = options.getLogPattern();
+//                pattern = pattern == null ? "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n" : pattern;
+//                java.lang.System.setProperty("java.util.logging.SimpleFormatter.format", pattern);
+//            }
+//        }
     }
 
     protected final void messageReceived(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("publish received by application [%s], notifying [%s] listeners", topicPath, receivedListeners.size()));
-        }
+        logger.debug("publish received by application {}, notifying {} listeners", topicPath, receivedListeners.size());
         receivedListeners.forEach(p -> p.receive(context, topicPath, qos, retained, data, message));
     }
 
     protected final void messageSent(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
-        if(logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, String.format("sent confirmed by application [%s], notifying [%s] listeners", topicPath, sentListeners.size()));
-        }
+        logger.debug("sent confirmed by application {}, notifying {} listeners", topicPath, sentListeners.size());
         sentListeners.forEach(p -> p.sent(context, topicPath, qos, retained, data, message));
     }
 
     protected final void messageSendFailure(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
-        if(logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, String.format("message failed sending [%s], notifying [%s] listeners", topicPath, sendFailureListeners.size()));
-        }
+        logger.debug("message failed sending {}, notifying {} listeners", topicPath, sendFailureListeners.size());
         sendFailureListeners.forEach(p -> p.sendFailure(context, topicPath, qos, retained, data, message, retryCount));
     }
 
@@ -302,7 +292,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @return should the local runtime send a DISCONNECT in reponse
      */
     public boolean handleRemoteDisconnect(IMqttsnContext context){
-        logger.log(Level.FINE, String.format("notified of remote disconnect [%s <- %s]", registry.getOptions().getContextId(), context));
+        logger.debug("notified of remote disconnect [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyRemoteDisconnect(context));
         return true;
     }
@@ -317,7 +307,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * if not, the exception is reported into the transport layer
      */
     public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
-        logger.log(Level.FINE, String.format("notified of local disconnect [%s !- %s]", registry.getOptions().getContextId(), context), t);
+        logger.debug("notified of local disconnect [{} !- {}] - {}", registry.getOptions().getContextId(), context, t.getMessage());
         connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
     }
@@ -329,7 +319,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param t - the exception that was encountered
      */
     public void handleConnectionLost(IMqttsnContext context, Throwable t){
-        logger.log(Level.FINE, String.format("notified of connection lost [%s !- %s]", registry.getOptions().getContextId(), context), t);
+        logger.debug("notified of connection lost [{} !- {}] - {}", registry.getOptions().getContextId(), context, t.getMessage());
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
 
@@ -338,7 +328,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param context
      */
     public void handleConnected(IMqttsnContext context){
-        logger.log(Level.FINE, String.format("notified of new connection [%s <- %s]", registry.getOptions().getContextId(), context));
+        logger.debug("notified of new connection [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyConnected(context));
     }
 
@@ -350,7 +340,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param context - the context who hasnt been heard of since the timeout
      */
     public void handleActiveTimeout(IMqttsnContext context){
-        logger.log(Level.FINE, String.format("notified of active timeout [%s <- %s]", registry.getOptions().getContextId(), context));
+        logger.debug("notified of active timeout [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
     }
 
@@ -497,8 +487,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-        logger.log(Level.SEVERE,
-                String.format("uncaught error in thread-pool on [%s]", t.getName()), e);
+        logger.error("uncaught error in thread-pool", t);
     }
 
     public abstract void close() throws IOException ;

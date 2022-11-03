@@ -33,7 +33,8 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author simonjohnson
@@ -41,7 +42,7 @@ import java.util.logging.Logger;
  */
 public class LoopbackMqttsnConnectorConnection extends AbstractMqttsnBackendConnection {
 
-    private Logger logger = Logger.getLogger(LoopbackMqttsnConnectorConnection.class.getName());
+    private Logger logger = LoggerFactory.getLogger(LoopbackMqttsnConnectorConnection.class.getName());
     protected MqttsnConnectorOptions options;
     protected final String clientId;
 

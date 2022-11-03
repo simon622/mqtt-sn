@@ -27,14 +27,12 @@ package org.slj.mqtt.sn.impl.ram;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageStateService;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.InflightMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.Pair;
 
 import java.util.*;
-import java.util.logging.Level;
 
 public class MqttsnInMemoryMessageStateService
         extends AbstractMqttsnMessageStateService {
@@ -63,11 +61,11 @@ public class MqttsnInMemoryMessageStateService
                     Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair =
                             inflightMessages.get(context);
                     if(pair != null && pair.getLeft().size() == 0 && pair.getRight().size() == 0){
-                        logger.log(Level.FINE, String.format("removing inflight key for context [%s]", context));
+                        logger.debug("removing inflight key for context {}", context);
                         itr.remove();
                     }
                 } catch(MqttsnException e){
-                    logger.log(Level.WARNING, "error occurred during inflight eviction run;", e);
+                    logger.warn("error occurred during inflight eviction run;", e);
                 }
             }
         }
@@ -106,9 +104,7 @@ public class MqttsnInMemoryMessageStateService
     @Override
     protected boolean inflightExists(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
         boolean exists = getInflightMessages(context, source).containsKey(packetId);
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("context [%s] -> inflight exists for id [%s] ? [%s]", context, packetId, exists));
-        }
+        logger.debug("context {} -> inflight exists for id {} ? {}", context, packetId, exists);
         return exists;
     }
 
@@ -124,9 +120,7 @@ public class MqttsnInMemoryMessageStateService
                 }
             }
         }
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("inflight for [%s] is [%s]", context, pair));
-        }
+        logger.debug("inflight for {} is {}", context, pair);
 
         //left is sending right is receiving
         return source == IMqttsnOriginatingMessageSource.LOCAL ? pair.getLeft() : pair.getRight();

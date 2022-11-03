@@ -28,8 +28,6 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
-import java.util.logging.Level;
-
 public abstract class AbstractMqttsnBackoffThreadService
         extends MqttsnService implements Runnable {
 
@@ -52,7 +50,7 @@ public abstract class AbstractMqttsnBackoffThreadService
             t.setDaemon(true);
             t.start();
             t.setUncaughtExceptionHandler((t, e) ->
-                    logger.log(Level.SEVERE, "uncaught error on deamon process;", e));
+                    logger.error("uncaught error on deamon process;", e));
         }
     }
 
@@ -73,8 +71,7 @@ public abstract class AbstractMqttsnBackoffThreadService
             Thread.currentThread().interrupt();
             throw new RuntimeException("error joining startup", e);
         }
-
-        logger.log(Level.INFO, String.format("starting thread [%s] processing", Thread.currentThread().getName()));
+        logger.info("starting thread {} processing", Thread.currentThread().getName());
         while(running &&
                 !Thread.currentThread().isInterrupted()){
             long maxBackoff = doWork();
@@ -86,12 +83,10 @@ public abstract class AbstractMqttsnBackoffThreadService
                     Thread.currentThread().interrupt();
                 }
             }
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE,
-                        String.format("worker [%s] waited for [%s] in the end", Thread.currentThread().getName(), System.currentTimeMillis() - waitStart));
-            }
+            logger.debug("worker {} waited for {} in the end", Thread.currentThread().getName(), System.currentTimeMillis() - waitStart);
         }
-        logger.log(Level.INFO, String.format("stopped %s thread", Thread.currentThread().getName()));
+
+        logger.info("stopped {} thread", Thread.currentThread().getName());
     }
 
     /**

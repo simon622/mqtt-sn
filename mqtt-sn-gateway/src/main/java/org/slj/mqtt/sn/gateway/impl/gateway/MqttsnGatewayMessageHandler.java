@@ -41,8 +41,6 @@ import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
-import java.util.logging.Level;
-
 public class MqttsnGatewayMessageHandler
         extends AbstractMqttsnMessageHandler {
 
@@ -82,7 +80,7 @@ public class MqttsnGatewayMessageHandler
                 shouldContinue = true;
             }
             if(!shouldContinue){
-                logger.log(Level.WARNING, String.format("detected invalid client session state for [%s] and inbound message [%s]", context, message));
+                logger.warn("detected invalid client session state for {} and inbound message {}", context, message);
                 throw new MqttsnException(e);
             }
         }
@@ -111,7 +109,7 @@ public class MqttsnGatewayMessageHandler
             if(messageOut != null && messageOut.isErrorMessage() &&
                     registry.getCodec().isConnect(messageIn)){
                 //-- this is an error in CONNECT - remove from network registry so we dont leak
-                logger.log(Level.WARNING, String.format("connect for [%s] was rejected, tidy up network layer after response is sent", context));
+                logger.warn("connect for {} was rejected, tidy up network layer after response is sent", context);
                 registry.getNetworkRegistry().removeExistingClientId(context.getMqttsnContext().getId());
             }
 
@@ -122,10 +120,8 @@ public class MqttsnGatewayMessageHandler
                         messageOut != null && MqttsnMessageRules.isTerminalMessage(getRegistry().getCodec(), messageOut) && !messageOut.isErrorMessage() ){
                     if(MqttsnUtils.in(session.getClientState(),
                             MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE)) {
-                        if(logger.isLoggable(Level.FINE)){
-                            logger.log(Level.FINE, String.format("scheduling flush based on outbound message [%s] -> inflight [%s]", messageOut == null ? messageIn : messageOut,
-                                    getRegistry().getMessageStateService().countInflight(context.getMqttsnContext(), IMqttsnOriginatingMessageSource.LOCAL)));
-                        }
+                        logger.debug("scheduling flush based on outbound message {} -> inflight {}", messageOut == null ? messageIn : messageOut,
+                                    getRegistry().getMessageStateService().countInflight(context.getMqttsnContext(), IMqttsnOriginatingMessageSource.LOCAL));
                         registry.getMessageStateService().scheduleFlush(context.getMqttsnContext());
                     }
                 }
@@ -168,7 +164,7 @@ public class MqttsnGatewayMessageHandler
 
         if(registry.getAuthenticationService() != null){
             if(!registry.getAuthenticationService().allowConnect(context.getMqttsnContext(), clientId)){
-                logger.log(Level.WARNING, String.format("authentication service rejected client [%s]", clientId));
+                logger.warn("authentication service rejected client {}", clientId);
                 return registry.getMessageFactory().createConnack(MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
             }
         }
@@ -250,8 +246,8 @@ public class MqttsnGatewayMessageHandler
         if(clientId != null){
             //-- ensure the clientId matches the context
             if(!clientId.trim().equals(context.getMqttsnContext().getId())){
-                logger.log(Level.WARNING, String.format("ping-req contained clientId [%s] that did not match that from context [%s]",
-                        clientId, context.getMqttsnContext().getId()));
+                logger.warn("ping-req contained clientId {} that did not match that from context {}",
+                        clientId, context.getMqttsnContext().getId());
                 return super.handlePingreq(context, message);
             }
         }
@@ -273,7 +269,7 @@ public class MqttsnGatewayMessageHandler
 
                 } else if(session.getClientState() == MqttsnClientState.AWAKE){
                     //-- this is the client issuing multiple pings when it should be waiting on the messages.. humph
-                    logger.log(Level.INFO, "multiple pings are being sent, clear up and try again the client is getting confused..");
+                    logger.warn("multiple pings are being sent, clear up and try again the client is getting confused..");
                     registry.getMessageStateService().clearInflight(context.getMqttsnContext());
                     registry.getMessageStateService().scheduleFlush(context.getMqttsnContext());
                 }
@@ -309,8 +305,8 @@ public class MqttsnGatewayMessageHandler
         }
 
         if(!MqttsnUtils.validTopicScheme(topicIdType, topicData, true)){
-            logger.log(Level.WARNING, String.format("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId [%s] topicData [%s]", topicIdType,
-                    MqttsnWireUtils.toBinary(topicData)));
+            logger.warn("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId {} topicData {}", topicIdType,
+                    MqttsnWireUtils.toBinary(topicData));
             return registry.getMessageFactory().createSuback(0, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         }
 
@@ -319,7 +315,7 @@ public class MqttsnGatewayMessageHandler
                 topicIdType == 0);
 
         SubscribeResult result = getRegistry().getGatewaySessionService().subscribe(state, info, message);
-        logger.log(Level.INFO, "subscribe message yielded info " + info + " and result " + result);
+        logger.info("subscribe message yielded info " + info + " and result " + result);
         processSessionResult(result);
 
         if(result.isError()){
@@ -339,8 +335,8 @@ public class MqttsnGatewayMessageHandler
         MqttsnUnsubscribe unsubscribe = (MqttsnUnsubscribe) message;
 
         if(!MqttsnUtils.validTopicScheme(unsubscribe.getTopicType(), unsubscribe.getTopicData(), true)){
-            logger.log(Level.WARNING, String.format("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId [%s] topicData [%s]", unsubscribe.getTopicType(),
-                    MqttsnWireUtils.toBinary(unsubscribe.getTopicData())));
+            logger.warn("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId {} topicData {}", unsubscribe.getTopicType(),
+                    MqttsnWireUtils.toBinary(unsubscribe.getTopicData()));
             return registry.getMessageFactory().createUnsuback();
         }
 
@@ -358,8 +354,7 @@ public class MqttsnGatewayMessageHandler
         MqttsnRegister register = (MqttsnRegister) message;
 
         if(!MqttsnSpecificationValidator.isValidPublishTopic(register.getTopicName())){
-            logger.log(Level.WARNING,
-                    String.format("invalid topic [%s] received during register, reply with error code", register.getTopicName()));
+            logger.warn("invalid topic {} received during register, reply with error code", register.getTopicName());
             return registry.getMessageFactory().createRegack(MqttsnConstants.TOPIC_NORMAL, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         } else {
             IMqttsnSession state = getActiveSession(context);
@@ -400,7 +395,7 @@ public class MqttsnGatewayMessageHandler
 
     protected void processSessionResult(Result result){
         if(result.getStatus() == Result.STATUS.ERROR){
-            logger.log(Level.WARNING, String.format("error detected by session service [%s]", result));
+            logger.warn("error detected by session service {}", result);
         }
     }
 }

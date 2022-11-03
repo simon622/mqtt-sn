@@ -39,7 +39,6 @@ import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
 
 public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsole {
 
@@ -58,7 +57,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
 
         if(options.isConsoleEnabled()){
             jsonMapper = new ObjectMapper();
-            logger.log(Level.INFO, String.format("starting console service with - %s", options));
+            logger.info("starting console service with - {}", options);
             cloudService = new HttpCloudServiceImpl(jsonMapper,
                     "http://mqtt-sn.cloud/api/services.json", 5000, 5000, 30000);
             startWebServer(options);
@@ -68,14 +67,14 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
     @Override
     public void stop() throws MqttsnException {
         super.stop();
-        logger.log(Level.INFO, String.format("stopping webserver..."));
+        logger.info("stopping webserver...");
         stopWebServer();
     }
 
     private void startWebServer(MqttsnConsoleOptions options) throws MqttsnException {
         try {
 
-            logger.log(Level.INFO, String.format("starting console server listening on [%s] -> [%s]", options.getHostName(), options.getConsolePort()));
+            logger.info("starting console server listening on {} -> {}", options.getHostName(), options.getConsolePort());
 
             ExecutorService service = getRegistry().getRuntime().createManagedExecutorService("mqtt-sn-console-http-",
                     options.getServerThreads());
@@ -101,7 +100,7 @@ public class MqttsnConsoleService extends MqttsnService implements IMqttsnConsol
             server.registerContext("/console/async", new AsyncContentHandler(getJsonMapper(), "httpd/html/",
                     "dashboard.html", "clients.html",  "session.html", "connectors.html", "config.html", "cluster.html", "topics.html", "settings.html", "docs.html", "system.html", "dead-letter.html"));
             server.startServer();
-            logger.log(Level.INFO, String.format("console server started..."));
+            logger.trace("console server started...");
         } catch(Exception e){
             throw new MqttsnException(e);
         }

@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>mqtt-sn</artifactId>
+    <groupId>org.slj</groupId>
+    <version>1.0.0</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.slj</groupId>
   <artifactId>mqtt-sn-gateway</artifactId>
-  <version>0.1.15-alpha</version>
   <build>
     <finalName>mqtt-sn-gateway-loopback-${project.version}</finalName>
     <plugins>
@@ -13,7 +16,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>${maven.build.shade.version}</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -47,11 +50,4 @@
       </exclusions>
     </dependency>
   </dependencies>
-  <properties>
-    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <junit.version>4.13.1</junit.version>
-  </properties>
 </project>

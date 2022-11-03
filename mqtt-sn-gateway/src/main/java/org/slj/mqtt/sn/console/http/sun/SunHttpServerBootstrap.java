@@ -25,22 +25,22 @@
 package org.slj.mqtt.sn.console.http.sun;
 
 import com.sun.net.httpserver.HttpServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponseHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A realisation of the HTTP handler layer using the SUN HTTP packages which are available
  * on the Oracle VM > 1.6.
  */
 public class SunHttpServerBootstrap {
-    private static final Logger LOG =
-            Logger.getLogger(SunHttpServerBootstrap.class.getName());
+    private static final Logger logger =
+            LoggerFactory.getLogger(SunHttpServerBootstrap.class);
     private InetSocketAddress bindAddress;
     private HttpServer server;
     private ExecutorService threadPoolExecutor;
@@ -53,7 +53,7 @@ public class SunHttpServerBootstrap {
 
     public synchronized void init(ExecutorService executor, int tcpBacklog) throws IOException {
         if(!running && server == null){
-            LOG.log(Level.INFO, String.format("bootstrapping sun-http-server to [%s], tcpBacklog=%s", bindAddress, tcpBacklog));
+            logger.info("bootstrapping sun-http-server to [%s], tcpBacklog=%s", bindAddress, tcpBacklog);
             server = HttpServer.create(bindAddress, tcpBacklog);
             server.setExecutor(threadPoolExecutor);
         }
@@ -76,28 +76,30 @@ public class SunHttpServerBootstrap {
     public void stopServer(){
         if(running){
             try {
+                running = false;
                 if(server != null){
                     server.stop(1);
-                    LOG.log(Level.INFO, String.format("stopped server... closing down pools..."));
+                    logger.info("stopped server... closing down pools...");
                 }
             }
             finally {
+                server = null;
                 try {
-                    if(!threadPoolExecutor.isShutdown()){
-                        threadPoolExecutor.shutdown();
-                        try {
-                            threadPoolExecutor.awaitTermination(10000, TimeUnit.SECONDS);
-                        } catch(InterruptedException e){
-                            Thread.currentThread().interrupt();
-                        } finally {
-                            if(!threadPoolExecutor.isShutdown()){
-                                threadPoolExecutor.shutdownNow();
+                    if(threadPoolExecutor != null){
+                        if(!threadPoolExecutor.isShutdown()){
+                            threadPoolExecutor.shutdown();
+                            try {
+                                threadPoolExecutor.awaitTermination(10000, TimeUnit.SECONDS);
+                            } catch(InterruptedException e){
+                                Thread.currentThread().interrupt();
+                            } finally {
+                                if(!threadPoolExecutor.isShutdown()){
+                                    threadPoolExecutor.shutdownNow();
+                                }
                             }
                         }
                     }
                 } finally {
-                    running = false;
-                    server = null;
                     threadPoolExecutor = null;
                 }
             }

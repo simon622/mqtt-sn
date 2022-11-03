@@ -44,7 +44,6 @@ import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Date;
 import java.util.Iterator;
-import java.util.logging.Level;
 
 public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadService
         implements IMqttsnGatewaySessionService {
@@ -82,7 +81,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                                     getRegistry().getMessageStateService().scheduleFlush(session.getContext());
                                 }
                             } catch(MqttsnException e){
-                                logger.log(Level.WARNING, "error scheduling flush", e);
+                                logger.warn("error scheduling flush", e);
                             }
                         }
                     }
@@ -97,17 +96,17 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         long expires = lastSeen.getTime() + (session.getSessionExpiryInterval() * 1000);
                         //only expire sessions set to less than the max which means forever
                         if(expires < time){
-                            logger.log(Level.WARNING, String.format("removing session [%s] state last seen [%s] > allowed [%s] seconds ago", session.getContext(), lastSeen, session.getSessionExpiryInterval()));
+                            logger.warn("removing session {} state last seen {} > allowed {} seconds ago", session.getContext(), lastSeen, session.getSessionExpiryInterval());
                             getRegistry().getSessionRegistry().clear(session);
                         }
                     } else if(session.getSessionExpiryInterval() == 0){
                         //TODO options should control whether to allow persist forever sessions
-                        logger.log(Level.WARNING, String.format("detected session [%s] with expiry interval 0", session.getContext()));
+                        logger.warn("detected session {} with expiry interval 0", session.getContext());
                     }
                 }
             }
         } catch(Exception e){
-            logger.log(Level.SEVERE, String.format("error monitoring ongoing session state - handled;"), e);
+            logger.error("error monitoring ongoing session state - handled;", e);
         }
         return MIN_SESSION_MONITOR_CHECK;
     }
@@ -119,13 +118,13 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     public void markSessionLost(IMqttsnSession session) {
-        logger.log(Level.WARNING, String.format("session timeout or stale [%s], mark lost", session.getContext()));
+        logger.warn("session timeout or stale {}, mark lost", session.getContext());
 
         getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.LOST);
 
         if(getRegistry().getWillRegistry().hasWillMessage(session)){
             IMqttsnWillData data = getRegistry().getWillRegistry().getWillMessage(session);
-            logger.log(Level.INFO, String.format("session expired or stale has will data to publish [%s]", data));
+            logger.info("session expired or stale has will data to publish {}", data);
             IMqttsnMessage willPublish = getRegistry().getCodec().createMessageFactory().createPublish(data.getQos(), false, data.isRetained(),
                     "ab", data.getData());
             try {
@@ -133,7 +132,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 //per the MQTT spec, once published the will message should be discarded
                 getRegistry().getWillRegistry().clear(session);
             } catch(MqttsnException e){
-                logger.log(Level.SEVERE, String.format("error publish will message for [%s] -> [%s]", session.getContext(), data), e);
+                logger.error("error publish will message for {} -> {}", session.getContext(), data, e);
             }
         }
     }
@@ -168,7 +167,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 //            clear(session.getContext(), true, false);
             getRegistry().getSessionRegistry().clear(session, false);
         }
-        logger.log(result.isError() ? Level.WARNING : Level.INFO, String.format("handled connection request for [%s] with cleanSession [%s] -> [%s], [%s]", session.getContext(), cleanSession, result.getStatus(), result.getMessage()));
+
+        if(result.isError()){
+            logger.error("handled connection request for {} with cleanSession {} -> {}, {}", session.getContext(), cleanSession, result.getStatus(), result.getMessage());
+        } else {
+            logger.info("handled connection request for {} with cleanSession {} -> {}, {}", session.getContext(), cleanSession, result.getStatus(), result.getMessage());
+        }
         return result;
     }
 
@@ -181,7 +185,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
             result = getRegistry().getBackendService().disconnect(session.getContext(), message);
             if(!result.isError()){
                 if(duration > 0){
-                    logger.log(Level.INFO, String.format("[%s] setting client state asleep for [%s]", session.getContext(), duration));
+                    logger.info("{} setting client state asleep for {}", session.getContext(), duration);
 
                     //TODO - the gateway should use the sei for sleep monitoring
                     getRegistry().getSessionRegistry().modifyKeepAlive(session, (int) duration);
@@ -190,7 +194,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     getRegistry().getTopicRegistry().clear(session,
                             getRegistry().getOptions().isSleepClearsRegistrations());
                 } else {
-                    logger.log(Level.INFO, String.format("[%s] disconnecting client", session.getContext()));
+                    logger.info("{} disconnecting client", session.getContext());
                     getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.DISCONNECTED);
                 }
             }
@@ -253,7 +257,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         result.setGrantedQoS(QoS);
                     }
                 } catch(MqttsnIllegalFormatException e){
-                    logger.log(Level.WARNING, String.format("error in topic format"), e);
+                    logger.warn("error in topic format", e);
                     result = new SubscribeResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, "invalid topic format");
                 }
                 return result;

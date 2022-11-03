@@ -25,18 +25,10 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractWillRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
 
 public class MqttsnInMemoryWillRegistry
         extends AbstractWillRegistry {
@@ -59,7 +51,7 @@ public class MqttsnInMemoryWillRegistry
             willData.setTopicPath(new TopicPath(topicPath));
         }
 
-        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", session, willData));
+        logger.info("updating will data for {}, becomes {}", session, willData);
     }
 
     @Override
@@ -77,7 +69,7 @@ public class MqttsnInMemoryWillRegistry
             willData.setData(data);
         }
 
-        logger.log(Level.INFO, String.format("updating will data for [%s], becomes [%s]", session, willData));
+        logger.info("updating will data for {}, becomes {}", session, willData);
     }
 
     @Override

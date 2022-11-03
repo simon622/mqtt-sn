@@ -35,9 +35,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * Provides a transport over User Datagram Protocol (UDP). This implementation uses a receiver thread which binds
@@ -76,8 +74,8 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
 
     protected Thread createDatagramServer(final String threadName, final int bufSize, final DatagramSocket socketIn){
         Thread thread = new Thread(() -> {
-            logger.log(Level.INFO, String.format("mqtt-sn udp [%s] creating udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]",
-                    registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running));
+            logger.info("mqtt-sn udp {} creating udp server {} bound to socket {} with buffer size {}, running ? {}",
+                    registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running);
             byte[] buff = new byte[bufSize];
             while(running && !socketIn.isClosed() &&
                     !Thread.currentThread().isInterrupted()){
@@ -86,9 +84,8 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                     socketIn.receive(p);
                     int length = p.getLength();
 
-                    if(logger.isLoggable(Level.FINE)){
-                        logger.log(Level.FINE, "receiving ["+ length +"] byte Datagram, offset = " + p.getOffset() + ", data = " + p.getData().length);
-                    }
+                    logger.debug("receiving {} byte Datagram, offset = {}, data = {}",
+                            length, p.getOffset(), p.getData().length);
 
                     NetworkAddress address = NetworkAddress.from(p.getPort(), p.getAddress().getHostAddress());
                     INetworkContext context = registry.getNetworkRegistry().getContext(address);
@@ -106,21 +103,21 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                     }
                 }
                 catch(SocketException e){
-                    logger.log(Level.WARNING, "socket error, i/o channels closed;", e);
+                    logger.warn("socket error, i/o channels closed;", e);
                 }
                 catch(InterruptedException e){
                     Thread.currentThread().interrupt();
-                    logger.log(Level.WARNING, "thread interrupted, i/o channels closed;", e);
+                    logger.warn("thread interrupted, i/o channels closed;", e);
                 }
                 catch(Throwable e){
-                    logger.log(Level.SEVERE, "encountered an error listening for traffic", e);
+                    logger.error("encountered an error listening for traffic", e);
                 } finally {
                     buff = new byte[bufSize];
                 }
             }
 
-            logger.log(Level.INFO, String.format("mqtt-sn udp [%s] stopping udp server [%s] bound to socket [%s] with buffer size [%s], running ? [%s]",
-                    registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running));
+            logger.info("mqtt-sn udp {} stopping udp server {} bound to socket {} with buffer size {}, running ? {}",
+                    registry.getOptions().getContextId(), threadName, socketIn.getLocalPort(), bufSize, running);
 
         }, threadName);
         thread.setDaemon(true);
@@ -144,7 +141,7 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
             receiverThread.interrupt();
         }
 
-        logger.log(Level.INFO, String.format("stopped udp transport"));
+        logger.info("stopped udp transport");
         broadcastThread = null;
     }
 
@@ -165,17 +162,15 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
 
     protected void sendDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {
         if(!running){
-            logger.log(Level.WARNING, String.format("transport is NOT RUNNING trying to send [%s] byte Datagram to [%s]",
-                    packet.getLength(), context));
+            logger.warn("transport is NOT RUNNING trying to send {} byte Datagram to {}",
+                    packet.getLength(), context);
         }
         NetworkAddress address = context.getNetworkAddress();
         InetAddress inetAddress = InetAddress.getByName(address.getHostAddress());
         packet.setAddress(inetAddress);
         packet.setPort(address.getPort());
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("sending [%s] byte Datagram to [%s] -> [%s]",
-                    packet.getLength(), address, address.getPort()));
-        }
+        logger.debug("sending {} byte Datagram to {} -> {}",
+                    packet.getLength(), address, address.getPort());
         send(packet);
     }
 
@@ -193,8 +188,8 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
             try (DatagramSocket socket = new DatagramSocket()){
                 socket.setBroadcast(true);
                 for(InetAddress address : broadcastAddresses) {
-                    logger.log(Level.FINE, String.format("broadcasting [%s] message to network interface [%s] -> [%s]",
-                            broadcastMessage.getMessageName(), address, options.getBroadcastPort()));
+                    logger.debug("broadcasting {} message to network interface {} -> {}",
+                            broadcastMessage.getMessageName(), address, options.getBroadcastPort());
                     DatagramPacket packet
                             = new DatagramPacket(arr, arr.length, address, options.getBroadcastPort());
                     socket.send(packet);

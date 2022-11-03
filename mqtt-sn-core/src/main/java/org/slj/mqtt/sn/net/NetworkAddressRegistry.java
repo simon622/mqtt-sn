@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.net;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.INetworkAddressRegistry;
@@ -35,12 +37,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
-    static Logger logger = Logger.getLogger(NetworkAddressRegistry.class.getName());
+    static Logger logger = LoggerFactory.getLogger(NetworkAddressRegistry.class.getName());
 
     final protected Map<NetworkAddress, INetworkContext> networkRegistry;
     final protected Map<IMqttsnContext, INetworkContext> mqttsnContextRegistry;
@@ -57,7 +57,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     @Override
     public INetworkContext getContext(NetworkAddress address) throws NetworkRegistryException {
         INetworkContext context = networkRegistry.get(address);
-        logger.log(Level.FINE, String.format("getting network context from RAM registry by address [%s] -> [%s]", address, context));
+        logger.debug("getting network context from RAM registry by address {} -> {}", address, context);
         return context;
     }
 
@@ -66,9 +66,8 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
         INetworkContext context = mqttsnContextRegistry.get(sessionContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get network route for session " + sessionContext);
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("getting network context from RAM registry by session [%s] -> [%s]", sessionContext, context));
-        }
+
+        logger.debug("getting network context from RAM registry by session {} -> {}", sessionContext, context);
         return context;
     }
 
@@ -77,9 +76,8 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
         IMqttsnContext context = networkContextRegistry.get(networkContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get session context for network route " + networkContext);
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("getting session context from RAM registry network route [%s] -> [%s]", networkContext, context));
-        }
+
+        logger.debug("getting session context from RAM registry network route {} -> {}", networkContext, context);
         return context;
     }
 
@@ -142,7 +140,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
                     itr.remove();
                     networkRegistry.remove(c.getNetworkAddress());
                     networkContextRegistry.remove(c);
-                    logger.log(Level.INFO, String.format("removing network,session & address from RAM registry - [%s]", clientId));
+                    logger.info("removing network,session & address from RAM registry - {}", clientId);
                     return true;
                 }
             }

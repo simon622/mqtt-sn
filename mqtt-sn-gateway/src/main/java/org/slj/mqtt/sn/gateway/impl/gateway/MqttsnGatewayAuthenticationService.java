@@ -31,7 +31,6 @@ import org.slj.mqtt.sn.spi.IMqttsnAuthenticationService;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
-import java.util.logging.Level;
 
 public class MqttsnGatewayAuthenticationService
         extends MqttsnService  implements IMqttsnAuthenticationService {
@@ -40,7 +39,7 @@ public class MqttsnGatewayAuthenticationService
     public boolean allowConnect(IMqttsnContext context, String clientId) {
         MqttsnClientCredentials credentials = ((MqttsnGatewayOptions)registry.getOptions()).getClientCredentials();
         if(credentials == null) {
-            logger.log(Level.WARNING, "credentials not defined on runtime options.. deny all");
+            logger.warn("credentials not defined on runtime options.. deny all");
             return false;
         }
         //allow all

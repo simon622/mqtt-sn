@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.TopicInfo;
@@ -31,13 +33,10 @@ import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.*;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class MqttsnMessageQueueProcessor
         extends MqttsnService implements IMqttsnMessageQueueProcessor {
 
-    static Logger logger = Logger.getLogger(MqttsnMessageQueueProcessor.class.getName());
+    static Logger logger = LoggerFactory.getLogger(MqttsnMessageQueueProcessor.class.getName());
 
     protected boolean clientMode;
 
@@ -54,15 +53,12 @@ public class MqttsnMessageQueueProcessor
         //-- so safe to remove
         long count = registry.getMessageQueue().queueSize(session);
 
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE,
-                    String.format("processing queue size [%s] on thread [%s] in client-mode [%s] for [%s]", count, Thread.currentThread().getName(), clientMode, context));
-        }
+        logger.debug("processing queue size {} on thread {} in client-mode {} for {}", count, Thread.currentThread().getName(), clientMode, context);
+
 
         if(count == 0){
             if(stateCheckService != null){
-                logger.log(Level.FINE,
-                        String.format("notifying state service of queue empty thread [%s] for [%s]", Thread.currentThread().getName(), context));
+                logger.debug("notifying state service of queue empty thread {} for {}", Thread.currentThread().getName(), context);
                 //-- this checks on the state of any session and if its AWAKE will lead to a PINGRESP being sent
                 stateCheckService.queueEmpty(context);
             }
@@ -76,9 +72,7 @@ public class MqttsnMessageQueueProcessor
 
         //-- this checks the inflight if its > 0 we cannot send
         if(!registry.getMessageStateService().canSend(context)) {
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("state service determined cant send at the moment [%s], remove process and allow protocol processor to schedule new check", context));
-            }
+            logger.debug("state service determined cant send at the moment {}, remove process and allow protocol processor to schedule new check", context);
             return RESULT.BACKOFF_PROCESS;
         }
 
@@ -100,9 +94,7 @@ public class MqttsnMessageQueueProcessor
         String topicPath = queuedMessage.getData().getTopicPath();
         TopicInfo info = registry.getTopicRegistry().lookup(session, topicPath, true);
         if(info == null){
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("need to register for delivery to [%s] on topic [%s]", session.getContext(), topicPath));
-            }
+            logger.debug("need to register for delivery to {} on topic {}", session.getContext(), topicPath);
             if(!clientMode){
                 //-- only the server hands out alias's
                 info = registry.getTopicRegistry().register(session, topicPath);
@@ -116,7 +108,7 @@ public class MqttsnMessageQueueProcessor
                     }
                 }
             } catch(MqttsnExpectationFailedException e){
-                logger.log(Level.WARNING, String.format("unable to send message, try again later"), e);
+                logger.warn("unable to send message, try again later", e);
             }
             //-- with a register we should come back when the registration is complete and attempt delivery
             return RESULT.REPROCESS;
@@ -147,13 +139,10 @@ public class MqttsnMessageQueueProcessor
 
                 RESULT res = ((registry.getMessageQueue().queueSize(session) > 0) ||
                         queuedMessage.getData().getQos() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
-                if(logger.isLoggable(Level.FINE)){
-                    logger.log(Level.FINE, String.format("sending complete returning [%s] for [%s]", res, context));
-                }
+                logger.debug("sending complete returning {} for {}", res, context);
                 return res;
             } catch (MqttsnException e) {
-
-                logger.log(Level.WARNING, String.format("encountered error dequeing publish"), e);
+                logger.warn("encountered error dequeing publish", e);
                 //-- error so back off a little
                 return RESULT.BACKOFF_PROCESS;
             }

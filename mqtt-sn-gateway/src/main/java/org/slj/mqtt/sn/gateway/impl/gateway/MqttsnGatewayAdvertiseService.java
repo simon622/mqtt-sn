@@ -31,8 +31,6 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
-import java.util.logging.Level;
-
 public class MqttsnGatewayAdvertiseService
         extends AbstractMqttsnBackoffThreadService implements IMqttsnGatewayAdvertiseService {
 
@@ -51,8 +49,8 @@ public class MqttsnGatewayAdvertiseService
             timeout = ((MqttsnGatewayOptions)registry.getOptions()).getGatewayAdvertiseTime();
             int gatewayId = ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId();
 
-            logger.log(Level.INFO, String.format("advertising gateway id [%s], next sending time in [%s] seconds",
-                    gatewayId, timeout));
+            logger.info("advertising gateway id {}, next sending time in {} seconds",
+                    gatewayId, timeout);
 
             IMqttsnMessage msg = registry.getMessageFactory().createAdvertise(
                     ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId(),
@@ -61,7 +59,7 @@ public class MqttsnGatewayAdvertiseService
             lastGatewayBroadcastTime = System.currentTimeMillis();
 
         } catch(Exception e){
-            logger.log(Level.WARNING, String.format("error sending advertising message"), e);
+            logger.warn("error sending advertising message", e);
         }
 
         return timeout * 1000;

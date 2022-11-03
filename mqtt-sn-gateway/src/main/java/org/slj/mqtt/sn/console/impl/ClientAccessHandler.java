@@ -35,7 +35,6 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 public class ClientAccessHandler extends MqttsnConsoleAjaxRealmHandler {
 
@@ -83,7 +82,6 @@ public class ClientAccessHandler extends MqttsnConsoleAjaxRealmHandler {
     protected void handleHttpPost(IHttpRequestResponse request) throws HttpException, IOException {
 
         try {
-            LOG.log(Level.INFO, "handle new credentials here " + request);
             MqttsnClientCredentials creds = registry.getOptions().getClientCredentials();
             boolean modified = false;
 

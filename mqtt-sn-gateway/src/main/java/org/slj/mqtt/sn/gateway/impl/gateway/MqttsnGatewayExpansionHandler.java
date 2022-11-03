@@ -38,7 +38,6 @@ import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
-import java.util.logging.Level;
 
 
 /**
@@ -59,7 +58,7 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
             throw new MqttsnException("illegal format supplied", e);
         }
 
-        logger.log(Level.FINE, String.format("receiving broker side message into [%s] sessions", recipients.size()));
+        logger.debug("receiving broker side message into [{}] sessions", recipients.size());
 
         IMqttsnDataRef dataId = getRegistry().getMessageRegistry().add(payload);
         int successfulExpansion = 0;
@@ -75,7 +74,7 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
                 if(session != null){
                     if(session.getMaxPacketSize() != 0 &&
                             payload.length + 9 > session.getMaxPacketSize()){
-                        logger.log(Level.WARNING, String.format("payload exceeded max size (%s) bytes configured by client, ignore this client [%s]", payload.length, context));
+                        logger.warn("payload exceeded max size ({}) bytes configured by client, ignore this client [{}]", payload.length, context);
                         getRegistry().getDeadLetterQueue().add(
                                 MqttsnDeadLetterQueueBean.REASON.MAX_SIZE_EXCEEDED,
                                 context, impl);
@@ -88,10 +87,10 @@ public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqt
                         }
                     }
                 } else {
-                    logger.log(Level.WARNING, String.format("detected <null> session state for subscription (%s)", context));
+                    logger.warn("detected <null> session state for subscription ({})", context);
                 }
             } catch(MqttsnException e){
-                logger.log(Level.WARNING, String.format("detected issue for session receipt.. ignore client (%s)", context));
+                logger.warn("detected issue for session receipt.. ignore client ({})", context);
             } finally {
                 getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_EXPANSION).increment(1);
             }

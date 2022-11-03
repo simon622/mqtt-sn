@@ -30,7 +30,6 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
 
 public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
 
@@ -50,7 +49,7 @@ public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
 
     private void initSender(){
         if(senderThread == null){
-            logger.log(Level.INFO, String.format("starting udp datagram batching sender.."));
+            logger.info("starting udp datagram batching sender..");
             senderThread = new Thread(() -> {
                 while(running){
                     try {
@@ -61,10 +60,10 @@ public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
                     }
                     catch(InterruptedException e){
                         Thread.currentThread().interrupt();
-                        logger.log(Level.WARNING, "batched sending interrupted");
+                        logger.warn("batched sending interrupted");
                     }
                     catch(Exception e){
-                        logger.log(Level.SEVERE, "error on sending thread", e);
+                        logger.error("error on sending thread", e);
                     }
                 }
             }, "mqtt-sn-sender");

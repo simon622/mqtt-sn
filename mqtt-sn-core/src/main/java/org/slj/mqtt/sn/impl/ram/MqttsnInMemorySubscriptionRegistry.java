@@ -34,11 +34,10 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
 import org.slj.mqtt.sn.utils.tree.PathTriesTree;
+import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
 
 import java.util.Set;
-import java.util.logging.Level;
 
 public class MqttsnInMemorySubscriptionRegistry
         extends AbstractSubscriptionRegistry {
@@ -106,7 +105,7 @@ public class MqttsnInMemorySubscriptionRegistry
     @Override
     public boolean hasSubscription(String topicPath) {
         boolean exists = tree.hasMembers(topicPath);
-        logger.log(Level.INFO, String.format("subscription exists ? [%s] -> [%s]", topicPath, exists));
+        logger.info("subscription exists ? {} -> {}", topicPath, exists);
         return exists;
     }
 

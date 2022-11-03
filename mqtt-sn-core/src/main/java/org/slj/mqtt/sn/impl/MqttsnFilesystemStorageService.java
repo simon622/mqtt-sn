@@ -36,7 +36,6 @@ import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.logging.Level;
 
 public class MqttsnFilesystemStorageService extends MqttsnService implements IMqttsnStorageService {
 
@@ -117,8 +116,8 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
                         throw new MqttsnSecurityException("unable to read / write to settings location");
                     }
                     else {
-                        logger.log(Level.INFO, String.format("initialising file system settings storage at [%s]",
-                                settingsFile.getAbsolutePath()));
+                        logger.info("initialising file system settings storage at {}",
+                                settingsFile.getAbsolutePath());
                         properties = new Properties();
                         setDatePreference(FIRSTRUN, new Date());
                         firstRun = true;
@@ -227,7 +226,7 @@ public class MqttsnFilesystemStorageService extends MqttsnService implements IMq
     @Override
     public void saveFile(String fileName, byte[] bytes) throws MqttsnException {
         try {
-            logger.log(Level.INFO, String.format("writing data to storage [%s] -> [%s]", fileName, bytes.length));
+            logger.info("writing data to storage {} -> {}", fileName, bytes.length);
             if(fileName.contains(File.separator) || fileName.contains(".."))
                 throw new MqttsnSecurityException("only able to write to child of root storage");
             File f = new File(path, fileName);

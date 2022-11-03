@@ -26,6 +26,8 @@ package org.slj.mqtt.sn.gateway.connector.paho;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.PublishResult;
@@ -39,8 +41,6 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author simonjohnson
@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  */
 public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection implements MqttCallback {
 
-    private Logger logger = Logger.getLogger(PahoMqttsnBrokerConnection.class.getName());
+    private Logger logger = LoggerFactory.getLogger(PahoMqttsnBrokerConnection.class.getName());
     private volatile MqttClient client = null;
     protected MqttsnConnectorOptions options;
 
@@ -72,7 +72,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
                 if (client != null && !client.isConnected()){
                     MqttConnectOptions connectOptions = createConnectOptions(options);
                     try {
-                        logger.log(Level.INFO, String.format("connecting client with options [%s]", options));
+                        logger.info("connecting client with options [{}]", options);
                         client.connect(connectOptions);
                         if(client.isConnected()){
                             onClientConnected(client);
@@ -114,14 +114,14 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
                 MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PROTOCOL : MqttsnConnectorOptions.DEFAULT_MQTT_PROTOCOL :
                 protocol;
 
-        return String.format("%s://%s:%s", protocol, options.getHostName(), options.getPort());
+        return String.format("{}://{}:{}", protocol, options.getHostName(), options.getPort());
     }
 
     protected MqttClient createClient(MqttsnConnectorOptions options) throws MqttsnConnectorException {
         try {
             String clientId = createClientId(options);
             String connectionStr = createConnectionString(options);
-            logger.log(Level.INFO, String.format("creating new paho client with host [%s] and clientId [%s]", connectionStr, clientId));
+            logger.info("creating new paho client with host [{}] and clientId [{}]", connectionStr, clientId);
             MqttClient client = new MqttClient(connectionStr, clientId, new MemoryPersistence());
             client.setCallback(this);
             client.setTimeToWait(options.getConnectionTimeout() * 1000);
@@ -141,11 +141,11 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
         synchronized (this){
             try {
                 if(client != null && client.isConnected()){
-                    logger.log(Level.INFO, "closing connection to broker");
+                    logger.info("closing connection to broker");
                     client.disconnectForcibly();
                 }
             } catch(MqttException e){
-                logger.log(Level.SEVERE, "error encountered closing paho client;", e);
+                logger.error("error encountered closing paho client;", e);
             } finally {
                 try {
                     if(client != null){
@@ -164,7 +164,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
         try {
             int QoS = message == null ? MqttsnConstants.QoS2 : backendService.getRegistry().getCodec().getQoS(message, true);
             if(isConnected()) {
-                logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
+                logger.info("subscribing connection to [{}] -> [{}]", topicPath, QoS);
                 client.subscribe(topicPath.toString(), QoS);
                 return new SubscribeResult(QoS);
             }
@@ -177,7 +177,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     @Override
     public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
-            logger.log(Level.INFO, String.format("unsubscribing connection from [%s]", topicPath));
+            logger.info("unsubscribing connection from [{}]", topicPath);
             if(isConnected()){
                 client.unsubscribe(topicPath.toString());
                 return new UnsubscribeResult(Result.STATUS.SUCCESS);
@@ -203,7 +203,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
 
     @Override
     public void connectionLost(Throwable t) {
-        logger.log(Level.SEVERE, "connection reported lost on broker side", t);
+        logger.error("connection reported lost on broker side", t);
         try {
             client.close(true);
         } catch(Exception e){
@@ -216,18 +216,16 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
         try {
             byte[] data = mqttMessage.getPayload();
-            logger.log(Level.INFO, String.format("recieved message from connection [%s] -> [%s] bytes", s, data.length));
+            logger.info("received message from connection [{}] -> [{}] bytes", s, data.length);
             receive(s, mqttMessage.getQos(), mqttMessage.isRetained(), data);
         } catch(Exception e){
-            logger.log(Level.SEVERE, "gateway reported issue receiving message from broker;", e);
+            logger.error("gateway reported issue receiving message from broker;", e);
         }
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        if (logger.isLoggable(Level.FINE)) {
-            logger.log(Level.FINE, String.format("broker confirm delivery complete [%s] -> [%s]",
-                    token.getMessageId(), Arrays.toString(token.getTopics())));
-        }
+        logger.trace("broker confirm delivery complete [{}] -> [{}]",
+                    token.getMessageId(), Arrays.toString(token.getTopics()));
     }
 }

@@ -35,7 +35,6 @@ import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
 
 public abstract class AbstractMqttsnBackendService
         extends AbstractMqttsnBackoffThreadService implements IMqttsnBackendService {
@@ -122,7 +121,7 @@ public abstract class AbstractMqttsnBackendService
             try {
                 getRegistry().getExpansionHandler().receiveToSessions(topicPath,qos, retained, payload);
             } catch(Exception e){
-                logger.log(Level.SEVERE, "error receiving to sessions;", e);
+                logger.error("error receiving to sessions;", e);
             }
         });
     }
@@ -175,7 +174,7 @@ public abstract class AbstractMqttsnBackendService
                 if(running()){
                     stop();
                 }
-                logger.log(Level.INFO, String.format("starting new instance of connector [%s] using [%s]", descriptor.getClassName(), options));
+                logger.info("starting new instance of connector {} using {}", descriptor.getClassName(), options);
                 IMqttsnConnector connector = getConnectorClass(descriptor).getConstructor(
                                 MqttsnConnectorDescriptor.class, MqttsnConnectorOptions.class).
                         newInstance(descriptor, options);

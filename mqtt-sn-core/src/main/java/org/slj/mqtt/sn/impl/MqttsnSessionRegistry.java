@@ -38,7 +38,6 @@ import org.slj.mqtt.sn.utils.radix.RadixTree;
 import org.slj.mqtt.sn.utils.radix.RadixTreeImpl;
 
 import java.util.*;
-import java.util.logging.Level;
 
 /**
  * Created bean based session objects which can encapsulate the storage of session elements
@@ -61,7 +60,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     @Override
     public IMqttsnSession createNewSession(IMqttsnContext context) {
         if(!running()) throw new MqttsnRuntimeException("unable to create session on, service not running");
-        logger.log(Level.INFO, String.format("creating new session for [%s]", context));
+        logger.info("creating new session for {}", context);
         IMqttsnSession session = new MqttsnSessionBeanImpl(context, MqttsnClientState.DISCONNECTED);
         sessionLookup.put(context, session);
         try {
@@ -121,8 +120,8 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
             registry.getWillRegistry().clear(session);
         }
 
-        logger.log(Level.INFO, String.format(String.format("cleaning session state [%s], deepClean ? [%s], queueSize after clean [%s]",
-                session, deepClean, registry.getMessageQueue().queueSize(session))));
+        logger.info("cleaning session state {}, deepClean ? {}, queueSize after clean {}",
+                session, deepClean, registry.getMessageQueue().queueSize(session));
         return true;
     }
 
@@ -130,8 +129,8 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     public void clear(IMqttsnSession session, boolean clearNetworking) throws MqttsnException {
         try {
             if(session == null) throw new NullPointerException("cannot clear <null> session");
-            logger.log(Level.INFO, String.format("removing session for [%s], clear networking ? [%s]",
-                    session.getContext(), clearNetworking));
+            logger.info("removing session for {}, clear networking ? {}",
+                    session.getContext(), clearNetworking);
             if(clearNetworking){
                 getRegistry().getNetworkRegistry().
                         removeExistingClientId(session.getContext().getId());
@@ -200,32 +199,32 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     @Override
     public void modifyClientState(IMqttsnSession session, MqttsnClientState state){
         getSessionBean(session).setClientState(state);
-        logger.log(Level.INFO, String.format("setting session-state as '%s' [%s]", state, session));
+        logger.info("setting session-state as '{}' {}", state, session);
     }
 
     @Override
     public void modifyLastSeen(IMqttsnSession session) {
         Date lastSeen = new Date();
         getSessionBean(session).setLastSeen(lastSeen);
-        logger.log(Level.INFO, String.format("setting session-lastSeen as '%s' [%s]", lastSeen, session));
+        logger.info("setting session-lastSeen as '{}' {}", lastSeen, session);
     }
 
     @Override
     public void modifyKeepAlive(IMqttsnSession session, int keepAlive) {
         getSessionBean(session).setKeepAlive(keepAlive);
-        logger.log(Level.INFO, String.format("setting session-keepAlive as '%s' [%s]", keepAlive, session));
+        logger.info("setting session-keepAlive as '{}' {}", keepAlive, session);
     }
 
     @Override
     public void modifySessionExpiryInterval(IMqttsnSession session, long sessionExpiryInterval) {
         getSessionBean(session).setSessionExpiryInterval(sessionExpiryInterval);
-        logger.log(Level.INFO, String.format("setting session-sessionExpiryInterval as '%s' [%s]", sessionExpiryInterval, session));
+        logger.info("setting session-sessionExpiryInterval as '{}' {}", sessionExpiryInterval, session);
     }
 
     @Override
     public void modifyMaxPacketSize(IMqttsnSession session, int maxPacketSize) {
         getSessionBean(session).setMaxPacketSize(maxPacketSize);
-        logger.log(Level.INFO, String.format("setting session-maxPacketSize as '%s' [%s]", maxPacketSize, session));
+        logger.info("setting session-maxPacketSize as '{}}' {}", maxPacketSize, session);
     }
 
     protected void registerMetrics(IMqttsnRuntimeRegistry runtime){

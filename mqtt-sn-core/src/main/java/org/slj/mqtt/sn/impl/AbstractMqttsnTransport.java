@@ -36,7 +36,6 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 /**
  * The abstract transport implementation provides many of the requisite behaviours required of the
@@ -110,14 +109,13 @@ public abstract class AbstractMqttsnTransport
                 return;
             }
             if (data.length > registry.getOptions().getMaxProtocolMessageSize()) {
-                logger.log(Level.SEVERE, String.format("receiving [%s] bytes - max allowed message size [%s] - error",
-                        data.length, registry.getOptions().getMaxProtocolMessageSize()));
+                logger.error("receiving {} bytes - max allowed message size {} - error",
+                        data.length, registry.getOptions().getMaxProtocolMessageSize());
                 throw new MqttsnRuntimeException("received message was larger than allowed max");
             }
 
             if (registry.getOptions().isWireLoggingEnabled()) {
-                logger.log(Level.INFO, String.format("receiving [%s] ",
-                        MqttsnWireUtils.toBinary(data)));
+                logger.info("receiving [{}] ", MqttsnWireUtils.toBinary(data));
             }
 
             if(registry.getSecurityService().protocolIntegrityEnabled()){
@@ -126,10 +124,8 @@ public abstract class AbstractMqttsnTransport
 
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
 
-            if (logger.isLoggable(Level.FINE)) {
-                logger.log(Level.FINE, String.format("receiving [%s] protocol bytes (%s) from [%s] on thread [%s]",
-                        data.length, message.getMessageName(), networkContext, Thread.currentThread().getName()));
-            }
+            logger.debug("receiving {} protocol bytes {} from {} on thread {}",
+                        data.length, message.getMessageName(), networkContext, Thread.currentThread().getName());
 
             boolean authd = true;
             int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
@@ -137,7 +133,7 @@ public abstract class AbstractMqttsnTransport
             if (message instanceof IMqttsnProtocolVersionPacket) {
                 protocolVersion = ((IMqttsnProtocolVersionPacket)message).getProtocolVersion();
                 if(!registry.getCodec().supportsVersion(protocolVersion)){
-                    logger.log(Level.WARNING, String.format("codec does not support presented protocol version [%s] for [%s]", protocolVersion, networkContext));
+                    logger.warn("codec does not support presented protocol version {} for {}", protocolVersion, networkContext);
                     throw new MqttsnCodecException("unsupported codec version");
                 }
             }
@@ -149,7 +145,7 @@ public abstract class AbstractMqttsnTransport
                 if(clientId == null){
                     if(protocolVersion == MqttsnConstants.PROTOCOL_VERSION_2_0){
                         clientId = getRegistry().getClientIdFactory().createClientId(null);
-                        logger.log(Level.INFO, String.format("detected <null> clientId, creating an assignedClient using clientId factory [%s]", clientId));
+                        logger.info("detected <null> clientId, creating an assignedClient using clientId factory {}", clientId);
                     }
                 }
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext)) {
@@ -158,20 +154,20 @@ public abstract class AbstractMqttsnTransport
                     //-- need to check the context from the network matches the supplied clientId in case of address reuse..
                     IMqttsnContext mqttsnContext = registry.getNetworkRegistry().getMqttsnContext(networkContext);
                     if(clientId == null || "".equals(clientId.trim()) && message.getMessageType() == MqttsnConstants.PINGREQ){
-                        logger.log(Level.INFO, String.format("%s received with no clientId, continue with previous clientId on network address [%s]",
-                                message, mqttsnContext));
+                        logger.info("{} received with no clientId, continue with previous clientId on network address {}",
+                                message, mqttsnContext);
                     }
                     else if(!mqttsnContext.getId().equals(clientId)){
                         //-- the connecting device is presenting a different clientId to the previous one held against the
                         //-- network address - we must ensure they dont interfere..
                         if(checkNewClientIdMatchesClientIdFromExistingContext()){
-                            logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] invalidate, and re-auth",
-                                    networkContext.getNetworkAddress(), mqttsnContext, clientId));
+                            logger.warn("detected mis-matched clientId for network address {} -> {} != {} invalidate, and re-auth",
+                                    networkContext.getNetworkAddress(), mqttsnContext, clientId);
                             getRegistry().getRuntime().handleConnectionLost(mqttsnContext, null);
                             authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
                         } else {
-                            logger.log(Level.WARNING, String.format("detected mis-matched clientId for network address [%s] -> [%s] != [%s] implementation says this is OK, ignore",
-                                    networkContext.getNetworkAddress(), mqttsnContext, clientId));
+                            logger.warn("detected mis-matched clientId for network address {} -> {} != {} implementation says this is OK, ignore",
+                                    networkContext.getNetworkAddress(), mqttsnContext, clientId);
                         }
                     }
                 }
@@ -181,7 +177,7 @@ public abstract class AbstractMqttsnTransport
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext) &&
                         registry.getCodec().isPublish(message) &&
                         registry.getCodec().getData(message).getQos() == -1) {
-                    logger.log(Level.INFO, String.format("detected non authorised publish -1, apply for temporary auth from network context [%s]", networkContext));
+                    logger.info("detected non authorised publish -1, apply for temporary auth from network context {}", networkContext);
                     authd = registry.getMessageHandler().temporaryAuthorizeContext(networkContext);
                 }
             }
@@ -191,21 +187,21 @@ public abstract class AbstractMqttsnTransport
                 IMqttsnMessageContext messageContext = getRegistry().getContextFactory().createMessageContext(networkContext);
                 registry.getMessageHandler().receiveMessage(messageContext, message);
             } else {
-                logger.log(Level.WARNING, "auth could not be established, send disconnect that is not processed by application");
+                logger.warn("auth could not be established, send disconnect that is not processed by application");
                 writeToTransportInternal(networkContext,
                         registry.getMessageFactory().createDisconnect(), false);
             }
         }
         catch(MqttsnCodecException e){
-            logger.log(Level.SEVERE, "protocol error - sending payload format error disconnect;", e);
+            logger.error("protocol error - sending payload format error disconnect;", e);
             writeToTransportInternal(networkContext,
                     registry.getMessageFactory().createDisconnect(MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
         }
         catch(MqttsnSecurityException e){
-            logger.log(Level.SEVERE, "security exception encountered processing, drop packet;", e);
+            logger.error("security exception encountered processing, drop packet;", e);
         }
         catch(Throwable t){
-            logger.log(Level.SEVERE, "unknown error;", t);
+            logger.error("unknown error;", t);
         }
     }
 
@@ -222,26 +218,24 @@ public abstract class AbstractMqttsnTransport
             }
 
             if(data.length > registry.getOptions().getMaxProtocolMessageSize()){
-                logger.log(Level.SEVERE, String.format("cannot send [%s] bytes - max allowed message size [%s]",
-                        data.length, registry.getOptions().getMaxProtocolMessageSize()));
+                logger.error("cannot send {} bytes - max allowed message size {}",
+                        data.length, registry.getOptions().getMaxProtocolMessageSize());
                 throw new MqttsnRuntimeException("cannot send messages larger than allowed max");
             }
 
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("writing [%s] bytes (%s) to [%s] on thread [%s]",
-                        data.length, message.getMessageName(), context, Thread.currentThread().getName()));
-            }
+            logger.debug("writing {} bytes (%s) to {} on thread {}",
+                        data.length, message.getMessageName(), context, Thread.currentThread().getName());
 
             if(registry.getOptions().isWireLoggingEnabled()){
-                logger.log(Level.INFO, String.format("writing [%s] ",
-                        MqttsnWireUtils.toBinary(data)));
+                logger.info("writing {} ",
+                        MqttsnWireUtils.toBinary(data));
             }
 
             writeToTransport(context, data);
             if(notifyListeners) notifyTrafficSent(context, data, message);
             return true;
         } catch(Throwable e){
-            logger.log(Level.SEVERE, String.format("[%s] transport layer error sending buffer", context), e);
+            logger.error("transport layer error sending buffer", e);
             return false;
         }
     }

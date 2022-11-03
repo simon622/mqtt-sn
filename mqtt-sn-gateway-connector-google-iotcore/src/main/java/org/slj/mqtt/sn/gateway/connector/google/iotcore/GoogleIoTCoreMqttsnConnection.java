@@ -31,6 +31,8 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.gateway.connector.paho.PahoMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.spi.ConnectResult;
 import org.slj.mqtt.sn.gateway.spi.DisconnectResult;
@@ -51,8 +53,6 @@ import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author simonjohnson
@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  */
 public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
 
-    private Logger logger = Logger.getLogger(GoogleIoTCoreMqttsnConnection.class.getName());
+    private Logger logger = LoggerFactory.getLogger(GoogleIoTCoreMqttsnConnection.class);
 
     static final String ALG_RSA = "RS256";
     static final String ALG_ES = "ES256";
@@ -88,14 +88,14 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
     @Override
     public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         if(isConnected()){
-            logger.log(Level.INFO, String.format("attaching [%s] device by clientId", context.getId()));
+            logger.info("attaching {} device by clientId", context.getId());
             IMqttsnMessageFactory factory = backendService.getRegistry().getCodec().createMessageFactory();
             //-- tell IoT core we are attaching a device & register for device changes
             String topicPath = String.format("/devices/%s/attach", context.getId());
             IMqttsnMessage publish =
                     factory.createPublish(1, false, false, topicPath, new byte[0]);
             if(!super.publish(context, new TopicPath(topicPath), 1, false, new byte[0], publish).isError()){
-                logger.log(Level.INFO, String.format("device [%s] attached, subscribing or config changes", context.getId()));
+                logger.info("device {} attached, subscribing or config changes", context.getId());
                 topicPath = String.format("/devices/%s/config", context.getId());
                 IMqttsnMessage subscribe = factory.createSubscribe(0, topicPath);
                 subscribe(context, new TopicPath(topicPath), subscribe);
@@ -108,7 +108,7 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
     @Override
     public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         if(isConnected()){
-            logger.log(Level.INFO, String.format("detaching gateway device " + context.getId()));
+            logger.info("detaching gateway device " + context.getId());
             IMqttsnMessageFactory factory = backendService.getRegistry().getCodec().createMessageFactory();
             String topicPath = String.format("/devices/%s/detach", context.getId());
             IMqttsnMessage publish =
@@ -138,18 +138,18 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
             ///devices/{gateway_ID}/errors
             {
                 String topic = String.format("/devices/%s/errors", getGoogleIoTGatewayId(options));
-                logger.log(Level.INFO, String.format("subscribing to Google gateway error topic [%s]", topic));
+                logger.info("subscribing to Google gateway error topic {}", topic);
                 client.subscribe(topic, 0);
             }
 
             ///devices/{gateway_ID}/config
             {
                 String topic = String.format("/devices/%s/config", getGoogleIoTGatewayId(options));
-                logger.log(Level.INFO, String.format("subscribing to Google gateway error topic [%s]", topic));
+                logger.info("subscribing to Google gateway error topic {}", topic);
                 client.subscribe(topic, 0);
             }
         } catch(Exception e){
-            logger.log(Level.SEVERE, String.format("error subscribing to error topic"), e);
+            logger.error("error subscribing to error topic", e);
         }
     }
 
@@ -175,7 +175,6 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
                         createJwtRsa(getGoogleIoTProjectId(options),
                                 options.getPrivateKeyFileLocation()).toCharArray());
             }
-            logger.log(Level.INFO, new String(connectOptions.getPassword()));
             return connectOptions;
         } catch(Exception e){
             throw new MqttsnConnectorException(e);
@@ -254,7 +253,7 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
 
     @Override
     public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
-        logger.log(Level.INFO, String.format("received message from google iot [%s] -> [%s]", s, new String(mqttMessage.getPayload())));
+        logger.info("received message from google iot {} -> {}", s, new String(mqttMessage.getPayload()));
         super.messageArrived(s, mqttMessage);
     }
 }

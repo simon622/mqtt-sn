@@ -24,25 +24,26 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
-import org.slj.mqtt.sn.spi.*;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slj.mqtt.sn.spi.IMqttsnContextFactory;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnSecurityException;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
 public class MqttsnContextFactory
         extends MqttsnService implements IMqttsnContextFactory {
 
-    protected static Logger logger = Logger.getLogger(MqttsnContextFactory.class.getName());
+    protected static Logger logger = LoggerFactory.getLogger(MqttsnContextFactory.class.getName());
 
     @Override
     public INetworkContext createInitialNetworkContext(NetworkAddress address) throws MqttsnException {
 
-        logger.log(Level.INFO,
-                String.format("create new network context for [%s]", address));
+        logger.info("create new network context for {}", address);
         NetworkContext context = new NetworkContext(address);
         return context;
     }
@@ -50,7 +51,7 @@ public class MqttsnContextFactory
     @Override
     public IMqttsnContext createInitialApplicationContext(INetworkContext networkContext, String clientId, int protocolVersion) throws MqttsnSecurityException {
 
-        logger.log(Level.INFO, String.format("create new mqtt-sn context for [%s], protocolVersion [%s]", clientId, protocolVersion));
+        logger.info("create new mqtt-sn context for {}, protocolVersion {}", clientId, protocolVersion);
         MqttsnContext context = new MqttsnContext(clientId);
         context.setProtocolVersion(protocolVersion);
         return context;
@@ -59,7 +60,7 @@ public class MqttsnContextFactory
     @Override
     public IMqttsnContext createTemporaryApplicationContext(INetworkContext networkContext, int protocolVersion) throws MqttsnSecurityException {
 
-        logger.log(Level.INFO, String.format("create temporary mqtt-sn context for [%s], protocolVersion [%s]", networkContext, protocolVersion));
+        logger.info("create temporary mqtt-sn context for {}, protocolVersion {}", networkContext, protocolVersion);
         MqttsnContext context = new MqttsnContext(null);
         context.setProtocolVersion(protocolVersion);
         return context;
@@ -77,7 +78,7 @@ public class MqttsnContextFactory
                 getRegistry().getSessionRegistry().getSession(mqttsnContext, false);
         connectionContext.setMqttsnSession(session);
 
-        logger.log(Level.INFO, String.format("creating mqtt-sn message context for processing [%s]", connectionContext));
+        logger.info("creating mqtt-sn message context for processing {}", connectionContext);
 
         return connectionContext;
     }

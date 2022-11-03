@@ -36,6 +36,7 @@ import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -50,7 +51,9 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     protected String host;
     protected int port;
 
-    public MqttsnClientProfile() {
+    protected IMqttsnStorageService storageService;
+
+    public MqttsnClientProfile(IMqttsnStorageService storageService) {
         clientId = UUID.randomUUID().toString();
     }
 
@@ -73,7 +76,7 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
                             withMaxWait(20000).
                             withMinFlushTime(10).
                             withPredefinedTopic("my/predefined/example/topic/1", 1);
-                    AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+                    AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                             withTransport(new MqttsnUdpTransport(udpOptions)).
                             withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 
@@ -126,13 +129,13 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     }
 
     protected void bindSendLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishSentListener((IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+        createOrGetClient().registerPublishSentListener((IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             getProgress().incrementProgress(1);
         });
     }
 
     protected void bindFailedLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishFailedListener((IMqttsnContext context, UUID messageId, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retry) -> {
+        createOrGetClient().registerPublishFailedListener((IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retry) -> {
             getProgress().incrementProgress(1);
         });
     }

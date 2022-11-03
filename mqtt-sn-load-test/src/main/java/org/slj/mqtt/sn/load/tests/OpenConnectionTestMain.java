@@ -29,10 +29,13 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
+import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.net.UnknownHostException;
@@ -48,9 +51,11 @@ public class OpenConnectionTestMain {
         int port = 2442;
 //        String host = "34.248.60.25";
         String host = "localhost";
+        IMqttsnStorageService storageService = new MqttsnFilesystemStorageService(
+                new MqttsnVMObjectReaderWriter(), "mqtt-sn-load-test");
         for(int i = 0; i < 1200; i++){
             try {
-                MqttsnClient client = createClient(host, port);
+                MqttsnClient client = createClient(storageService, host, port);
                 client.connect(60 * 60, true);
                 client.subscribe("foo", 2);
                 Thread.sleep(10);
@@ -61,7 +66,7 @@ public class OpenConnectionTestMain {
         }
     }
 
-    protected static MqttsnClient createClient(String host, int port)
+    protected static MqttsnClient createClient(IMqttsnStorageService storage, String host, int port)
             throws MqttsnException, UnknownHostException {
 
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
@@ -71,7 +76,7 @@ public class OpenConnectionTestMain {
                 withMinFlushTime(200).
                 withMaxWait(20000).
                 withPredefinedTopic("my/predefined/example/topic/1", 1);
-        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storage, options).
                 withTransport(new MqttsnUdpTransport(udpOptions)).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

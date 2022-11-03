@@ -25,6 +25,8 @@
 package org.slj.mqtt.sn.cloud.client.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.cloud.*;
 import org.slj.mqtt.sn.cloud.client.http.HttpClient;
 import org.slj.mqtt.sn.cloud.client.http.HttpResponse;
@@ -34,12 +36,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
-    static Logger logger = Logger.getLogger(HttpCloudServiceImpl.class.getName());
+    static Logger logger = LoggerFactory.getLogger(HttpCloudServiceImpl.class.getName());
     static final int DEFAULT_CLOUD_MONITOR_TIMEOUT = 10000;
     protected MqttsnCloudToken cloudToken;
     protected String serviceDiscoveryEndpoint;
@@ -169,7 +169,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
                 }
             }
         }
-        logger.log(Level.FINE, "mqtt-sn cloud provider has " + descriptors.size() + " available");
+        logger.debug("mqtt-sn cloud provider has {} descriptors", descriptors.size());
         return descriptors;
     }
 
@@ -185,7 +185,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
     protected void checkConnectivity() throws MqttsnCloudServiceException {
         if(!hasConnectivity){
-            logger.log(Level.WARNING, "mqtt-sn cloud provider is offline");
+            logger.warn("mqtt-sn cloud provider is offline");
             throw new MqttsnCloudServiceException("mqtt-sn cloud provider is unavailable at this time");
         }
     }
@@ -208,7 +208,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         try {
             HttpResponse response =
                     HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
-            logger.log(Level.FINE, String.format("obtaining cloud service list from [%s] -> [%s]", url, response));
+            logger.debug("obtaining cloud service list from {} -> {}", url, response);
             checkResponse(response, true);
             return mapper.readValue(response.getResponseBody(),
                     mapper.getTypeFactory().constructCollectionType(List.class, cls));
@@ -223,7 +223,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         try {
             HttpResponse response =
                     HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
-            logger.log(Level.FINE, String.format("obtaining cloud service object from [%s] -> [%s]", url, response));
+            logger.debug("obtaining cloud service object from {} -> {}", url, response);
             checkResponse(response, true);
             return mapper.readValue(response.getResponseBody(), cls);
         } catch(IOException e){
@@ -239,7 +239,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
             try (InputStream is = new ByteArrayInputStream(jsonBody.getBytes())) {
                 HttpResponse response =
                         HttpClient.post(getHeaders(), url, is, connectTimeoutMillis, readTimeoutMillis);
-                logger.log(Level.FINE, String.format("posting to cloud service object from [%s] -> [%s]", url, response));
+                logger.debug("posting to cloud service object from {} -> {}", url, response);
                 checkResponse(response, true);
                 return mapper.readValue(response.getResponseBody(), cls);
             }
@@ -254,10 +254,10 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         try {
             HttpResponse response = HttpClient.head(getHeaders(), serviceDiscoveryEndpoint, readTimeoutMillis);
             hasConnectivity = !response.isError();
-            logger.log(Level.INFO, String.format("successfully established connection to cloud provider [%s], online", serviceDiscoveryEndpoint));
+            logger.debug("successfully established connection to cloud provider {}, online", serviceDiscoveryEndpoint);
         } catch(IOException e){
             hasConnectivity = false;
-            logger.log(Level.WARNING, String.format("connection to cloud provider [%s] could not be established, offline", serviceDiscoveryEndpoint));
+            logger.warn("connection to cloud provider {} could not be established, offline", serviceDiscoveryEndpoint);
         }  finally {
             updateLastAttempt();
         }

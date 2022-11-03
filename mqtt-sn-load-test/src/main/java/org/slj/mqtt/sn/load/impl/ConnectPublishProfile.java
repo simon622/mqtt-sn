@@ -24,17 +24,21 @@
 
 package org.slj.mqtt.sn.load.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
 public class ConnectPublishProfile extends MqttsnClientProfile {
 
-    static Logger logger = Logger.getLogger(ConnectPublishProfile.class.getName());
+    static Logger logger = LoggerFactory.getLogger(ConnectPublishProfile.class);
     static final int KEEP_ALIVE = 240;
+
+    public ConnectPublishProfile(IMqttsnStorageService storageService) {
+        super(storageService);
+    }
 
     @Override
     public ExecutionProgress initializeProfile(ExecutionInput input) {
@@ -68,7 +72,7 @@ public class ConnectPublishProfile extends MqttsnClientProfile {
             client.disconnect();
 
         } catch(Exception e){
-            logger.log(Level.SEVERE, "error detected", e);
+            logger.error("error detected", e);
             progress.setError(e);
         }
     }

@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.model.MqttsnClientState;
@@ -35,15 +37,17 @@ import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class MqttsnUtils {
 
-    private static Logger logger = Logger.getLogger(MqttsnUtils.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(MqttsnUtils.class.getName());
 
-    public static double percentOf(double val, double of){
-        return val / of * 100;
+    public static double percent(double val, double total){
+        return val / total * 100;
+    }
+
+    public static double percentOf(double percent, double total){
+        return total * (percent / 100);
     }
 
     public static byte[] arrayOf(int size, byte fill){
@@ -73,11 +77,11 @@ public class MqttsnUtils {
             throws MqttsnExpectationFailedException{
         if(response.isPresent() &&
                 response.get().isErrorMessage()){
-            logger.log(Level.WARNING, "error response received from gateway, operation failed; throw to application");
+            logger.warn("error response received from gateway, operation failed; throw to application");
             throw new MqttsnExpectationFailedException("error response received from gateway, operation failed");
         }
         if(token.isError()){
-            logger.log(Level.WARNING, "token was marked invalid by state machine; throw to application");
+            logger.warn("token was marked invalid by state machine; throw to application");
             throw new MqttsnExpectationFailedException("token was marked invalid by state machine");
         }
     }
@@ -202,6 +206,5 @@ public class MqttsnUtils {
     }
 
     public static void main(String[] args) {
-        MqttsnUtils.percentOf(30, 100);
     }
 }

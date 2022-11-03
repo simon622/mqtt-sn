@@ -45,7 +45,6 @@ import org.slj.mqtt.sn.utils.TopicPath;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
 
 /**
  * A single broker connection is maintained and used for all connecting gateway side
@@ -88,7 +87,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             try {
                 close(connection);
             } catch(MqttsnConnectorException e){
-                logger.log(Level.WARNING, "error encountered shutting down broker connector;", e);
+                logger.warn("error encountered shutting down broker connector;", e);
             } finally {
                 synchronized (monitor){
                     monitor.notifyAll();
@@ -99,11 +98,11 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
 
     protected void connectOnStartup() throws MqttsnException{
 
-        logger.log(Level.INFO, "aggregating backend connecting during startup requested..");
+        logger.info("aggregating backend connecting during startup requested..");
         try {
             getConnection(null);
         } catch(MqttsnConnectorException e){
-            logger.log(Level.SEVERE, "encountered error attempting connect..", e);
+            logger.error("encountered error attempting connect..", e);
             throw new MqttsnException("encountered error attempting connect..",e);
         }
 
@@ -144,14 +143,14 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
         try {
             if(isConnected(context)){
                 if(!connection.canAccept(context, topicPath, payload, message)){
-                    logger.log(Level.WARNING, String.format("unable to accept publish [%s]", topicPath));
+                    logger.warn("unable to accept publish {}", topicPath);
                     return new PublishResult(Result.STATUS.ERROR,
-                            String.format("publisher unable to accept message on [%s]", topicPath));
+                            String.format("publisher unable to accept message on {}", topicPath));
                 }
             }
 
             if(queue.size() >= ((MqttsnGatewayOptions) registry.getOptions()).getMaxBackendQueueSize()){
-                logger.log(Level.WARNING, String.format("queuing message for publish [%s] failed, backend queue at capacity [%s]", topicPath, queue.size()));
+                logger.warn("queuing message for publish {} failed, backend queue at capacity {}", topicPath, queue.size());
                 return new PublishResult(Result.STATUS.ERROR,"backend queue is full.");
             } else {
                 BrokerPublishOperation op = new BrokerPublishOperation();
@@ -163,9 +162,8 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 op.qos = qos;
                 queue.add(op);
 
-                if(logger.isLoggable(Level.FINE)){
-                    logger.log(Level.FINE, String.format("queuing message for publish [%s], queue contains [%s]", topicPath, queue.size()));
-                }
+                logger.debug("queuing message for publish {}, queue contains {}", topicPath, queue.size());
+
                 synchronized (monitor){
                     monitor.notifyAll();
                 }
@@ -181,10 +179,10 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     protected long doWork() {
         try {
             if(running){
-                logger.log(Level.FINE, "checking status of managed connection..");
+                logger.debug("checking status of managed connection..");
                 if(connection != null){
                     if(!connection.isConnected()){
-                        logger.log(Level.WARNING, "detected invalid connection to broker, dropping stale connection.");
+                        logger.warn("detected invalid connection to broker, dropping stale connection.");
                         close(connection);
                     }
                 } else {
@@ -192,7 +190,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 }
             }
         } catch(Exception e){
-            logger.log(Level.SEVERE, "error occurred monitoring connections;", e);
+            logger.error("error occurred monitoring connections;", e);
         }
         return MANAGED_CONNECTION_VALIDATION_TIME;
     }
@@ -214,15 +212,15 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                         if(op != null){
                             if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
                                 if(rateLimiter != null) rateLimiter.acquire();
-                                logger.log(Level.FINE, String.format("de-queuing message to broker from queue, [%s] remaining", queue.size()));
+                                logger.debug("de-queuing message to broker from queue, {} remaining", queue.size());
                                 PublishResult res = super.publish(op.context, op.topicPath, op.qos, op.retained, op.payload, op.initialMessage);
                                 if(res.isError()){
                                     if(++errorCount < MAX_ERROR_RETRIES){
-                                        logger.log(Level.WARNING, String.format("error sending message to backend, [%s] - requeue", queue.size()));
+                                        logger.warn("error sending message to backend, {} - requeue", queue.size());
                                         queue.offer(op);
                                     }
                                     else {
-                                        logger.log(Level.WARNING, String.format("error sending message to backend, retries exhausted - discard"));
+                                        logger.warn("error sending message to backend, retries exhausted - discard");
                                         getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH_ERROR).increment(1);
                                         errorCount = 0;
                                     }
@@ -231,7 +229,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                                     getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_PUBLISH).increment(1);
                                 }
                             } else {
-                                logger.log(Level.WARNING, "unable to accept publish operation from queue - discard");
+                                logger.warn("unable to accept publish operation from queue - discard");
                             }
                         }
                     } else {
@@ -253,10 +251,10 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                 }
                 catch(InterruptedException e){
                     Thread.currentThread().interrupt();
-                    logger.log(Level.WARNING, String.format("backend publishing thread interrupted;"));
+                    logger.warn("backend publishing thread interrupted;");
                 }
                 catch(Exception e){
-                    logger.log(Level.SEVERE, String.format("error publishing via queue publisher;"), e);
+                    logger.error("error publishing via queue publisher;", e);
                 }
             } while(running && !stopped);
         }, "mqtt-sn-backend-publisher");
@@ -278,18 +276,18 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                         try {
                             Set<String> paths = getRegistry().getSubscriptionRegistry().readAllSubscribedTopicPaths();
                             if(paths!= null){
-                                logger.log(Level.INFO, String.format("new aggregated connection subscribing to [%s] existing topics..", paths.size()));
+                                logger.info("new aggregated connection subscribing to {} existing topics..", paths.size());
                                 paths.forEach(path -> {
                                     try {
                                         connection.subscribe(null, new TopicPath(path), null);
                                     } catch (MqttsnConnectorException e) {
                                         e.printStackTrace();
-                                        logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
+                                        logger.warn("error subscribing to {} existing topics..", e);
                                     }
                                 });
                             }
                         } catch (MqttsnException e) {
-                            logger.log(Level.WARNING, "error subscribing to [%s] existing topics..", e);
+                            logger.warn("error subscribing to {} existing topics..", e);
                             throw new MqttsnConnectorException(e);
                         }
                     }
@@ -306,7 +304,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                     hasSubscription(topic.toString())) {
                 return super.subscribe(context, topic, message);
             } else {
-                logger.log(Level.INFO, String.format("subscription already existed, not need to subscribe again"));
+                logger.info("subscription already existed, not need to subscribe again");
                 return new SubscribeResult(Result.STATUS.NOOP);
             }
         } catch(MqttsnIllegalFormatException | MqttsnException e){
@@ -322,7 +320,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                     hasSubscription(topic.toString())) {
                 return super.unsubscribe(context, topic, message);
             } else {
-                logger.log(Level.INFO, String.format("more subscriptions existed, do not unsubscribe"));
+                logger.info("more subscriptions existed, do not unsubscribe");
                 return new UnsubscribeResult(Result.STATUS.NOOP);
             }
         } catch(MqttsnIllegalFormatException | MqttsnException e){

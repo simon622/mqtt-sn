@@ -33,7 +33,6 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 public class MqttsnGateway extends AbstractMqttsnRuntime {
 
@@ -82,17 +81,8 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                 ((IMqttsnGatewayRuntimeRegistry) registry).
                         getBackendService().publish(context, topicPath, qos, retained, data, message);
             } catch (MqttsnException e) {
-                logger.log(Level.SEVERE, "error publishing message to backend", e);
+                logger.error("error publishing message to backend", e);
             }
-        });
-
-        //-- notify the backend of confirmed message
-        registerPublishSentListener((context, topicPath, qos, retained, data, message) ->  {
-//            try {
-//                registry.getMessageRegistry().removeWhenCommitted(messageId);
-//            } catch (MqttsnException e) {
-//                logger.log(Level.SEVERE, "error publishing message to backend", e);
-//            }
         });
 
         registerConnectionListener(new IMqttsnConnectionStateListener() {
@@ -123,7 +113,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                                 getGatewaySessionService().markSessionLost(session);
                     }
                 } catch (MqttsnException e) {
-                    logger.log(Level.SEVERE, "error marking session lost;", e);
+                    logger.error("error marking session lost;", e);
                 } finally {
                     notifyCluster(context);
                 }
@@ -134,7 +124,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                     try {
                         ((MqttsnGatewayRuntimeRegistry)registry).getGatewayClusterService().notifyDisconnection(context);
                     } catch (MqttsnException e) {
-                        logger.log(Level.WARNING, String.format("error notifying cluster of disconnection/connection loss"), e);
+                        logger.warn("error notifying cluster of disconnection/connection loss", e);
                     }
                 }
             }

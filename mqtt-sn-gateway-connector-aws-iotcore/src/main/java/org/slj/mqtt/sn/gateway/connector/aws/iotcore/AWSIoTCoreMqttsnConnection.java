@@ -25,6 +25,8 @@
 package org.slj.mqtt.sn.gateway.connector.aws.iotcore;
 
 import com.amazonaws.services.iot.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
@@ -41,8 +43,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author simonjohnson
@@ -52,7 +52,7 @@ import java.util.logging.Logger;
 public class AWSIoTCoreMqttsnConnection
         extends AbstractMqttsnBackendConnection {
 
-    private Logger logger = Logger.getLogger(AWSIoTCoreMqttsnConnection.class.getName());
+    private Logger logger = LoggerFactory.getLogger(AWSIoTCoreMqttsnConnection.class.getName());
 
     static int MIN_TIMEOUT = 5000;
 
@@ -79,8 +79,8 @@ public class AWSIoTCoreMqttsnConnection
                         }
                         initClient();
                         client.connect(getOperationTimeout());
-                        logger.log(Level.INFO, String.format("connecting new AWS client with username [%s] and keepAlive [%s]",
-                                options.getUsername(), options.getKeepAlive()));
+                        logger.info("connecting new AWS client with username {} and keepAlive {}",
+                                options.getUsername(), options.getKeepAlive());
                     } catch(Exception e){
                         throw new MqttsnConnectorException(e);
                     }
@@ -100,7 +100,7 @@ public class AWSIoTCoreMqttsnConnection
                 }
 
                 File keystoreFile = new File(options.getKeystoreLocation());
-                logger.log(Level.INFO, String.format("loading keystore from [%s]", keystoreFile.getAbsolutePath()));
+                logger.info("loading keystore from {}", keystoreFile.getAbsolutePath());
                 String keyStorePassword = options.getKeystorePassword();
                 String keyPassword = options.getKeyPassword();
                 KeyStore store = loadKeyStore(keystoreFile, keyStorePassword);
@@ -118,7 +118,7 @@ public class AWSIoTCoreMqttsnConnection
                     throw new ExceptionInInitializerError("invalid private key location");
                 }
 
-                logger.log(Level.INFO, String.format("loading keystore from certificate [%s] and private-key [%s]", certFile, keyFile));
+                logger.info("loading keystore from certificate {} and private-key {}", certFile, keyFile);
                 AwsCertUtils.KeyStorePasswordPair pair = AwsCertUtils.getKeyStorePasswordPair(certFile, keyFile);
                 client = new AWSIotMqttClient(options.getHostName(), clientId, pair.keyStore, pair.keyPassword);
             }
@@ -148,14 +148,14 @@ public class AWSIoTCoreMqttsnConnection
     @Override
     public synchronized void close() {
         try {
-            logger.log(Level.INFO, "disconnecting & closing connection to broker");
+            logger.info("disconnecting & closing connection to broker");
             if(client != null){
                 if(client.getConnectionStatus() != AWSIotConnectionStatus.DISCONNECTED){
                     client.disconnect(getOperationTimeout(), true);
                 }
             }
         } catch(AWSIotException | AWSIotTimeoutException e){
-            logger.log(Level.SEVERE, "error encountered closing AWS IoT client;", e);
+            logger.error("error encountered closing AWS IoT client;", e);
         } finally {
             client = null;
         }
@@ -167,16 +167,16 @@ public class AWSIoTCoreMqttsnConnection
         try {
             if(isConnected()){
                 int QoS = ((MqttsnSubscribe)message).getQoS();
-                logger.log(Level.INFO, String.format("subscribing connection to [%s] -> [%s]", topicPath, QoS));
+                logger.info("subscribing connection to {} -> {}", topicPath, QoS);
                 client.subscribe(new AWSIotTopic(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(QoS))){
                     @Override
                     public void onMessage(AWSIotMessage message) {
                         try {
                             byte[] data = message.getPayload();
-                            logger.log(Level.INFO, String.format("received message from AWS IoT broker [%s] -> [%s] bytes", getTopic(), data.length));
+                            logger.info("received message from AWS IoT broker {} -> {} bytes", getTopic(), data.length);
                             receive(getTopic(), message.getQos().getValue(), false, data);
                         } catch(Exception e){
-                            logger.log(Level.SEVERE, String.format("error receiving message from broker;"), e);
+                            logger.error("error receiving message from broker;", e);
                         }
                     }
                 });
@@ -193,7 +193,7 @@ public class AWSIoTCoreMqttsnConnection
             throws MqttsnConnectorException {
         try {
             if(isConnected()){
-                logger.log(Level.INFO, String.format("unsubscribing broker from [%s]", topicPath));
+                logger.info("unsubscribing broker from {}", topicPath);
                 client.unsubscribe(topicPath.toString());
                 return new UnsubscribeResult(Result.STATUS.SUCCESS);
             }
@@ -212,7 +212,7 @@ public class AWSIoTCoreMqttsnConnection
                    client.publish(topicPath.toString(), AWSIotQos.valueOf(awsSafeQoS(qos)), payload, getOperationTimeout());
                    return new PublishResult(Result.STATUS.SUCCESS);
                } catch(AWSIotTimeoutException e){
-                   logger.log(Level.WARNING, String.format("timedout sending message to broker [%s]", topicPath));
+                   logger.warn("timedout sending message to broker {}", topicPath);
                    return new PublishResult(Result.STATUS.ERROR, "timed out publishing to broker");
                }
            }

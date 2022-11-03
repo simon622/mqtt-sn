@@ -42,7 +42,6 @@ import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnHelo;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 /**
  * Provides a blocking command implementation, with the ability to handle transparent reconnection
@@ -65,16 +64,13 @@ import java.util.logging.Level;
  * For example use, please refer to {@link Example}.
  */
 public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient {
-
     private volatile IMqttsnSession session;
     private volatile int keepAlive;
     private volatile boolean cleanSession;
-
     private int errorRetryCounter = 0;
     private Thread managedConnectionThread = null;
     private final Object sleepMonitor = new Object();
     private final Object connectionMonitor = new Object();
-
     private final boolean managedConnection;
     private final boolean autoReconnect;
 
@@ -175,7 +171,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 return state.getClientState() == MqttsnClientState.ACTIVE;
             }
         } catch(MqttsnException e){
-            logger.log(Level.WARNING, "error checking connection state", e);
+            logger.warn("error checking connection state", e);
             return false;
         }
     }
@@ -219,7 +215,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     startProcessing(true);
                 } catch(MqttsnExpectationFailedException e){
                     //-- something was not correct with the CONNECT, shut it down again
-                    logger.log(Level.WARNING, "error issuing CONNECT, disconnect");
+                    logger.warn("error issuing CONNECT, disconnect");
                     getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.DISCONNECTED);
                     stopProcessing();
                     throw new MqttsnClientConnectException(e);
@@ -259,7 +255,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
             } catch(MqttsnExpectationFailedException e){
                 //-- something was not correct with the CONNECT, shut it down again
-                logger.log(Level.WARNING, "error issuing WILL UPDATE", e);
+                logger.warn("error issuing WILL UPDATE", e);
                 throw e;
             }
         }
@@ -400,7 +396,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             try {
                 long wake = Math.min(wakeAfterIntervalSeconds, period);
                 if(wake > 0){
-                    logger.log(Level.INFO, String.format("will wake after [%s] seconds", wake));
+                    logger.info("will wake after {} seconds", wake);
                     synchronized (sleepMonitor){
                         //TODO protect against spurious wake up here
                         sleepMonitor.wait(wake * 1000);
@@ -432,7 +428,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         MqttsnSpecificationValidator.validateSessionExpiry(sessionExpiryInterval);
 
-        logger.log(Level.INFO, String.format("sleeping for [%s] seconds", sessionExpiryInterval));
+        logger.info("sleeping for {} seconds", sessionExpiryInterval);
         IMqttsnSession state = checkSession(true);
         IMqttsnMessage message = registry.getMessageFactory().createDisconnect(sessionExpiryInterval);
         synchronized (this){
@@ -530,7 +526,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     try {
                         if (MqttsnUtils.in(state.getClientState(),
                                 MqttsnClientState.ACTIVE, MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)) {
-                            logger.log(Level.INFO, String.format("disconnecting client; deepClean ? [%s], sending remote disconnect ? [%s]", deepClean, sendRemoteDisconnect));
+                            logger.info("disconnecting client; deepClean ? [{}], sending remote disconnect ? {}", deepClean, sendRemoteDisconnect);
                             if(sendRemoteDisconnect){
                                 IMqttsnMessage message = registry.getMessageFactory().createDisconnect();
                                 registry.getMessageStateService().sendMessage(state.getContext(), message);
@@ -589,7 +585,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 getRegistry().getSessionRegistry().modifyClientState(session, newState);
             }
         } catch(MqttsnExpectationFailedException e){
-            logger.log(Level.SEVERE, "operation could not be completed, error in response");
+            logger.error("operation could not be completed, error in response");
             throw e;
         }
     }
@@ -599,13 +595,13 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             synchronized (this){
                 if(session == null){
                     try {
-                        logger.log(Level.INFO, "discovering gateway...");
+                        logger.info("discovering gateway...");
                         Optional<INetworkContext> optionalMqttsnContext =
                                 registry.getNetworkRegistry().waitForContext(registry.getOptions().getDiscoveryTime(), TimeUnit.SECONDS);
                         if(optionalMqttsnContext.isPresent()){
                             INetworkContext networkContext = optionalMqttsnContext.get();
                             session = registry.getSessionRegistry().createNewSession(registry.getNetworkRegistry().getMqttsnContext(networkContext));
-                            logger.log(Level.INFO, String.format("discovery located a gateway for use [%s]", networkContext));
+                            logger.info("discovery located a gateway for use {}", networkContext);
                         } else {
                             throw new MqttsnException("unable to discovery gateway within specified timeout");
                         }
@@ -629,8 +625,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     try {
                         synchronized (connectionMonitor){
                             long delta = errorRetryCounter > 0 ? registry.getOptions().getMaxErrorRetryTime() : getPingDelta()  * 1000L;
-                            logger.log(Level.FINE,
-                                    String.format("managed connection monitor is running at time delta [%s], keepAlive [%s]...", delta, keepAlive));
+                            logger.debug("managed connection monitor is running at time delta {}, keepAlive {}...", delta, keepAlive);
                             connectionMonitor.wait(delta);
 
                             if(running){
@@ -639,7 +634,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                                     if(state != null){
                                         if(state.getClientState() == MqttsnClientState.DISCONNECTED){
                                             if(autoReconnect){
-                                                logger.log(Level.INFO, "client connection set to auto-reconnect...");
+                                                logger.info("client connection set to auto-reconnect...");
                                                 connect(keepAlive, false);
                                                 resetErrorState();
                                             }
@@ -650,7 +645,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                                                         getMessageLastSentToContext(state.getContext());
                                                 if(lastMessageSent == null || System.currentTimeMillis() >
                                                         lastMessageSent + delta ){
-                                                    logger.log(Level.INFO, "managed connection issuing ping...");
+                                                    logger.info("managed connection issuing ping...");
                                                     ping();
                                                     resetErrorState();
                                                 }
@@ -663,19 +658,19 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     } catch(Exception e){
                         try {
                             if(errorRetryCounter++ >= registry.getOptions().getMaxErrorRetries()){
-                                logger.log(Level.SEVERE, String.format("error [%s] on connection manager thread, DISCONNECTING", errorRetryCounter), e);
+                                logger.error("error on connection manager thread, DISCONNECTING", e);
                                 resetErrorState();
                                 disconnect(false, true);
                             } else {
                                 registry.getMessageStateService().clearInflight(getSessionState().getContext());
-                                logger.log(Level.WARNING, String.format("error [%s] on connection manager thread, execute retransmission", errorRetryCounter), e);
+                                logger.warn("error on connection manager thread, execute retransmission", e);
                             }
                         } catch(Exception ex){
-                            logger.log(Level.WARNING, String.format("error handling retranmission [%s] on connection manager thread, execute retransmission", errorRetryCounter), e);
+                            logger.warn("error handling re-tranmission on connection manager thread, execute retransmission", e);
                         }
                     }
                 }
-                logger.log(Level.INFO, "managed-connection closing down");
+                logger.warn("managed-connection closing down");
             }, "mqtt-sn-managed-connection");
             managedConnectionThread.setPriority(Thread.MIN_PRIORITY);
             managedConnectionThread.setDaemon(true);
@@ -685,7 +680,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
     public void resetConnection(IMqttsnContext context, Throwable t, boolean attemptRestart) {
         try {
-            logger.log(Level.WARNING, String.format("connection lost at transport layer [%s]", context), t);
+            logger.warn("connection lost at transport layer", t);
             disconnect(false, true);
             //attempt to restart transport
             callShutdown(registry.getTransport());
@@ -697,12 +692,12 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                             connectionMonitor.notify();
                         }
                     } catch(Exception e){
-                        logger.log(Level.WARNING, String.format("error encountered when trying to recover from unsolicited disconnect [%s]", context), e);
+                        logger.warn("error encountered when trying to recover from unsolicited disconnect", e);
                     }
                 }
             }
         } catch(Exception e){
-            logger.log(Level.WARNING, String.format("error encountered resetting connection [%s], current client state is [%s]", context, getSessionState()), e);
+            logger.warn("error encountered resetting connection", e);
         }
     }
 
@@ -736,7 +731,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         //-- unsolicited disconnect notify to the application
         IMqttsnSession session = checkSession(false);
         if(session != null){
-            logger.log(Level.INFO, String.format("clearing state, deep clean ? [%s]", deepClear));
+            logger.info("clearing state, deep clean ? {}", deepClear);
             registry.getMessageStateService().clearInflight(session.getContext());
             registry.getTopicRegistry().clear(session,
                     deepClear || registry.getOptions().isSleepClearsRegistrations());

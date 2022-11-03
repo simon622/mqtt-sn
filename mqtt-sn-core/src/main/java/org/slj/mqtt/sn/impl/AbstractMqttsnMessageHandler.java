@@ -37,8 +37,6 @@ import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
-import java.util.logging.Level;
-
 public abstract class AbstractMqttsnMessageHandler
         extends MqttsnService implements IMqttsnMessageHandler {
 
@@ -50,11 +48,11 @@ public abstract class AbstractMqttsnMessageHandler
                 registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                 return true;
             }
-            logger.log(Level.WARNING, String.format("context factory did not provide temporary secured context, refuse auth"));
+            logger.warn("context factory did not provide temporary secured context, refuse auth");
             return false;
         }
         catch(MqttsnSecurityException e){
-            logger.log(Level.WARNING, String.format("security exception detected, refuse auth"), e);
+            logger.warn("security exception detected, refuse auth", e);
             return false;
         }
     }
@@ -64,7 +62,7 @@ public abstract class AbstractMqttsnMessageHandler
             boolean authorized = false;
             if(!MqttsnSpecificationValidator.validClientId(clientId, false)){
                 authorized = false;
-                logger.log(Level.WARNING, String.format("clientId format not valid, refuse auth"));
+                logger.warn("clientId format not valid, refuse auth");
             } else {
                 registry.getNetworkRegistry().removeExistingClientId(clientId);
                 IMqttsnContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
@@ -73,13 +71,13 @@ public abstract class AbstractMqttsnMessageHandler
                     mqttsnContext.setAssignedClientId(assignedClientId);
                     authorized = true;
                 } else {
-                    logger.log(Level.WARNING, String.format("context factory did not provide secured context, refuse auth"));
+                    logger.warn("context factory did not provide secured context, refuse auth");
                 }
             }
             return authorized;
         }
         catch(MqttsnSecurityException e){
-            logger.log(Level.WARNING, String.format("security exception detected, refuse auth"), e);
+            logger.warn("security exception detected, refuse auth", e);
             return false;
         }
     }
@@ -96,22 +94,20 @@ public abstract class AbstractMqttsnMessageHandler
         try {
 
             if(!canHandle(context, message)){
-                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] dropping message it could not handle [%s]",
-                        context, message.getMessageName()));
+                logger.warn("mqtt-sn handler [{} <- {}] dropping message it could not handle {}",
+                        context, message.getMessageName());
                 return;
             }
 
             if(message.isErrorMessage()){
-                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] received error message [%s]",
-                        registry.getOptions().getContextId(), context, message));
+                logger.warn("mqtt-sn handler [{} <- {}] received error message {}",
+                        registry.getOptions().getContextId(), context, message);
             }
 
             beforeHandle(context, message);
 
-            if(logger.isLoggable(Level.INFO)){
-                logger.log(Level.INFO, String.format("mqtt-sn handler [%s <- %s] handling inbound message [%s]",
-                        registry.getOptions().getContextId(), context, message));
-            }
+            logger.info("mqtt-sn handler [{} <- {}] handling inbound message {}",
+                        registry.getOptions().getContextId(), context, message);
 
             boolean errord = false;
             IMqttsnMessage originatingMessage = null;
@@ -122,8 +118,8 @@ public abstract class AbstractMqttsnMessageHandler
                             registry.getMessageStateService().notifyMessageReceived(context.getMqttsnContext(), message);
                 } catch(MqttsnException e){
                     errord = true;
-                    logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] state service errord, allow message lifecycle to handle [%s] -> [%s]",
-                            registry.getOptions().getContextId(), context.getMqttsnContext().getId(), message, e.getMessage()));
+                    logger.warn("mqtt-sn handler [{} <- {}] state service errord, allow message lifecycle to handle {} -> {}",
+                            registry.getOptions().getContextId(), context.getMqttsnContext().getId(), message, e.getMessage());
                 }
             }
 
@@ -132,8 +128,8 @@ public abstract class AbstractMqttsnMessageHandler
             //-- if the state service threw a wobbler but for some reason this didnt lead to an error message
             //-- we should just disconnect the device
             if(errord && !response.isErrorMessage()){
-                logger.log(Level.WARNING, String.format("mqtt-sn handler [%s <- %s] state service errord, message handler did not produce an error, so overrule and disconnect [%s] -> [%s]",
-                        registry.getOptions().getContextId(), context, message));
+                logger.warn("mqtt-sn handler [{} <- {}] state service errord, message handler did not produce an error, so overrule and disconnect {} -> {}",
+                        registry.getOptions().getContextId(), context, message);
                 response = registry.getMessageFactory().createDisconnect();
             }
 
@@ -152,7 +148,7 @@ public abstract class AbstractMqttsnMessageHandler
             afterResponse(context, message, response);
 
         } catch(MqttsnException e){
-            logger.log(Level.WARNING,"handled with disconnect error encountered during receive;", e);
+            logger.warn("handled with disconnect error encountered during receive;", e);
             handleResponse(context,
                     registry.getMessageFactory().createDisconnect());
             if(!registry.getRuntime().handleLocalDisconnect(context.getMqttsnContext(), e)) {
@@ -315,7 +311,7 @@ public abstract class AbstractMqttsnMessageHandler
             //we need to remove any message that was marked inflight
             if(message.needsId()){
                 if(registry.getMessageStateService().removeInflight(context.getMqttsnContext(), IMqttsnOriginatingMessageSource.REMOTE, message.getId()) != null){
-                    logger.log(Level.WARNING, "tidied up bad message that was marked inflight and yeilded error response");
+                    logger.warn("tidied up bad message that was marked inflight and yeilded error response");
                 }
             }
         }
@@ -326,7 +322,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     protected boolean validateOriginatingMessage(IMqttsnMessageContext context, IMqttsnMessage originatingMessage, IMqttsnMessage message) {
         if(originatingMessage == null){
-            logger.log(Level.WARNING, String.format("[%s] no originating message found for acknowledgement [%s]; reaper probably moved this back to queue", context, message));
+            logger.warn("{} no originating message found for acknowledgement {}; reaper probably moved this back to queue", context, message);
             return false;
         }
         return true;
@@ -335,11 +331,8 @@ public abstract class AbstractMqttsnMessageHandler
     protected void handleResponse(IMqttsnMessageContext context, IMqttsnMessage response)
             throws MqttsnException {
 
-        if(logger.isLoggable(Level.INFO)){
-            logger.log(Level.INFO, String.format("mqtt-sn handler [%s -> %s] sending outbound message [%s]",
-                    registry.getOptions().getContextId(), context, response));
-        }
-
+        logger.info("mqtt-sn handler [{} -> {}] sending outbound message {}",
+                    registry.getOptions().getContextId(), context, response);
         registry.getTransport().writeToTransport(context.getNetworkContext(), response);
     }
 
@@ -369,7 +362,7 @@ public abstract class AbstractMqttsnMessageHandler
 
         //-- if the disconnect is received in response to a disconnect we sent, lets not send another!
         if(originatingMessage != null){
-            logger.log(Level.INFO, "disconnect received in response to my disconnect, dont send another!");
+            logger.info("disconnect received in response to my disconnect, dont send another!");
             return null;
         } else {
             if(registry.getRuntime().handleRemoteDisconnect(context.getMqttsnContext())){
@@ -493,12 +486,12 @@ public abstract class AbstractMqttsnMessageHandler
         if(!isError){
             if(topicIdType == MqttsnConstants.TOPIC_PREDEFINED){
                 getRegistry().getOptions().getPredefinedTopics().put(topicPath, topicId);
-                logger.log(Level.WARNING, String.format("received PREDEFINED regack response (v2), registering [%s]; Msg=%s", context, response));
+                logger.warn("received PREDEFINED regack response (v2), registering {}; Msg={}", context, response);
             } else if(topicIdType == MqttsnConstants.TOPIC_NORMAL){
                 registry.getTopicRegistry().register(context.getMqttsnSession(), topicPath, topicId);
             }
         } else {
-            logger.log(Level.WARNING, String.format("received error regack response [%s]; Msg=%s", context, response));
+            logger.warn("received error regack response {}; Msg={}", context, response);
         }
     }
 
@@ -535,7 +528,7 @@ public abstract class AbstractMqttsnMessageHandler
         String topicPath = registry.getTopicRegistry().topicPath(session, info, true);
         if(registry.getAuthorizationService() != null){
             if(!registry.getAuthorizationService().allowedToPublish(context.getMqttsnContext(), topicPath, data.length, QoS)){
-                logger.log(Level.WARNING, String.format("authorization service rejected publish from [%s] to [%s]", context, topicPath));
+                logger.warn("authorization service rejected publish from {} to {}", context, topicPath);
                 response = registry.getMessageFactory().createPuback(topicDataAsInt, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION);
             }
         }
@@ -598,7 +591,7 @@ public abstract class AbstractMqttsnMessageHandler
             return helo;
 
         } else {
-            logger.log(Level.INFO, String.format("received HELO reply from [%s] -> userAgent [%s]", context, helo.getUserAgent()));
+            logger.info("received HELO reply from {} -> userAgent {}", context, helo.getUserAgent());
             return null;
         }
     }

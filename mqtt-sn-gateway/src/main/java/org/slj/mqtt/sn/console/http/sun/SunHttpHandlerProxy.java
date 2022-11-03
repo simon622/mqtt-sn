@@ -33,12 +33,13 @@ import org.slj.mqtt.sn.console.http.IHttpRequestResponseHandler;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SunHttpHandlerProxy implements HttpHandler  {
 
     protected final Logger LOG =
-            Logger.getLogger(getClass().getName());
+            LoggerFactory.getLogger(getClass().getName());
 
     private IHttpRequestResponseHandler handler;
 

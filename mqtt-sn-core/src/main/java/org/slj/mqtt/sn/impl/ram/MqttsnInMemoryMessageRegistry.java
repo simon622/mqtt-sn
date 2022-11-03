@@ -32,7 +32,6 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.logging.Level;
 
 public class MqttsnInMemoryMessageRegistry
         extends AbstractMqttsnMessageRegistry {
@@ -88,7 +87,7 @@ public class MqttsnInMemoryMessageRegistry
                 if(id != null){
                     MessageImpl m = messageLookup.get(id);
                     if(m.getExpires() < now){
-                        logger.log(Level.INFO, String.format("expiring message [%s]", id));
+                        logger.info("expiring message {}", id);
                         itr.remove();
                     }
                 }

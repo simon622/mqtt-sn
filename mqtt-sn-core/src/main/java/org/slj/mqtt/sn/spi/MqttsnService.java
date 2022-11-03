@@ -24,11 +24,12 @@
 
 package org.slj.mqtt.sn.spi;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class MqttsnService implements IMqttsnService {
 
-    protected final Logger logger = Logger.getLogger(getClass().getName());
+    protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
     protected IMqttsnRuntimeRegistry registry;
     protected volatile boolean running = false;
 

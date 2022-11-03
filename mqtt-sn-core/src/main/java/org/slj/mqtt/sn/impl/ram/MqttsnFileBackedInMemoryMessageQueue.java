@@ -35,7 +35,6 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.Files;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
-import org.slj.mqtt.sn.utils.TransientObjectLocks;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -47,16 +46,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 
 public class MqttsnFileBackedInMemoryMessageQueue
         extends MqttsnInMemoryMessageQueue {
 
     static final String DIR = "_message-queues-overflow";
-    private final TransientObjectLocks locks = new TransientObjectLocks();
     private final IMqttsnObjectReaderWriter readWriter;
     private Set<IMqttsnDataRef> refs;
-    private Map<IMqttsnSession, AtomicInteger> countMap;
+    private Map<String, AtomicInteger> countMap;
     private volatile File root = null;
 
     public MqttsnFileBackedInMemoryMessageQueue(IMqttsnObjectReaderWriter readWriter) {
@@ -93,18 +90,16 @@ public class MqttsnFileBackedInMemoryMessageQueue
                 int count = super.getSessionBean(session).getQueueSize();
                 int max = getRegistry().getOptions().getMaxMessagesInQueue();
                 int threshold = getRegistry().getOptions().getMessageQueueDiskStorageThreshold();
-                if (MqttsnUtils.percentOf(count, max) > threshold) {
+                if (MqttsnUtils.percent(count, max) > threshold) {
                     File f = getFileForSession(session, true);
-                    logger.log(Level.FINE, "message queue threshold exceeded ({0}), overflow to disk overflow {1}",
-                            new Object[]{count, session.getContext()});
-
+                    logger.debug("message queue threshold exceeded ({}), overflow to disk overflow {}", count, session.getContext());
                     byte[] a = readWriter.write(message);
                     byte[] c = new byte[a.length + 1];
                     System.arraycopy(a, 0, c, 0, a.length);
                     c[c.length - 1] = Files.NEW_LINE_DECIMAL;
                     Files.append(f, c);
                     incrementFileObjectCount(session, 1);
-//                    Files.appendWithLock(f, readWriter.write(message), true);
+
                     //-- we use weak references (this is still meant to be volatile storage)
                     //-- so we need to keep hold of the datarefs so theyre not collected
                     refs.add(message.getDataRefId());
@@ -132,34 +127,42 @@ public class MqttsnFileBackedInMemoryMessageQueue
             synchronized (locks.mutex(session.getContext().getId())){
                 if(super.queueSize(session) == 0 &&
                         hasOverflow(session)){
+
+                    int max = getRegistry().getOptions().getMaxMessagesInQueue();
+                    int threshold = getRegistry().getOptions().getMessageQueueDiskStorageThreshold();
+                    int memorySize = (int) MqttsnUtils.percentOf(threshold, max);
+
                     //-- move some messages from disk into memory space
                     byte[] data = Files.consumeLinesFromStart(
-                            getFileForSession(session, false), 10);
+                            getFileForSession(session, false), memorySize);
 
-                    logger.log(Level.INFO, "consuming messages from disk overflow {0} -> ({1} bytes)",
-                            new Object[] { session.getContext().getId(), data.length });
+                    logger.info("consuming {} messages from disk overflow {} -> ({} bytes)",
+                            memorySize, session.getContext().getId(), data.length );
 
-                    int idx = 0;
-                    ByteArrayOutputStream baos
-                            = new ByteArrayOutputStream();
-                    do {
-                        byte b = data[idx++];
-                        if(b == Files.NEW_LINE_DECIMAL
-                                || idx == data.length){
-                            if(b != Files.NEW_LINE_DECIMAL){
+                    if(data.length > 0){
+                        int idx = 0;
+                        ByteArrayOutputStream baos
+                                = new ByteArrayOutputStream();
+                        do {
+                            byte b = data[idx++];
+                            if(b == Files.NEW_LINE_DECIMAL
+                                    || idx == data.length){
+                                if(b != Files.NEW_LINE_DECIMAL){
+                                    baos.write(b);
+                                }
+                                super.offerInternal(session,
+                                        readWriter.load(MqttsnQueuedPublishMessageImpl.class,
+                                                baos.toByteArray()));
+                                incrementFileObjectCount(session, -1);
+                                baos = new ByteArrayOutputStream();
+                            } else {
                                 baos.write(b);
                             }
-                            super.offerInternal(session,
-                                    readWriter.load(MqttsnQueuedPublishMessageImpl.class,
-                                    baos.toByteArray()));
-                            incrementFileObjectCount(session, -1);
-                            baos = new ByteArrayOutputStream();
-                        } else {
-                            baos.write(b);
-                        }
-                    } while(idx < data.length);
+                        } while(idx < data.length);
+                    }
                 }
             }
+
             return super.peek(session);
         } catch(Exception e){
             throw new MqttsnRuntimeException(e);
@@ -169,22 +172,21 @@ public class MqttsnFileBackedInMemoryMessageQueue
     @Override
     public long queueSize(IMqttsnSession session) throws MqttsnException {
         try {
-            long combinedQueue = super.queueSize(session);
-            if(hasOverflow(session)){
-//                File f = getFileForSession(session, true);
-//                combinedQueue += Files.countLines(f);
-                combinedQueue += getFileObjectCount(session);
+            synchronized (locks.mutex(session.getContext().getId())){
+                long combinedQueue = super.queueSize(session);
+                if(hasOverflow(session)){
+                    combinedQueue += getFileObjectCount(session);
+                }
+                return combinedQueue;
             }
-            return combinedQueue;
         } catch(Exception e){
             throw new MqttsnException(e);
         }
     }
 
     private boolean hasOverflow(IMqttsnSession session) throws IOException {
-        File f = getFileForSession(session, false);
         synchronized (locks.mutex(session.getContext().getId())){
-            return f.exists();
+            return countMap.containsKey(session.getContext().getId());
         }
     }
 
@@ -192,25 +194,23 @@ public class MqttsnFileBackedInMemoryMessageQueue
         File f = new File(root, fileNameSafe(session.getContext().getId()));
         if(createIfNotExists && !f.exists()){
             f.createNewFile();
-            countMap.put(session, new AtomicInteger());
+            countMap.put(session.getContext().getId(), new AtomicInteger());
             f.deleteOnExit();
-            logger.log(Level.INFO, "creating disk overflow for {0}",
-                    new Object[] { session.getContext().getId()});
         }
         return f;
     }
 
     private void incrementFileObjectCount(IMqttsnSession session, int value){
-        AtomicInteger c = countMap.get(session);
+        AtomicInteger c = countMap.get(session.getContext().getId());
         if(c != null) {
-            c.addAndGet(value);
+            int newVal = c.addAndGet(value);
         }
     }
 
     private int getFileObjectCount(IMqttsnSession session){
-        AtomicInteger c = countMap.get(session);
+        AtomicInteger c = countMap.get(session.getContext().getId());
         if(c != null) {
-            return c.incrementAndGet();
+            return c.get();
         }
         return 0;
     }

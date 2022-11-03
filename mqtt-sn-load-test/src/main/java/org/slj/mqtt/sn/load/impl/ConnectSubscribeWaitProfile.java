@@ -24,18 +24,22 @@
 
 package org.slj.mqtt.sn.load.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ConnectSubscribeWaitProfile extends MqttsnClientProfile {
 
-    static Logger logger = Logger.getLogger(ConnectSubscribeWaitProfile.class.getName());
+    static Logger logger = LoggerFactory.getLogger(ConnectSubscribeWaitProfile.class);
+
+    public ConnectSubscribeWaitProfile(IMqttsnStorageService storageService) {
+        super(storageService);
+    }
 
     @Override
     public ExecutionProgress initializeProfile(ExecutionInput input) {
@@ -77,7 +81,7 @@ public class ConnectSubscribeWaitProfile extends MqttsnClientProfile {
             progress.waitForCompletion();
 
         } catch(Exception e){
-            logger.log(Level.SEVERE, "error detected", e);
+            logger.error("error detected", e);
             progress.setError(e);
         }
     }

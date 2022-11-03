@@ -33,7 +33,6 @@ import org.slj.mqtt.sn.spi.MqttsnService;
 import org.slj.mqtt.sn.utils.Security;
 
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Level;
 
 public class MqttsnSecurityService
         extends MqttsnService implements IMqttsnSecurityService {
@@ -75,7 +74,7 @@ public class MqttsnSecurityService
                     }
                     if(verified){
                         data = Security.readOriginalData(length, data);
-                        logger.log(Level.INFO, String.format("integrity check verified [%s] bytes of data becomes [%s] bytes", beforeSize, data.length));
+                        logger.info("integrity check verified {} bytes of data becomes {} bytes", beforeSize, data.length);
                         return data;
                     } else {
                         throw new MqttsnSecurityException("message integrity check failed");
@@ -102,7 +101,7 @@ public class MqttsnSecurityService
                         data = Security.createChecksumdData(securityOptions.getIntegrityChecksumAlgorithm(), data);
                     }
 
-                    logger.log(Level.INFO, String.format("integrity process [%s] bytes of data becomes [%s] bytes", beforeSize, data.length));
+                    logger.info("integrity process {} bytes of data becomes {} bytes", beforeSize, data.length);
 
                 } catch(MqttsnException e){
                     throw new MqttsnSecurityException("security configuration error;", e);

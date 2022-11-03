@@ -26,15 +26,13 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnQueueProcessorStateService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnService;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
-
-import java.util.logging.Level;
 
 public class MqttsnGatewayQueueProcessorStateService extends MqttsnService
         implements IMqttsnQueueProcessorStateService {
@@ -54,11 +52,9 @@ public class MqttsnGatewayQueueProcessorStateService extends MqttsnService
 
         IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
         if(session != null){
-            if(logger.isLoggable(Level.FINE)){
-                logger.log(Level.FINE, String.format("notified that the queue is empty, post process state is - [%s]", session));
-            }
+            logger.debug("notified that the queue is empty, post process state is - {}", session);
             if(MqttsnUtils.in(session.getClientState() , MqttsnClientState.AWAKE)){
-                logger.log(Level.INFO, String.format("notified that the queue is empty, putting device back to sleep and sending ping-resp - [%s]", context));
+                logger.info("notified that the queue is empty, putting device back to sleep and sending ping-resp - {}", context);
                 //-- need to transition the device back to sleep
                 getRegistry().getGatewaySessionService().disconnect(session,
                         getRegistry().getMessageFactory().createDisconnect(session.getKeepAlive()));

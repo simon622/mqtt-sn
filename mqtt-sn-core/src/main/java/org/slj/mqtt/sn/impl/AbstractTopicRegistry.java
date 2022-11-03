@@ -28,12 +28,13 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
-import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.spi.IMqttsnTopicRegistry;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.util.*;
-import java.util.logging.Level;
 
 public abstract class AbstractTopicRegistry
         extends AbstractMqttsnSessionBeanRegistry
@@ -43,7 +44,7 @@ public abstract class AbstractTopicRegistry
     public TopicInfo register(IMqttsnSession session, String topicPath) throws MqttsnException {
         Map<String, Integer> map = getRegistrationMapInternal(session, false);
         if(map.size() >= registry.getOptions().getMaxTopicsInRegistry()){
-            logger.log(Level.WARNING, String.format("max number of registered topics reached for client [%s] >= [%s]", session, map.size()));
+            logger.warn("max number of registered topics reached for client {} >= {}", session, map.size());
             throw new MqttsnException("max number of registered topics reached for client");
         }
         synchronized (map){
@@ -65,9 +66,7 @@ public abstract class AbstractTopicRegistry
     @Override
     public void register(IMqttsnSession session, String topicPath, int topicAlias) throws MqttsnException {
 
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] registering [%s] -> [%s]", registry.getOptions().getContextId(), session, topicPath, topicAlias));
-        }
+        logger.debug("mqtt-sn topic-registry [{} -> {}] registering {} -> {}", registry.getOptions().getContextId(), session, topicPath, topicAlias);
 
         Map<String, Integer> map = getRegistrationMapInternal(session, false);
         if(map.containsKey(topicPath)){
@@ -76,7 +75,7 @@ public abstract class AbstractTopicRegistry
                     getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath), topicAlias);
         } else {
             if(map.size() >= registry.getOptions().getMaxTopicsInRegistry()){
-                logger.log(Level.WARNING, String.format("max number of registered topics reached for client [%s] >= [%s]", session.getContext(), map.size()));
+                logger.warn("max number of registered topics reached for client {} >= {}", session.getContext(), map.size());
                 throw new MqttsnException("max number of registered topics reached for client");
             }
             addOrUpdateRegistration(session,
@@ -112,8 +111,8 @@ public abstract class AbstractTopicRegistry
         }
 
         if(topicPath == null) {
-            logger.log(Level.WARNING, String.format("unable to find matching topicPath in system for [%s] -> [%s], available was [%s]",
-                    topicInfo, session, Objects.toString(getRegistrationMapInternal(session, false))));
+            logger.warn("unable to find matching topicPath in system for {} -> {}, available was {}",
+                    topicInfo, session, Objects.toString(getRegistrationMapInternal(session, false)));
             throw new MqttsnExpectationFailedException("unable to find matching topicPath in system");
         }
         return getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
@@ -189,10 +188,7 @@ public abstract class AbstractTopicRegistry
             }
         }
 
-        if(logger.isLoggable(Level.FINE)){
-            logger.log(Level.FINE, String.format("mqtt-sn topic-registry [%s -> %s] lookup for [%s] found [%s]", registry.getOptions().getContextId(), session, topicPath, info));
-        }
-
+        logger.debug("mqtt-sn topic-registry [{} -> {}] lookup for {} found {}", registry.getOptions().getContextId(), session, topicPath, info);
         return info;
     }
 

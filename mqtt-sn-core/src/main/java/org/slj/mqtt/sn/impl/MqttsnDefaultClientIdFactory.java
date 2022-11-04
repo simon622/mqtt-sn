@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.IMqttsnClientIdFactory;
 
 
@@ -36,7 +37,7 @@ import org.slj.mqtt.sn.spi.IMqttsnClientIdFactory;
  * Runtime Output -> 'MyClientId'
  * Connect Value -> 'MyClientId'
  */
-public class MqttsnDefaultClientIdFactory implements IMqttsnClientIdFactory {
+public class MqttsnDefaultClientIdFactory extends AbstractMqttsnService implements IMqttsnClientIdFactory {
 
     @Override
     public String createClientId(String clientIdSeed) {

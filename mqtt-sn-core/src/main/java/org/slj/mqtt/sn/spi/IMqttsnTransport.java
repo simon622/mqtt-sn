@@ -24,10 +24,10 @@
 
 package org.slj.mqtt.sn.spi;
 
+import org.slj.mqtt.sn.impl.AbstractMqttsnTransport;
 import org.slj.mqtt.sn.model.INetworkContext;
+import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 /**
@@ -36,12 +36,13 @@ import java.util.concurrent.Future;
  * It is envisaged implementations will include UDP (with and without DTLS), TCP-IP (with and without TLS),
  * BLE and ZigBee.
  *
- * Please refer to {@link org.slj.mqtt.sn.impl.AbstractMqttsnTransport} and sub-class your own implementations
+ * Please refer to {@link AbstractMqttsnTransport} and sub-class your own implementations
  * or choose an existing implementation out of the box.
  *
- * @see {@link org.slj.mqtt.sn.net.MqttsnUdpTransport} for an example of an out of the box implementation.
+ * @see {@link MqttsnUdpTransport} for an example of an out of the box implementation.
  */
-public interface IMqttsnTransport {
+@MqttsnService(order = MqttsnService.FIRST)
+public interface IMqttsnTransport extends IMqttsnService {
 
     void receiveFromTransport(INetworkContext context, byte[] data);
 

@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
 
-public interface IMqttsnTopicModifier {
+public interface IMqttsnTopicModifier extends IMqttsnService{
 
     /**
      * Method called before any interactions into or out of the registry to allow for

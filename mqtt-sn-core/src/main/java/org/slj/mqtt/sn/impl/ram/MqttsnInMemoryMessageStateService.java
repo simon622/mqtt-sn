@@ -78,11 +78,6 @@ public class MqttsnInMemoryMessageStateService
     }
 
     @Override
-    public void clearAll() {
-        inflightMessages.clear();
-    }
-
-    @Override
     public InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
         Map<Integer, InflightMessage> map = getInflightMessages(context, source);
         return map.remove(packetId);

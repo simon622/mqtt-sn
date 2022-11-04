@@ -29,13 +29,13 @@ import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnSecurityService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnSecurityException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.utils.Security;
 
 import java.nio.charset.StandardCharsets;
 
 public class MqttsnSecurityService
-        extends MqttsnService implements IMqttsnSecurityService {
+        extends AbstractMqttsnService implements IMqttsnSecurityService {
 
     public boolean protocolIntegrityEnabled(){
         MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();

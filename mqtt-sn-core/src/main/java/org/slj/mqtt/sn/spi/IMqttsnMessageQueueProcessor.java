@@ -39,6 +39,7 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
  *  REPROCESS (continue) - The queue is not empty, (where possible) call me back immediately to process again
  *
  */
+@MqttsnService
 public interface IMqttsnMessageQueueProcessor
             extends IMqttsnService {
 

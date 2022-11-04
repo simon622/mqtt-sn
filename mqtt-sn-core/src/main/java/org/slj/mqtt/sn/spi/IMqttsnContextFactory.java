@@ -46,7 +46,8 @@ import org.slj.mqtt.sn.net.NetworkContext;
  * to wrap custom User objects, for example.
  *
  */
-public interface IMqttsnContextFactory <T extends IMqttsnRuntimeRegistry> {
+@MqttsnService
+public interface IMqttsnContextFactory extends IMqttsnService {
 
     /**
      * When no network context can be found in the registry from the associated {@link NetworkAddress},

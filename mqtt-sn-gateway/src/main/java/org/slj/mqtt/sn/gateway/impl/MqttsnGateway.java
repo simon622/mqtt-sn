@@ -29,51 +29,14 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnConnectionStateListener;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.io.IOException;
 
 public class MqttsnGateway extends AbstractMqttsnRuntime {
 
-    protected void startupServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
 
-        //-- ensure we start all the startable services
-        callStartup(runtime.getMessageHandler());
-        callStartup(runtime.getMessageQueue());
-        callStartup(runtime.getMessageRegistry());
-        callStartup(runtime.getTopicRegistry());
-        callStartup(runtime.getWillRegistry());
-        callStartup(runtime.getSecurityService());
-        callStartup(runtime.getSubscriptionRegistry());
-        callStartup(runtime.getMessageStateService());
-        callStartup(runtime.getQueueProcessorStateCheckService());
-        callStartup(runtime.getQueueProcessor());
-        callStartup(runtime.getContextFactory());
-        callStartup(runtime.getSessionRegistry());
-        callStartup(runtime.getDeadLetterQueue());
-
-        if (runtime.getMetrics() != null) callStartup(runtime.getMetrics());
-        if (runtime.getAuthenticationService() != null) callStartup(runtime.getAuthenticationService());
-        if (runtime.getAuthorizationService() != null) callStartup(runtime.getAuthorizationService());
-
-        //-- start the network last
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getExpansionHandler());
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getConnector());
-        callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
-
-        //-- start discovery
-        if (runtime.getOptions().isEnableDiscovery()) {
-            callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewayAdvertiseService());
-        }
-
-        if(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole() != null){
-            callStartup(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole());
-        }
-
-        //-- start transport
-        callStartup(runtime.getTransport());
+    protected void notifyServicesStarted() {
 
         //-- notify the backend of confirmed message
         registerPublishReceivedListener((context, topicPath, qos, retained, data, message) -> {
@@ -129,45 +92,6 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                 }
             }
         });
-    }
-
-    public void stopServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-
-        //-- stop the networks first
-        callShutdown(runtime.getTransport());
-
-        if (runtime.getOptions().isEnableDiscovery()) {
-            callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewayAdvertiseService());
-        }
-
-        if(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole() != null){
-            callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getConsole());
-        }
-
-        callShutdown(runtime.getSecurityService());
-
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getExpansionHandler());
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getGatewaySessionService());
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getConnector());
-        callShutdown(((IMqttsnGatewayRuntimeRegistry) runtime).getBackendService());
-
-        //-- ensure we stop all the startable services
-
-        if (runtime.getMetrics() != null) callShutdown(runtime.getMetrics());
-        if (runtime.getAuthenticationService() != null) callShutdown(runtime.getAuthenticationService());
-        if (runtime.getAuthorizationService() != null) callShutdown(runtime.getAuthorizationService());
-        callShutdown(runtime.getContextFactory());
-        callShutdown(runtime.getSessionRegistry());
-        callShutdown(runtime.getMessageHandler());
-        callShutdown(runtime.getMessageQueue());
-        callShutdown(runtime.getMessageRegistry());
-        callShutdown(runtime.getWillRegistry());
-        callShutdown(runtime.getTopicRegistry());
-        callShutdown(runtime.getDeadLetterQueue());
-        callShutdown(runtime.getSubscriptionRegistry());
-        callShutdown(runtime.getQueueProcessorStateCheckService());
-        callShutdown(runtime.getQueueProcessor());
-        callShutdown(runtime.getMessageStateService());
     }
 
     public boolean handleRemoteDisconnect(IMqttsnContext context) {

@@ -24,9 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnWillRegistry;
-import org.slj.mqtt.sn.spi.MqttsnService;
 
 public abstract class AbstractWillRegistry
         extends AbstractMqttsnSessionBeanRegistry implements IMqttsnWillRegistry {

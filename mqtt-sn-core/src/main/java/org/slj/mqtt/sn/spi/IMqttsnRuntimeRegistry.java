@@ -28,63 +28,39 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IMqttsnRuntimeRegistry {
 
     void setRuntime(AbstractMqttsnRuntime runtime);
-
     void init();
-
     MqttsnOptions getOptions();
-
     AbstractMqttsnRuntime getRuntime();
-
+    void withService(IMqttsnService service);
+    List<IMqttsnService> getServices();
+    <T extends IMqttsnService> T getService(Class<T> clz);
+    <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz);
     IMqttsnTransport getTransport();
-
     IMqttsnCodec getCodec();
-
     IMqttsnMessageQueue getMessageQueue();
-
     IMqttsnMessageFactory getMessageFactory();
-
     IMqttsnMessageHandler getMessageHandler();
-
     IMqttsnMessageStateService getMessageStateService();
-
     INetworkAddressRegistry getNetworkRegistry();
-
     IMqttsnTopicRegistry getTopicRegistry();
-
     IMqttsnSubscriptionRegistry getSubscriptionRegistry();
-
     IMqttsnContextFactory getContextFactory();
-
     IMqttsnSessionRegistry getSessionRegistry();
-
     IMqttsnMessageQueueProcessor getQueueProcessor();
-
     IMqttsnQueueProcessorStateService getQueueProcessorStateCheckService();
-
     IMqttsnMessageRegistry getMessageRegistry();
-
     IMqttsnWillRegistry getWillRegistry();
-
     IMqttsnAuthenticationService getAuthenticationService();
-
     IMqttsnAuthorizationService getAuthorizationService();
-
     IMqttsnSecurityService getSecurityService();
-
     IMqttsnTopicModifier getTopicModifier();
-
     IMqttsnMetricsService getMetrics();
-
-    List<IMqttsnTrafficListener> getTrafficListeners();
-
     IMqttsnStorageService getStorageService();
-
     IMqttsnClientIdFactory getClientIdFactory();
-
     IMqttsnDeadLetterQueue getDeadLetterQueue() ;
-
 }

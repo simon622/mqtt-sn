@@ -37,7 +37,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
 
-public class MqttsnFilesystemStorageService extends MqttsnService implements IMqttsnStorageService {
+public class MqttsnFilesystemStorageService extends AbstractMqttsnService implements IMqttsnStorageService {
 
     final String HOME_DIR = "user.dir";
     final String TMP_DIR = "java.io.tmpdir";

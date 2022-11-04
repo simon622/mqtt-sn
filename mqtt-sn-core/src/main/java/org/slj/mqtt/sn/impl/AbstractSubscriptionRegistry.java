@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
 import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;

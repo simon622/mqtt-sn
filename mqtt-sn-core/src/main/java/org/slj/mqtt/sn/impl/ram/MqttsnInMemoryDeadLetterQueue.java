@@ -75,13 +75,6 @@ public class MqttsnInMemoryDeadLetterQueue extends AbstractDeadLetterQueue {
         }
     }
 
-    @Override
-    public void clearAll() {
-        synchronized (list){
-            list.clear();
-        }
-    }
-
     public long size() {
         return list.size();
     }

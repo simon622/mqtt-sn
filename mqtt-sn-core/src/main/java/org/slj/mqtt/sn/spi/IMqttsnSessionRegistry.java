@@ -32,8 +32,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-public interface
-IMqttsnSessionRegistry extends IMqttsnRegistry {
+@MqttsnService
+public interface IMqttsnSessionRegistry extends IMqttsnService {
 
     Optional<IMqttsnContext> lookupClientIdSession(String clientId) throws MqttsnException;
     IMqttsnSession createNewSession(IMqttsnContext context) throws MqttsnException;

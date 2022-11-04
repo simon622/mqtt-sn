@@ -32,7 +32,8 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
  * offload messages to a remote (gateway or client), and is called back by the queue processor to be notified of
  * the queue being empty after having been flushed.
  */
-public interface IMqttsnQueueProcessorStateService {
+@MqttsnService
+public interface IMqttsnQueueProcessorStateService extends IMqttsnService {
 
     /**
      * The application can determine if its in a position to send publish messages to the remote context

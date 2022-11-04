@@ -34,7 +34,7 @@ import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.*;
 
 public class MqttsnMessageQueueProcessor
-        extends MqttsnService implements IMqttsnMessageQueueProcessor {
+        extends AbstractMqttsnService implements IMqttsnMessageQueueProcessor {
 
     static Logger logger = LoggerFactory.getLogger(MqttsnMessageQueueProcessor.class.getName());
 

@@ -24,9 +24,12 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
+import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
-public interface IMqttsnGatewayExpansionHandler {
+@MqttsnService(order = MqttsnService.LAST)
+public interface IMqttsnGatewayExpansionHandler extends IMqttsnService {
 
     void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException ;
 }

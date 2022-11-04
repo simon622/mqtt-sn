@@ -33,10 +33,10 @@ import org.slj.mqtt.sn.net.NetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnContextFactory;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnSecurityException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public class MqttsnContextFactory
-        extends MqttsnService implements IMqttsnContextFactory {
+        extends AbstractMqttsnService implements IMqttsnContextFactory {
 
     protected static Logger logger = LoggerFactory.getLogger(MqttsnContextFactory.class.getName());
 

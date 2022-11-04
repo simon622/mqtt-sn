@@ -35,7 +35,7 @@ import org.slj.mqtt.sn.model.session.IMqttsnSession;
  *
  * Ideally the queue should be implemented to support FIFO where possible.
  */
-public interface IMqttsnMessageQueue extends IMqttsnRegistry {
+public interface IMqttsnMessageQueue extends IMqttsnService  {
 
     /**
      * Return the size of the queue for a given context

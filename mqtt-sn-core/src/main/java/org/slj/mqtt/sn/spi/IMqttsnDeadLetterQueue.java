@@ -35,7 +35,8 @@ import java.util.List;
  * This gives observability to failures in the runtime that may
  * otherwise go unnoticed
  */
-public interface IMqttsnDeadLetterQueue extends IMqttsnRegistry {
+@MqttsnService
+public interface IMqttsnDeadLetterQueue extends IMqttsnService {
 
     void add(MqttsnDeadLetterQueueBean.REASON reason, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage)
             throws MqttsnException ;

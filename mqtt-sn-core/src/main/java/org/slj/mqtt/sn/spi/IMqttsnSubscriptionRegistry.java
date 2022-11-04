@@ -35,7 +35,8 @@ import java.util.Set;
  * is used to determine which clients are subscribed to which topics to enable outbound delivery. In client
  * mode it tracks the subscriptions a client presently holds.
  */
-public interface IMqttsnSubscriptionRegistry extends IMqttsnRegistry {
+@MqttsnService
+public interface IMqttsnSubscriptionRegistry extends IMqttsnService {
 
     /**
      * Which QoS is a subscription held at

@@ -26,7 +26,8 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IMqttsnMetric;
 
-public interface IMqttsnMetricsService {
+@MqttsnService
+public interface IMqttsnMetricsService extends IMqttsnService {
 
     IMqttsnMetric getMetric(String metricName);
     void registerMetric(IMqttsnMetric metric);

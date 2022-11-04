@@ -26,13 +26,12 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.model.MqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.net.NetworkContext;
+import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
+import org.slj.mqtt.sn.net.NetworkContext;
 import org.slj.mqtt.sn.spi.*;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * The base runtime registry provides support for simple fluent construction and encapsulates
@@ -45,38 +44,17 @@ import java.util.List;
 public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeRegistry {
 
     protected MqttsnOptions options;
-
-    //-- obtained lazily from the codec --//
-    protected IMqttsnMessageFactory factory;
-    protected IMqttsnCodec codec;
-    protected IMqttsnMessageHandler messageHandler;
-    protected IMqttsnMessageQueue messageQueue;
-    protected IMqttsnTransport transport;
     protected AbstractMqttsnRuntime runtime;
     protected INetworkAddressRegistry networkAddressRegistry;
-    protected IMqttsnTopicRegistry topicRegistry;
-    protected IMqttsnSubscriptionRegistry subscriptionRegistry;
-    protected IMqttsnMessageStateService messageStateService;
-    protected IMqttsnContextFactory contextFactory;
-    protected IMqttsnSessionRegistry sessionRegistry;
-    protected IMqttsnMessageQueueProcessor queueProcessor;
-    protected IMqttsnQueueProcessorStateService queueProcessorStateCheckService;
-    protected IMqttsnMessageRegistry messageRegistry;
-    protected IMqttsnAuthenticationService authenticationService;
-    protected IMqttsnAuthorizationService authorizationService;
-    protected IMqttsnWillRegistry willRegistry;
-    protected IMqttsnSecurityService securityService;
-    protected IMqttsnTopicModifier topicModifier;
-    protected IMqttsnMetricsService metrics;
     protected IMqttsnStorageService storageService;
-    protected IMqttsnDeadLetterQueue deadLetterQueue;
-    protected IMqttsnClientIdFactory clientIdFactory;
-
-    protected volatile List<IMqttsnTrafficListener> trafficListeners;
+    protected IMqttsnCodec codec;
+    protected IMqttsnMessageFactory factory;
+    protected List<IMqttsnService> services;
 
     public AbstractMqttsnRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options){
         this.options = options;
         this.storageService = storageService;
+        services = new ArrayList<>();
     }
 
     @Override
@@ -85,6 +63,8 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         initNetworkRegistry();
         factory = codec.createMessageFactory();
 
+        //ensure the storage system is added to managed lifecycle
+        withService(storageService);
     }
 
     protected void initNetworkRegistry(){
@@ -103,29 +83,6 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     /**
-     * Traffic listeners can contributed to the runtime to be notified of any traffic processed by
-     * the transport layer. Listeners are not able to affect the traffic in transit or the business
-     * logic executed during the course of the traffic, they are merely observers.
-     *
-     * The listeners ~may be notified asynchronously from the application, and thus they cannot be relied
-     * upon to give an absolute timeline of traffic.
-     *
-     * @param trafficListener - The traffic listener instance which will be notified upon traffic being processed.
-     * @return This runtime registry
-     */
-    public AbstractMqttsnRuntimeRegistry withTrafficListener(IMqttsnTrafficListener trafficListener){
-        if(trafficListeners == null){
-            synchronized (this){
-                if(trafficListeners == null){
-                    trafficListeners = new ArrayList<>();
-                }
-            }
-        }
-        trafficListeners.add(trafficListener);
-        return this;
-    }
-
-    /**
      * NOTE: this is optional
      * When contributed, this controller is used by the queue processor to check if the application is in a fit state to
      * offload messages to a remote (gateway or client), and is called back by the queue processor to be notified of
@@ -135,7 +92,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withQueueProcessorStateCheck(IMqttsnQueueProcessorStateService queueProcessorStateCheckService){
-        this.queueProcessorStateCheckService = queueProcessorStateCheckService;
+        withService(queueProcessorStateCheckService);
         return this;
     }
 
@@ -147,7 +104,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withMetrics(IMqttsnMetricsService metricsService){
-        this.metrics = metricsService;
+        withService(metricsService);
         return this;
     }
 
@@ -167,7 +124,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withQueueProcessor(IMqttsnMessageQueueProcessor queueProcessor){
-        this.queueProcessor = queueProcessor;
+        withService(queueProcessor);
         return this;
     }
 
@@ -180,7 +137,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withTopicModifier(IMqttsnTopicModifier topicModifier){
-        this.topicModifier = topicModifier;
+        withService(topicModifier);
         return this;
     }
 
@@ -202,7 +159,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withContextFactory(IMqttsnContextFactory contextFactory){
-        this.contextFactory = contextFactory;
+        withService(contextFactory);
         return this;
     }
 
@@ -219,7 +176,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withMessageRegistry(IMqttsnMessageRegistry messageRegistry){
-        this.messageRegistry = messageRegistry;
+        withService(messageRegistry);
         return this;
     }
 
@@ -234,7 +191,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withMessageStateService(IMqttsnMessageStateService messageStateService){
-        this.messageStateService = messageStateService;
+        withService(messageStateService);
         return this;
     }
 
@@ -247,7 +204,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withSubscriptionRegistry(IMqttsnSubscriptionRegistry subscriptionRegistry){
-        this.subscriptionRegistry = subscriptionRegistry;
+        withService(subscriptionRegistry);
         return this;
     }
 
@@ -260,7 +217,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withTopicRegistry(IMqttsnTopicRegistry topicRegistry){
-        this.topicRegistry = topicRegistry;
+        withService(topicRegistry);
         return this;
     }
 
@@ -274,7 +231,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withMessageQueue(IMqttsnMessageQueue messageQueue){
-        this.messageQueue = messageQueue;
+        withService(messageQueue);
         return this;
     }
 
@@ -302,7 +259,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withMessageHandler(IMqttsnMessageHandler handler){
-        this.messageHandler = handler;
+        withService(handler);
         return this;
     }
 
@@ -312,16 +269,16 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * It is envisaged implementations will include UDP (with and without DTLS), TCP-IP (with and without TLS),
      * BLE and ZigBee.
      *
-     * Please refer to {@link org.slj.mqtt.sn.impl.AbstractMqttsnTransport} and sub-class your own implementations
+     * Please refer to {@link AbstractMqttsnTransport} and sub-class your own implementations
      * or choose an existing implementation out of the box.
      *
-     * @see {@link org.slj.mqtt.sn.net.MqttsnUdpTransport} for an example of an out of the box implementation.
+     * @see {@link MqttsnUdpTransport} for an example of an out of the box implementation.
      *
      * @param transport The instance
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withTransport(IMqttsnTransport transport){
-        this.transport = transport;
+        withService(transport);
         return this;
     }
 
@@ -344,7 +301,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withSecurityService(IMqttsnSecurityService securityService){
-        this.securityService = securityService;
+        withService(securityService);
         return this;
     }
 
@@ -355,7 +312,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withSessionRegistry(IMqttsnSessionRegistry sessionRegistry){
-        this.sessionRegistry = sessionRegistry;
+        withService(sessionRegistry);
         return this;
     }
 
@@ -369,7 +326,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withAuthenticationService(IMqttsnAuthenticationService authenticationService){
-        this.authenticationService = authenticationService;
+        withService(authenticationService);
         return this;
     }
 
@@ -383,7 +340,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withAuthorizationService(IMqttsnAuthorizationService authorizationService){
-        this.authorizationService = authorizationService;
+        withService(authorizationService);
         return this;
     }
 
@@ -401,7 +358,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withClientIdFactory(IMqttsnClientIdFactory clientIdFactory){
-        this.clientIdFactory = clientIdFactory;
+        withService(clientIdFactory);
         return this;
     }
 
@@ -413,7 +370,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withWillRegistry(IMqttsnWillRegistry willRegistry){
-        this.willRegistry = willRegistry;
+        withService(willRegistry);
         return this;
     }
 
@@ -424,7 +381,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
      * @return This runtime registry
      */
     public AbstractMqttsnRuntimeRegistry withDeadLetterQueue(IMqttsnDeadLetterQueue deadLetterQueue){
-        this.deadLetterQueue = deadLetterQueue;
+        withService(deadLetterQueue);
         return this;
     }
 
@@ -450,16 +407,16 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     @Override
     public IMqttsnAuthenticationService getAuthenticationService() {
-        return authenticationService;
+        return getOptionalService(IMqttsnAuthenticationService.class).orElse(null);
     }
 
     @Override
     public IMqttsnAuthorizationService getAuthorizationService() {
-        return authorizationService;
+        return getOptionalService(IMqttsnAuthorizationService.class).orElse(null);
     }
 
     public IMqttsnQueueProcessorStateService getQueueProcessorStateCheckService() {
-        return queueProcessorStateCheckService;
+        return getOptionalService(IMqttsnQueueProcessorStateService.class).orElse(null);
     }
 
     @Override
@@ -469,12 +426,12 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     @Override
     public IMqttsnMessageHandler getMessageHandler() {
-        return messageHandler;
+        return getService(IMqttsnMessageHandler.class);
     }
 
     @Override
     public IMqttsnTransport getTransport() {
-        return transport;
+        return getService(IMqttsnTransport.class);
     }
 
     @Override
@@ -484,67 +441,62 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     @Override
     public IMqttsnMessageQueue getMessageQueue() {
-        return messageQueue;
+        return getService(IMqttsnMessageQueue.class);
     }
 
     @Override
     public IMqttsnTopicRegistry getTopicRegistry() {
-        return topicRegistry;
+        return getService(IMqttsnTopicRegistry.class);
     }
 
     @Override
     public IMqttsnSubscriptionRegistry getSubscriptionRegistry() {
-        return subscriptionRegistry;
+        return getService(IMqttsnSubscriptionRegistry.class);
     }
 
     @Override
     public IMqttsnMessageStateService getMessageStateService() {
-        return messageStateService;
+        return getService(IMqttsnMessageStateService.class);
     }
 
     @Override
     public IMqttsnMessageRegistry getMessageRegistry(){
-        return messageRegistry;
+        return getService(IMqttsnMessageRegistry.class);
     }
 
     @Override
     public IMqttsnWillRegistry getWillRegistry(){
-        return willRegistry;
-    }
-
-    @Override
-    public List<IMqttsnTrafficListener> getTrafficListeners() {
-        return trafficListeners;
+        return getService(IMqttsnWillRegistry.class);
     }
 
     @Override
     public IMqttsnContextFactory getContextFactory() {
-        return contextFactory;
+        return getService(IMqttsnContextFactory.class);
     }
 
     @Override
     public IMqttsnMessageQueueProcessor getQueueProcessor() {
-        return queueProcessor;
+        return getService(IMqttsnMessageQueueProcessor.class);
     }
 
     @Override
     public IMqttsnSecurityService getSecurityService() {
-        return securityService;
+        return getOptionalService(IMqttsnSecurityService.class).orElse(null);
     }
 
     @Override
     public IMqttsnSessionRegistry getSessionRegistry() {
-        return sessionRegistry;
+        return getService(IMqttsnSessionRegistry.class);
     }
 
     @Override
     public IMqttsnTopicModifier getTopicModifier() {
-        return topicModifier;
+        return getOptionalService(IMqttsnTopicModifier.class).orElse(null);
     }
 
     @Override
     public IMqttsnMetricsService getMetrics() {
-        return metrics;
+        return getOptionalService(IMqttsnMetricsService.class).orElse(null);
     }
 
     @Override
@@ -554,30 +506,51 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     @Override
     public IMqttsnClientIdFactory getClientIdFactory() {
-        return clientIdFactory;
+        return getService(IMqttsnClientIdFactory.class);
     }
 
     @Override
     public IMqttsnDeadLetterQueue getDeadLetterQueue() {
-        return deadLetterQueue;
+        return getOptionalService(IMqttsnDeadLetterQueue.class).orElse(null);
     }
+
+    @Override
+    public List<IMqttsnService> getServices() {
+        synchronized (services){
+            ArrayList sorted = new ArrayList(services);
+            Collections.sort(sorted, new ServiceSort());
+            return Collections.unmodifiableList(sorted);
+        }
+    }
+
+    @Override
+    public void withService(IMqttsnService service){
+        synchronized (services){
+            services.add(service);
+        }
+    }
+
+    @Override
+    public <T extends IMqttsnService> T getService(Class<T> clz){
+        synchronized (services){
+            return (T) services.stream().filter(s ->
+                            clz.isAssignableFrom(s.getClass())).
+                    findFirst().orElseThrow(() -> new MqttsnRuntimeException("unable to find service on runtime " + clz.getName()));
+        }
+    }
+
+    @Override
+    public <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz){
+        synchronized (services){
+            return (Optional<T>) services.stream().filter(s ->
+                            clz.isAssignableFrom(s.getClass())).findFirst();
+        }
+    }
+
 
     protected void validateOnStartup() throws MqttsnRuntimeException {
         if(storageService == null) throw new MqttsnRuntimeException("storage service must be found for a valid runtime");
         if(networkAddressRegistry == null) throw new MqttsnRuntimeException("network-registry must be bound for valid runtime");
-        if(messageStateService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
-        if(transport == null) throw new MqttsnRuntimeException("transport must be bound for valid runtime");
-        if(topicRegistry == null) throw new MqttsnRuntimeException("topic registry must be bound for valid runtime");
         if(codec == null) throw new MqttsnRuntimeException("codec must be bound for valid runtime");
-        if(messageHandler == null) throw new MqttsnRuntimeException("message handler must be bound for valid runtime");
-        if(messageQueue == null) throw new MqttsnRuntimeException("message queue must be bound for valid runtime");
-        if(contextFactory == null) throw new MqttsnRuntimeException("context factory must be bound for valid runtime");
-        if(queueProcessor == null) throw new MqttsnRuntimeException("queue processor must be bound for valid runtime");
-        if(messageRegistry == null) throw new MqttsnRuntimeException("message registry must be bound for valid runtime");
-        if(willRegistry == null) throw new MqttsnRuntimeException("will registry must be bound for valid runtime");
-        if(securityService == null) throw new MqttsnRuntimeException("security service must be bound for valid runtime");
-        if(sessionRegistry == null) throw new MqttsnRuntimeException("sessionRegistry must be bound for valid runtime");
-        if(topicModifier == null) throw new MqttsnRuntimeException("topicModifier must be bound for valid runtime");
-        if(deadLetterQueue == null) throw new MqttsnRuntimeException("deadLetterQueue must be bound for valid runtime");
     }
 }

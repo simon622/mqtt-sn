@@ -29,10 +29,10 @@ import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
 import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
 import org.slj.mqtt.sn.spi.IMqttsnDeadLetterQueue;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public abstract class AbstractDeadLetterQueue
-        extends MqttsnService implements IMqttsnDeadLetterQueue {
+        extends AbstractMqttsnService implements IMqttsnDeadLetterQueue {
 
     @Override
     public void add(MqttsnDeadLetterQueueBean.REASON reason, String message, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage) throws MqttsnException {

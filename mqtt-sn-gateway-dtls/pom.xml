@@ -31,7 +31,7 @@
     <parent>
         <groupId>org.slj</groupId>
         <artifactId>mqtt-sn</artifactId>
-        <version>1.0.0</version>
+        <version>0.1.0</version>
     </parent>
 
     <groupId>org.slj</groupId>
@@ -46,12 +46,12 @@
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-codec</artifactId>
-            <version>1.0.0</version>
+            <version>${mqtt-sn.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-core</artifactId>
-            <version>1.0.0</version>
+            <version>${mqtt-sn.version}</version>
         </dependency>
     </dependencies>
 

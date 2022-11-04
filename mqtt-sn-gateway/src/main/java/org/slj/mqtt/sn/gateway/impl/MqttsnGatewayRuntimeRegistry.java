@@ -24,9 +24,6 @@
 
 package org.slj.mqtt.sn.gateway.impl;
 
-import org.slj.mqtt.sn.console.IMqttsnConsole;
-import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
-import org.slj.mqtt.sn.console.impl.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
@@ -37,16 +34,8 @@ import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
-import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
-    private IMqttsnGatewayAdvertiseService advertiseService;
-    private IMqttsnBackendService brokerService;
-    private IMqttsnConnector connector;
-    private IMqttsnGatewaySessionService sessionService;
-    private IMqttsnGatewayExpansionHandler expansionHandler;
-    private IMqttsnGatewayClusterService clusterService;
-    private IMqttsnConsole console;
 
     public MqttsnGatewayRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options){
         super(storageService, options);
@@ -79,91 +68,65 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withClientIdFactory(new MqttsnDefaultClientIdFactory()).
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
 
-        MqttsnConsoleOptions consoleOptions = options.getConsoleOptions();
-        if(consoleOptions != null &&
-                consoleOptions.isConsoleEnabled()){
-            registry.withConsole(new MqttsnConsoleService(consoleOptions));
-        }
         return registry;
     }
 
     public MqttsnGatewayRuntimeRegistry withGatewayClusterService(IMqttsnGatewayClusterService clusterService){
-        this.clusterService = clusterService;
-        return this;
-    }
-
-    public MqttsnGatewayRuntimeRegistry withConsole(IMqttsnConsole console){
-        this.console = console;
+        withService(clusterService);
         return this;
     }
 
     public MqttsnGatewayRuntimeRegistry withGatewayAdvertiseService(IMqttsnGatewayAdvertiseService advertiseService){
-        this.advertiseService = advertiseService;
+        withService(advertiseService);
         return this;
     }
 
     public MqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector){
-        this.connector = connector;
+        withService(connector);
         return this;
     }
 
     public MqttsnGatewayRuntimeRegistry withGatewaySessionService(IMqttsnGatewaySessionService sessionService){
-        this.sessionService = sessionService;
+        withService(sessionService);
         return this;
     }
 
     public MqttsnGatewayRuntimeRegistry withBackendService(IMqttsnBackendService brokerService){
-        this.brokerService = brokerService;
+        withService(brokerService);
         return this;
     }
 
     public MqttsnGatewayRuntimeRegistry withExpansionHandler(IMqttsnGatewayExpansionHandler handler){
-        this.expansionHandler = handler;
+        withService(handler);
         return this;
     }
 
     @Override
     public IMqttsnGatewaySessionService getGatewaySessionService() {
-        return sessionService;
+        return getService(IMqttsnGatewaySessionService.class);
     }
 
     @Override
     public IMqttsnBackendService getBackendService() {
-        return brokerService;
+        return getService(IMqttsnBackendService.class);
     }
 
     @Override
     public IMqttsnConnector getConnector() {
-        return connector;
+        return getService(IMqttsnConnector.class);
     }
 
     @Override
     public IMqttsnGatewayAdvertiseService getGatewayAdvertiseService() {
-        return advertiseService;
+        return getOptionalService(IMqttsnGatewayAdvertiseService.class).orElse(null);
     }
 
     @Override
     public IMqttsnGatewayClusterService getGatewayClusterService() {
-        return clusterService;
-    }
-
-    @Override
-    public IMqttsnConsole getConsole() {
-        return console;
+        return getOptionalService(IMqttsnGatewayClusterService.class).orElse(null);
     }
 
     public IMqttsnGatewayExpansionHandler getExpansionHandler() {
-        return expansionHandler;
-    }
-
-    @Override
-    protected void validateOnStartup() throws MqttsnRuntimeException {
-
-        super.validateOnStartup();
-        if(brokerService == null) throw new MqttsnRuntimeException("message state service must be bound for valid runtime");
-        if(expansionHandler == null) throw new MqttsnRuntimeException("expansion handler must be bound for valid runtime");
-        if(connector == null) throw new MqttsnRuntimeException("connector must be bound for valid runtime");
-        if(sessionService == null) throw new MqttsnRuntimeException("session service must be bound for valid runtime");
-        if(clientIdFactory == null) throw new MqttsnRuntimeException("clientIdFactory must be bound for valid runtime");
+        return getService(IMqttsnGatewayExpansionHandler.class);
     }
 }

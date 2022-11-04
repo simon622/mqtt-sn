@@ -22,32 +22,28 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.console.http.impl.handlers;
+package org.slj.mqtt.sn.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slj.mqtt.sn.console.http.HttpUtils;
-import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
+import org.slj.mqtt.sn.spi.IMqttsnService;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
-import java.io.IOException;
+import java.util.Comparator;
 
-public class StaticFileHandler extends AbstractHttpRequestResponseHandler {
-
-    protected final String resourceRoot;
-
-    public StaticFileHandler(ObjectMapper mapper, String resourceRoot) {
-        super(mapper);
-        this.resourceRoot = resourceRoot;
-    }
+public class ServiceSort implements Comparator<IMqttsnService> {
 
     @Override
-    protected void handleHttpGet(IHttpRequestResponse requestResponse) throws IOException {
-
-        String resourcePath = requestResponse.getContextRelativePath();
-        resourcePath = HttpUtils.sanitizePath(resourcePath);
-        String filePath = HttpUtils.combinePaths(resourceRoot, resourcePath);
-        writeDataFromResource(requestResponse, filePath);
+    public int compare(IMqttsnService o1, IMqttsnService o2) {
+        return getSortValue(o1) - getSortValue(o2);
     }
 
 
+    private static int getSortValue(IMqttsnService service){
+        if(service.getClass().isAnnotationPresent(MqttsnService.class)){
+            MqttsnService a = service.getClass().getAnnotation(MqttsnService.class);
+            return  a.order();
+        }
+        return 0;
+    }
 }
+
+

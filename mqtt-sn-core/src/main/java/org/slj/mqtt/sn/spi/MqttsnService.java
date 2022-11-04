@@ -24,32 +24,16 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public abstract class MqttsnService implements IMqttsnService {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface MqttsnService {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
-    protected IMqttsnRuntimeRegistry registry;
-    protected volatile boolean running = false;
+    int FIRST = 100, ANY = 50, LAST = 10, RESERVED = 0;
 
-    public MqttsnService(){
-    }
-
-    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-        this.registry = runtime;
-        running = true;
-    }
-
-    public void stop() throws MqttsnException {
-        running = false;
-    }
-
-    protected IMqttsnRuntimeRegistry getRegistry(){
-        return registry;
-    }
-
-    public boolean running(){
-        return running;
-    }
+    int order() default ANY;
 }

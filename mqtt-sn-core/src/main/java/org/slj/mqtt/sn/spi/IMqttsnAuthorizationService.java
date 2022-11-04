@@ -34,7 +34,8 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
  * Granted Maximum Subscription Levels
  * Eligibility to publish to a given path & size
  */
-public interface IMqttsnAuthorizationService {
+@MqttsnService
+public interface IMqttsnAuthorizationService extends IMqttsnService {
 
     /**
      * Is a client allowed to SUBSCRIBE to a given topic path

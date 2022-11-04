@@ -32,7 +32,8 @@ import org.slj.mqtt.sn.model.IMqttsnContext;
  *
  * CONNECT with the given clientId
  */
-public interface IMqttsnAuthenticationService {
+@MqttsnService
+public interface IMqttsnAuthenticationService extends IMqttsnService {
 
     /**
      * Is a client allowed to CONNECT successfully.

@@ -22,24 +22,27 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.console.http.impl.handlers;
+package org.slj.mqtt.sn.impl.metrics;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slj.mqtt.sn.console.http.Html;
-import org.slj.mqtt.sn.console.http.HttpConstants;
-import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
-import org.slj.mqtt.sn.console.http.impl.AbstractHttpRequestResponseHandler;
+import org.slj.mqtt.sn.model.IMqttsnMetric;
 
-import java.io.IOException;
+public abstract class MqttsnMetric implements IMqttsnMetric {
 
-public class HelloWorldHandler extends AbstractHttpRequestResponseHandler {
+    private final String name;
+    private final String description;
 
-    public HelloWorldHandler(ObjectMapper mapper) {
-        super(mapper);
+    public MqttsnMetric(String name, String description){
+        this.name = name;
+        this.description = description;
     }
 
     @Override
-    protected void handleHttpGet(IHttpRequestResponse request) throws IOException {
-        writeHTMLResponse(request, HttpConstants.SC_OK, Html.span("Hello World From SLJ MQTT-SN Console!", Html.RED, true));
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
     }
 }

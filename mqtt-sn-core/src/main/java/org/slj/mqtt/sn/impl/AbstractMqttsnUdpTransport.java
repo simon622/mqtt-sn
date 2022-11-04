@@ -29,8 +29,6 @@ import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
-import java.nio.ByteBuffer;
-
 public abstract class AbstractMqttsnUdpTransport
         extends AbstractMqttsnTransport {
 

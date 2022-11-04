@@ -25,12 +25,13 @@
 package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.IMqttsnTopicModifier;
 
 /**
  * Default implementation does nothing to the topic
  */
-public class MqttsnDefaultTopicModifier implements IMqttsnTopicModifier {
+public class MqttsnDefaultTopicModifier extends AbstractMqttsnService implements IMqttsnTopicModifier {
 
     @Override
     public String modifyTopic(IMqttsnContext context, String topicName) {

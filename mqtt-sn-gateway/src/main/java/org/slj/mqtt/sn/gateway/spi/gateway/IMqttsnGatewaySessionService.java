@@ -30,7 +30,9 @@ import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
+@MqttsnService(order = MqttsnService.LAST)
 public interface IMqttsnGatewaySessionService extends IMqttsnService {
 
     void markSessionLost(IMqttsnSession state) throws MqttsnException;

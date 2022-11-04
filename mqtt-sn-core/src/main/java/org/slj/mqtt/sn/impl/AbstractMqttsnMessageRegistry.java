@@ -29,10 +29,10 @@ import org.slj.mqtt.sn.model.IntegerDataRef;
 import org.slj.mqtt.sn.spi.IMqttsnMessageRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public abstract class AbstractMqttsnMessageRegistry
-        extends MqttsnService implements IMqttsnMessageRegistry {
+        extends AbstractMqttsnService implements IMqttsnMessageRegistry {
 
     private volatile int lastId = 0;
     private Object lock = new Object();

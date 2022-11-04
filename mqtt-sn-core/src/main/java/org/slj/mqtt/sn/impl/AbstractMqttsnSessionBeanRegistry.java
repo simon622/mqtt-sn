@@ -27,15 +27,11 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.impl.MqttsnSessionBeanImpl;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.spi.MqttsnService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public abstract class AbstractMqttsnSessionBeanRegistry
-        extends MqttsnService {
+        extends AbstractMqttsnService {
 
     protected MqttsnSessionBeanImpl getSessionBean(IMqttsnSession session){
         if(session instanceof MqttsnSessionBeanImpl){

@@ -22,11 +22,34 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.console.http;
+package org.slj.mqtt.sn.spi;
 
-public class HttpInternalServerError extends HttpException {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    public HttpInternalServerError(String responseMessage, Exception e) {
-        super(HttpConstants.SC_INTERNAL_SERVER_ERROR, responseMessage, e);
+public abstract class AbstractMqttsnService implements IMqttsnService {
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected IMqttsnRuntimeRegistry registry;
+    protected volatile boolean running = false;
+
+    public AbstractMqttsnService(){
+    }
+
+    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
+        this.registry = runtime;
+        running = true;
+    }
+
+    public void stop() throws MqttsnException {
+        running = false;
+    }
+
+    protected IMqttsnRuntimeRegistry getRegistry(){
+        return registry;
+    }
+
+    public boolean running(){
+        return running;
     }
 }

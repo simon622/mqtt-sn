@@ -25,8 +25,11 @@
 package org.slj.mqtt.sn.gateway.spi.connector;
 
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
+import org.slj.mqtt.sn.spi.IMqttsnService;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
-public interface IMqttsnConnector<T extends IMqttsnConnectorConnection> {
+@MqttsnService(order = MqttsnService.LAST)
+public interface IMqttsnConnector<T extends IMqttsnConnectorConnection> extends IMqttsnService {
 
     T createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException;
 

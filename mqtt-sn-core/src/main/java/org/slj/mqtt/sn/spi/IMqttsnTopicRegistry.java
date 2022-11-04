@@ -35,7 +35,8 @@ import java.util.Set;
  * to use for a given remote context and topic combination. The topic registry will be cleared
  * according to session lifecycle rules.
  */
-public interface IMqttsnTopicRegistry extends IMqttsnRegistry {
+@MqttsnService
+public interface IMqttsnTopicRegistry extends IMqttsnService  {
 
     TopicInfo normalize(byte topicIdType, byte[] topicData, boolean normalAsLong) throws MqttsnException;
 

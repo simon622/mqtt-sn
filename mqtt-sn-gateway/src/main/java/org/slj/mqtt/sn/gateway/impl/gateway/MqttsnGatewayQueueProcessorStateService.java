@@ -28,13 +28,10 @@ import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnQueueProcessorStateService;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 
-public class MqttsnGatewayQueueProcessorStateService extends MqttsnService
+public class MqttsnGatewayQueueProcessorStateService extends AbstractMqttsnService
         implements IMqttsnQueueProcessorStateService {
 
     protected IMqttsnGatewayRuntimeRegistry getRegistry(){

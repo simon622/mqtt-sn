@@ -38,7 +38,7 @@ import org.slj.mqtt.sn.wire.version1_2.payload.*;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public abstract class AbstractMqttsnMessageHandler
-        extends MqttsnService implements IMqttsnMessageHandler {
+        extends AbstractMqttsnService implements IMqttsnMessageHandler {
 
     public boolean temporaryAuthorizeContext(INetworkContext context) {
         try {

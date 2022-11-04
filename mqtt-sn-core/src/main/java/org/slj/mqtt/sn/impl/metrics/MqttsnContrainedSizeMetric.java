@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * When the max. size is reached the oldest sample will be removed on in preference to the newest
  * sample. Operates in FIFO mode.
  */
-public class MqttsnContrainedSizeMetric extends AbstractMqttsnMetric {
+public class MqttsnContrainedSizeMetric extends MqttsnMetric {
     final private List<MqttsnMetricSample> samples;
     volatile MqttsnMetricSample minValue;
     volatile MqttsnMetricSample maxValue;

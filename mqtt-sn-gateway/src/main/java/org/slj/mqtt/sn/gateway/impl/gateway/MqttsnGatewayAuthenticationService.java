@@ -27,13 +27,13 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientCredentials;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.IMqttsnAuthenticationService;
-import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
 
 public class MqttsnGatewayAuthenticationService
-        extends MqttsnService  implements IMqttsnAuthenticationService {
+        extends AbstractMqttsnService implements IMqttsnAuthenticationService {
 
     @Override
     public boolean allowConnect(IMqttsnContext context, String clientId) {

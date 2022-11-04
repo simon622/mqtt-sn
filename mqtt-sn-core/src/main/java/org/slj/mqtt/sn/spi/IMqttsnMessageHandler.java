@@ -34,6 +34,7 @@ import org.slj.mqtt.sn.model.INetworkContext;
  *
  * It is directly responsible for creating response messages and sending them back to the transport layer
  */
+@MqttsnService(order = MqttsnService.FIRST)
 public interface IMqttsnMessageHandler extends IMqttsnService {
 
     /**

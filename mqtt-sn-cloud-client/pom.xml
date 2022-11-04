@@ -31,7 +31,7 @@
     <parent>
         <groupId>org.slj</groupId>
         <artifactId>mqtt-sn</artifactId>
-        <version>1.0.0</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>mqtt-sn-cloud-client</artifactId>
@@ -40,12 +40,12 @@
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-core</artifactId>
-            <version>1.0.0</version>
+            <version>${mqtt-sn.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.10.2</version>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 

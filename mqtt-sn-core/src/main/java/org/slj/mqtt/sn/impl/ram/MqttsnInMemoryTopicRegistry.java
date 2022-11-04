@@ -25,19 +25,14 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractTopicRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
 import org.slj.mqtt.sn.model.session.impl.MqttsnTopicRegistrationImpl;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 
 import java.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
 public class MqttsnInMemoryTopicRegistry

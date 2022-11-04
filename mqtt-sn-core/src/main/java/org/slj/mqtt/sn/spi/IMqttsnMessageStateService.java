@@ -39,7 +39,8 @@ import java.util.Optional;
  * The message handling layer will call into the state service with messages it has received, and the queue processor
  * will use the state service to dispatch new outbound publish messages.
  */
-public interface IMqttsnMessageStateService extends IMqttsnRegistry {
+@MqttsnService
+public interface IMqttsnMessageStateService extends IMqttsnService {
 
     /**
      * Dispatch a new message to the transport layer, binding it to the state service en route for tracking.

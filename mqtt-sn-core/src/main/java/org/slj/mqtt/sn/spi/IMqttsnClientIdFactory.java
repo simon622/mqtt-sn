@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-public interface IMqttsnClientIdFactory {
+public interface IMqttsnClientIdFactory extends IMqttsnService {
 
     String createClientId(String clientIdSeed) throws MqttsnException;
 

@@ -117,8 +117,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     }
 
     @Override
-    protected void startupServices(IMqttsnRuntimeRegistry registry) throws MqttsnException {
-
+    protected void notifyServicesStarted() {
         try {
             Optional<INetworkContext> optionalContext = registry.getNetworkRegistry().first();
             if(!registry.getOptions().isEnableDiscovery() &&
@@ -126,40 +125,8 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                 throw new MqttsnRuntimeException("unable to launch non-discoverable client without configured gateway");
             }
         } catch(NetworkRegistryException e){
-            throw new MqttsnException("error using network registry", e);
+            throw new MqttsnRuntimeException("error using network registry", e);
         }
-
-        callStartup(registry.getMessageStateService());
-        callStartup(registry.getMessageHandler());
-        callStartup(registry.getMessageQueue());
-        callStartup(registry.getMessageRegistry());
-        callStartup(registry.getContextFactory());
-        callStartup(registry.getSessionRegistry());
-        callStartup(registry.getSubscriptionRegistry());
-        callStartup(registry.getTopicRegistry());
-        callStartup(registry.getWillRegistry());
-        callStartup(registry.getSecurityService());
-        callStartup(registry.getDeadLetterQueue());
-        callStartup(registry.getQueueProcessor());
-        callStartup(registry.getTransport());
-
-    }
-
-    @Override
-    protected void stopServices(IMqttsnRuntimeRegistry registry) throws MqttsnException {
-        callShutdown(registry.getTransport());
-        callShutdown(registry.getQueueProcessor());
-        callShutdown(registry.getMessageStateService());
-        callShutdown(registry.getMessageHandler());
-        callShutdown(registry.getMessageQueue());
-        callShutdown(registry.getMessageRegistry());
-        callShutdown(registry.getSecurityService());
-        callShutdown(registry.getContextFactory());
-        callShutdown(registry.getSessionRegistry());
-        callShutdown(registry.getWillRegistry());
-        callShutdown(registry.getSubscriptionRegistry());
-        callShutdown(registry.getTopicRegistry());
-        callShutdown(registry.getDeadLetterQueue());
     }
 
     @Override

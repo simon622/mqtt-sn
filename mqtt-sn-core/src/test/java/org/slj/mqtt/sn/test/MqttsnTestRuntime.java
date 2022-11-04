@@ -27,8 +27,6 @@ package org.slj.mqtt.sn.test;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddress;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.io.IOException;
 
@@ -40,43 +38,5 @@ public class MqttsnTestRuntime extends AbstractMqttsnRuntime {
 
     @Override
     public void close() throws IOException {
-    }
-
-    @Override
-    protected void startupServices(final IMqttsnRuntimeRegistry registry) throws MqttsnException {
-        callStartup(registry.getMessageHandler());
-        callStartup(registry.getMessageQueue());
-        callStartup(registry.getMessageRegistry());
-        callStartup(registry.getTopicRegistry());
-        callStartup(registry.getWillRegistry());
-        callStartup(registry.getSecurityService());
-        callStartup(registry.getSubscriptionRegistry());
-        callStartup(registry.getMessageStateService());
-        callStartup(registry.getQueueProcessorStateCheckService());
-        callStartup(registry.getQueueProcessor());
-        callStartup(registry.getContextFactory());
-        if (registry.getAuthenticationService() != null) callStartup(registry.getAuthenticationService());
-        if (registry.getAuthorizationService() != null) callStartup(registry.getAuthorizationService());
-        callStartup(registry.getTransport());
-        callStartup(registry.getSessionRegistry());
-    }
-
-    @Override
-    protected void stopServices(final IMqttsnRuntimeRegistry registry) throws MqttsnException {
-        callShutdown(registry.getMessageHandler());
-        callShutdown(registry.getMessageQueue());
-        callShutdown(registry.getMessageRegistry());
-        callShutdown(registry.getTopicRegistry());
-        callShutdown(registry.getWillRegistry());
-        callShutdown(registry.getSecurityService());
-        callShutdown(registry.getSubscriptionRegistry());
-        callShutdown(registry.getMessageStateService());
-        callShutdown(registry.getQueueProcessorStateCheckService());
-        callShutdown(registry.getQueueProcessor());
-        callShutdown(registry.getContextFactory());
-        if (registry.getAuthenticationService() != null) callShutdown(registry.getAuthenticationService());
-        if (registry.getAuthorizationService() != null) callShutdown(registry.getAuthorizationService());
-        callShutdown(registry.getTransport());
-        callShutdown(registry.getSessionRegistry());
     }
 }

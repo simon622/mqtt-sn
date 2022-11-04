@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.gateway.connector.paho;
 
-import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGateway;
 import org.slj.mqtt.sn.gateway.cli.MqttsnInteractiveGatewayLauncher;
 import org.slj.mqtt.sn.gateway.connector.custom.CustomMqttBrokerConnector;
@@ -46,10 +45,6 @@ public class PahoGatewayInteractiveMain {
                 MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
                 storageService.initializeFieldsFromStorage(connectorOptions);
                 namespacePreferences.initializeFieldsFromStorage(connectorOptions);
-
-                ((MqttsnGatewayOptions)options).withMaxNetworkAddressEntries(100000);
-                ((MqttsnGatewayOptions)options).withMaxConnectedClients(100000);
-                ((MqttsnGatewayOptions)options).withConsoleOptions(new MqttsnConsoleOptions());
 
                 return MqttsnGatewayRuntimeRegistry.defaultConfiguration(storageService, (MqttsnGatewayOptions) options).
                         withConnector(new CustomMqttBrokerConnector(CustomMqttBrokerConnector.DESCRIPTOR, connectorOptions)).

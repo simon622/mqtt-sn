@@ -33,9 +33,9 @@ import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
-import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.Set;
 
@@ -47,7 +47,7 @@ import java.util.Set;
  * so care needs to be taken when coding these objects to ensure they are memory efficient both in size and shared
  * references.
  */
-public class MqttsnGatewayExpansionHandler extends MqttsnService implements IMqttsnGatewayExpansionHandler {
+public class MqttsnGatewayExpansionHandler extends AbstractMqttsnService implements IMqttsnGatewayExpansionHandler {
 
     @Override
     public void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {

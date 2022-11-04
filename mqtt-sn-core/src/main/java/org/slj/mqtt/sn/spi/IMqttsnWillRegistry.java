@@ -24,15 +24,14 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.model.session.IMqttsnWillData;
-import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
 
 /**
  * Stores and Maintains will data associated with a given context
  */
-public interface IMqttsnWillRegistry extends IMqttsnRegistry {
+@MqttsnService
+public interface IMqttsnWillRegistry extends IMqttsnService {
 
     void setWillMessage(IMqttsnSession session, IMqttsnWillData willData);
 

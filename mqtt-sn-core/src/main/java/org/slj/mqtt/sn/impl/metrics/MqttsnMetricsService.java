@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.spi.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MqttsnMetricsService extends MqttsnService implements IMqttsnMetricsService {
+public class MqttsnMetricsService extends AbstractMqttsnService implements IMqttsnMetricsService {
 
     private Map<String, IMqttsnMetric> metrics = new ConcurrentHashMap<>();
 

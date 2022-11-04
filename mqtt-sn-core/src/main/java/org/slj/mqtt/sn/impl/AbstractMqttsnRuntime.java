@@ -39,6 +39,7 @@ import org.slj.mqtt.sn.utils.VirtualMachine;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -88,18 +89,19 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
             logger.info("starting mqttsn-environment {}, initializing options from storage using {}",
                     java.lang.System.identityHashCode(this),
                     getRegistry().getStorageService().getClass().getSimpleName());
+
             registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
 
             running = true;
 
-            if(reg.getTrafficListeners() != null && !reg.getTrafficListeners().isEmpty()){
-                trafficListeners.addAll(reg.getTrafficListeners());
-            }
             generalUseExecutorService =
                     createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
             bindShutdownHook();
-            startupServices(registry);
-            postStartupTasks();
+            startupServices();
+            notifyServicesStarted();
+            if(registry.getMetrics() != null){
+                installRuntimeMetrics();
+            }
             startupLatch.countDown();
             logger.info("mqttsn-environment started successfully in {}", java.lang.System.currentTimeMillis() - startedAt);
             if(join){
@@ -121,7 +123,8 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         if(running){
             logger.info("stopping mqttsn-environment {}", java.lang.System.identityHashCode(this));
             try {
-                stopServices(registry);
+                stopServices();
+                notifyServicesStopped();
             } finally {
                 running = false;
                 try {
@@ -133,6 +136,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
                     sentListeners.clear();
                     sendFailureListeners.clear();
                     managedExecutorServices.clear();
+                    trafficListeners.clear();
                     synchronized (monitor){
                         monitor.notifyAll();
                     }
@@ -156,7 +160,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         }
     }
 
-    protected void bindShutdownHook(){
+    private void bindShutdownHook(){
         Runtime.getRuntime().addShutdownHook(new Thread(getThreadGroup(), () -> {
             try {
                 AbstractMqttsnRuntime.this.stop();
@@ -166,25 +170,21 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         }, "mqtt-sn-finalizer"));
     }
 
-    protected final void callStartup(Object service) throws MqttsnException {
-        if(service instanceof IMqttsnService){
-            IMqttsnService snService =  (IMqttsnService) service;
-            if(!snService.running()){
-                logger.info("starting {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
-                snService.start(registry);
-                activeServices.add(snService);
-            }
+    protected final void callStartup(IMqttsnService service) throws MqttsnException {
+        if(service == null) throw new MqttsnRuntimeException("unable to start <null> service");
+        if(!service.running()){
+            logger.info("starting {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
+            service.start(registry);
+            activeServices.add(service);
         }
     }
 
-    protected final void callShutdown(Object service) throws MqttsnException {
-        if(service instanceof IMqttsnService){
-            IMqttsnService snService =  (IMqttsnService) service;
-            if(snService.running()){
-                logger.info("stopping {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
-                snService.stop();
-                activeServices.remove(snService);
-            }
+    protected final void callShutdown(IMqttsnService service) throws MqttsnException {
+        if(service == null) throw new MqttsnRuntimeException("unable to start <null> service");
+        if(service.running()){
+            logger.info("stopping {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
+            service.stop();
+            activeServices.remove(service);
         }
     }
 
@@ -257,24 +257,20 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         if(listener == null) throw new IllegalArgumentException("cannot unregister <null> listener");
         return sentListeners.remove(listener);
     }
-
     public void clearSentReceiveListeners(){
         sentListeners.clear();
         receivedListeners.clear();
     }
-
     public void registerConnectionListener(IMqttsnConnectionStateListener listener) {
         if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
         if(!connectionListeners.contains(listener))
             connectionListeners.add(listener);
     }
-
     public void registerPublishFailedListener(IMqttsnPublishFailureListener listener) {
         if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
         if(!sendFailureListeners.contains(listener))
             sendFailureListeners.add(listener);
     }
-
     public void registerTrafficListener(IMqttsnTrafficListener listener) {
         if(listener == null) throw new IllegalArgumentException("cannot register <null> listener");
         if(!trafficListeners.contains(listener))
@@ -282,7 +278,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     }
 
     public List<IMqttsnTrafficListener> getTrafficListeners(){
-        return trafficListeners;
+        return Collections.unmodifiableList(trafficListeners);
     }
 
 
@@ -440,49 +436,96 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         return registry;
     }
 
-    protected void postStartupTasks(){
-        if(registry.getMetrics() != null){
+    protected void installRuntimeMetrics(){
 
-            //-- snapshot metrics are self-managed
-            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, "The amount of memory available to the virtual machine (kb).",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getUsedMemoryKb()));
-            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_THREADS_USED, "The number of threads in the virtual machine.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getThreadCount()));
-            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, "The number of entries in the network registry.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
-            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT, "The number of messages residing in the application message data store.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getMessageRegistry().size()));
-            registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.DLQ_REGISTRY_COUNT, "The number of messages residing in the dead letter queue.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getDeadLetterQueue().size()));
+        //-- snapshot metrics are self-managed
+        registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, "The amount of memory available to the virtual machine (kb).",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getUsedMemoryKb()));
+        registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_THREADS_USED, "The number of threads in the virtual machine.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getThreadCount()));
+        registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, "The number of entries in the network registry.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
+        registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT, "The number of messages residing in the application message data store.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getMessageRegistry().size()));
+        registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.DLQ_REGISTRY_COUNT, "The number of messages residing in the dead letter queue.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS, () -> registry.getDeadLetterQueue().size()));
 
-            //-- these require managing externally
-            registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN, "The number of mqtt-sn publish messages received (ingress) in the time period.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
-            registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT, "The number of mqtt-sn publish messages sent (egress) in the time period.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+        //-- these require managing externally
+        registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN, "The number of mqtt-sn publish messages received (ingress) in the time period.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+        registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT, "The number of mqtt-sn publish messages sent (egress) in the time period.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
 
-            registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.NETWORK_BYTES_IN, "The number of network bytes received (ingress) in the time period.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
-            registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.NETWORK_BYTES_OUT, "The number of network bytes sent (egress) in the time period.",
-                    IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+        registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.NETWORK_BYTES_IN, "The number of network bytes received (ingress) in the time period.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
+        registry.getMetrics().registerMetric(new MqttsnCountingMetric(IMqttsnMetrics.NETWORK_BYTES_OUT, "The number of network bytes sent (egress) in the time period.",
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SAMPLES_TIME_MILLIS));
 
-            registerPublishReceivedListener((context, topicPath, qos, retained, data, message) ->
-                    registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).increment(1));
+        registerPublishReceivedListener((context, topicPath, qos, retained, data, message) ->
+                registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_IN).increment(1));
 
-            registerPublishSentListener((context, topicPath, qos, retained, data, message) ->
-                    registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT).increment(1));
-            registerTrafficListener(new IMqttsnTrafficListener() {
-                @Override
-                public void trafficSent(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                    registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_OUT).increment(data.length);
-                }
+        registerPublishSentListener((context, topicPath, qos, retained, data, message) ->
+                registry.getMetrics().getMetric(IMqttsnMetrics.PUBLISH_MESSAGE_OUT).increment(1));
+        registerTrafficListener(new IMqttsnTrafficListener() {
+            @Override
+            public void trafficSent(INetworkContext context, byte[] data, IMqttsnMessage message) {
+                registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_OUT).increment(data.length);
+            }
 
-                @Override
-                public void trafficReceived(INetworkContext context, byte[] data, IMqttsnMessage message) {
-                    registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_IN).increment(data.length);
-                }
-            });
+            @Override
+            public void trafficReceived(INetworkContext context, byte[] data, IMqttsnMessage message) {
+                registry.getMetrics().getMetric(IMqttsnMetrics.NETWORK_BYTES_IN).increment(data.length);
+            }
+        });
+    }
+
+    private final synchronized void startupServices()
+            throws MqttsnException {
+
+        Iterator<IMqttsnService> services =
+                getRegistry().getServices().iterator();
+        while(services.hasNext()){
+            try {
+                IMqttsnService s = services.next();
+                callStartup(s);
+            } catch(MqttsnException e){
+                logger.error("error starting service;", e);
+                throw new MqttsnException(e);
+            }
         }
+    }
+
+    private final synchronized void stopServices()
+            throws MqttsnException {
+
+        Iterator<IMqttsnService> services =
+                getRegistry().getServices().iterator();
+        while(services.hasNext()){
+            try {
+                IMqttsnService s = services.next();
+                callShutdown(s);
+            } catch(MqttsnException e){
+                logger.error("error starting service;", e);
+                throw new MqttsnException(e);
+            }
+        }
+    }
+
+
+    /**
+     * Optionally override this hook method to bootstrap logic into the managed lifecycle;
+     * called AFTER all services have been started
+     */
+    protected void notifyServicesStarted(){
+
+    }
+
+    /**
+     * Optionally override this hook method to bootstrap logic into the managed lifecycle;
+     * called AFTER all services have been stopped
+     */
+    protected void notifyServicesStopped(){
+
     }
 
     @Override
@@ -492,7 +535,4 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 
     public abstract void close() throws IOException ;
 
-    protected abstract void startupServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException;
-
-    protected abstract void stopServices(IMqttsnRuntimeRegistry runtime) throws MqttsnException;
 }

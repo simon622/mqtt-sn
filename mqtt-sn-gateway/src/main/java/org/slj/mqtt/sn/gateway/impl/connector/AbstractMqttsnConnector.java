@@ -29,8 +29,10 @@ import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public abstract class AbstractMqttsnConnector<T extends IMqttsnConnectorConnection>
+    extends AbstractMqttsnService
         implements IMqttsnConnector<T> {
 
     protected MqttsnConnectorDescriptor descriptor;

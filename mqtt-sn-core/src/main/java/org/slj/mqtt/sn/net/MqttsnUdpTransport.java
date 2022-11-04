@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.net;
 
-import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -46,7 +45,7 @@ import java.util.List;
  * The broadcast-receiver when activated runs on it own thread, listening on the broadcast port, updating the registry
  * when new contexts are discovered.
  */
-public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
+public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport {
 
     private DatagramSocket socket;
     private DatagramSocket broadcastSocket;

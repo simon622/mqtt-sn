@@ -66,13 +66,6 @@ public class MqttsnInMemoryMessageRegistry
     }
 
     @Override
-    public void clearAll() {
-        synchronized (messageLookup){
-            messageLookup.clear();
-        }
-    }
-
-    @Override
     public long size() {
         return messageLookup.size();
     }

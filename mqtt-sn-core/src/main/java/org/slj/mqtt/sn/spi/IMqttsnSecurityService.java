@@ -29,7 +29,8 @@ import org.slj.mqtt.sn.model.INetworkContext;
 /**
  * Used to verify message integrity and provide other security services;
  */
-public interface IMqttsnSecurityService {
+@MqttsnService
+public interface IMqttsnSecurityService extends IMqttsnService {
 
     /**
      * Check to see if protocol integrity is enabled on the runtime

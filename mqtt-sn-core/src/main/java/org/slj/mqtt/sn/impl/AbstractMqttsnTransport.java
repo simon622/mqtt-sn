@@ -43,7 +43,7 @@ import java.util.concurrent.Future;
  * You should sub-class this base as a starting point for you implementations.
  */
 public abstract class AbstractMqttsnTransport
-        extends MqttsnService implements IMqttsnTransport {
+        extends AbstractMqttsnService implements IMqttsnTransport {
 
     protected ExecutorService protocolProcessor;
     protected ExecutorService egressPublishProcessor;

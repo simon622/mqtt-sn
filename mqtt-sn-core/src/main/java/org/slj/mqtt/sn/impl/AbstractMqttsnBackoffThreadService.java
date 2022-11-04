@@ -26,10 +26,10 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public abstract class AbstractMqttsnBackoffThreadService
-        extends MqttsnService implements Runnable {
+        extends AbstractMqttsnService implements Runnable {
 
     private Thread t;
     private Object monitor = new Object();

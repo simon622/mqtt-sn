@@ -31,7 +31,7 @@
     <parent>
         <groupId>org.slj</groupId>
         <artifactId>mqtt-sn</artifactId>
-        <version>1.0.0</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>mqtt-sn-gateway</artifactId>
@@ -43,17 +43,12 @@
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-codec</artifactId>
-            <version>1.0.0</version>
+            <version>${mqtt-sn.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-core</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slj</groupId>
-            <artifactId>mqtt-sn-cloud-client</artifactId>
-            <version>1.0-0</version>
+            <version>${mqtt-sn.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -61,9 +56,9 @@
             <version>30.0-jre</version>
         </dependency>
         <dependency>
-            <groupId>be.ceau</groupId>
-            <artifactId>chart</artifactId>
-            <version>2.6.0</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 

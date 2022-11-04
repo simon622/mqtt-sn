@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
+import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public interface IMqttsnRuntimeRegistry {
     void init();
     MqttsnOptions getOptions();
     AbstractMqttsnRuntime getRuntime();
-    void withService(IMqttsnService service);
+    AbstractMqttsnRuntimeRegistry withService(IMqttsnService service);
     List<IMqttsnService> getServices();
     <T extends IMqttsnService> T getService(Class<T> clz);
     <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz);

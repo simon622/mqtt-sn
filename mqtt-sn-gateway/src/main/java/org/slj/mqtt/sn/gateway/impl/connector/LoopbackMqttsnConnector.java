@@ -33,7 +33,7 @@ public class LoopbackMqttsnConnector
         extends AbstractMqttsnConnector<LoopbackMqttsnConnectorConnection>
             implements IMqttsnConnector<LoopbackMqttsnConnectorConnection> {
 
-    static final MqttsnConnectorDescriptor DESCRIPTOR = new MqttsnConnectorDescriptor();
+    public static final MqttsnConnectorDescriptor DESCRIPTOR = new MqttsnConnectorDescriptor();
     static {
         DESCRIPTOR.setClassName(LoopbackMqttsnConnector.class.getName());
         DESCRIPTOR.setCompanyName("SLJ");

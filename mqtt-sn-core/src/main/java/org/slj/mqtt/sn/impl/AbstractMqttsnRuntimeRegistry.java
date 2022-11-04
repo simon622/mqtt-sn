@@ -524,10 +524,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     @Override
-    public void withService(IMqttsnService service){
+    public AbstractMqttsnRuntimeRegistry withService(IMqttsnService service){
         synchronized (services){
             services.add(service);
         }
+        return this;
     }
 
     @Override

@@ -29,4 +29,7 @@ public interface MqttsnCloudConstants {
     //-- use simple bearer tokens
     String AUTHORIZATION_HEADER = "Authorization";
     String BEARER_TOKEN_HEADER = "Bearer %s";
+
+    String CONTENT_TYPE = "Content-Type";
+    String CONTENT_ENCODING = "Content-Encoding";
 }

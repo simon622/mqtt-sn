@@ -25,8 +25,15 @@
 package org.slj.mqtt.sn.utils;
 
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
-public class VirtualMachine {
+public class Environment {
 
     public static long getThreadCount(){
         try {
@@ -72,5 +79,37 @@ public class VirtualMachine {
         buff.append("mb");
         return buff.toString();
 
+    }
+
+    public static Map<String, String> getMacAddresses() throws SocketException {
+        Map<String, String> m = new HashMap<>();
+        Enumeration<NetworkInterface> networkInterfaces =
+                NetworkInterface.getNetworkInterfaces();
+        while (networkInterfaces.hasMoreElements()) {
+            NetworkInterface ni = networkInterfaces.nextElement();
+            byte[] hardwareAddress = ni.getHardwareAddress();
+            if (hardwareAddress != null) {
+                m.put(ni.getName(), macBytes(hardwareAddress));
+            }
+        }
+        return m;
+    }
+
+    public static String getLocalHostMacAddress()
+            throws SocketException, UnknownHostException {
+        InetAddress ipAddress = InetAddress.getLocalHost();
+        NetworkInterface networkInterface = NetworkInterface
+                .getByInetAddress(ipAddress);
+        byte[] macAddressBytes = networkInterface.getHardwareAddress();
+        return macBytes(macAddressBytes);
+    }
+
+    private static final String macBytes(byte[] b){
+        String[] hexadecimalFormat = new String[b.length];
+        for (int i = 0; i < b.length; i++) {
+            hexadecimalFormat[i] = String.format("%02X", b[i]);
+        }
+        String mac = String.join(":", hexadecimalFormat);
+        return mac;
     }
 }

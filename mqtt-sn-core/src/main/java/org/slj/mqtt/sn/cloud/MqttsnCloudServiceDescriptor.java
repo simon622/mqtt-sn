@@ -30,7 +30,8 @@ public class MqttsnCloudServiceDescriptor {
             CONNECTOR_LISTING = "ConnectorListing",
             ACCOUNT_CREATE = "AccountCreate",
             ACCOUNT_AUTHORIZE = "AccountAuthorize",
-            ACCOUNT_DETAILS = "AccountDetails";
+            ACCOUNT_DETAILS = "AccountDetails",
+            SEND_EMAIL_SERVICE = "EmailService";
 
     String serviceName;
     String serviceDisplayName;

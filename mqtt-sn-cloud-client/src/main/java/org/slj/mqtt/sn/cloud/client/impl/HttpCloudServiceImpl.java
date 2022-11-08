@@ -125,26 +125,54 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         return getServiceDescriptors().size();
     }
 
-    public MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException {
+    public MqttsnCloudToken registerAccount(String emailAddress, String firstName, String lastName, String companyName, String macAddress, String contextId) throws MqttsnCloudServiceException {
 
         checkConnectivity();
 
         if(!General.validEmailAddress(emailAddress))
-            throw new MqttsnCloudServiceException("invalid email entered; must confrom to OWASP guidelines");
+            throw new MqttsnCloudServiceException("invalid email entered; must conform to OWASP guidelines");
 
-        AccountCreate create = new AccountCreate();
+        AccountDetails create = new AccountDetails();
         create.emailAddress = emailAddress;
         create.companyName = companyName;
         create.firstName = firstName;
         create.lastName = lastName;
+        create.macAddress = macAddress;
+        create.contextId = contextId;
 
-        MqttsnCloudAccount account = httpPost(
+        MqttsnCloudToken token = httpPost(
                 loadDescriptor(
                         MqttsnCloudServiceDescriptor.ACCOUNT_CREATE).getServiceEndpoint(),
-                MqttsnCloudAccount.class, create);
+                MqttsnCloudToken.class, create);
+        return token;
+    }
+
+
+    public MqttsnCloudAccount readAccount() throws MqttsnCloudServiceException {
+
+        checkConnectivity();
+
+        MqttsnCloudAccount account = httpGet(
+                loadDescriptor(MqttsnCloudServiceDescriptor.ACCOUNT_DETAILS).
+                        getServiceEndpoint(), MqttsnCloudAccount.class);
         return account;
     }
 
+    @Override
+    public void sendCloudEmail(MqttsnCloudEmail email) throws MqttsnCloudServiceException {
+
+        checkConnectivity();
+
+        if(email.getBody() == null || email.getSubject() == null ||
+                email.getToAddresses() == null || email.getToAddresses().isEmpty()){
+            throw new MqttsnCloudServiceException("unable to send email, required fields needed");
+        }
+
+        httpPost(
+                loadDescriptor(
+                        MqttsnCloudServiceDescriptor.SEND_EMAIL_SERVICE).getServiceEndpoint(),
+                Void.class, email);
+    }
 
     protected MqttsnCloudServiceDescriptor loadDescriptor(String name) throws MqttsnCloudServiceException {
         Optional<MqttsnCloudServiceDescriptor> descriptor =
@@ -179,7 +207,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         if(response.isError())
             throw new MqttsnCloudServiceException("cloud service ["+response.getRequestUrl()+"] failed ("+response.getStatusCode()+" - "+response.getStatusMessage()+")");
         if(expectPayload && response.getContentLength() <= 0){
-            throw new MqttsnCloudServiceException("could service ["+response.getRequestUrl()+"] failed with no expected content ("+response.getStatusCode()+" - "+response.getStatusMessage()+")");
+            throw new MqttsnCloudServiceException("cloud service ["+response.getRequestUrl()+"] failed with no expected content ("+response.getStatusCode()+" - "+response.getStatusMessage()+")");
         }
     }
 
@@ -202,6 +230,11 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     @Override
     public boolean isAuthorized() {
         return cloudToken != null;
+    }
+
+    @Override
+    public void setToken(MqttsnCloudToken token) throws MqttsnCloudServiceException {
+        this.cloudToken = token;
     }
 
     protected  <T> List<T> httpGetList(String url, Class<? extends T> cls) throws MqttsnCloudServiceException {
@@ -236,15 +269,28 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     protected  <T> T httpPost(String url, Class<? extends T> cls, Object jsonPostObject) throws MqttsnCloudServiceException {
         try {
             String jsonBody = mapper.writeValueAsString(jsonPostObject);
+
             try (InputStream is = new ByteArrayInputStream(jsonBody.getBytes())) {
+                Map<String, String> headers = getHeaders();
+                headers.put(MqttsnCloudConstants.CONTENT_TYPE, "application/json");
+                headers.put(MqttsnCloudConstants.CONTENT_ENCODING, "UTF-8");
                 HttpResponse response =
-                        HttpClient.post(getHeaders(), url, is, connectTimeoutMillis, readTimeoutMillis);
-                logger.debug("posting to cloud service object from {} -> {}", url, response);
-                checkResponse(response, true);
-                return mapper.readValue(response.getResponseBody(), cls);
+                        HttpClient.post(headers, url, is, connectTimeoutMillis, readTimeoutMillis);
+
+                logger.info("post to cloud service object from {} {} -> {}", url, jsonBody, response);
+
+                if(cls == Void.class){
+                    return null;
+                } else {
+
+                    checkResponse(response, true);
+                    byte[] b = response.getResponseBody();
+                    logger.error("response is -> {}", new String(b));
+                    return mapper.readValue(b, cls);
+                }
             }
         } catch(IOException e){
-            throw new MqttsnCloudServiceException("error in http socket connection", e);
+            throw new MqttsnCloudServiceException("error reading response body;", e);
         } finally {
             updateLastAttempt();
         }
@@ -276,10 +322,12 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         return map;
     }
 
-    class AccountCreate {
+    class AccountDetails {
         public String emailAddress;
         public String companyName;
         public String firstName;
         public String lastName;
+        public String macAddress;
+        public String contextId;
     }
 }

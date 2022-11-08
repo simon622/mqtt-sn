@@ -37,31 +37,149 @@ public interface IMqttsnRuntimeRegistry {
     void init();
     MqttsnOptions getOptions();
     AbstractMqttsnRuntime getRuntime();
+
+    /**
+     * Add a service to the managed service lifecycle. Once bound,
+     * services will be started and stopped inline with their
+     * optional order parameter.
+     */
     AbstractMqttsnRuntimeRegistry withService(IMqttsnService service);
+
+    /**
+     * Obtain an immutable list of the service instances installed in the runtime.
+     */
     List<IMqttsnService> getServices();
+
+    /**
+     * Obtain the service instance installed in the runtime. If it exists,
+     * the first matching instance of the supplied class (assignable from)
+     * will be returned, else you will recieve an unchecked runtime exception.
+     *
+     * NOTE: This method should only be used when the service is mandatory
+     */
     <T extends IMqttsnService> T getService(Class<T> clz);
+
+    /**
+     * Obtain the service instance installed in the runtime. If it exists,
+     * the first matching instance of the supplied class (assignable from)
+     * will be returned, else the optional will be empty.
+     *
+     * @return Optional wrapping the service requested
+     */
     <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz);
+
+    /**
+     * @see IMqttsnTransport
+     */
     IMqttsnTransport getTransport();
+
+    /**
+     * @see IMqttsnCodec
+     */
     IMqttsnCodec getCodec();
+
+    /**
+     * @see IMqttsnMessageQueue
+     */
     IMqttsnMessageQueue getMessageQueue();
+
+    /**
+     * @see IMqttsnMessageFactory
+     */
     IMqttsnMessageFactory getMessageFactory();
+
+    /**
+     * @see IMqttsnMessageHandler
+     */
     IMqttsnMessageHandler getMessageHandler();
+
+    /**
+     * @see IMqttsnMessageStateService
+     */
     IMqttsnMessageStateService getMessageStateService();
+
+    /**
+     * @see INetworkAddressRegistry
+     */
     INetworkAddressRegistry getNetworkRegistry();
+
+    /**
+     * @see IMqttsnTopicRegistry
+     */
     IMqttsnTopicRegistry getTopicRegistry();
+
+    /**
+     * @see IMqttsnSubscriptionRegistry
+     */
     IMqttsnSubscriptionRegistry getSubscriptionRegistry();
+
+    /**
+     * @see IMqttsnContextFactory
+     */
     IMqttsnContextFactory getContextFactory();
+
+    /**
+     * @see IMqttsnSessionRegistry
+     */
     IMqttsnSessionRegistry getSessionRegistry();
+
+    /**
+     * @see IMqttsnMessageQueueProcessor
+     */
     IMqttsnMessageQueueProcessor getQueueProcessor();
+
+    /**
+     * @see IMqttsnMessageQueueProcessor
+     */
     IMqttsnQueueProcessorStateService getQueueProcessorStateCheckService();
+
+    /**
+     * @see IMqttsnMessageRegistry
+     */
     IMqttsnMessageRegistry getMessageRegistry();
+
+    /**
+     * @see IMqttsnWillRegistry
+     */
     IMqttsnWillRegistry getWillRegistry();
+
+    /**
+     * @see IMqttsnAuthenticationService
+     */
     IMqttsnAuthenticationService getAuthenticationService();
+
+    /**
+     * @see IMqttsnAuthorizationService
+     */
     IMqttsnAuthorizationService getAuthorizationService();
+
+    /**
+     * @see IMqttsnSecurityService
+     */
     IMqttsnSecurityService getSecurityService();
+
+    /**
+     * @see IMqttsnTopicModifier
+     */
     IMqttsnTopicModifier getTopicModifier();
+
+    /**
+     * @see IMqttsnMetricsService
+     */
     IMqttsnMetricsService getMetrics();
+
+    /**
+     * @see IMqttsnStorageService
+     */
     IMqttsnStorageService getStorageService();
+
+    /**
+     * @see IMqttsnClientIdFactory
+     */
     IMqttsnClientIdFactory getClientIdFactory();
+
+    /**
+     * @see IMqttsnDeadLetterQueue
+     */
     IMqttsnDeadLetterQueue getDeadLetterQueue() ;
 }

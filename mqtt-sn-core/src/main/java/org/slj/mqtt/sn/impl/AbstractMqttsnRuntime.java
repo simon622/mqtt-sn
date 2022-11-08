@@ -34,7 +34,7 @@ import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
-import org.slj.mqtt.sn.utils.VirtualMachine;
+import org.slj.mqtt.sn.utils.Environment;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -440,9 +440,9 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 
         //-- snapshot metrics are self-managed
         registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED, "The amount of memory available to the virtual machine (kb).",
-                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getUsedMemoryKb()));
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> Environment.getUsedMemoryKb()));
         registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.SYSTEM_VM_THREADS_USED, "The number of threads in the virtual machine.",
-                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> VirtualMachine.getThreadCount()));
+                IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> Environment.getThreadCount()));
         registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.NETWORK_REGISTRY_COUNT, "The number of entries in the network registry.",
                 IMqttsnMetrics.DEFAULT_MAX_SAMPLES, IMqttsnMetrics.DEFAULT_SNAPSHOT_TIME_MILLIS, () -> registry.getNetworkRegistry().size()));
         registry.getMetrics().registerMetric(new MqttsnSnapshotMetric(IMqttsnMetrics.MESSAGE_REGISTRY_COUNT, "The number of messages residing in the application message data store.",

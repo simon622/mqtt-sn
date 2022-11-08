@@ -51,7 +51,7 @@ public interface IMqttsnContextFactory extends IMqttsnService {
 
     /**
      * When no network context can be found in the registry from the associated {@link NetworkAddress},
-     * the factrory is called to create a new instance from the address supplied.
+     * the factory is called to create a new instance from the address supplied.
      * @param address - the source address from which traffic has been received.
      * @return - the new instance of a network context bound to the address supplied
      * @throws MqttsnException - an error has occurred

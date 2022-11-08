@@ -36,8 +36,14 @@ public interface IMqttsnCloudService {
 
     boolean isAuthorized();
 
-    MqttsnCloudAccount registerAccount(String emailAddress, String firstName, String lastName, String companyName) throws MqttsnCloudServiceException ;
+    MqttsnCloudToken registerAccount(String emailAddress, String firstName, String lastName, String companyName, String macAddress, String contextId) throws MqttsnCloudServiceException ;
+
+    MqttsnCloudAccount readAccount() throws  MqttsnCloudServiceException;
 
     MqttsnCloudToken authorizeCloudAccount(MqttsnCloudAccount account) throws MqttsnCloudServiceException;
+
+    void setToken(MqttsnCloudToken token) throws MqttsnCloudServiceException;
+
+    void sendCloudEmail(MqttsnCloudEmail email) throws MqttsnCloudServiceException;
 
 }

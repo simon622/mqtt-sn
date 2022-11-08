@@ -35,7 +35,7 @@ import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
 import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
-import org.slj.mqtt.sn.utils.VirtualMachine;
+import org.slj.mqtt.sn.utils.Environment;
 import org.slj.mqtt.sn.utils.ThreadDump;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -357,7 +357,7 @@ public abstract class AbstractInteractiveCli {
                 message_nochev(String.format("Current Lost Sessions: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SESSION_LOST_REGISTRY_COUNT))));
                 message_nochev("");
                 message_nochev("======== System Stats ========");
-                message_nochev(String.format("JVM Used Memory: %s", VirtualMachine.getMemoryString(getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED)))));
+                message_nochev(String.format("JVM Used Memory: %s", Environment.getMemoryString(getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_MEMORY_USED)))));
                 message_nochev(String.format("JVM Threads: %s", getValueSafe(metricsService.getLatestValue(IMqttsnMetrics.SYSTEM_VM_THREADS_USED))));
             } else {
                 message("metrics disabled by service");

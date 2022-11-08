@@ -151,10 +151,13 @@ public class HttpClient {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     byte[] buffer = new byte[READ_BUFFER_SIZE];
                     int bytesRead;
+                    int total = 0;
                     while ((bytesRead = is.read(buffer)) != -1){
                         baos.write(buffer, 0, bytesRead);
+                        total += bytesRead;
                     }
                     response.setResponseBody(baos.toByteArray());
+                    response.setContentLength(total);
                 }
             }
             finally {

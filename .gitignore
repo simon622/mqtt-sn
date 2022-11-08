@@ -42,4 +42,3 @@ mqtt-sn-client-sec/
 /mqtt-sn-gateway-connector-aws-iotcore/dependency-reduced-pom.xml
 /mqtt-sn-gateway/dependency-reduced-pom.xml
 /mqtt-sn-client/dependency-reduced-pom.xml
-/mqtt-sn-gateway-console/

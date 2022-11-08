@@ -54,4 +54,5 @@ public class MqttsnCloudToken {
     public void setExpires(Date expires) {
         this.expires = expires;
     }
+
 }

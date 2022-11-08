@@ -194,7 +194,7 @@ public class MqttsnUtils {
 
     public static String upperCaseWords(String str){
         if(str == null) return null;
-        str = str.toLowerCase();
+        str = str.toLowerCase().trim();
         String[] words = str.split(" ");
         StringBuffer buff = new StringBuffer();
         for (int i = 0; i < words.length; i++) {

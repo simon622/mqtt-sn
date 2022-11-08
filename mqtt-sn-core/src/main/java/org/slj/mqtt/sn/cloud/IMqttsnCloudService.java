@@ -28,6 +28,9 @@ import java.util.List;
 
 public interface IMqttsnCloudService {
 
+    String CLOUD_TOKEN = "cloudToken";
+    String CLOUD_TOKEN_EXPIRES = "cloudTokenExpiry";
+
     List<MqttsnConnectorDescriptor> getAvailableConnectors() throws MqttsnCloudServiceException;
 
     int getConnectedServiceCount() throws MqttsnCloudServiceException;
@@ -35,6 +38,8 @@ public interface IMqttsnCloudService {
     boolean hasCloudConnectivity();
 
     boolean isAuthorized();
+
+    boolean isVerified();
 
     MqttsnCloudToken registerAccount(String emailAddress, String firstName, String lastName, String companyName, String macAddress, String contextId) throws MqttsnCloudServiceException ;
 

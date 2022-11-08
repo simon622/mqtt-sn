@@ -51,6 +51,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
 
     protected ObjectMapper mapper;
     protected volatile boolean hasConnectivity;
+    protected volatile boolean verified;
     private volatile List<MqttsnCloudServiceDescriptor> descriptors;
     private Thread cloudClientMonitor;
     private volatile boolean running = false;
@@ -125,7 +126,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         return getServiceDescriptors().size();
     }
 
-    public MqttsnCloudToken registerAccount(String emailAddress, String firstName, String lastName, String companyName, String macAddress, String contextId) throws MqttsnCloudServiceException {
+    public synchronized MqttsnCloudToken registerAccount(String emailAddress, String firstName, String lastName, String companyName, String macAddress, String contextId) throws MqttsnCloudServiceException {
 
         checkConnectivity();
 
@@ -148,13 +149,16 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     }
 
 
-    public MqttsnCloudAccount readAccount() throws MqttsnCloudServiceException {
+    public synchronized MqttsnCloudAccount readAccount() throws MqttsnCloudServiceException {
 
         checkConnectivity();
 
         MqttsnCloudAccount account = httpGet(
                 loadDescriptor(MqttsnCloudServiceDescriptor.ACCOUNT_DETAILS).
                         getServiceEndpoint(), MqttsnCloudAccount.class);
+        if(account != null){
+            verified = account.isVerified();
+        }
         return account;
     }
 
@@ -230,6 +234,11 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     @Override
     public boolean isAuthorized() {
         return cloudToken != null;
+    }
+
+    @Override
+    public boolean isVerified() {
+        return isAuthorized() && verified;
     }
 
     @Override

@@ -30,21 +30,14 @@ public class MqttsnCloudAccount implements Serializable {
 
     private static final long serialVersionUID = 6341853420538762716L;
 
-    private String accessKey;
+    private String apiKey;
     private String emailAddress;
     private String companyName;
     private String firstName;
     private String lastName;
+    private boolean verified;
 
     public MqttsnCloudAccount() {
-    }
-
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
     }
 
     public String getEmailAddress() {
@@ -79,14 +72,31 @@ public class MqttsnCloudAccount implements Serializable {
         this.lastName = lastName;
     }
 
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
     @Override
     public String toString() {
         return "MqttsnCloudAccount{" +
-                "accessKey='" + accessKey + '\'' +
+                "apiKey='" + apiKey + '\'' +
                 ", emailAddress='" + emailAddress + '\'' +
                 ", companyName='" + companyName + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", verified=" + verified +
                 '}';
     }
 }

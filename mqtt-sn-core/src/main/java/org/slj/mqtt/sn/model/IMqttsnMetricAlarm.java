@@ -22,19 +22,18 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.spi;
+package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.IMqttsnMetric;
-import org.slj.mqtt.sn.model.IMqttsnMetricAlarm;
+public interface IMqttsnMetricAlarm {
 
-@MqttsnService
-public interface IMqttsnMetricsService extends IMqttsnService {
+    String getMetricName();
 
-    IMqttsnMetric getMetric(String metricName);
-    void registerMetric(IMqttsnMetric metric);
-    void registerAlarm(IMqttsnMetricAlarm alarm);
-    Long getLatestValue(String metricName);
-    Long getMaxValue(String metricName);
-    Long getMinValue(String metricName);
-    Long getTotalValue(String metricName);
+    long getThresholdValue();
+
+    String getAlarmEmailAddresses();
+
+    int getFirePeriodBackoff();
+
+    int getMinSamplesBeforeActive();
+
 }

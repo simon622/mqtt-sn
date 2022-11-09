@@ -25,15 +25,21 @@
 package org.slj.mqtt.sn.impl.metrics;
 
 import org.slj.mqtt.sn.model.IMqttsnMetric;
+import org.slj.mqtt.sn.model.IMqttsnMetricAlarm;
 import org.slj.mqtt.sn.model.MqttsnMetricSample;
 import org.slj.mqtt.sn.spi.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MqttsnMetricsService extends AbstractMqttsnService implements IMqttsnMetricsService {
 
     private Map<String, IMqttsnMetric> metrics = new ConcurrentHashMap<>();
+    private List<IMqttsnMetricAlarm> alarms =
+            Collections.synchronizedList(new ArrayList<>());
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
@@ -67,6 +73,13 @@ public class MqttsnMetricsService extends AbstractMqttsnService implements IMqtt
         if(metric instanceof MqttsnTemporalMetric){
             ((MqttsnTemporalMetric)metric).start();
         }
+    }
+
+    @Override
+    public void registerAlarm(IMqttsnMetricAlarm alarm) {
+        if(alarm == null) throw new MqttsnRuntimeException("cannot register a <null> alarm");
+        if(!metrics.containsKey(alarm.getMetricName()))  throw new MqttsnRuntimeException("unable to register alarm against non-existent metric");
+        alarms.add(alarm);
     }
 
     @Override

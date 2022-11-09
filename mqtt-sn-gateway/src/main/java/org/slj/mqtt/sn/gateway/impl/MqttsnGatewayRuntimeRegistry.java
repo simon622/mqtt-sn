@@ -82,7 +82,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     }
 
     public MqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector){
-        withService(connector);
+        withServiceReplaceIfExists(IMqttsnConnector.class, connector);
         return this;
     }
 

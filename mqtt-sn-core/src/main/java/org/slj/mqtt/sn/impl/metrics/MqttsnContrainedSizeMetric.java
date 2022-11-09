@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
- * A metric whose sample size is constrained to the number of samples provided by the contructor.
+ * A metric whose sample size is constrained to the number of samples provided by the constructor.
  * When the max. size is reached the oldest sample will be removed on in preference to the newest
  * sample. Operates in FIFO mode.
  */

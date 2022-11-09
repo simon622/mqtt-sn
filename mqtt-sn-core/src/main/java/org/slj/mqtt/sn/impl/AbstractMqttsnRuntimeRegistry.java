@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.model.MqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddress;
@@ -31,6 +33,7 @@ import org.slj.mqtt.sn.net.NetworkContext;
 import org.slj.mqtt.sn.spi.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The base runtime registry provides support for simple fluent construction and encapsulates
@@ -41,6 +44,8 @@ import java.util.*;
  * Extending implementations should provide convenience methods for out-of-box runtimes.
  */
 public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeRegistry {
+
+    protected Logger logger = LoggerFactory.getLogger(getClass());
 
     protected MqttsnOptions options;
     protected AbstractMqttsnRuntime runtime;
@@ -314,11 +319,43 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     @Override
+    public <T extends IMqttsnService> AbstractMqttsnRuntimeRegistry withServiceReplaceIfExists(Class<T> serviceInterface, IMqttsnService serviceInstance){
+        synchronized (services){
+            Optional<IMqttsnService> existing =
+                    getOptionalService((Class<IMqttsnService>) serviceInterface);
+            if(existing.isPresent()){
+                logger.info("found existing instance of {} in runtime, removing",
+                        serviceInterface.getName());
+                services.remove(existing.get());
+            }
+            services.add(serviceInstance);
+        }
+        return this;
+    }
+
+    @Override
     public <T extends IMqttsnService> T getService(Class<T> clz){
         synchronized (services){
-            return (T) services.stream().filter(s ->
+            List<IMqttsnService> all = services.stream().filter(s ->
                             clz.isAssignableFrom(s.getClass())).
-                    findFirst().orElseThrow(() -> new MqttsnRuntimeException("unable to find service on runtime " + clz.getName()));
+                    collect(Collectors.toList());
+            if(all.size() > 1){
+                throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
+            }
+            else if(all.size() == 0){
+                throw new MqttsnRuntimeException("unable to find instance of "+clz+" service found");
+            }
+            return (T) all.get(0);
+        }
+    }
+
+    @Override
+    public <T extends IMqttsnService> List<T> getServices(Class<T> clz){
+        synchronized (services){
+            List<IMqttsnService> all = services.stream().filter(s ->
+                    clz.isAssignableFrom(s.getClass())).
+                    collect(Collectors.toList());
+            return (List<T>) all;
         }
     }
 

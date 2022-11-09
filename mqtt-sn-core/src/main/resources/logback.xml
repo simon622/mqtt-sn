@@ -26,7 +26,7 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%-30(%d [%t] [%level]) - %msg%n%ex</pattern>
+            <pattern>%-30(%d [%logger{36}] [%level]) - %msg%n%ex</pattern>
         </encoder>
     </appender>
 
@@ -38,7 +38,7 @@
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%-30(%d [%level]) - %msg%n%ex</pattern>
+            <pattern>%-30(%d [%logger{36}] [%level]) - %msg%n%ex</pattern>
         </encoder>
     </appender>
 
@@ -46,7 +46,7 @@
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <logger name="org.slj" level="WARN"/>
+    <logger name="org.slj" level="INFO"/>
     <logger name="ch.qos.logback" level="OFF"/>
 
 </configuration>

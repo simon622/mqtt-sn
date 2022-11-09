@@ -46,22 +46,39 @@ public interface IMqttsnRuntimeRegistry {
     AbstractMqttsnRuntimeRegistry withService(IMqttsnService service);
 
     /**
+     * Add a service to the managed service lifecycle. Once bound,
+     * services will be started and stopped inline with their
+     * optional order parameter. This version of the method will replace a service found
+     * with the existing supplied interface
+     */
+    <T extends IMqttsnService> AbstractMqttsnRuntimeRegistry withServiceReplaceIfExists(Class<T> serviceInterface, IMqttsnService serviceInstance);
+
+    /**
      * Obtain an immutable list of the service instances installed in the runtime.
      */
     List<IMqttsnService> getServices();
 
     /**
      * Obtain the service instance installed in the runtime. If it exists,
-     * the first matching instance of the supplied class (assignable from)
-     * will be returned, else you will recieve an unchecked runtime exception.
+     * the instance of the supplied class (assignable from)
+     * will be returned, else you will receive an unchecked runtime exception.
+     *
+     * If more than one matching instance of the class is found, a runtime exception will
+     * be thrown
      *
      * NOTE: This method should only be used when the service is mandatory
      */
     <T extends IMqttsnService> T getService(Class<T> clz);
 
     /**
+     * Obtain the service instances matching the class supplied on the runtime.
+     * Will return [0..n] matching instances (incl.)
+     */
+    <T extends IMqttsnService> List<T> getServices(Class<T> clz);
+
+    /**
      * Obtain the service instance installed in the runtime. If it exists,
-     * the first matching instance of the supplied class (assignable from)
+     * the instance of the supplied class (assignable from)
      * will be returned, else the optional will be empty.
      *
      * @return Optional wrapping the service requested

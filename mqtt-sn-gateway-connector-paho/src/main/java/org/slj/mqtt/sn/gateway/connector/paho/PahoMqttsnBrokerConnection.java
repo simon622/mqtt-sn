@@ -114,7 +114,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
                 MqttsnConnectorOptions.DEFAULT_MQTT_TLS_PROTOCOL : MqttsnConnectorOptions.DEFAULT_MQTT_PROTOCOL :
                 protocol;
 
-        return String.format("{}://{}:{}", protocol, options.getHostName(), options.getPort());
+        return String.format("%s://%s:%s", protocol, options.getHostName(), options.getPort());
     }
 
     protected MqttClient createClient(MqttsnConnectorOptions options) throws MqttsnConnectorException {

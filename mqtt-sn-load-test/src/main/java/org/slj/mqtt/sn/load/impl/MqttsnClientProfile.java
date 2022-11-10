@@ -50,10 +50,10 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     protected String clientId;
     protected String host;
     protected int port;
-
     protected IMqttsnStorageService storageService;
 
-    public MqttsnClientProfile(IMqttsnStorageService storageService) {
+
+    public MqttsnClientProfile() {
         clientId = UUID.randomUUID().toString();
     }
 
@@ -94,6 +94,7 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
 
         this.host = ((ClientInput)input).host;
         this.port = ((ClientInput)input).port;
+        this.storageService = ((ClientInput)input).storageService;
 
         ExecutionProgress progress = new ExecutionProgress(input);
         return progress;
@@ -152,6 +153,8 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
         public String topic;
         public int qos;
         public int messageCount;
+
+        public IMqttsnStorageService storageService;
 
         public ClientInput(long maxWait, TimeUnit maxWaitUnit) {
             super(maxWait, maxWaitUnit);

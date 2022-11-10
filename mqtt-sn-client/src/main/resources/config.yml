@@ -1,0 +1,4 @@
+contextId: someClientId
+maxMessagesInQueue: 100
+maxWait: 10000
+maxProtocolMessageSize: 1024

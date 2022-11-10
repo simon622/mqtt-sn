@@ -29,8 +29,6 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
-import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
@@ -40,22 +38,18 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.net.UnknownHostException;
 import java.util.UUID;
-import java.util.logging.LogManager;
 
 public class OpenConnectionTestMain {
 
     public static void main(String[] args) {
 
-        LogManager.getLogManager().reset();
-//        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
         int port = 2442;
 //        String host = "34.248.60.25";
         String host = "localhost";
-        IMqttsnStorageService storageService = new MqttsnFilesystemStorageService(
-                new MqttsnVMObjectReaderWriter(), "mqtt-sn-load-test");
+
         for(int i = 0; i < 1200; i++){
             try {
-                MqttsnClient client = createClient(storageService, host, port);
+                MqttsnClient client = createClient(TestHelper.getTestStorageService(), host, port);
                 client.connect(60 * 60, true);
                 client.subscribe("foo", 2);
                 Thread.sleep(10);

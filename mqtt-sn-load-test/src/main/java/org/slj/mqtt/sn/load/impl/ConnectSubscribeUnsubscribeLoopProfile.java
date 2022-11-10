@@ -30,7 +30,6 @@ import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,8 +39,7 @@ public class ConnectSubscribeUnsubscribeLoopProfile extends MqttsnClientProfile 
     static Logger logger = LoggerFactory.getLogger(ConnectSubscribeUnsubscribeLoopProfile.class);
 
 
-    public ConnectSubscribeUnsubscribeLoopProfile(IMqttsnStorageService storageService) {
-        super(storageService);
+    public ConnectSubscribeUnsubscribeLoopProfile() {
     }
 
     @Override

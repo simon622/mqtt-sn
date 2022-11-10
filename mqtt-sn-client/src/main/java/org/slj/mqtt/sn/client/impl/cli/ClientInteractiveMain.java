@@ -35,19 +35,10 @@ public class ClientInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
-
-                /*
-                MqttsnSecurityOptions securityOptions = new MqttsnSecurityOptions().
-                        withIntegrityType(MqttsnSecurityOptions.INTEGRITY_TYPE.hmac).
-                        withIntegrityPoint(MqttsnSecurityOptions.INTEGRITY_POINT.protocol_messages);
-                options.withSecurityOptions(securityOptions);
-                */
                 options.withMaxMessagesInQueue(100000);
-                options.withMaxMessagesInflight(1000);
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                         withTransport(transport).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
-
                 return registry;
             }
         });

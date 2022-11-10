@@ -29,15 +29,14 @@ import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
-import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
 public class ConnectPublishProfile extends MqttsnClientProfile {
 
     static Logger logger = LoggerFactory.getLogger(ConnectPublishProfile.class);
     static final int KEEP_ALIVE = 240;
 
-    public ConnectPublishProfile(IMqttsnStorageService storageService) {
-        super(storageService);
+    public ConnectPublishProfile() {
+
     }
 
     @Override

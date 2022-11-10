@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
-import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,8 +36,7 @@ public class ConnectSubscribeWaitProfile extends MqttsnClientProfile {
 
     static Logger logger = LoggerFactory.getLogger(ConnectSubscribeWaitProfile.class);
 
-    public ConnectSubscribeWaitProfile(IMqttsnStorageService storageService) {
-        super(storageService);
+    public ConnectSubscribeWaitProfile(){
     }
 
     @Override

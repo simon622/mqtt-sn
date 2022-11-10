@@ -79,6 +79,7 @@
         <mqtt-sn.version>0.1.0</mqtt-sn.version>
         <maven.build.shade.version>3.4.1</maven.build.shade.version>
         <jackson.version>2.10.2</jackson.version>
+        <yaml.version>1.11</yaml.version>
     </properties>
 
     <dependencies>
@@ -91,6 +92,11 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${yaml.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

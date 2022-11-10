@@ -25,11 +25,13 @@
 package org.slj.mqtt.sn.gateway.impl.gateway.type;
 
 import com.google.common.util.concurrent.RateLimiter;
+import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
+import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
@@ -77,6 +79,18 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             connectOnStartup();
             initPublisher();
         }
+    }
+
+    @Override
+    public synchronized boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException {
+        int qps = descriptor.getRateLimit();
+        if(qps > 0){
+            rateLimiter = RateLimiter.create(qps);
+            logger.warn("re-initialising connector rate-limiter with {} permits", qps);
+        } else {
+            rateLimiter = null;
+        }
+        return super.initializeConnector(descriptor, options);
     }
 
     @Override

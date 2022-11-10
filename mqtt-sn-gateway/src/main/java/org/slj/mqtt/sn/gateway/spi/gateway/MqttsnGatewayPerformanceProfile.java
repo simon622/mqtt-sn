@@ -33,7 +33,7 @@ public final class MqttsnGatewayPerformanceProfile {
      * For use in typical gateway deployments on site. Will limit CPU use while respecting incoming device traffic
      */
     public static MqttsnGatewayPerformanceProfile BALANCED_GATEWAY_GENERAL_PURPOSE =
-            new MqttsnGatewayPerformanceProfile(5, 2, 1, 1, 250, 100, 25, 100);
+            new MqttsnGatewayPerformanceProfile(5, 2, 1, 1, 250, 100, 25, 1000);
 
     /**
      * For use in typical cloud deployments. Balanced between protocol responsiveness and outbound messaging from backend

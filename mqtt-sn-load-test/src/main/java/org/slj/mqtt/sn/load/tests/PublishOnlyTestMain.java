@@ -34,18 +34,18 @@ public class PublishOnlyTestMain {
 
     public static void main(String[] args) {
         try {
-//            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
-//            LogManager.getLogManager().reset();
             ThreadPerProfileLoadTestRunner runner =
                     new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 10, 20);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(60, TimeUnit.SECONDS);
 
+            input.storageService = TestHelper.getTestStorageService();
+
 //            input.host = "34.248.60.25";
                         input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 200;
+            input.messageCount = 50;
             input.qos = 1;
             input.topic = "foo";
 

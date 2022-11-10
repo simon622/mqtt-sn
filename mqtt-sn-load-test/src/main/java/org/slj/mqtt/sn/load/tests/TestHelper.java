@@ -24,31 +24,16 @@
 
 package org.slj.mqtt.sn.load.tests;
 
-import org.slj.mqtt.sn.load.impl.ConnectSubscribeWaitProfile;
-import org.slj.mqtt.sn.load.impl.MqttsnClientProfile;
-import org.slj.mqtt.sn.load.runner.ThreadPerProfileLoadTestRunner;
+import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
+import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
+import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
-import java.util.concurrent.TimeUnit;
+public class TestHelper {
 
-public class SubscribeAndWaitTestMain {
+    public static IMqttsnStorageService storageService = new MqttsnFilesystemStorageService(
+            new MqttsnVMObjectReaderWriter(), "mqtt-sn-load-test");
 
-    public static void main(String[] args) {
-        try {
-            ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeWaitProfile.class, 250, 20);
-
-            MqttsnClientProfile.ClientInput input =
-                    new MqttsnClientProfile.ClientInput(2400, TimeUnit.SECONDS);
-
-            input.host = "localhost";
-            input.port = 2442;
-            input.messageCount = 100000;
-            input.topic = "test";
-            input.qos = 2;
-            runner.start(input);
-
-        } catch(Exception e){
-            e.printStackTrace();
-        }
+    public static IMqttsnStorageService getTestStorageService(){
+        return storageService;
     }
 }

@@ -25,7 +25,6 @@
 package org.slj.mqtt.sn.load.tests;
 
 import org.slj.mqtt.sn.load.impl.ConnectSubscribeUnsubscribeLoopProfile;
-import org.slj.mqtt.sn.load.impl.ConnectSubscribeWaitProfile;
 import org.slj.mqtt.sn.load.impl.MqttsnClientProfile;
 import org.slj.mqtt.sn.load.runner.ThreadPerProfileLoadTestRunner;
 
@@ -35,7 +34,6 @@ public class SubscribeUnsubscribeTestMain {
 
     public static void main(String[] args) {
         try {
-            System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tc] %4$s %2$s - %5$s %6$s%n");
             ThreadPerProfileLoadTestRunner runner =
                     new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 400, 20);
 

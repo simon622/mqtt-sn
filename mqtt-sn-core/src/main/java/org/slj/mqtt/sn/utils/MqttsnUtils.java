@@ -99,7 +99,7 @@ public class MqttsnUtils {
             nextValue++;
             if(!used.contains(nextValue)) return nextValue;
         } while(nextValue <= 0xFFFF);
-        throw new MqttsnException("unable to assigned lease client");
+        throw new MqttsnException("unable to assign packet identifier");
     }
 
     /**
@@ -108,11 +108,12 @@ public class MqttsnUtils {
      * @param retryCount - the number of retries (the larger the number the higher the backoff)
      */
     public static long getExponentialBackoff(int retryCount, boolean addFuzziness){
-        long factor = (long) (Math.pow(2, Math.min(retryCount, 10)) * 250);
+        long f = (long) (Math.pow(2, Math.min(retryCount, 10)) * 1000);
         if(addFuzziness){
-            factor += ThreadLocalRandom.current().nextInt(0, Math.min((int) factor, 999));
+            f += ThreadLocalRandom.current().nextInt(0, Math.min((int) f, 999));
         }
-        return factor;
+        f =  Math.min(f, 10000);
+        return f;
     }
 
     public static String getDurationString(long millis) {
@@ -206,5 +207,9 @@ public class MqttsnUtils {
     }
 
     public static void main(String[] args) {
+
+        for (int i =0; i < 10; i++){
+            System.err.println(getExponentialBackoff(i, false));
+        }
     }
 }

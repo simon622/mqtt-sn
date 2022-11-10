@@ -1,0 +1,90 @@
+:description: The implementation guide has been produced by OASIS committee members and contributors to act as a companion to the specification.
+:url-repo: https://github.com/oasis-open/mqtt-sn-sample-resources
+:keywords: MQTT-SN, MQTT, IoT, Protocol, OASIS
+:license-url: http://www.apache.org/licenses/LICENSE-2.0
+:license-title: Apache 2
+:doctype: book
+:toc: left
+
+= MQTT-SN Version 2.0 Implementation Guide
+Craggs. I <icraggs@gmail.com>, Johnson. S <simon622@gmail.com>
+0.1, November 10, 2022: Working Draft 2
+
+`Copyright © OASIS Open 2022. All Rights Reserved.
+“Non-Standards Track Work Product” is a Work Product produced and approved by an OASIS Technical Committee in accordance with the TC Process that may be progressed to Committee Note. Non-Standards Track Work Products are intended to be informative and explanatory in nature. They are not subject to the patent licensing and other obligations explained in the OASIS Intellectual Property Rights (IPR) Policy Non-Standards Track Work Products must not contain language that would otherwise fall within the definition of Normative Portion.`
+
+TIP: Visit https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/#ex-literal
+
+== Introduction ==
+(SLJ - EoW 18th Nov)
+
+== Transparent Gateways ==
+
+
+== Aggregating Gateways ==
+(SLJ - EoW 18th Nov)
+
+== Forwarder Gateways ==
+
+
+== Client Identifiers & Identification ==
+(SLJ - EoW 18th Nov)
+
+=== Format Restrictions ===
+(SLJ - EoW 18th Nov)
+
+=== Examples ===
+(SLJ - EoW 18th Nov)
+
+== Client Connection (CONNECT / CONNACK) ==
+== Authentication ==
+
+The authentication section doesn't say anything about the use of the AUTH packet
+
+== Sessions ==
+=== On the Client ===
+=== On the Gateway ===
+
+== Topics (REGISTER / REGACK) ==
+== Subscription (SUBSCRIBE / SUBACK) ==
+
+=== Topic Filter Matching ===
+(SLJ - EoW 18th Nov)
+
+=== Subscription Storage Examples At Scale ===
+(SLJ - EoW 18th Nov)
+
+== Publishing (PUBLISH) ==
+=== Quality of Service -1 ===
+=== Quality of Service 0 ===
+=== Quality of Service 1 ===
+=== Quality of Service 2 ===
+
+== Sleeping Client (DISCONNECT) ==
+Especially transparent gateways - which might be viewed as limiting
+
+== Network ==
+=== Datagram ===
+=== Retry / Error Algorithms ===
+[source,java]
+----
+public static long getRetryWait(int retryCount, long max, boolean addFuzziness){
+    long f = (long) (Math.pow(2, Math.min(retryCount, 10)) * 1000);
+    if(addFuzziness){
+        f += ThreadLocalRandom.current().nextInt(0, Math.min((int) f, 999));
+    }
+    f =  Math.min(f, max);
+    return factor;
+}
+----
+
+== Security ==
+=== Transport Security ===
+=== Integrity Protection ===
+=== Application Security ===
+
+
+
+
+
+

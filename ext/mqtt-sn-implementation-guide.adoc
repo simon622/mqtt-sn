@@ -16,7 +16,16 @@ Craggs. I <icraggs@gmail.com>, Johnson. S <simon622@gmail.com>
 TIP: Visit https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/#ex-literal
 
 == Introduction ==
-This non-normative document providers implementers guidance on the usage of the MQTT-SN specification(s). The MQTT-SN specification provides a basis for interoperability between implementations of both MQTT-SN and MQTT system components. Implementers will be making important decisions regarding networking, authentication mechanisms, deployment architectures, session state and application taxonomies. These decisions will be guided by each unique set of deployment/infrastructure circumstances and therefore there is not one single "correct" way of using the specification. This should be taken into consideration when deploying a specified artefact. Further, not all functional areas of the normative behaviour need be implemented in order to be considered compliant to the specification. For example, a deployment may be limited by a transport medium which does not support broadcast capability. This will restrict the ability to provide discovery behaviour defined in the specification but in no way limits other aspects of the functionality. Implementers should be clear when publishing works where their artefacts diverge functionally or omit aspects of the specification so as to ease interoperability tasks.
+This non-normative document providers implementers guidance on the usage of the MQTT-SN specification(s).
+The MQTT-SN specification provides a basis for interoperability between implementations of both MQTT-SN and MQTT system components.
+Implementers will be making important decisions regarding networking, authentication mechanisms, deployment architectures, session
+state and application taxonomies. These decisions will be guided by each unique set of deployment/infrastructure circumstances
+and therefore there is not one single "correct" way of using the specification. This should be taken into consideration when
+deploying a specified artefact. Further, not all functional areas of the normative behaviour need be implemented in order to be
+considered compliant to the specification. For example, a deployment may be limited by a transport medium which does not support
+broadcast capability. This will restrict the ability to provide discovery behaviour defined in the specification but in no way
+limits other aspects of the functionality. Implementers should be clear when publishing works where their artefacts diverge
+functionally or omit aspects of the specification so as to ease interoperability tasks.
 
 === Recommended Knowledge ===
 The reader is assumed to be very familiar with:
@@ -31,16 +40,24 @@ The reader is assumed to be very familiar with:
 .Recommended reading
 * SASL (RFC 222 & RFC 442)
 
+== MQTT-SN Architectures ==
+The IoT has brought about the advent of the mass deployment of "wireless sensor" / "sensor fusion" devices.
+These devices are more often-than-not simple, low cost, low powered (battery), connecting using unreliable network
+connections and deployed in high volume. They are typically (but not limited to) concerned with capturing; measurements,
+environmental conditions, process control and fault detection. Further, as systems become ever more complex and distributed
+the role of gateways, forwarders and inter-connected clients is all the more important as networking modalities are traversed
+in order for data to find its way back to the enterprise.
 
+(NB: Ensure this para does not limit use in any way, think intra system BUS etc.)
 
+=== Transparent Gateways ===
 
-== Transparent Gateways ==
-
-
-== Aggregating Gateways ==
+=== Aggregating Gateways ===
 (SLJ - EoW 18th Nov)
 
-== Forwarder Gateways ==
+=== Forwarder Gateways ===
+
+=== Backends ===
 
 
 == Client Identifiers & Identification ==

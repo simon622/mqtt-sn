@@ -451,7 +451,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_introduction">Introduction</a></li>
+<li><a href="#_introduction">Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#_recommended_knowledge">Recommended Knowledge</a></li>
+</ul>
+</li>
 <li><a href="#_transparent_gateways">Transparent Gateways</a></li>
 <li><a href="#_aggregating_gateways">Aggregating Gateways</a></li>
 <li><a href="#_forwarder_gateways">Forwarder Gateways</a></li>
@@ -526,7 +530,41 @@ Visit <a href="https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-referen
 <h2 id="_introduction">Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(SLJ - EoW 18th Nov)</p>
+<p>This non-normative document providers implementers guidance on the usage of the MQTT-SN specification(s). The MQTT-SN specification provides a basis for interoperability between implementations of both MQTT-SN and MQTT system components, implementers will be making important decisions regarding networking, authentication mechanisms, deployment architectures, session state and application taxonomies. These decisions will be guided by each unique set of deployment/infrastructure circumstances and therefore there is not one single "correct" way of using the specification. This should be taken into consideration when deploying a specified artefact. Further, not all functional areas of the normative behaviour need be implemented in order to be considered compliant to the specification. For example, a deployment may be limited by a transport medium which does not support broadcast capability. This will restrict the ability to provide discovery behaviour defined in the specification but in no way limits other aspects of the functionality. Implementers should be clear when publishing works where their artefacts diverge functionally or omit aspects of the specification so as to ease interoperability tasks.</p>
+</div>
+<div class="sect2">
+<h3 id="_recommended_knowledge">Recommended Knowledge</h3>
+<div class="paragraph">
+<p>The reader is assumed to be very familiar with:</p>
+</div>
+<div class="ulist">
+<div class="title">MQTT Family of specifications</div>
+<ul>
+<li>
+<p>MQTT 3.1</p>
+</li>
+<li>
+<p>MQTT 3.1.1</p>
+</li>
+<li>
+<p>MQTT 5.0</p>
+</li>
+<li>
+<p>MQTT-SN 1.2</p>
+</li>
+<li>
+<p>MQTT-SN 2.0</p>
+</li>
+</ul>
+</div>
+<div class="ulist">
+<div class="title">Recommended reading</div>
+<ul>
+<li>
+<p>SASL (RFC 222 &amp; RFC 442)</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -694,7 +732,7 @@ Visit <a href="https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-referen
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2022-11-10 15:13:06 UTC
+Last updated 2022-11-17 14:03:31 UTC
 </div>
 </div>
 </body>

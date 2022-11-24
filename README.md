@@ -383,5 +383,6 @@ Mqtt-sn Transparent Java Gateway | Ian Craggs & jsaak | [GitHub Repository](http
 Paho Mqtt Java Client | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.java) | Fully featured MQTT Java client library | N/A | N/A | N/A | N/A
 Paho Mqtt C Client | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.c) | Fully featured MQTT C client library | N/A | N/A | N/A | N/A
 Paho Mqtt C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.embedded-c) | Fully featured embedded MQTT C client library | N/A | N/A | N/A | N/A
+Zephyr RTOS | Various | [GitHub Repository](https://github.com/zephyrproject-rtos/zephyr) | Embedded RTOS that features a client library | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x:
 
 

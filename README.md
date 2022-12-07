@@ -385,4 +385,6 @@ Paho Mqtt C Client | Various | [GitHub Repository](https://github.com/eclipse/pa
 Paho Mqtt C Embedded | Various | [GitHub Repository](https://github.com/eclipse/paho.mqtt.embedded-c) | Fully featured embedded MQTT C client library | N/A | N/A | N/A | N/A
 Zephyr RTOS | Various | [GitHub Repository](https://github.com/zephyrproject-rtos/zephyr) | Embedded RTOS that features a client library | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_multiplication_x:
 
+## Implementation Notes
+It has become clear that something that is fundamentally missing from the MQTT-SN and MQTT space generally are authoritative implementation notes. To that end, myself and other committee members have decided to start the process of creating implementation guides which can details both normative and non-normative details of a particular implementation approach. To that end, I will produce implementation details in the [OASIS Repository](https://github.com/oasis-open/mqtt-sn-sample-resources/blob/main/docs/mqtt-sn-implementation-guide.adoc).
 

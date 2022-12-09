@@ -88,10 +88,10 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
     private synchronized void initRoot(){
         path = path == null ?  new File(System.getProperty(HOME_DIR)) : path;
         path = new File(path, IMqttsnStorageService.DEFAULT_FOLDER_NAME);
-        if(!path.isDirectory()) throw new MqttsnSecurityException("path location must be a directory");
         if(!path.exists()){
             path.mkdirs();
         }
+        if(!path.isDirectory()) throw new MqttsnSecurityException("path location must be a directory");
     }
 
     private synchronized void initWorkspace(){

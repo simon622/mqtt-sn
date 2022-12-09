@@ -68,6 +68,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         this.readTimeoutMillis = readTimeoutMillis;
         this.cloudMonitorTimeoutMillis = Math.max(2000, cloudMonitorTimeoutMillis);
         initMonitor();
+        checkCloudStatus();
     }
 
     protected void initMonitor(){

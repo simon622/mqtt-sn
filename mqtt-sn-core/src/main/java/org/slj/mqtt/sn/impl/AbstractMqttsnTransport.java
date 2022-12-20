@@ -174,10 +174,14 @@ public abstract class AbstractMqttsnTransport
             } else {
                 //-- sort the case where publish -1 can be recieved without an authd context from the
                 //-- network address alone
+                boolean isPublish = registry.getCodec().isPublish(message);
+                boolean qosM1 = false;
+                if(isPublish){
+                    qosM1 =  registry.getCodec().getQoS(message, false) == -1;
+                }
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext) &&
-                        registry.getCodec().isPublish(message) &&
-                        registry.getCodec().getData(message).getQos() == -1) {
-                    logger.info("detected non authorised publish -1, apply for temporary auth from network context {}", networkContext);
+                        isPublish && qosM1) {
+                    logger.warn("detected non authorised publish -1, apply for temporary auth from network context {}", networkContext);
                     authd = registry.getMessageHandler().temporaryAuthorizeContext(networkContext);
                 }
             }

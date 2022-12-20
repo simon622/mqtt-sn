@@ -61,7 +61,7 @@ public class PublishData implements Serializable {
     }
 
     public int getQos() {
-        return qos;
+        return qos == 3 ? -1 : qos;
     }
 
     public byte[] getData() {

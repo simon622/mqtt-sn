@@ -115,7 +115,7 @@ public abstract class AbstractTopicRegistry
                     topicInfo, session, Objects.toString(getRegistrationMapInternal(session, false)));
             throw new MqttsnExpectationFailedException("unable to find matching topicPath in system");
         }
-        return getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
+        return getRegistry().getTopicModifier().modifyTopic(session == null ? null : session.getContext(), topicPath);
     }
 
     @Override
@@ -154,7 +154,7 @@ public abstract class AbstractTopicRegistry
                 String topicPath = itr.next();
                 Integer i = predefinedMap.get(topicPath);
                 if(i != null && i.intValue() == topicAlias)
-                    return getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
+                    return getRegistry().getTopicModifier().modifyTopic(session == null ? null : session.getContext(), topicPath);
             }
         }
         return null;

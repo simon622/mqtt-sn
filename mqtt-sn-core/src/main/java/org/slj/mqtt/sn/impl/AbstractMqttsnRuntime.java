@@ -315,7 +315,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param t - the exception that was encountered
      */
     public void handleConnectionLost(IMqttsnContext context, Throwable t){
-        logger.debug("notified of connection lost [{} !- {}] - {}", registry.getOptions().getContextId(), context, t.getMessage());
+        logger.debug("notified of connection lost [{} !- {}] - {}", registry.getOptions().getContextId(), context, t == null ? null : t.getMessage());
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
 

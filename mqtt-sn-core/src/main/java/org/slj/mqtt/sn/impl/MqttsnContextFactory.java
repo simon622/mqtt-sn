@@ -61,7 +61,7 @@ public class MqttsnContextFactory
     public IMqttsnContext createTemporaryApplicationContext(INetworkContext networkContext, int protocolVersion) throws MqttsnSecurityException {
 
         logger.info("create temporary mqtt-sn context for {}, protocolVersion {}", networkContext, protocolVersion);
-        MqttsnContext context = new MqttsnContext(null);
+        MqttsnContext context = new MqttsnContext(networkContext.getNetworkAddress().toSimpleString());
         context.setProtocolVersion(protocolVersion);
         return context;
     }

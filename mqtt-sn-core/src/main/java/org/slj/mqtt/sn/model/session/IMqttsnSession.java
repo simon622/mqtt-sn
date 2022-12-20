@@ -44,4 +44,6 @@ public interface IMqttsnSession {
     int getKeepAlive();
 
     long getSessionExpiryInterval();
+
+    int getProtocolVersion();
 }

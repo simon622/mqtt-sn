@@ -155,7 +155,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 msg = new MqttsnRegack_V2_0();
                 break;
             case MqttsnConstants.PUBLISH:
-                validateLengthGreaterThanOrEquals(data, 9);
+                validateLengthGreaterThanOrEquals(data, 6);
                 msg = new MqttsnPublish_V2_0();
                 msg.decode(data);
                 break;

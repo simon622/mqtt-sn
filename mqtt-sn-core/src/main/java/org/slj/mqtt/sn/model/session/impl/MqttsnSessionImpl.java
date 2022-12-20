@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.model.session.impl;
 
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.MqttsnClientState;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
@@ -40,11 +41,21 @@ public class MqttsnSessionImpl implements IMqttsnSession {
     protected long sessionExpiryInterval;
     protected Date sessionStarted;
     protected int maxPacketSize;
+    protected int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
+
 
     public MqttsnSessionImpl(final IMqttsnContext context, MqttsnClientState state){
         this.context = context;
         sessionStarted = new Date();
         this.state = state;
+    }
+
+    public int getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public void setProtocolVersion(int protocolVersion) {
+        this.protocolVersion = protocolVersion;
     }
 
     @Override

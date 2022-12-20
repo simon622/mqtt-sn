@@ -140,6 +140,7 @@ public class MqttsnGatewayMessageHandler
         boolean will = false;
         long sessionExpiryInterval = MqttsnConstants.UNSIGNED_MAX_32;
         int maxPacketSize = MqttsnConstants.UNSIGNED_MAX_16;
+        int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
 
         if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
             MqttsnConnect connectMessage = (MqttsnConnect) connect ;
@@ -147,6 +148,7 @@ public class MqttsnGatewayMessageHandler
             cleanStart = connectMessage.isCleanSession();
             keepAlive = connectMessage.getDuration();
             will = connectMessage.isWill();
+            protocolVersion = MqttsnConstants.PROTOCOL_VERSION_1_2;
         }
         else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnConnect_V2_0 connectMessage = (MqttsnConnect_V2_0) connect ;
@@ -156,6 +158,7 @@ public class MqttsnGatewayMessageHandler
             keepAlive = connectMessage.getKeepAlive();
             sessionExpiryInterval = connectMessage.getSessionExpiryInterval();
             maxPacketSize = connectMessage.getMaxPacketSize();
+            protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
         }
 
         //-- just be careful here - the cliendId from the message may well not match the one on the context at this
@@ -197,6 +200,7 @@ public class MqttsnGatewayMessageHandler
                 boolean changedFromRequested = sessionExpiryIntervalRequested != sessionExpiryInterval;
                 getRegistry().getSessionRegistry().modifySessionExpiryInterval(session, sessionExpiryInterval);
                 getRegistry().getSessionRegistry().modifyMaxPacketSize(session, maxPacketSize);
+                getRegistry().getSessionRegistry().modifyProtocolVersion(session, protocolVersion);
                 return registry.getMessageFactory().createConnack(
                         result.getReturnCode(), stateExisted, assignedClientId, changedFromRequested ? sessionExpiryInterval : 0);
             }

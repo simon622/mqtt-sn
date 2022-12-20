@@ -215,7 +215,7 @@ public class MqttsnOptions {
     /**
      * By default, specify 0 (unlimited)
      */
-    public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 0;
+    public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 60 * 60 * 24 * 365;
 
     private String contextId;
     private long sessionExpiryInterval = DEFAULT_SESSION_EXPIRY_INTERVAL;

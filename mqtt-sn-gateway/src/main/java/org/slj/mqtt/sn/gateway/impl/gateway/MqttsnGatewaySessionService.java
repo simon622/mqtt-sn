@@ -100,8 +100,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                             getRegistry().getSessionRegistry().clear(session);
                         }
                     } else if(session.getSessionExpiryInterval() == 0){
-                        //TODO options should control whether to allow persist forever sessions
-                        logger.warn("detected session {} with expiry interval 0", session.getContext());
+                        // delete the session on terminal event
                     }
                 }
             }

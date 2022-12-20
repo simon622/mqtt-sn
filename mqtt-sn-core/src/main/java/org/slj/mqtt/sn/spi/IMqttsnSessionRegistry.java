@@ -57,4 +57,6 @@ public interface IMqttsnSessionRegistry extends IMqttsnService {
     void modifySessionExpiryInterval(IMqttsnSession session, long sessionExpiryInterval);
     void modifyMaxPacketSize(IMqttsnSession session, int maxPacketSize);
 
+    void modifyProtocolVersion(IMqttsnSession session, int protocolVersion);
+
 }

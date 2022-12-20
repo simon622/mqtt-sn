@@ -216,6 +216,12 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     }
 
     @Override
+    public void modifyProtocolVersion(IMqttsnSession session, int protocolVersion) {
+        getSessionBean(session).setProtocolVersion(protocolVersion);
+        logger.info("setting session-protocolVersion as '{}' {}", protocolVersion, session);
+    }
+
+    @Override
     public void modifySessionExpiryInterval(IMqttsnSession session, long sessionExpiryInterval) {
         getSessionBean(session).setSessionExpiryInterval(sessionExpiryInterval);
         logger.info("setting session-sessionExpiryInterval as '{}' {}", sessionExpiryInterval, session);

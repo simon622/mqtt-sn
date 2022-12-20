@@ -207,7 +207,19 @@ public class MqttsnOptions {
      */
     public static final int DEFAULT_MESSAGE_QUEUE_DISK_STORAGE_THRESHOLD = 5;
 
+    /**
+     * By default, specify 0 (unlimited) max messages in awake flush
+     */
+    public static final int DEFAULT_MAX_AWAKE_MESSAGES = 0;
+
+    /**
+     * By default, specify 0 (unlimited)
+     */
+    public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 0;
+
     private String contextId;
+    private long sessionExpiryInterval = DEFAULT_SESSION_EXPIRY_INTERVAL;
+    private int defaultMaxAwakeMessages = DEFAULT_MAX_AWAKE_MESSAGES;
     private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
     private int transportPublishHandoffThreadCount = DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT;
     private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
@@ -237,7 +249,6 @@ public class MqttsnOptions {
     private int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
     private int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
     private int congestionWait = DEFAULT_CONGESTION_WAIT;
-    private int removeDisconnectedSessionsSeconds = DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS;
     private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
     private boolean metricsEnabled = DEFAULT_METRICS_ENABLED;
 
@@ -270,19 +281,6 @@ public class MqttsnOptions {
      */
     public MqttsnOptions withMetricsEnabled(boolean metricsEnabled) {
         this.metricsEnabled = metricsEnabled;
-        return this;
-    }
-
-    /**
-     * How many seconds after a client is last seen should disconnected sessions be removed from
-     * the session state service
-     *
-     * @param removeDisconnectedSessionsSeconds - Number of threads to use to service outbound queue processing
-     * @return this configuration
-     * @see {@link MqttsnOptions#DEFAULT_REMOVE_DISCONNECTED_SESSIONS_SECONDS}
-     */
-    public MqttsnOptions withRemoveDisconnectedSessionsSeconds(int removeDisconnectedSessionsSeconds) {
-        this.removeDisconnectedSessionsSeconds = removeDisconnectedSessionsSeconds;
         return this;
     }
 
@@ -332,6 +330,18 @@ public class MqttsnOptions {
      */
     public MqttsnOptions withMaxErrorRetries(int maxErrorRetries) {
         this.maxErrorRetries = maxErrorRetries;
+        return this;
+    }
+
+    /**
+     * Configure by default the max number of awake messages to receive in a flush
+     *
+     * @param defaultMaxAwakeMessages - The max number of awake messages to send/received in a sleeping (awake) state
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_MAX_AWAKE_MESSAGES}
+     */
+    public MqttsnOptions withDefaultMaxAwakeMessages(int defaultMaxAwakeMessages) {
+        this.defaultMaxAwakeMessages = defaultMaxAwakeMessages;
         return this;
     }
 
@@ -716,6 +726,17 @@ public class MqttsnOptions {
     }
 
     /**
+     * Tune Session Expiry interval of the connection
+     *
+     * @param sessionExpiryInterval - The time (in seconds) sessions will reside on the gateway after connection ending event
+     * @return this configuration
+     */
+    public MqttsnOptions withSessionExpiryInterval(int sessionExpiryInterval) {
+        this.sessionExpiryInterval = sessionExpiryInterval;
+        return this;
+    }
+
+    /**
      * Sets the locations of known clients or gateways on the network. When running as a client and discovery is not enabled,
      * it is mandatory that at least 1 gateway entry be supplied, which will be the gateway the client talks to. In gateway
      * mode, the registry is populated dynamically.
@@ -872,10 +893,6 @@ public class MqttsnOptions {
         return congestionWait;
     }
 
-    public int getRemoveDisconnectedSessionsSeconds() {
-        return removeDisconnectedSessionsSeconds;
-    }
-
     public MqttsnSecurityOptions getSecurityOptions() {
         return securityOptions;
     }
@@ -906,5 +923,13 @@ public class MqttsnOptions {
 
     public MqttsnClientCredentials getClientCredentials() {
         return clientCredentials;
+    }
+
+    public int getDefaultMaxAwakeMessages() {
+        return defaultMaxAwakeMessages;
+    }
+
+    public long getSessionExpiryInterval() {
+        return sessionExpiryInterval;
     }
 }

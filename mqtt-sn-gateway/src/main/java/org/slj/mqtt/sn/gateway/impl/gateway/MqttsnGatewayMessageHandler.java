@@ -190,9 +190,9 @@ public class MqttsnGatewayMessageHandler
             } else {
                 long sessionExpiryIntervalRequested = sessionExpiryInterval;
                 if(sessionExpiryInterval >
-                        registry.getOptions().getRemoveDisconnectedSessionsSeconds()){
+                        registry.getOptions().getSessionExpiryInterval()){
                     sessionExpiryInterval = Math.min(sessionExpiryInterval,
-                            registry.getOptions().getRemoveDisconnectedSessionsSeconds());
+                            registry.getOptions().getSessionExpiryInterval());
                 }
                 boolean changedFromRequested = sessionExpiryIntervalRequested != sessionExpiryInterval;
                 getRegistry().getSessionRegistry().modifySessionExpiryInterval(session, sessionExpiryInterval);

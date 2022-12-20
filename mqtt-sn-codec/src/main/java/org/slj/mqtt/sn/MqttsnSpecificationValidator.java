@@ -182,6 +182,12 @@ public class MqttsnSpecificationValidator {
         }
     }
 
+    public static void validateDefaultAwakeMessages(int defaultAwakeMessages){
+        if(defaultAwakeMessages < 0 || defaultAwakeMessages > 15){
+            throw new MqttsnCodecException("invalid default awake messages value - " + defaultAwakeMessages);
+        }
+    }
+
     public static void validatePublishData(byte[] data) {
         if(data == null)
             throw new MqttsnCodecException("publish data cannot be null");

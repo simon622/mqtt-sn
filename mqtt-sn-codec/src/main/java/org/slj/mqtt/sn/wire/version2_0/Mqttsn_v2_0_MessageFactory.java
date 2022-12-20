@@ -53,15 +53,16 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize) throws MqttsnCodecException {
+    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval) throws MqttsnCodecException {
 
         MqttsnConnect_V2_0 msg = new MqttsnConnect_V2_0();
         msg.setClientId(clientId);
         msg.setKeepAlive(keepAlive);
-        msg.setSessionExpiryInterval(keepAlive);
         msg.setCleanStart(cleanSession);
         msg.setWill(willPrompt);
         msg.setMaxPacketSize(maxPacketSize);
+        msg.setDefaultAwakeMessages(defaultAwakeMessages);
+        msg.setSessionExpiryInterval(sessionExpiryInterval);
         msg.validate();
         return msg;
     }

@@ -36,6 +36,7 @@ public class ClientInteractiveMain {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
                 options.withMaxMessagesInQueue(100000);
+                options.withMinFlushTime(1);
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                         withTransport(transport).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);

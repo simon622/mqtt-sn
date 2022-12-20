@@ -80,7 +80,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize) throws MqttsnCodecException {
+    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval) throws MqttsnCodecException {
 
         MqttsnConnect msg = new MqttsnConnect();
         msg.setClientId(clientId);

@@ -44,6 +44,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
     protected int keepAlive;
     protected long sessionExpiryInterval;
     protected int maxPacketSize;
+    protected int defaultAwakeMessages;
     protected String clientId;
 
     @Override
@@ -112,6 +113,14 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
         this.clientId = clientId;
     }
 
+    public int getDefaultAwakeMessages() {
+        return defaultAwakeMessages;
+    }
+
+    public void setDefaultAwakeMessages(int defaultAwakeMessages) {
+        this.defaultAwakeMessages = defaultAwakeMessages;
+    }
+
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
@@ -167,14 +176,17 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
 
     protected void readFlags(byte v) {
         /**
-         Reserved           Auth  Will CleanSession
-         (bit 7,6,5,4,3)     (2)    (1)          (0)
+         Reserved     DefaultAwakeMessage      Auth  Will CleanSession
+         (bit 7), (6,5,4,3)                     (2)    (1)          (0)
          **/
 
         //check all reserved flags
-        if((v & 0xF8) != 0){
+        if((v & 0x80) != 0){
             throw new MqttsnCodecException("reserved flags must be set to 0");
         }
+
+        //default awake messages
+        defaultAwakeMessages = (v & 0x78) >> 3;
 
         //auth
         auth = (v & 0x04) >> 2 != 0;
@@ -188,11 +200,13 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
 
     protected byte writeFlags() {
         /**
-         Reserved           Auth  Will CleanSession
-         (bit 7,6,5,4,3)     (2)    (1)          (0)
+         Reserved     DefaultAwakeMessage      Auth  Will CleanSession
+         (bit 7), (6,5,4,3)                     (2)    (1)          (0)
          **/
 
         byte v = 0x00;
+
+        v |= defaultAwakeMessages << 3;
 
         //dup redelivery
         if (auth) v |= 0x04;
@@ -208,6 +222,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
 
     @Override
     public void validate() throws MqttsnCodecException {
+        MqttsnSpecificationValidator.validateDefaultAwakeMessages(defaultAwakeMessages);
         MqttsnSpecificationValidator.validateProtocolId(protocolVersion);
         MqttsnSpecificationValidator.validateKeepAlive(keepAlive);
         MqttsnSpecificationValidator.validateSessionExpiry(sessionExpiryInterval);
@@ -225,6 +240,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
                 ", keepAlive=" + keepAlive +
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", maxPacketSize=" + maxPacketSize +
+                ", defaultAwakeMessages=" + defaultAwakeMessages +
                 ", clientId='" + clientId + '\'' +
                 '}';
     }

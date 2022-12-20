@@ -72,7 +72,7 @@ public class Mqttsn1_2WireTests {
     public void testMqttsnConnect() throws MqttsnCodecException {
 
         //-- test normal length clientId
-        IMqttsnMessage message = factory.createConnect(_clientid, MqttsnConstants.UNSIGNED_MAX_16, false, true, 1024);
+        IMqttsnMessage message = factory.createConnect(_clientid, MqttsnConstants.UNSIGNED_MAX_16, false, true, 1024, 0, 0);
         testWireMessage(message);
     }
 
@@ -85,7 +85,7 @@ public class Mqttsn1_2WireTests {
             sb.append("A");
         }
 
-        IMqttsnMessage message = factory.createConnect(sb.toString(), MqttsnConstants.UNSIGNED_MAX_16, false, true, 1024);
+        IMqttsnMessage message = factory.createConnect(sb.toString(), MqttsnConstants.UNSIGNED_MAX_16, false, true, 1024, 0, 0);
         testWireMessage(message);
     }
 

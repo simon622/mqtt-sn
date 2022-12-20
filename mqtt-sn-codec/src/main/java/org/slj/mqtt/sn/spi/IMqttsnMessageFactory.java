@@ -80,8 +80,9 @@ public interface IMqttsnMessageFactory {
      * @param keepAlive:    same as with MQTT, contains the value of the Keep Alive timer.
      * @param willPrompt:   if set, indicates that client is requesting for Will topic and Will message prompting.
      * @param cleanSession: same meaning as with MQTT, however extended for Will topic and Will message.
+     * @param defaultAwakeMessages: the default max number of messages transmitted per awake cycle.
      */
-    IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize)
+    IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval)
             throws MqttsnCodecException;
 
     /**

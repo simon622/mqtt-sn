@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.codec.MqttsnUnsupportedVersionException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
@@ -131,9 +132,15 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 break;
             case MqttsnConstants.CONNECT:
                 //-- check version
-                //-- TODO - need to move to 5 when large message
-                if(data[3] != MqttsnConstants.PROTOCOL_VERSION_2_0){
-                    throw new MqttsnUnsupportedVersionException("codec cannot parse ["+data[3]+"] non 2.0 message");
+                int version = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
+                if(data[0] == 0x01){
+                    version = data[5];
+                } else {
+                    version = data[3];
+                }
+
+                if(version != MqttsnConstants.PROTOCOL_VERSION_2_0){
+                    throw new MqttsnUnsupportedVersionException("codec cannot parse ["+version+"] non 2.0 message");
                 } else {
                     validateLengthGreaterThanOrEquals(data, 12);
                     msg = new MqttsnConnect_V2_0();

@@ -166,18 +166,46 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
     @Override
     public void decode(byte[] arr) throws MqttsnCodecException {
+
         readFlags(readHeaderByteWithOffset(arr, 2));
-        topicLength =  readUInt16Adjusted(arr, 3);
-        id = readUInt16Adjusted(arr, 5);
-        setTopicData(readBytesAdjusted(arr, 7, topicLength));
-        data = readRemainingBytesAdjusted(arr,  7 + topicLength);
+
+        //-- limited format
+        if(getQoS() <= 0){
+            if(topicIdType == MqttsnConstants.TOPIC_FULL){
+
+                //first 2 bytes of payload are topic length
+                topicLength =  readUInt16Adjusted(arr, 3);
+                setTopicData(readBytesAdjusted(arr, 5, topicLength));
+                data = readRemainingBytesAdjusted(arr,  5 + topicLength);
+            } else {
+                topicLength = 2;
+                setTopicData(readBytesAdjusted(arr, 3, 2));
+                data = readRemainingBytesAdjusted(arr,  5);
+            }
+        } else {
+
+            //-- packet id format
+            id = readUInt16Adjusted(arr, 3);
+
+            if(topicIdType == MqttsnConstants.TOPIC_FULL){
+                //first 2 bytes of payload are topic length
+
+                topicLength =  readUInt16Adjusted(arr, 5);
+                setTopicData(readBytesAdjusted(arr, 7, topicLength));
+                data = readRemainingBytesAdjusted(arr,  7 + topicLength);
+            } else {
+                topicLength = 2;
+                setTopicData(readBytesAdjusted(arr, 5, topicLength));
+                data = readRemainingBytesAdjusted(arr,  5 + topicLength);
+            }
+        }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
         byte[] msg;
-        int length = data.length + (topicLength - 2) + 9;
+        int length = data.length + (topicLength - 2) + (getQoS() <= 0 ? 5 : 7);
         int idx = 0;
 
         if ((length) > 0xFF) {
@@ -194,14 +222,22 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         msg[idx++] = (byte) getMessageType();
         msg[idx++] = writeFlags();
 
+        //-- encode the packetid for varient 2 packet types
+        if(getQoS() >= 1){
+            msg[idx++] = (byte) ((id >> 8) & 0xFF);
+            msg[idx++] = (byte) (id & 0xFF);
+        }
+
         topicLength = topicLength == 0 ? topicIdType == MqttsnConstants.TOPIC_FULL ? topicData.length : 2 : 2;
-        msg[idx++] = (byte) ((topicLength >> 8) & 0xFF);
-        msg[idx++] = (byte) (topicLength & 0xFF);
 
-        msg[idx++] = (byte) ((id >> 8) & 0xFF);
-        msg[idx++] = (byte) (id & 0xFF);
+        if(topicIdType == MqttsnConstants.TOPIC_FULL){
+            msg[idx++] = (byte) ((topicLength >> 8) & 0xFF);
+            msg[idx++] = (byte) (topicLength & 0xFF);
+        } else {
+            System.arraycopy(topicData, 0, msg, idx, topicData.length);
+        }
 
-        System.arraycopy(topicData, 0, msg, idx, topicData.length);
+
         System.arraycopy(data, 0, msg, msg.length - (data.length), data.length);
         return msg;
     }

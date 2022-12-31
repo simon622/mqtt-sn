@@ -51,6 +51,15 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
     }
 
     @Test
+    public void testMqttsnConnectNoClientId() throws MqttsnCodecException {
+        IMqttsnMessage message = factory.createConnect("",98, false, false, 500, 4, 5000);
+        testWireMessage(message);
+
+        message = factory.createConnect("",98, false, false, 500, 0, 5000);
+        testWireMessage(message);
+    }
+
+    @Test
     public void testMqttsnConnack() throws MqttsnCodecException {
         IMqttsnMessage message = factory.createConnack(MqttsnConstants.RETURN_CODE_ACCEPTED, true, "XXXXX", 240 * 240);
         testWireMessage(message);

@@ -132,15 +132,24 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
 
         protocolVersion = readUInt8Adjusted(data, 3);
         keepAlive = readUInt16Adjusted(data, 4);
-        sessionExpiryInterval = readUInt32Adjusted(data, 6);
-        maxPacketSize = readUInt16Adjusted(data, 10);
-        clientId = readUTF8EncodedStringAdjusted(data, 12);
+
+        if(data.length >= 10){
+            sessionExpiryInterval = readUInt32Adjusted(data, 6);
+        }
+
+        if(data.length >= 12){
+            maxPacketSize = readUInt16Adjusted(data, 10);
+        }
+
+        if(data.length > 13){
+            clientId = readRemainingUTF8EncodedAdjusted(data, 12);
+        }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 12 + (clientId == null ? 0 : clientId.length() + 2);
+        int length = 12 + (clientId == null ? 0 : clientId.length());
         byte[] msg;
         int idx = 0;
         if ((length) > 0xFF) {
@@ -168,7 +177,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
         msg[idx++] = (byte) (maxPacketSize & 0xFF);
 
         if (clientId != null) {
-            writeUTF8EncodedStringData(msg, idx, clientId);
+            writeUTF8EncodedStringDataNoLength(msg, idx, clientId);
         }
 
         return msg;
@@ -241,7 +250,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", maxPacketSize=" + maxPacketSize +
                 ", defaultAwakeMessages=" + defaultAwakeMessages +
-                ", clientId='" + clientId + '\'' +
+                ", clientId='" + (clientId == null ? "" : "") + '\'' +
                 '}';
     }
 }

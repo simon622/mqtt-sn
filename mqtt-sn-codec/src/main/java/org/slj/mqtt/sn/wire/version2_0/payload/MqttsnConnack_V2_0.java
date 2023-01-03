@@ -78,7 +78,7 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         idx += 4;
 
         if (assignedClientId != null) {
-            writeUTF8EncodedStringData(msg, idx, assignedClientId);
+            writeUTF8EncodedStringDataNoLength(msg, idx, assignedClientId);
         }
 
         return msg;

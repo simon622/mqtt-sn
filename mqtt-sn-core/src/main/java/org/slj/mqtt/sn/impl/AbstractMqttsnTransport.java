@@ -199,13 +199,17 @@ public abstract class AbstractMqttsnTransport
         catch(MqttsnCodecException e){
             logger.error("protocol error - sending payload format error disconnect;", e);
             writeToTransportInternal(networkContext,
-                    registry.getMessageFactory().createDisconnect(MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
+                    registry.getMessageFactory().createDisconnect(
+                            MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
         }
         catch(MqttsnSecurityException e){
             logger.error("security exception encountered processing, drop packet;", e);
         }
         catch(Throwable t){
-            logger.error("unknown error;", t);
+            logger.error("error, send generic error disconnect;", t);
+            writeToTransportInternal(networkContext,
+                    registry.getMessageFactory().createDisconnect(
+                            MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, t.getMessage()), false);
         }
     }
 

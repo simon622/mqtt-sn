@@ -121,6 +121,16 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
         getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.LOST);
 
+        try {
+            IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
+                    MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION, "Session LOST to timeout");
+            getRegistry().getTransport().writeToTransport(
+                    getRegistry().getNetworkRegistry().getContext(session.getContext()), disconnect);
+        } catch(Exception e){
+            logger.warn("unable to send disconnect to timeout {}", e.getMessage());
+        }
+
+
         if(getRegistry().getWillRegistry().hasWillMessage(session)){
             IMqttsnWillData data = getRegistry().getWillRegistry().getWillMessage(session);
             logger.info("session expired or stale has will data to publish {}", data);

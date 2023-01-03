@@ -139,9 +139,6 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
 
         if(data.length >= 12){
             maxPacketSize = readUInt16Adjusted(data, 10);
-        }
-
-        if(data.length > 13){
             clientId = readRemainingUTF8EncodedAdjusted(data, 12);
         }
     }

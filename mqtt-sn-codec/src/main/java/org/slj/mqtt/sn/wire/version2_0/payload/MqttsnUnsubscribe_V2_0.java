@@ -91,6 +91,7 @@ public class MqttsnUnsubscribe_V2_0 extends MqttsnSubscribe_V2_0 implements IMqt
         //topic type
         if (topicIdType == MqttsnConstants.TOPIC_PREDEFINED) v |= 0x01;
         else if (topicIdType == MqttsnConstants.TOPIC_SHORT) v |= 0x02;
+        else if (topicIdType == MqttsnConstants.TOPIC_FULL) v |= 0x03;
 
         return v;
     }

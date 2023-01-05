@@ -403,7 +403,7 @@ public abstract class AbstractMqttsnMessageHandler
             MqttsnUnsubscribe_V2_0 unsub = (MqttsnUnsubscribe_V2_0) message;
         }
 
-        return registry.getMessageFactory().createUnsuback();
+        return registry.getMessageFactory().createUnsuback(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
     protected void handleSuback(IMqttsnMessageContext context, IMqttsnMessage initial, IMqttsnMessage message) throws MqttsnException {

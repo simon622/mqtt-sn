@@ -64,7 +64,8 @@ public class MqttsnSubscribe_V2_0 extends AbstractMqttsnMessage implements IMqtt
     }
 
     public void setTopicName(String topicName) {
-        setTopicType(topicName != null && topicName.length() <= 2 ? MqttsnConstants.TOPIC_SHORT : MqttsnConstants.TOPIC_NORMAL);
+        setTopicType(topicName != null && topicName.length() <= 2 ?
+                MqttsnConstants.TOPIC_SHORT : MqttsnConstants.TOPIC_FULL);
         if(topicName.length() == 1){
             topicData = new byte[]{topicName.getBytes(MqttsnConstants.CHARSET)[0], 0x00};
         } else {
@@ -201,6 +202,7 @@ public class MqttsnSubscribe_V2_0 extends AbstractMqttsnMessage implements IMqtt
         //topic type
         if (topicIdType == MqttsnConstants.TOPIC_PREDEFINED) v |= 0x01;
         else if (topicIdType == MqttsnConstants.TOPIC_SHORT) v |= 0x02;
+        else if (topicIdType == MqttsnConstants.TOPIC_FULL) v |= 0x03;
 
         return v;
     }

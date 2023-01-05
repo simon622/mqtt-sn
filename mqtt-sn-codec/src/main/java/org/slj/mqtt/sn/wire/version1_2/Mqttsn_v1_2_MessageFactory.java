@@ -348,8 +348,9 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createUnsuback() throws MqttsnCodecException {
+    public IMqttsnMessage createUnsuback(int reasonCode) throws MqttsnCodecException {
         MqttsnUnsuback msg = new MqttsnUnsuback();
+        msg.setReturnCode(reasonCode);
         return msg;
     }
 

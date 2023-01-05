@@ -130,16 +130,15 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
             readFlags(data[2]);
         }
 
+        //all mandatory
         protocolVersion = readUInt8Adjusted(data, 3);
         keepAlive = readUInt16Adjusted(data, 4);
+        sessionExpiryInterval = readUInt32Adjusted(data, 6);
+        maxPacketSize = readUInt16Adjusted(data, 10);
 
-        if(data.length >= 10){
-            sessionExpiryInterval = readUInt32Adjusted(data, 6);
-        }
-
-        if(data.length >= 12){
-            maxPacketSize = readUInt16Adjusted(data, 10);
-            clientId = readRemainingUTF8EncodedAdjusted(data, 12);
+        //clientId is optional
+        if(data.length >= 13){
+            clientId = readRemainingUTF8EncodedAdjustedNoLength(data, 12);
         }
     }
 

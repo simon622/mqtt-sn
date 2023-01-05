@@ -69,6 +69,42 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
     }
 
     @Test
+    public void testUnsuback() throws MqttsnCodecException {
+        IMqttsnMessage message = factory.createUnsuback(45);
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testSubscribe() throws MqttsnCodecException {
+        IMqttsnMessage message = factory.createSubscribe(1, "this/is/a/long/topicname");
+        testWireMessage(message);
+
+        message = factory.createSubscribe(1, "ab");
+        testWireMessage(message);
+
+        message = factory.createSubscribe(1, MqttsnConstants.TOPIC_TYPE.NORMAL, 12);
+        testWireMessage(message);
+
+        message = factory.createSubscribe(1, MqttsnConstants.TOPIC_TYPE.PREDEFINED, 23);
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testUnsubscribe() throws MqttsnCodecException {
+        IMqttsnMessage message = factory.createUnsubscribe("this/is/a/long/topicname");
+        testWireMessage(message);
+
+        message = factory.createUnsubscribe("ab");
+        testWireMessage(message);
+
+        message = factory.createUnsubscribe(MqttsnConstants.TOPIC_TYPE.NORMAL, 12);
+        testWireMessage(message);
+
+        message = factory.createUnsubscribe(MqttsnConstants.TOPIC_TYPE.PREDEFINED, 23);
+        testWireMessage(message);
+    }
+
+    @Test
     public void testMqttsnDisconnectWithSessionExpiry() throws MqttsnCodecException {
         IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_32 / 2);
         testWireMessage(message);

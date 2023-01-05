@@ -340,7 +340,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         options.withMaxConnectedClients(100).
                 withGatewayId(101).
                 withContextId(storageService.getStringPreference(GatewayConfig.CLIENTID, null)).
-                withRemoveDisconnectedSessionsSeconds(60 * 60).
+                withSessionExpiryInterval(60 * 60).
                 withMinFlushTime(5);
         return options;
     }

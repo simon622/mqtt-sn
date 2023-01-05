@@ -43,8 +43,8 @@ public class MqttsnUnsuback_V2_0 extends AbstractMqttsnMessage implements IMqtts
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        id = readUInt16Adjusted(data, 3);
-        returnCode = readUInt8Adjusted(data, 7);
+        id = readUInt16Adjusted(data, 2);
+        returnCode = readUInt8Adjusted(data, 4);
     }
 
     @Override

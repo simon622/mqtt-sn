@@ -347,7 +347,7 @@ public interface IMqttsnMessageFactory {
     /**
      * An UNSUBACK message is sent by a GW to acknowledge the receipt and processing of an UNSUBSCRIBE
      */
-    IMqttsnMessage createUnsuback()
+    IMqttsnMessage createUnsuback(int reasonCode)
             throws MqttsnCodecException;
 
     /**

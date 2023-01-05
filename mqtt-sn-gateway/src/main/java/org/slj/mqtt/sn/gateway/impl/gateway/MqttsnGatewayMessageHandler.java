@@ -341,14 +341,14 @@ public class MqttsnGatewayMessageHandler
         if(!MqttsnUtils.validTopicScheme(unsubscribe.getTopicType(), unsubscribe.getTopicData(), true)){
             logger.warn("supplied topic did not appear to be valid, return INVALID TOPIC ID typeId {} topicData {}", unsubscribe.getTopicType(),
                     MqttsnWireUtils.toBinary(unsubscribe.getTopicData()));
-            return registry.getMessageFactory().createUnsuback();
+            return registry.getMessageFactory().createUnsuback(MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         }
 
         IMqttsnSession state = getActiveSession(context);
         TopicInfo info = registry.getTopicRegistry().normalize((byte) unsubscribe.getTopicType(), unsubscribe.getTopicData(), true);
         UnsubscribeResult result = getRegistry().getGatewaySessionService().unsubscribe(state, info, message);
         processSessionResult(result);
-        return registry.getMessageFactory().createUnsuback();
+        return registry.getMessageFactory().createUnsuback(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
     @Override

@@ -123,12 +123,6 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
         return decodedString;
     }
 
-    protected String readRemainingUTF8EncodedAdjusted(byte[] data, int startIdx) {
-        byte[] arr = readRemainingBytesAdjusted(data, startIdx);
-        String decodedString = new String(arr, MqttsnConstants.CHARSET);
-        return decodedString;
-    }
-
     protected static void writeUTF8EncodedStringData(byte[] dest, int startIdx, String stringData) {
 
         byte[] arr = stringData.getBytes(MqttsnConstants.CHARSET);
@@ -154,6 +148,15 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
             throw new MqttsnCodecException("buffer too small to accommodate data");
 
         System.arraycopy(arr, 0, dest, startIdx, arr.length);
+    }
+
+    /**
+     * Reads the remaining bytes as UTF-8 encoded bytes WITHOUT the preceding 16 bits size
+     */
+    protected String readRemainingUTF8EncodedAdjustedNoLength(byte[] data, int startIdx) {
+        byte[] arr = readRemainingBytesAdjusted(data, startIdx);
+        String decodedString = new String(arr, MqttsnConstants.CHARSET);
+        return decodedString;
     }
 
     protected void writeUInt32(byte[] data, int startIdx, long value){

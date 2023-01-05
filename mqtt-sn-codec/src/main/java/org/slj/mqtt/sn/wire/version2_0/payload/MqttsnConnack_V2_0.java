@@ -47,15 +47,17 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         returnCode = readUInt8Adjusted(data, 2);
         sessionPresent = readBooleanAdjusted(data, 3);
         sessionExpiryInterval = readUInt32Adjusted(data, 4);
-        if(data.length > 8){
-            assignedClientId = readUTF8EncodedStringAdjusted(data, 8);
+
+        //clientId is optional
+        if(data.length >= 9){
+            assignedClientId = readRemainingUTF8EncodedAdjustedNoLength(data, 8);
         }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 8 + (assignedClientId == null ? 0 : assignedClientId.length() + 2);
+        int length = 8 + (assignedClientId == null ? 0 : assignedClientId.length());
         byte[] msg;
         int idx = 0;
         if ((length) > 0xFF) {

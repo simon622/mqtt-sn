@@ -231,9 +231,9 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createUnsuback() throws MqttsnCodecException {
+    public IMqttsnMessage createUnsuback(int reasonCode) throws MqttsnCodecException {
         MqttsnUnsuback_V2_0 msg = new MqttsnUnsuback_V2_0();
-        msg.setReturnCode(MqttsnConstants.RETURN_CODE_ACCEPTED);
+        msg.setReturnCode(reasonCode);
         return msg;
     }
 

@@ -29,7 +29,7 @@
     <parent>
         <artifactId>mqtt-sn</artifactId>
         <groupId>org.slj</groupId>
-        <version>0.1.16</version>
+        <version>0.1.17</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -67,7 +67,7 @@
     </dependencies>
 
     <build>
-        <finalName>mqtt-sn-gateway-full-${project.version}</finalName>
+        <finalName>mqtt-sn-gateway-console-${project.version}</finalName>
         <plugins>
 
             <!-- Maven Shade Plugin -->

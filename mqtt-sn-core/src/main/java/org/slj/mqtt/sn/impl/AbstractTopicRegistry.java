@@ -222,6 +222,9 @@ public abstract class AbstractTopicRegistry
                     info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.NORMAL, MqttsnWireUtils.read16bit(topicData[0],topicData[1]));
                 }
                 break;
+            case MqttsnConstants.TOPIC_FULL:
+                info = new TopicInfo(MqttsnConstants.TOPIC_TYPE.FULL, new String(topicData, MqttsnConstants.CHARSET));
+                break;
             case MqttsnConstants.TOPIC_PREDEFINED:
                 if(topicData.length != 2){
                     throw new MqttsnExpectationFailedException("predefined topic aliases must be exactly 2 bytes");

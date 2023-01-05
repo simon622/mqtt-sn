@@ -327,9 +327,16 @@ public class MqttsnGatewayMessageHandler
             return registry.getMessageFactory().createSuback(0, 0, result.getReturnCode());
         } else {
             //-- this is a flaw in the current spec, you should be able to send back the topicIdType in the response
-            IMqttsnMessage suback = registry.getMessageFactory().createSuback(result.getGrantedQoS(),
-                    result.getTopicInfo().getTopicId(), result.getReturnCode());
-            return suback;
+            if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+                MqttsnSuback_V2_0 suback = (MqttsnSuback_V2_0) registry.getMessageFactory().createSuback(result.getGrantedQoS(),
+                        result.getTopicInfo().getTopicId(), result.getReturnCode());
+                suback.setTopicIdType(
+                        result.getTopicInfo().getType().getFlag());
+                return suback;
+            } else {
+                return registry.getMessageFactory().createSuback(result.getGrantedQoS(),
+                        result.getTopicInfo().getTopicId(), result.getReturnCode());
+            }
         }
     }
 

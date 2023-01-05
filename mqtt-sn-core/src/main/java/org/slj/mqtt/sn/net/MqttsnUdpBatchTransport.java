@@ -75,8 +75,10 @@ public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
     @Override
     public void stop() throws MqttsnException {
         super.stop();
-        senderThread.interrupt();
-        senderThread = null;
+        if(senderThread != null){
+            senderThread.interrupt();
+            senderThread = null;
+        }
     }
 
     @Override

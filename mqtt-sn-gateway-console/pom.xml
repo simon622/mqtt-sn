@@ -29,7 +29,7 @@
     <parent>
         <artifactId>mqtt-sn</artifactId>
         <groupId>org.slj</groupId>
-        <version>0.1.0</version>
+        <version>0.1.16</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -65,5 +65,46 @@
             <version>2.6.0</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <finalName>mqtt-sn-gateway-full-${project.version}</finalName>
+        <plugins>
+
+            <!-- Maven Shade Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <!-- Run shade goal on package phase -->
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.slj.mqtt.sn.console.MqttsnGatewayWithConsoleMain</mainClass>
+                                </transformer>
+                            </transformers>
+                            <!--minimizeJar>true</minimizeJar-->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>

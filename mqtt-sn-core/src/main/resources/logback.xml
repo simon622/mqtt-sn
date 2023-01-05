@@ -46,7 +46,7 @@
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <logger name="org.slj" level="INFO"/>
+    <logger name="org.slj" level="ERROR"/>
     <logger name="ch.qos.logback" level="OFF"/>
 
 </configuration>

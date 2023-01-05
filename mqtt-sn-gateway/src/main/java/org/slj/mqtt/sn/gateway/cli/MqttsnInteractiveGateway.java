@@ -53,7 +53,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         LOOP("Create <count> messages in a loop", new String[]{"int count", "String* topicName", "String* data", "int QoS"}),
         POKE("Poke the queue", new String[0], true),
         INFLIGHT("List inflight messages", new String[0], false),
-        REINIT("Reinit the backend broker connection", new String[0]),
+        REINIT("Re-init the backend broker connection", new String[0]),
         FLUSH("Run inflight reaper on clientId", new String[0]),
         NETWORK("View network registry", new String[0]),
         SESSIONS("View sessions", new String[0]),

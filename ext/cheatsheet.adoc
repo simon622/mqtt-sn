@@ -1,0 +1,19 @@
+= MQTT-SN Cheatsheet
+Simon Johnson <simon622@gmail.com>
+3.0, July 29, 2022: AsciiDoc article template
+:toc:
+:icons: font
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+
+Content entered directly below the header but before the first section heading is called the preamble.
+
+== First level heading
+
+This is a paragraph with a *bold* word and an _italicized_ word.
+
+MQTT-SN Foo
+====
+Content in an example block is subject to normal substitutions.
+====
+
+

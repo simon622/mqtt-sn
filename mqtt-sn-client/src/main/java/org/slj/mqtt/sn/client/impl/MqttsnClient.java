@@ -71,6 +71,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     private Thread managedConnectionThread = null;
     private final Object sleepMonitor = new Object();
     private final Object connectionMonitor = new Object();
+    private final Object functionMutex = new Object();
     private final boolean managedConnection;
     private final boolean autoReconnect;
 
@@ -132,7 +133,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     @Override
     public boolean isConnected() {
         try {
-            synchronized(this){
+            synchronized(functionMutex){
                 IMqttsnSession state = checkSession(false);
                 if(state == null) return false;
                 return state.getClientState() == MqttsnClientState.ACTIVE;
@@ -163,7 +164,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         this.keepAlive = keepAlive;
         this.cleanSession = cleanSession;
         IMqttsnSession session = checkSession(false);
-        synchronized (this) {
+        synchronized (functionMutex) {
             //-- its assumed regardless of being already connected or not, if connect is called
             //-- local state should be discarded
             clearState(cleanSession);
@@ -246,7 +247,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#waitForCompletion(MqttsnWaitToken, int)}
      */
     public Optional<IMqttsnMessage> waitForCompletion(MqttsnWaitToken token, int customWaitTime) throws MqttsnExpectationFailedException {
-        synchronized (this){
+        synchronized (functionMutex){
             Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(
                     session.getContext(), token, customWaitTime);
             MqttsnUtils.responseCheck(token, response);
@@ -338,7 +339,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             message = registry.getMessageFactory().createUnsubscribe(info.getType(), info.getTopicId());
         }
 
-        synchronized (this){
+        synchronized (functionMutex){
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(session.getContext(), message);
             Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(session.getContext(), token);
             MqttsnUtils.responseCheck(token, response);
@@ -402,7 +403,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         logger.info("sleeping for {} seconds", sessionExpiryInterval);
         IMqttsnSession state = checkSession(true);
         IMqttsnMessage message = registry.getMessageFactory().createDisconnect(sessionExpiryInterval);
-        synchronized (this){
+        synchronized (functionMutex){
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
             Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(state.getContext(), token);
             stateChangeResponseCheck(state, token, response, MqttsnClientState.ASLEEP);
@@ -428,7 +429,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         IMqttsnSession state = checkSession(false);
         IMqttsnMessage message = registry.getMessageFactory().createPingreq(registry.getOptions().getContextId());
-        synchronized (this){
+        synchronized (functionMutex){
             if(MqttsnUtils.in(state.getClientState(),
                     MqttsnClientState.ASLEEP)){
                 startProcessing(false);
@@ -458,7 +459,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public void ping()  throws MqttsnException{
         IMqttsnSession state = checkSession(true);
         IMqttsnMessage message = registry.getMessageFactory().createPingreq(registry.getOptions().getContextId());
-        synchronized (this){
+        synchronized (functionMutex){
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
             registry.getMessageStateService().waitForCompletion(state.getContext(), token);
         }
@@ -471,7 +472,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public String helo()  throws MqttsnException{
         IMqttsnSession state = checkSession(true);
         IMqttsnMessage message = registry.getMessageFactory().createHelo(null);
-        synchronized (this){
+        synchronized (functionMutex){
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
             Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(state.getContext(), token);
             if(response.isPresent()){
@@ -492,7 +493,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     private void disconnect(boolean sendRemoteDisconnect, boolean deepClean)  throws MqttsnException {
         try {
             IMqttsnSession state = checkSession(false);
-            synchronized (this) {
+            synchronized (functionMutex) {
                 if(state != null){
                     try {
                         if (MqttsnUtils.in(state.getClientState(),
@@ -563,7 +564,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
     private IMqttsnSession discoverGatewaySession() throws MqttsnException {
         if(session == null){
-            synchronized (this){
+            synchronized (functionMutex){
                 if(session == null){
                     try {
                         logger.info("discovering gateway...");
@@ -600,7 +601,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                             connectionMonitor.wait(delta);
 
                             if(running){
-                                synchronized (this){ //-- we could receive a unsolicited disconnect during passive reconnection | ping..
+                                synchronized (functionMutex){ //-- we could receive a unsolicited disconnect during passive reconnection | ping..
                                     IMqttsnSession state = checkSession(false);
                                     if(state != null){
                                         if(state.getClientState() == MqttsnClientState.DISCONNECTED){

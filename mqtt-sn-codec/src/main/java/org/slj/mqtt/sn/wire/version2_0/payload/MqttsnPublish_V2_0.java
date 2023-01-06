@@ -48,17 +48,6 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     protected boolean dupRedelivery;
     protected boolean retainedPublish;
 
-    public String getTopicName() {
-        if (topicIdType == MqttsnConstants.TOPIC_PREDEFINED)
-            throw new IllegalStateException("unable to parse string data from predefined topic alias");
-        else if(topicIdType == MqttsnConstants.TOPIC_SHORT){
-            //-- handle single char short topic names
-            if(topicData.length == 2 && topicData[1] == 0x00)
-                return new String(new byte[]{topicData[0]}, MqttsnConstants.CHARSET);
-        }
-        return new String(topicData, MqttsnConstants.CHARSET);
-    }
-
     public void setTopicName(String topicName) {
         setTopicType(topicName != null && topicName.length() <= 2 ? MqttsnConstants.TOPIC_SHORT : MqttsnConstants.TOPIC_NORMAL);
         if(topicName.length() == 1){

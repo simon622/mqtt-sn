@@ -4,7 +4,7 @@ import socket
 msg_type = 0x0C  # MQTT-SN PUBLISH message type
 msg_id = 0  # The message ID (16-bit unsigned integer)
 payload = b"hello world"  # The payload to send
-length = 6 + len(payload)
+length = 7 + len(payload)
 qos = 3
 
 # a pre-defined topic id (set to “0b01”)

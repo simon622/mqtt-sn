@@ -516,17 +516,12 @@ public abstract class AbstractMqttsnMessageStateService
             //-- so we need to pin it into the inflight system (if it needs confirming).
             if (registry.getCodec().isPublish(message)) {
                 PublishData data = registry.getCodec().getData(message);
-                if (data.getQos() == 2) {
-//                    int count = countInflight(context, InflightMessage.DIRECTION.RECEIVING);
-//                    if(count >= registry.getOptions().getMaxMessagesInflight()){
-//                        logger.log(Level.WARNING, String.format("have {} existing inbound message(s) inflight & new publish QoS2, replacing inflights!", count));
-//                       throw new MqttsnException("cannot receive more than maxInflight!");
-//                    }
+                if (data.getQos() == MqttsnConstants.QoS2) {
                     //-- Qos 2 needs further confirmation before being sent to application
                     markInflight(source, context, message, null);
-                } else {
+                }
+                else {
                     //-- Qos 0 & 1 are inbound are confirmed on receipt of message
-
                     CommitOperation op = CommitOperation.inbound(context, data, message);
                     op.data.setTopicPath(getTopicPathFromPublish(context, message));
                     confirmPublish(op);

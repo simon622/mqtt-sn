@@ -111,8 +111,7 @@ public abstract class AbstractTopicRegistry
         }
 
         if(topicPath == null) {
-            logger.warn("unable to find matching topicPath in system for {} -> {}, available was {}",
-                    topicInfo, session, Objects.toString(getRegistrationMapInternal(session, false)));
+            logger.warn("unable to find matching topicPath in system for {} -> {}", topicInfo, session);
             throw new MqttsnExpectationFailedException("unable to find matching topicPath in system");
         }
         return getRegistry().getTopicModifier().modifyTopic(session == null ? null : session.getContext(), topicPath);

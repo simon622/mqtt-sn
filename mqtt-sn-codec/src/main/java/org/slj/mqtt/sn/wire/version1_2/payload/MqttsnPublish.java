@@ -29,8 +29,6 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.spi.IMqttsnPublishPacket;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
 
 import java.util.Arrays;
 
@@ -112,5 +110,20 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateQoS(getQoS());
         MqttsnSpecificationValidator.validatePublishData(data);
+        MqttsnSpecificationValidator.validateTopicIdType(topicType);
+
+        //confirm that when the QoS is M1 we have the correct topicIdTypes sets
+        if(getQoS() == MqttsnConstants.QoSM1){
+            if(topicType == MqttsnConstants.TOPIC_NORMAL) {
+                throw new MqttsnCodecException("invalid topic type defined for QoS -1, must be short, pre or full");
+            }
+        }
+
+        if(getQoS() <= 0){
+            //confirm the msgId is coded 0x0000
+            if(id != 0){
+                throw new MqttsnCodecException("msgId should not be set for QoS -1 or 0 packets");
+            }
+        }
     }
 }

@@ -31,7 +31,6 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.spi.IMqttsnPublishPacket;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version1_2.payload.AbstractMqttsnMessageWithTopicData;
 
 import java.util.Arrays;
 
@@ -297,7 +296,6 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
                 ", topicLength=" + topicLength +
                 ", topicData=" + Arrays.toString(topicData) +
                 ", data.length=" + data.length +
-//                ", data=" + Arrays.toString(data) +
                 ", dupRedelivery=" + dupRedelivery +
                 ", retainedPublish=" + retainedPublish +
                 '}';
@@ -311,5 +309,19 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
         MqttsnSpecificationValidator.validateQoS(getQoS());
         MqttsnSpecificationValidator.validatePublishData(data);
+
+        //confirm that when the QoS is M1 we have the correct topicIdTypes sets
+        if(getQoS() == MqttsnConstants.QoSM1){
+            if(topicIdType == MqttsnConstants.TOPIC_NORMAL) {
+                throw new MqttsnCodecException("invalid topic type defined for QoS -1, must be short, pre or full");
+            }
+        }
+
+        if(getQoS() <= 0){
+            //confirm the msgId is coded 0x0000
+            if(id != 0){
+                throw new MqttsnCodecException("msgId should not be set for QoS -1 or 0 packets");
+            }
+        }
     }
 }

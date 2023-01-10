@@ -88,7 +88,7 @@ public interface IMqttsnRuntimeRegistry {
     /**
      * @see IMqttsnTransport
      */
-    IMqttsnTransport getTransport();
+    List<IMqttsnTransport> getTransports();
 
     /**
      * @see IMqttsnCodec

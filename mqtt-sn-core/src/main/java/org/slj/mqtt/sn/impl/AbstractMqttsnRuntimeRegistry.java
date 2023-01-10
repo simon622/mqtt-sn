@@ -217,8 +217,8 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     @Override
-    public IMqttsnTransport getTransport() {
-        return getService(IMqttsnTransport.class);
+    public List<IMqttsnTransport> getTransports() {
+        return getServices(IMqttsnTransport.class);
     }
 
     @Override

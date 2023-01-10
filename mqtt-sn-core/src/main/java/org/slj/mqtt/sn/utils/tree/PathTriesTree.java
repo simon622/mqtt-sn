@@ -215,7 +215,7 @@ public class PathTriesTree<T> {
                     TrieNode<T> wild = node.getChild(wildpath);
                     if(wild != null){
                         String[] remainingSegments =
-                                Arrays.copyOfRange(segments, i, segments.length - 1);
+                                Arrays.copyOfRange(segments, i + 1, segments.length);
                         //recurse point
                         Set<T> wildMembers = searchTreeForMembers(wild, remainingSegments);
                         if(wildMembers != null && !wildMembers.isEmpty()){

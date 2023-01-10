@@ -45,7 +45,7 @@ public class TriesTreeTests {
 
     @Test
     public void testReadAllFromTree() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         int BRANCHES = 50;
         Set<String> added = new HashSet<>();
         for (int i = 0; i < BRANCHES; i++){
@@ -62,21 +62,21 @@ public class TriesTreeTests {
 
     @Test(expected = TriesTreeLimitExceededException.class)
     public void testLargeTopicExceedsMaxSegments() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         String topic = generateRandomTopic((int) tree.getMaxPathSegments() + 1);
         tree.addPath(topic, "foo");
     }
 
     @Test(expected = TriesTreeLimitExceededException.class)
     public void testLargeTopicExceedsMaxLength() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         String topic = generateTopicMaxLength((int) tree.getMaxPathSize() + 1);
         tree.addPath(topic, "foo");
     }
 
     @Test(expected = TriesTreeLimitExceededException.class)
     public void testLargeTopicExceedsMaxMembers() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         String topic = generateRandomTopic(10);
         String[] members = new String[(int) tree.getMaxMembersAtLevel() + 1];
         Arrays.fill(members, UUID.randomUUID().toString());
@@ -86,7 +86,7 @@ public class TriesTreeTests {
     @Test
     public void testTopLevelTokenMatch() throws TriesTreeLimitExceededException {
 
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         tree.addPath("/", "foo");
         Assert.assertEquals("first level is a token", 1, tree.searchMembers("/").size());
     }
@@ -94,7 +94,7 @@ public class TriesTreeTests {
     @Test
     public void testTopLevelPrefixTokenMatchDistinct() throws TriesTreeLimitExceededException {
 
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         tree.addPath("/foo", "foo"); //different things
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
@@ -106,7 +106,7 @@ public class TriesTreeTests {
     @Test
     public void testTopLevelSuffixTokenMatchDistinct() throws TriesTreeLimitExceededException {
 
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         tree.addPath("foo/", "foo"); //different things
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
@@ -119,25 +119,50 @@ public class TriesTreeTests {
     @Test
     public void testWildcard() throws TriesTreeLimitExceededException {
 
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
-        tree.addPath("foo/bar#", "foo");
+        PathTriesTree<String> tree = createTreeDefaultConfig();
+        tree.addPath("foo/bar/#", "foo");
+        tree.addPath("foo/#", "bar");
+        tree.addPath("/#", "foo1");
+        tree.addPath("#", "root");
         System.err.println(tree.toTree(System.lineSeparator()));
-        Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
-        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/bar/is/me").size());
-        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/baris/me").size());
-        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("moo/bar/is/me").size());
+        Assert.assertEquals("should be 1 distinct branches", 3, tree.getBranchCount());
+        Assert.assertEquals("wildcard should match", 3, tree.searchMembers("foo/bar/is/me").size());
+        Assert.assertEquals("wildcard should match", 2, tree.searchMembers("/foo/bar/is/you").size());
+        Assert.assertEquals("wildcard should match", 2, tree.searchMembers("foo/bar").size());
+        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("moo/bar").size());
     }
 
     @Test
     public void testWildpath() throws TriesTreeLimitExceededException {
 
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = createTreeDefaultConfig();
         tree.addPath("foo/+/is/good", "foo");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
+        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("foo/bar").size());
         Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/mar/is/good").size());
         Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/bar/is/good").size());
+        Assert.assertEquals("wildcard should match", 1, tree.searchMembers("foo/ /is/good").size());
+        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("foo/bar/is/good/or/bad").size());
         Assert.assertEquals("wildcard should match", 0, tree.searchMembers("foo/bar/is/bad").size());
+        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("/foo/bar/is/good").size());
+        Assert.assertEquals("wildcard should match", 0, tree.searchMembers("foo/bar/is/bad").size());
+    }
+
+    @Test
+    public void testWildcardsGetRolledUp() throws TriesTreeLimitExceededException {
+
+        PathTriesTree<String> tree = createTreeDefaultConfig();
+
+        tree.addPath("foo/#", "foo");
+        tree.addPath("foo/bar", "foo1");
+        tree.addPath("foo/bar/foo", "foo2");
+        tree.addPath("foo/bar/zoo", "foo3");
+        tree.addPath("foo/bar/#", "foo4");
+        System.err.println(tree.toTree(System.lineSeparator()));
+
+        Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
+        Assert.assertEquals("wildcard should match", 3, tree.searchMembers("foo/bar/zoo").size());
     }
 
     @Test
@@ -196,5 +221,12 @@ public class TriesTreeTests {
             sb.append("a");
         }
         return sb.toString();
+    }
+
+    protected static PathTriesTree<String> createTreeDefaultConfig(){
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        tree.addWildcard("#");
+        tree.addWildpath("+");
+        return tree;
     }
 }

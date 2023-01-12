@@ -27,16 +27,27 @@ package org.slj.mqtt.sn.net;
 import org.slj.mqtt.sn.model.AbstractContextObject;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
+import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
 public class NetworkContext extends AbstractContextObject implements INetworkContext {
 
+    protected IMqttsnTransport transport;
     protected NetworkAddress networkAddress;
     protected int receivePort;
 
     public NetworkContext(){}
 
-    public NetworkContext(NetworkAddress networkAddress){
+    public NetworkContext(IMqttsnTransport transport, NetworkAddress networkAddress){
+        this.transport = transport;
         this.networkAddress = networkAddress;
+    }
+
+    public IMqttsnTransport getTransport() {
+        return transport;
+    }
+
+    public void setTransport(IMqttsnTransport transport) {
+        this.transport = transport;
     }
 
     public int getReceivePort() {
@@ -69,10 +80,12 @@ public class NetworkContext extends AbstractContextObject implements INetworkCon
         return networkAddress.hashCode();
     }
 
+
     @Override
     public String toString() {
         return "NetworkContext{" +
-                "networkAddress=" + networkAddress +
+                "transport=" + transport +
+                ", networkAddress=" + networkAddress +
                 ", receivePort=" + receivePort +
                 '}';
     }

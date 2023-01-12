@@ -78,7 +78,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
             while(itr.hasNext()){
                 String key = itr.next();
                 NetworkAddress address = options.getNetworkAddressEntries().get(key);
-                NetworkContext networkContext = new NetworkContext(address);
+                NetworkContext networkContext = new NetworkContext(getDefaultTransport(), address);
                 MqttsnContext sessionContext = new MqttsnContext(key);
                 sessionContext.setProtocolVersion(getCodec().getProtocolVersion());
                 networkAddressRegistry.bindContexts(networkContext, sessionContext);
@@ -219,6 +219,18 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     @Override
     public List<IMqttsnTransport> getTransports() {
         return getServices(IMqttsnTransport.class);
+    }
+
+    public IMqttsnTransport getDefaultTransport(){
+        List<IMqttsnTransport> transports = getTransports();
+        if(transports == null || transports.size() == 0)
+            throw new MqttsnRuntimeException("no transports available on runtime");
+        return transports.get(0);
+    }
+
+    @Override
+    public ITransportLocator getTransportLocator() {
+        return getService(ITransportLocator.class);
     }
 
     @Override

@@ -313,7 +313,8 @@ public abstract class AbstractMqttsnMessageStateService
                     lastMessageSent.put(context, time);
                 };
             }
-            registry.getTransport().writeToTransportWithWork(registry.getNetworkRegistry().getContext(context), message, callback);
+            INetworkContext networkContext = registry.getNetworkRegistry().getContext(context);
+            networkContext.getTransport().writeToTransportWithWork(networkContext, message, callback);
             return token;
 
         } catch(Exception e){

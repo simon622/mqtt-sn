@@ -40,6 +40,8 @@ import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
+import org.slj.mqtt.sn.utils.StringTable;
+import org.slj.mqtt.sn.utils.StringTableWriters;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -277,26 +279,23 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         MqttsnGatewayOptions opts = (MqttsnGatewayOptions) runtimeRegistry.getOptions();
         if(runtime != null) {
             boolean connected = getRuntimeRegistry().getBackendService().isConnected(null);
-
             int maxClients = opts.getMaxConnectedClients();
             int advertiseTime = opts.getGatewayAdvertiseTime();
 
             //-- general stuff
             message(String.format("Gateway Id: %s", opts.getGatewayId()));
             message(String.format("Advertise Interval: %s", advertiseTime));
+            message(String.format("Max connected clients: %s", maxClients));
+            message(String.format("Protocol Version: %s", getRuntimeRegistry().getCodec().getProtocolVersion()));
+            message(String.format("Max message size: %s", getRuntimeRegistry().getOptions().getMaxProtocolMessageSize()));
+            message(String.format("Message registry size: %s", getRuntimeRegistry().getMessageRegistry().size()));
 
-            if(getRuntimeRegistry().getTransport() instanceof AbstractMqttsnUdpTransport){
-                MqttsnUdpOptions udpOptions = ((AbstractMqttsnUdpTransport)getRuntimeRegistry().getTransport()).getUdpOptions();
-                message(String.format("Host: %s", udpOptions.getHost()));
-                message(String.format("Datagram port: %s", udpOptions.getPort()));
-                message(String.format("Secure port: %s", udpOptions.getSecurePort()));
-                message(String.format("Broadcast port: %s", udpOptions.getBroadcastPort()));
-                message(String.format("MTU: %s", udpOptions.getMtu()));
+            List<IMqttsnTransport> ts = getRuntimeRegistry().getTransports();
+            for (IMqttsnTransport t : ts){
+                StringTable st = t.getTransportDetails();
+                tabmessage(StringTableWriters.writeStringTableAsASCII(st));
             }
 
-            message(String.format("Max message size: %s", runtimeRegistry.getOptions().getMaxProtocolMessageSize()));
-            message(String.format("Max connected clients: %s", maxClients));
-            message(String.format("Message registry size: %s", getRuntimeRegistry().getMessageRegistry().size()));
 
             if (runtimeRegistry.getOptions() != null) {
                 Map<String, Integer> pTopics = runtimeRegistry.getOptions().getPredefinedTopics();

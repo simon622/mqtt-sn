@@ -30,6 +30,7 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.NetworkRegistryException;
+import org.slj.mqtt.sn.utils.StringTable;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -376,7 +377,7 @@ public class MqttsnTcpTransport
                             //- NB: this is NOT auth, this is simply creating a context to which we can respond, auth can
                             //-- happen during the mqtt-sn context creation, at which point we can talk back to the device
                             //-- with error packets and the like
-                            context = registry.getContextFactory().createInitialNetworkContext(networkAddress);
+                            context = registry.getContextFactory().createInitialNetworkContext(MqttsnTcpTransport.this, networkAddress);
                         }
                         Handler handler = new Handler(context, socket, this);
                         connections.put(context, handler);
@@ -548,6 +549,19 @@ public class MqttsnTcpTransport
     @Override
     public void broadcast(IMqttsnMessage message) throws MqttsnException {
         throw new UnsupportedOperationException("broadcast not supported on TCP");
+    }
+
+    @Override
+    public StringTable getTransportDetails() {
+        StringTable st = new StringTable("Property", "Value");
+        st.setTableName("TCP Transport");
+        st.addRow("Host", options.getHost());
+        st.addRow("TCP port", options.getPort());
+        st.addRow("Secure port", options.getSecurePort());
+        st.addRow("Max Connections", options.getMaxClientConnections());
+        st.addRow("Connect Timeout", options.getConnectTimeout());
+        st.addRow("So. Timeout", options.getSoTimeout());
+        return st;
     }
 }
 

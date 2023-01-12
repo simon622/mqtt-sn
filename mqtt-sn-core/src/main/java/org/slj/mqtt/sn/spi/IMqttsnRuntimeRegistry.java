@@ -88,7 +88,15 @@ public interface IMqttsnRuntimeRegistry {
     /**
      * @see IMqttsnTransport
      */
-    IMqttsnTransport getTransport();
+    List<IMqttsnTransport> getTransports();
+
+    /**
+     * When mulitple transport mechanisms are installed, which is considered default
+     * @return The default transport
+     */
+    IMqttsnTransport getDefaultTransport();
+
+    ITransportLocator getTransportLocator();
 
     /**
      * @see IMqttsnCodec

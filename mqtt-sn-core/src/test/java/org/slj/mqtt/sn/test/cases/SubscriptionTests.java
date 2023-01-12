@@ -266,7 +266,7 @@ public class SubscriptionTests {
             throws MqttsnException {
 
         return runtime.getRegistry().getContextFactory().
-                createInitialNetworkContext(MqttsnTestRuntime.TEST_ADDRESS);
+                createInitialNetworkContext(runtime.getRegistry().getDefaultTransport(), MqttsnTestRuntime.TEST_ADDRESS);
     }
 
 

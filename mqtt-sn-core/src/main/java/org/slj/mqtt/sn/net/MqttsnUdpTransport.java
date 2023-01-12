@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.net;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.utils.StringTable;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -93,7 +94,7 @@ public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTr
                         //- NB: this is NOT auth, this is simply creating a context to which we can respond, auth can
                         //-- happen during the mqtt-sn context creation, at which point we can talk back to the device
                         //-- with error packets and the like
-                        context = registry.getContextFactory().createInitialNetworkContext(address);
+                        context = registry.getContextFactory().createInitialNetworkContext(MqttsnUdpTransport.this, address);
                     }
 
                     if(socketIn != null){
@@ -197,5 +198,17 @@ public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTr
         } catch(Exception e){
             throw new MqttsnException(e);
         }
+    }
+
+    @Override
+    public StringTable getTransportDetails() {
+        StringTable st = new StringTable("Property", "Value");
+        st.setTableName("UDP Transport");
+        st.addRow("Host", options.getHost());
+        st.addRow("Datagram port", options.getPort());
+        st.addRow("Secure port", options.getSecurePort());
+        st.addRow("Broadcast port", options.getBroadcastPort());
+        st.addRow("MTU", options.getMtu());
+        return st;
     }
 }

@@ -124,7 +124,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         try {
             IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
                     MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION, "Session LOST to timeout");
-            getRegistry().getTransport().writeToTransport(
+            getRegistry().getTransportLocator().writeToTransport(
                     getRegistry().getNetworkRegistry().getContext(session.getContext()), disconnect);
         } catch(Exception e){
             logger.warn("unable to send disconnect to timeout {}", e.getMessage());

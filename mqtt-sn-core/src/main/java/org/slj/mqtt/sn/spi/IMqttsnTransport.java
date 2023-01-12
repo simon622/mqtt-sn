@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.spi;
 import org.slj.mqtt.sn.impl.AbstractMqttsnTransport;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
+import org.slj.mqtt.sn.utils.StringTable;
 
 import java.util.concurrent.Future;
 
@@ -55,5 +56,7 @@ public interface IMqttsnTransport extends IMqttsnService {
     void connectionLost(INetworkContext context, Throwable t);
 
     boolean restartOnLoss();
+
+    StringTable getTransportDetails();
 
 }

@@ -36,11 +36,14 @@ import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.StringTable;
+import org.slj.mqtt.sn.utils.StringTableWriters;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
@@ -403,6 +406,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         message(String.format("Remote Host: %s", storageService.getStringPreference(RuntimeConfig.HOSTNAME, null)));
         message(String.format("Remote Port: %s", storageService.getIntegerPreference(RuntimeConfig.PORT, null)));
         message(String.format("Client Id: %s", storageService.getStringPreference(RuntimeConfig.CLIENTID, null)));
+        message(String.format("Max message size: %s", runtimeRegistry.getOptions().getMaxProtocolMessageSize()));
+        message(String.format("Protocol Version: %s", runtimeRegistry.getCodec().getProtocolVersion()));
+
         if(client != null){
             if(runtimeRegistry != null) {
                 if (runtimeRegistry.getOptions() != null) {
@@ -416,6 +422,14 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         }
                     }
                 }
+
+                List<IMqttsnTransport> ts = getRuntimeRegistry().getTransports();
+                for (IMqttsnTransport t : ts){
+                    StringTable st = t.getTransportDetails();
+                    tabmessage(StringTableWriters.writeStringTableAsASCII(st));
+                }
+
+
 
                 if (getRuntimeRegistry().getQueueProcessor() != null) {
                     message(String.format("Queue Processor: %s", (getRuntimeRegistry().getQueueProcessor().running() ?

@@ -56,7 +56,7 @@ public interface IMqttsnContextFactory extends IMqttsnService {
      * @return - the new instance of a network context bound to the address supplied
      * @throws MqttsnException - an error has occurred
      */
-    INetworkContext createInitialNetworkContext(NetworkAddress address) throws MqttsnException;
+    INetworkContext createInitialNetworkContext(IMqttsnTransport transport, NetworkAddress address) throws MqttsnException;
 
     /**
      * No application existed for the network context OR a new clientId was detected, so we

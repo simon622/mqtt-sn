@@ -264,10 +264,6 @@ public abstract class AbstractMqttsnTransport
 
     protected abstract void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException ;
 
-    protected static ByteBuffer wrap(byte[] arr){
-        return wrap(arr, arr.length);
-    }
-
     protected static ByteBuffer wrap(byte[] arr, int length){
         return ByteBuffer.wrap(arr, 0 , length);
     }

@@ -30,10 +30,7 @@ import org.slj.mqtt.sn.model.*;
 import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
-import org.slj.mqtt.sn.spi.IMqttsnContextFactory;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.MqttsnSecurityException;
-import org.slj.mqtt.sn.spi.AbstractMqttsnService;
+import org.slj.mqtt.sn.spi.*;
 
 public class MqttsnContextFactory
         extends AbstractMqttsnService implements IMqttsnContextFactory {
@@ -41,10 +38,10 @@ public class MqttsnContextFactory
     protected static Logger logger = LoggerFactory.getLogger(MqttsnContextFactory.class.getName());
 
     @Override
-    public INetworkContext createInitialNetworkContext(NetworkAddress address) throws MqttsnException {
+    public INetworkContext createInitialNetworkContext(IMqttsnTransport transport, NetworkAddress address) {
 
         logger.info("create new network context for {}", address);
-        NetworkContext context = new NetworkContext(address);
+        NetworkContext context = new NetworkContext(transport, address);
         return context;
     }
 

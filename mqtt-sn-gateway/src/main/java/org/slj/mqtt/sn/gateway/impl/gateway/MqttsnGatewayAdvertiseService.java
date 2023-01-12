@@ -55,7 +55,7 @@ public class MqttsnGatewayAdvertiseService
             IMqttsnMessage msg = registry.getMessageFactory().createAdvertise(
                     ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId(),
                     timeout);
-            registry.getTransport().broadcast(msg);
+            registry.getDefaultTransport().broadcast(msg);
             lastGatewayBroadcastTime = System.currentTimeMillis();
 
         } catch(Exception e){

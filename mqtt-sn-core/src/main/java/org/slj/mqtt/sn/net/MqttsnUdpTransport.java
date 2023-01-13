@@ -24,9 +24,11 @@
 
 package org.slj.mqtt.sn.net;
 
+import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.utils.StringTable;
 
 import java.io.IOException;
@@ -36,6 +38,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Provides a transport over User Datagram Protocol (UDP). This implementation uses a receiver thread which binds
@@ -46,12 +49,13 @@ import java.util.List;
  * The broadcast-receiver when activated runs on it own thread, listening on the broadcast port, updating the registry
  * when new contexts are discovered.
  */
-public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport {
+public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
 
     private DatagramSocket socket;
     private DatagramSocket broadcastSocket;
     private Thread receiverThread;
     private Thread broadcastThread;
+
     protected volatile boolean running = false;
 
     public MqttsnUdpTransport(MqttsnUdpOptions udpOptions){
@@ -105,12 +109,8 @@ public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTr
                 catch(SocketException e){
                     logger.warn("socket error, i/o channels closed;", e);
                 }
-                catch(InterruptedException e){
-                    Thread.currentThread().interrupt();
-                    logger.warn("thread interrupted, i/o channels closed;", e);
-                }
                 catch(Throwable e){
-                    logger.error("encountered an error listening for traffic", e);
+                    logger.error("uncaught exception listening for datagrams", e);
                 } finally {
                     buff = new byte[bufSize];
                 }
@@ -135,7 +135,6 @@ public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTr
             socket.close();
         }
         socket = null;
-        broadcastSocket = null;
 
         if(receiverThread != null){
             receiverThread.interrupt();
@@ -146,24 +145,25 @@ public class MqttsnUdpTransport extends org.slj.mqtt.sn.impl.AbstractMqttsnUdpTr
     }
 
     @Override
-    public void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException {
+    protected void writeToTransportInternal(INetworkContext context, byte[] data) {
         try {
             DatagramPacket packet = new DatagramPacket(data, data.length);
             sendDatagramInternal(context, packet);
         } catch(Exception e){
-            throw new MqttsnException(e);
+            throw new MqttsnRuntimeException(e);
         }
     }
 
-    protected void receiveDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {
+    protected void receiveDatagramInternal(INetworkContext context, DatagramPacket packet) {
         ByteBuffer bb = wrap(packet.getData(), packet.getLength());
         receiveFromTransport(context, drain(bb));
     }
 
-    protected void sendDatagramInternal(INetworkContext context, DatagramPacket packet) throws Exception {
+    protected void sendDatagramInternal(INetworkContext context, DatagramPacket packet) throws IOException {
         if(!running){
             logger.warn("transport is NOT RUNNING trying to send {} byte Datagram to {}",
                     packet.getLength(), context);
+            return;
         }
         NetworkAddress address = context.getNetworkAddress();
         InetAddress inetAddress = InetAddress.getByName(address.getHostAddress());

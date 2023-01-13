@@ -26,10 +26,7 @@ package org.slj.mqtt.sn.net;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnTransport;
 import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
-import org.slj.mqtt.sn.spi.NetworkRegistryException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.StringTable;
 
 import javax.net.ssl.*;
@@ -38,6 +35,7 @@ import java.net.*;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -111,7 +109,7 @@ public class MqttsnTcpTransport
     }
 
     @Override
-    protected void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException {
+    protected void writeToTransportInternal(INetworkContext context, byte[] data) {
         try {
             if(clientMode){
                 if(clientHandler == null){
@@ -132,7 +130,7 @@ public class MqttsnTcpTransport
                 }
             }
         } catch(IOException | InterruptedException e){
-            throw new MqttsnException("error writing to connection;", e);
+            throw new MqttsnRuntimeException("error writing to connection;", e);
         }
     }
 
@@ -562,6 +560,11 @@ public class MqttsnTcpTransport
         st.addRow("Connect Timeout", options.getConnectTimeout());
         st.addRow("So. Timeout", options.getSoTimeout());
         return st;
+    }
+
+    @Override
+    public String getName() {
+        return "mqtt-sn-tcp";
     }
 }
 

@@ -52,11 +52,10 @@ public abstract class AbstractMqttsnUdpTransport
         return options;
     }
 
-    public boolean restartOnLoss(){
-        return false;
-    }
-
     protected abstract void bind() throws Exception;
 
-    public abstract void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException ;
+    @Override
+    public String getName() {
+        return "mqtt-sn-udp";
+    }
 }

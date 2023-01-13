@@ -376,40 +376,31 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     public synchronized ScheduledExecutorService createManagedScheduledExecutorService(String name, int threadCount){
 
         ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(Math.max(1, threadCount),
-                createManagedThreadFactory(name, Thread.MIN_PRIORITY + 4),
+                createManagedThreadFactory(name, Thread.NORM_PRIORITY),
                 new ThreadPoolExecutor.CallerRunsPolicy());//DiscardPolicy());
         managedExecutorServices.add(executorService);
         return executorService;
     }
 
-    public <T> Future<T> async(ExecutorService executorService, Runnable r, T result){
-        return running ? executorService.submit(r, result) : null;
+    public <T> Future<T> submit(ExecutorService executorService, Runnable task, T result){
+        if(running) {
+            return executorService.submit(task, result);
+        }
+        else {
+            throw new MqttsnRuntimeException("runtime is not active");
+        }
     }
 
-    public void async(ExecutorService executorService, Runnable r){
-        if(running) executorService.submit(r);
+    public void submit(ExecutorService executorService, Runnable task){
+        if(running){
+            executorService.submit(task);
+        } else {
+            throw new MqttsnRuntimeException("runtime is not active");
+        }
     }
 
-    public void asyncWithCallback(ExecutorService executorService, Runnable r, Runnable callback){
-        executorService.submit(() -> {
-            try {
-                r.run();
-            } finally {
-                callback.run();
-            }
-        });
-    }
-
-    /**
-     * Submit work for the main worker thread group, this could be
-     * transport operations or confirmations etc.
-     */
-    public <T> Future<T> async(Runnable r, T result){
-        return async(generalUseExecutorService, r, result);
-    }
-
-    public void async(Runnable r){
-        async(generalUseExecutorService, r);
+    public void generalPurposeSubmit(Runnable r){
+        submit(generalUseExecutorService, r);
     }
 
     /**

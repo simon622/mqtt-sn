@@ -29,12 +29,10 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
+import org.slj.mqtt.sn.model.IPacketTXRXJob;
 import org.slj.mqtt.sn.spi.*;
-import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
-import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
@@ -43,83 +41,13 @@ import java.util.concurrent.Future;
  * You should sub-class this base as a starting point for you implementations.
  */
 public abstract class AbstractMqttsnTransport
-        extends AbstractMqttsnService implements IMqttsnTransport {
+        extends AbstractTransport implements IMqttsnTransport {
 
-    protected ExecutorService protocolProcessor;
-    protected ExecutorService egressPublishProcessor;
-
-    public void connectionLost(INetworkContext context, Throwable t){
-        if(registry != null && context != null){
-            registry.getRuntime().handleConnectionLost(
-                    registry.getNetworkRegistry().getMqttsnContext(context), t);
-        }
-    }
-
-    @Override
-    public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-        super.start(runtime);
-        protocolProcessor = runtime.getRuntime().createManagedExecutorService(String.format("mqtt-sn-transport-%s-", System.identityHashCode(runtime)),
-                runtime.getOptions().getTransportProtocolHandoffThreadCount());
-        egressPublishProcessor = runtime.getRuntime().createManagedExecutorService(String.format("mqtt-sn-transport-egress-%s-", System.identityHashCode(runtime)),
-                runtime.getOptions().getTransportPublishHandoffThreadCount());
-    }
-
-    @Override
-    public void stop() throws MqttsnException {
-        super.stop();
-        try {
-            if(protocolProcessor != null){
-                registry.getRuntime().closeManagedExecutorService(protocolProcessor);
-            }
-        } finally {
-            if(egressPublishProcessor != null){
-                registry.getRuntime().closeManagedExecutorService(egressPublishProcessor);
-            }
-        }
-    }
-
-    public boolean restartOnLoss(){
-        return true;
-    }
-
-    @Override
-    public void receiveFromTransport(INetworkContext context, byte[] data) {
-        if(protocolProcessor != null){
-            getRegistry().getRuntime().async(protocolProcessor,
-                    () -> receiveFromTransportInternal(context, data));
-        }
-    }
-
-    @Override
-    public Future<INetworkContext> writeToTransport(INetworkContext context, IMqttsnMessage message) {
-        return getRegistry().getRuntime().async(getRegistry().getCodec().isPublish(message) ?
-                        egressPublishProcessor : protocolProcessor,
-                    () -> writeToTransportInternal(context, message, true), context);
-    }
-
-    public void writeToTransportWithWork(INetworkContext context, IMqttsnMessage message, Runnable callback) {
-        getRegistry().getRuntime().asyncWithCallback(getRegistry().getCodec().isPublish(message) ?
-                egressPublishProcessor : protocolProcessor,
-                () -> writeToTransportInternal(context, message, true), callback);
-    }
 
     protected void receiveFromTransportInternal(INetworkContext networkContext, byte[] data) {
         try {
             if (!registry.getMessageHandler().running()) {
                 return;
-            }
-            if (data.length > registry.getOptions().getMaxProtocolMessageSize()) {
-                logger.error("receiving {} bytes - max allowed message size {} - error",
-                        data.length, registry.getOptions().getMaxProtocolMessageSize());
-                throw new MqttsnRuntimeException("received message was larger than allowed max");
-            }
-
-            if (registry.getOptions().isWireLoggingEnabled()) {
-                logger.info("receiving [{}] ", MqttsnWireUtils.toBinary(data));
-            }
-
-            if(registry.getSecurityService().protocolIntegrityEnabled()){
-                data = registry.getSecurityService().readVerified(networkContext, data);
             }
 
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
@@ -192,13 +120,13 @@ public abstract class AbstractMqttsnTransport
                 registry.getMessageHandler().receiveMessage(messageContext, message);
             } else {
                 logger.warn("auth could not be established, send disconnect that is not processed by application");
-                writeToTransportInternal(networkContext,
+                writeMqttSnMessageToTransport(networkContext,
                         registry.getMessageFactory().createDisconnect(), false);
             }
         }
         catch(MqttsnCodecException e){
             logger.error("protocol error - sending payload format error disconnect;", e);
-            writeToTransportInternal(networkContext,
+            writeMqttSnMessageToTransport(networkContext,
                     registry.getMessageFactory().createDisconnect(
                             MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
         }
@@ -207,45 +135,32 @@ public abstract class AbstractMqttsnTransport
         }
         catch(Throwable t){
             logger.error("error, send generic error disconnect;", t);
-            writeToTransportInternal(networkContext,
+            writeMqttSnMessageToTransport(networkContext,
                     registry.getMessageFactory().createDisconnect(
                             MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, t.getMessage()), false);
         }
     }
 
-    protected boolean checkNewClientIdMatchesClientIdFromExistingContext(){
-        return true;
+    @Override
+    public Future<IPacketTXRXJob> writeToTransportWithCallback(INetworkContext context, IMqttsnMessage message, Runnable r) {
+        return writeMqttSnMessageToTransport(context, message, true, r);
     }
 
-    protected boolean writeToTransportInternal(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){
-        try {
-            byte[] data = registry.getCodec().encode(message);
+    @Override
+    public Future<IPacketTXRXJob> writeToTransport(INetworkContext context, IMqttsnMessage message) {
+        byte[] data = registry.getCodec().encode(message);
+        return super.writeToTransport(context, data);
+    }
 
-            if(registry.getSecurityService().protocolIntegrityEnabled()){
-                data = registry.getSecurityService().writeVerified(context, data);
-            }
+    protected Future<IPacketTXRXJob> writeMqttSnMessageToTransport(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){
+        return writeMqttSnMessageToTransport(context, message, notifyListeners, null);
+    }
 
-            if(data.length > registry.getOptions().getMaxProtocolMessageSize()){
-                logger.error("cannot send {} bytes - max allowed message size {}",
-                        data.length, registry.getOptions().getMaxProtocolMessageSize());
-                throw new MqttsnRuntimeException("cannot send messages larger than allowed max");
-            }
-
-            logger.debug("writing {} bytes (%s) to {} on thread {}",
-                        data.length, message.getMessageName(), context, Thread.currentThread().getName());
-
-            if(registry.getOptions().isWireLoggingEnabled()){
-                logger.info("writing {} ",
-                        MqttsnWireUtils.toBinary(data));
-            }
-
-            writeToTransport(context, data);
-            if(notifyListeners) notifyTrafficSent(context, data, message);
-            return true;
-        } catch(Throwable e){
-            logger.error("transport layer error sending buffer", e);
-            return false;
-        }
+    protected Future<IPacketTXRXJob> writeMqttSnMessageToTransport(INetworkContext context, IMqttsnMessage message, boolean notifyListeners, Runnable r){
+        byte[] data = registry.getCodec().encode(message);
+        Future<IPacketTXRXJob> c = super.writeToTransportWithCallback(context, data, r);
+        if(notifyListeners) notifyTrafficSent(context, data, message);
+        return c;
     }
 
     private void notifyTrafficReceived(final INetworkContext context, byte[] data, IMqttsnMessage message) {
@@ -262,15 +177,7 @@ public abstract class AbstractMqttsnTransport
         }
     }
 
-    protected abstract void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException ;
-
-    protected static ByteBuffer wrap(byte[] arr, int length){
-        return ByteBuffer.wrap(arr, 0 , length);
-    }
-
-    protected static byte[] drain(ByteBuffer buffer){
-        byte[] arr = new byte[buffer.remaining()];
-        buffer.get(arr, 0, arr.length);
-        return arr;
+    protected boolean checkNewClientIdMatchesClientIdFromExistingContext(){
+        return true;
     }
 }

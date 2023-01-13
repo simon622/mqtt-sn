@@ -117,7 +117,7 @@ public abstract class AbstractMqttsnBackendService
 
     @Override
     public void receive(String topicPath, int qos, boolean retained, byte[] payload) {
-        registry.getRuntime().async(() -> {
+        registry.getRuntime().generalPurposeSubmit(() -> {
             try {
                 getRegistry().getExpansionHandler().receiveToSessions(topicPath,qos, retained, payload);
             } catch(Exception e){

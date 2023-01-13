@@ -314,7 +314,7 @@ public abstract class AbstractMqttsnMessageStateService
                 };
             }
             INetworkContext networkContext = registry.getNetworkRegistry().getContext(context);
-            networkContext.getTransport().writeToTransportWithWork(networkContext, message, callback);
+            networkContext.getTransport().writeToTransportWithCallback(networkContext, message, callback);
             return token;
 
         } catch(Exception e){
@@ -537,7 +537,7 @@ public abstract class AbstractMqttsnMessageStateService
      */
     protected void confirmPublish(final CommitOperation operation) {
 
-        getRegistry().getRuntime().async(() -> {
+        getRegistry().getRuntime().generalPurposeSubmit(() -> {
             IMqttsnContext context = operation.context;
             byte[] payload = operation.data.getData();
             if(registry.getSecurityService().payloadIntegrityEnabled()){
@@ -621,12 +621,12 @@ public abstract class AbstractMqttsnMessageStateService
         startAt = Math.max(Math.max(1, registry.getOptions().getMsgIdStartAt()), startAt);
 
         Set<Integer> set = map.keySet();
-        while(set.contains(new Integer(startAt))){
+        while(set.contains(Integer.valueOf(startAt))){
             startAt = ++startAt % MqttsnConstants.UNSIGNED_MAX_16;
             startAt = Math.max(registry.getOptions().getMsgIdStartAt(), startAt);
         }
 
-        if(set.contains(new Integer(startAt)))
+        if(set.contains(Integer.valueOf(startAt)))
             throw new MqttsnRuntimeException("cannot assign msg id " + startAt);
 
         logger.debug("next id available for context {} is {}", context, startAt);

@@ -26,8 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnTransport;
 import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.net.MqttsnUdpTransport;
-import org.slj.mqtt.sn.utils.StringTable;
+import org.slj.mqtt.sn.model.IPacketTXRXJob;
 
 import java.util.concurrent.Future;
 
@@ -39,24 +38,13 @@ import java.util.concurrent.Future;
  *
  * Please refer to {@link AbstractMqttsnTransport} and sub-class your own implementations
  * or choose an existing implementation out of the box.
- *
- * @see {@link MqttsnUdpTransport} for an example of an out of the box implementation.
  */
-@MqttsnService(order = MqttsnService.FIRST)
-public interface IMqttsnTransport extends IMqttsnService {
+public interface IMqttsnTransport extends ITransport {
 
-    void receiveFromTransport(INetworkContext context, byte[] data);
+    Future<IPacketTXRXJob> writeToTransport(INetworkContext context, IMqttsnMessage message) throws MqttsnException ;
 
-    Future<INetworkContext> writeToTransport(INetworkContext context, IMqttsnMessage message) throws MqttsnException ;
-
-    void writeToTransportWithWork(INetworkContext context, IMqttsnMessage message, Runnable runnable) throws MqttsnException ;
+    Future<IPacketTXRXJob> writeToTransportWithCallback(INetworkContext context, IMqttsnMessage message, Runnable r);
 
     void broadcast(IMqttsnMessage message) throws MqttsnException ;
-
-    void connectionLost(INetworkContext context, Throwable t);
-
-    boolean restartOnLoss();
-
-    StringTable getTransportDetails();
 
 }

@@ -121,6 +121,18 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
                         MqttsnConnectorDescriptor.class);
         return connectors;
     }
+
+    @Override
+    public List<MqttsnBridgeDescriptor> getAvailableBridges() throws MqttsnCloudServiceException {
+        checkConnectivity();
+        List<MqttsnBridgeDescriptor> bridges =
+                httpGetList(
+                        loadDescriptor(
+                                MqttsnCloudServiceDescriptor.BRIDGE_LISTING).getServiceEndpoint(),
+                        MqttsnBridgeDescriptor.class);
+        return bridges;
+    }
+
     @Override
     public int getConnectedServiceCount() throws MqttsnCloudServiceException {
         checkConnectivity();

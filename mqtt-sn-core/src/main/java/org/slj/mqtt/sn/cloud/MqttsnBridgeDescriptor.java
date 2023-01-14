@@ -29,7 +29,7 @@ import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
 import java.io.Serializable;
 import java.util.List;
 
-public class MqttsnConnectorDescriptor implements Serializable, IMqttsnPreferenceNamespace {
+public class MqttsnBridgeDescriptor implements Serializable, IMqttsnPreferenceNamespace {
     private String name;
     private String description;
     private String signupLink;
@@ -46,7 +46,7 @@ public class MqttsnConnectorDescriptor implements Serializable, IMqttsnPreferenc
 
     private List<MqttsnDescriptorProperty> properties;
 
-    public MqttsnConnectorDescriptor(){
+    public MqttsnBridgeDescriptor(){
     }
 
     public List<MqttsnDescriptorProperty> getProperties() {
@@ -186,7 +186,7 @@ public class MqttsnConnectorDescriptor implements Serializable, IMqttsnPreferenc
         return getClassName();
     }
 
-    public void copyFrom(MqttsnConnectorDescriptor impl){
+    public void copyFrom(MqttsnBridgeDescriptor impl){
         setClassName(impl.getClassName());
         setCompanyName(impl.getCompanyName());
         setDescription(impl.getDescription());

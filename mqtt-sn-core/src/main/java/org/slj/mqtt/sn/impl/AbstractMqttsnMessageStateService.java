@@ -250,9 +250,8 @@ public abstract class AbstractMqttsnMessageStateService
 
         int count = countInflight(context, source);
         if(count >= registry.getOptions().getMaxMessagesInflight()){
-            logger.warn("presently unable to send {},{} to {}, max inflight reached for direction {} {} -> {}",
-                            message, queuedPublishMessage, context, source, count,
-                            Objects.toString(getInflightMessages(context, source)));
+            logger.warn("presently unable to send {},{} to {}, max inflight reached for direction {} {}",
+                            message, queuedPublishMessage, context, source, count);
 
             Optional<InflightMessage> blockingMessage =
                     getInflightMessages(context, source).values().stream().findFirst();

@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IDataRef;
 import org.slj.mqtt.sn.model.IntegerDataRef;
 import org.slj.mqtt.sn.spi.IMqttsnMessageRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -38,15 +38,15 @@ public abstract class AbstractMqttsnMessageRegistry
     private Object lock = new Object();
 
     @Override
-    public IMqttsnDataRef add(byte[] data) throws MqttsnException {
-        IMqttsnDataRef ref =  createNextMessageId();
+    public IDataRef add(byte[] data) throws MqttsnException {
+        IDataRef ref =  createNextMessageId();
         MessageImpl impl = new MessageImpl(data);
         storeInternal(ref, impl);
         return ref;
     }
 
     @Override
-    public byte[] get(IMqttsnDataRef messageId) throws MqttsnException {
+    public byte[] get(IDataRef messageId) throws MqttsnException {
 
         long now = System.currentTimeMillis();
         MessageImpl impl = readInternal(messageId);
@@ -76,15 +76,15 @@ public abstract class AbstractMqttsnMessageRegistry
 //        return val;
 //    }
 
-    protected IMqttsnDataRef createNextMessageId(){
+    protected IDataRef createNextMessageId(){
         synchronized (lock){
             return new IntegerDataRef(++lastId);
         }
     }
 
-    protected abstract IMqttsnDataRef storeInternal(IMqttsnDataRef ref, MessageImpl message) throws MqttsnException;
+    protected abstract IDataRef storeInternal(IDataRef ref, MessageImpl message) throws MqttsnException;
 
-    protected abstract MessageImpl readInternal(IMqttsnDataRef messageId) throws MqttsnException;
+    protected abstract MessageImpl readInternal(IDataRef messageId) throws MqttsnException;
 
     protected static class MessageImpl {
 

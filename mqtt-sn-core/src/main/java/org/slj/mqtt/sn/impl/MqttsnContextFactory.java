@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
 import org.slj.mqtt.sn.spi.*;
@@ -46,19 +46,19 @@ public class MqttsnContextFactory
     }
 
     @Override
-    public IMqttsnContext createInitialApplicationContext(INetworkContext networkContext, String clientId, int protocolVersion) throws MqttsnSecurityException {
+    public IClientIdentifierContext createInitialApplicationContext(INetworkContext networkContext, String clientId, int protocolVersion) throws MqttsnSecurityException {
 
         logger.info("create new mqtt-sn context for {}, protocolVersion {}", clientId, protocolVersion);
-        MqttsnContext context = new MqttsnContext(clientId);
+        ClientIdentifierContext context = new ClientIdentifierContext(clientId);
         context.setProtocolVersion(protocolVersion);
         return context;
     }
 
     @Override
-    public IMqttsnContext createTemporaryApplicationContext(INetworkContext networkContext, int protocolVersion) throws MqttsnSecurityException {
+    public IClientIdentifierContext createTemporaryApplicationContext(INetworkContext networkContext, int protocolVersion) throws MqttsnSecurityException {
 
         logger.info("create temporary mqtt-sn context for {}, protocolVersion {}", networkContext, protocolVersion);
-        MqttsnContext context = new MqttsnContext(networkContext.getNetworkAddress().toSimpleString());
+        ClientIdentifierContext context = new ClientIdentifierContext(networkContext.getNetworkAddress().toSimpleString());
         context.setProtocolVersion(protocolVersion);
         return context;
     }
@@ -68,10 +68,10 @@ public class MqttsnContextFactory
 
         MqttsnMessageContext connectionContext = new MqttsnMessageContext(networkContext);
 
-        IMqttsnContext mqttsnContext = getRegistry().getNetworkRegistry().getMqttsnContext(networkContext);
+        IClientIdentifierContext mqttsnContext = getRegistry().getNetworkRegistry().getMqttsnContext(networkContext);
         connectionContext.setMqttsnContext(mqttsnContext);
 
-        IMqttsnSession session =
+        ISession session =
                 getRegistry().getSessionRegistry().getSession(mqttsnContext, false);
         connectionContext.setMqttsnSession(session);
 

@@ -25,8 +25,7 @@
 package org.slj.mqtt.sn.gateway.spi.bridge;
 
 import org.slj.mqtt.sn.gateway.spi.*;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.Closeable;
@@ -37,15 +36,15 @@ public interface IProtocolBridgeConnection extends Closeable {
 
     void close();
 
-    DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws ProtocolBridgeException;
+    DisconnectResult disconnect(IClientIdentifierContext context) throws ProtocolBridgeException;
 
-    ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws ProtocolBridgeException;
+    ConnectResult connect(IClientIdentifierContext context) throws ProtocolBridgeException;
 
-    SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws ProtocolBridgeException;
+    SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topicPath) throws ProtocolBridgeException;
 
-    UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws ProtocolBridgeException;
+    UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topicPath) throws ProtocolBridgeException;
 
-    PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws ProtocolBridgeException;
+    PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload) throws ProtocolBridgeException;
 
-    boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) throws ProtocolBridgeException;
+    boolean canAccept(IClientIdentifierContext context, TopicPath topicPath, byte[] payload) throws ProtocolBridgeException;
 }

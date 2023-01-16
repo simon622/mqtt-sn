@@ -24,13 +24,27 @@
 
 package org.slj.mqtt.sn.model.session;
 
-public interface IMqttsnTopicRegistration {
+import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
-    String getTopicPath();
+import java.util.Date;
 
-    int getAliasId();
+public interface ISession {
 
-    boolean isConfirmed();
+    IClientIdentifierContext getContext();
 
-    void setConfirmed(boolean confirmed);
+    ClientState getClientState();
+
+    Date getLastSeen();
+
+    Date getSessionStarted();
+
+    int getMaxPacketSize();
+
+    int getKeepAlive();
+
+    long getSessionExpiryInterval();
+
+    int getProtocolVersion();
+
 }

@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
+import org.slj.mqtt.sn.model.IPreferenceNamespace;
 import org.slj.mqtt.sn.model.MqttsnClientCredentials;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
@@ -304,7 +304,7 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
         throw new MqttsnRuntimeException("unsupported preference type " + type);
     }
 
-    protected String getNamespacePrefix(IMqttsnPreferenceNamespace namespace, String key){
+    protected String getNamespacePrefix(IPreferenceNamespace namespace, String key){
         String space = namespace.getNamespace() + "-";
         if(key != null){
             space = space += key;
@@ -388,7 +388,7 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
     }
 
     @Override
-    public IMqttsnStorageService getPreferenceNamespace(final IMqttsnPreferenceNamespace namespace) {
+    public IMqttsnStorageService getPreferenceNamespace(final IPreferenceNamespace namespace) {
         return new IMqttsnStorageService() {
             @Override
             public <T> T getPreferenceValue(String key, Class<T> type) {
@@ -466,7 +466,7 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
             }
 
             @Override
-            public IMqttsnStorageService getPreferenceNamespace(final IMqttsnPreferenceNamespace namespace) {
+            public IMqttsnStorageService getPreferenceNamespace(final IPreferenceNamespace namespace) {
                 return MqttsnFilesystemStorageService.this.getPreferenceNamespace(namespace);
             }
 

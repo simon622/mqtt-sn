@@ -31,11 +31,11 @@ import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewaySessionService;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.IWillData;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
@@ -56,14 +56,14 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     @Override
     protected long doWork() {
         try {
-            Iterator<IMqttsnSession> itr = getRegistry().getSessionRegistry().iterator();
+            Iterator<ISession> itr = getRegistry().getSessionRegistry().iterator();
             while(itr.hasNext()){
-                IMqttsnSession session = itr.next();
+                ISession session = itr.next();
                 if(session == null) continue;
 
                 //check keep alive timing
-                if(session.getClientState() == MqttsnClientState.ACTIVE ||
-                        session.getClientState() == MqttsnClientState.ASLEEP){
+                if(session.getClientState() == ClientState.ACTIVE ||
+                        session.getClientState() == ClientState.ASLEEP){
                     long time = System.currentTimeMillis();
                     if(session.getKeepAlive() > 0){
                         Date lastSeen = getLastSeen(session);
@@ -75,7 +75,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         //This is a condition in case the sender was blocked when it attempted to send a message,
                         //we need something to ensure devices don't get stuck in the stale state (ie. ready to receive with messages
                         //in the queue but noone doing the work - this won't be needed 99% of the time
-                        if(session.getClientState() == MqttsnClientState.ACTIVE){
+                        if(session.getClientState() == ClientState.ACTIVE){
                             try {
                                 if(getRegistry().getMessageQueue().queueSize(session) > 0){
                                     getRegistry().getMessageStateService().scheduleFlush(session.getContext());
@@ -86,7 +86,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         }
                     }
                 }
-                else if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.DISCONNECTED, MqttsnClientState.LOST)){
+                else if(MqttsnUtils.in(session.getClientState(), ClientState.DISCONNECTED, ClientState.LOST)){
                     // check last seen time
                     long time = System.currentTimeMillis();
                     if(session.getSessionExpiryInterval() > 0 && //-- it may have literally just been initialised so if 0 ignore
@@ -110,16 +110,16 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         return MIN_SESSION_MONITOR_CHECK;
     }
 
-    protected static Date getLastSeen(IMqttsnSession state){
+    protected static Date getLastSeen(ISession state){
         Date lastSeen = state.getLastSeen();
         lastSeen = lastSeen == null ? state.getSessionStarted() : lastSeen;
         return lastSeen;
     }
 
-    public void markSessionLost(IMqttsnSession session) {
+    public void markSessionLost(ISession session) {
         logger.warn("session timeout or stale {}, mark lost", session.getContext());
 
-        getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.LOST);
+        getRegistry().getSessionRegistry().modifyClientState(session, ClientState.LOST);
 
         try {
             IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
@@ -132,7 +132,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
 
 
         if(getRegistry().getWillRegistry().hasWillMessage(session)){
-            IMqttsnWillData data = getRegistry().getWillRegistry().getWillMessage(session);
+            IWillData data = getRegistry().getWillRegistry().getWillMessage(session);
             logger.info("session expired or stale has will data to publish {}", data);
             IMqttsnMessage willPublish = getRegistry().getCodec().createMessageFactory().createPublish(data.getQos(), false, data.isRetained(),
                     "ab", data.getData());
@@ -147,7 +147,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public ConnectResult connect(IMqttsnSession session, IMqttsnMessage message) throws MqttsnException {
+    public ConnectResult connect(ISession session, IMqttsnMessage message) throws MqttsnException {
 
         String clientId = getRegistry().getCodec().getClientId(message);
         boolean cleanSession = getRegistry().getCodec().isCleanSession(message);
@@ -165,7 +165,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                         notifyCluster(session.getContext());
                         getRegistry().getSessionRegistry().cleanSession(session.getContext(), cleanSession);
                         getRegistry().getSessionRegistry().modifyKeepAlive(session, (int) keepAlive);
-                        getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.ACTIVE);
+                        getRegistry().getSessionRegistry().modifyClientState(session, ClientState.ACTIVE);
                     }
                 }
             }
@@ -186,7 +186,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnSession session, IMqttsnMessage message) throws MqttsnException {
+    public DisconnectResult disconnect(ISession session, IMqttsnMessage message) throws MqttsnException {
         DisconnectResult result = null;
         synchronized (session.getContext()){
 
@@ -199,12 +199,12 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     //TODO - the gateway should use the sei for sleep monitoring
                     getRegistry().getSessionRegistry().modifyKeepAlive(session, (int) duration);
                     getRegistry().getSessionRegistry().modifySessionExpiryInterval(session, duration);
-                    getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.ASLEEP);
+                    getRegistry().getSessionRegistry().modifyClientState(session, ClientState.ASLEEP);
                     getRegistry().getTopicRegistry().clear(session,
                             getRegistry().getOptions().isSleepClearsRegistrations());
                 } else {
                     logger.info("{} disconnecting client", session.getContext());
-                    getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.DISCONNECTED);
+                    getRegistry().getSessionRegistry().modifyClientState(session, ClientState.DISCONNECTED);
                 }
             }
         }
@@ -212,10 +212,10 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnSession session, TopicInfo info, IMqttsnMessage message)
+    public SubscribeResult subscribe(ISession session, TopicInfo info, IMqttsnMessage message)
             throws MqttsnException {
 
-        IMqttsnContext context = session.getContext();
+        IClientIdentifierContext context = session.getContext();
         synchronized (context){
             int QoS = getRegistry().getCodec().getQoS(message, true);
             String topicPath = null;
@@ -275,9 +275,9 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnSession session, TopicInfo info, IMqttsnMessage message) throws MqttsnException {
+    public UnsubscribeResult unsubscribe(ISession session, TopicInfo info, IMqttsnMessage message) throws MqttsnException {
 
-        IMqttsnContext context = session.getContext();
+        IClientIdentifierContext context = session.getContext();
         synchronized (context){
             String topicPath = null;
             if(info.getType() == MqttsnConstants.TOPIC_TYPE.PREDEFINED){
@@ -315,7 +315,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public RegisterResult register(IMqttsnSession session, String topicPath) throws MqttsnException {
+    public RegisterResult register(ISession session, String topicPath) throws MqttsnException {
 
         if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(topicPath)){
             return new RegisterResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, "invalid topic format");
@@ -334,7 +334,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
         }
     }
 
-    public void notifyCluster(IMqttsnContext context) throws MqttsnException {
+    public void notifyCluster(IClientIdentifierContext context) throws MqttsnException {
         if(getRegistry().getGatewayClusterService() != null){
             getRegistry().getGatewayClusterService().notifyConnection(context);
         }

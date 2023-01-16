@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
 public interface IMqttsnTopicModifier extends IMqttsnService{
 
@@ -35,5 +35,5 @@ public interface IMqttsnTopicModifier extends IMqttsnService{
      * @param topicName
      * @return
      */
-    String modifyTopic(IMqttsnContext context, String topicName) throws MqttsnException ;
+    String modifyTopic(IClientIdentifierContext context, String topicName) throws MqttsnException ;
 }

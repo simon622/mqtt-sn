@@ -30,9 +30,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnSubscriptionRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
@@ -73,7 +73,7 @@ public class SubscriptionTests {
     @Test
     public void testSimpleSubscription() throws MqttsnException, MqttsnIllegalFormatException {
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
 
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
         Assert.assertTrue("new subscription should be added",
@@ -98,7 +98,7 @@ public class SubscriptionTests {
     @Test
     public void testMultiWildcardSubscriptionMatching() throws MqttsnException, MqttsnIllegalFormatException {
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
 
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
         Assert.assertTrue("new subscription should be added",
@@ -128,7 +128,7 @@ public class SubscriptionTests {
 
                     System.err.println(clientId + " is starting");
 
-                    IMqttsnSession session = createConfirmedTestSession(clientId, 1);
+                    ISession session = createConfirmedTestSession(clientId, 1);
                     final IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
 
                     //-- add common subscription
@@ -186,7 +186,7 @@ public class SubscriptionTests {
     @Test
     public void testSingleWildcardSubscriptionMatching() throws MqttsnException, MqttsnIllegalFormatException {
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
 
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
         Assert.assertTrue("new subscription should be added",
@@ -204,7 +204,7 @@ public class SubscriptionTests {
                 "#", "sport/tennis/#", "+", "+/tennis/#", "sport/+/player1", "+/+", "/+", "/"
         };
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
 
         for (int i=0;i<topics.length;i++){
@@ -224,7 +224,7 @@ public class SubscriptionTests {
                 "sport/tennis#", "sport/tennis/#/ranking", "sport+", "", "unicode/null/" + MqttsnConstants.UNICODE_ZERO + "/is/illegal"
         };
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
 
         for (int i=0;i<invalidTopics.length;i++){
@@ -240,7 +240,7 @@ public class SubscriptionTests {
     @Test
     public void testValidMultiWildcardSubscription() throws MqttsnIllegalFormatException, MqttsnException {
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
         subscriptionRegistry.subscribe(session, TEST_MULTI_WILDCARD_TOPIC, 1);
     }
@@ -248,17 +248,17 @@ public class SubscriptionTests {
     @Test
     public void testValidSingleWildcardSubscription() throws MqttsnIllegalFormatException, MqttsnException {
 
-        IMqttsnSession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
+        ISession session = createConfirmedTestSession(MqttsnTestRuntime.TEST_CLIENT_ID, 1);
         IMqttsnSubscriptionRegistry subscriptionRegistry = runtime.getRegistry().getSubscriptionRegistry();
         subscriptionRegistry.subscribe(session, TEST_SINGLE_WILDCARD_TOPIC, 1);
     }
 
-    public IMqttsnSession createConfirmedTestSession(String clientId, int protocolVersion)
+    public ISession createConfirmedTestSession(String clientId, int protocolVersion)
             throws MqttsnException {
 
-        IMqttsnContext context = runtime.getRegistry().getContextFactory().createInitialApplicationContext(
+        IClientIdentifierContext context = runtime.getRegistry().getContextFactory().createInitialApplicationContext(
                 createUnconfirmedTestContext(), clientId, protocolVersion);
-        IMqttsnSession session = runtime.getRegistry().getSessionRegistry().getSession(context, true);
+        ISession session = runtime.getRegistry().getSessionRegistry().getSession(context, true);
         return session;
     }
 

@@ -24,12 +24,12 @@
 
 package org.slj.mqtt.sn.model.session.impl;
 
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.IWillData;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.io.Serializable;
 
-public class MqttsnWillDataImpl implements IMqttsnWillData, Serializable {
+public class WillDataImpl implements IWillData, Serializable {
 
     private static final long serialVersionUID = 2284318994034723218L;
 
@@ -38,11 +38,11 @@ public class MqttsnWillDataImpl implements IMqttsnWillData, Serializable {
     private boolean retained;
     private byte[] data;
 
-    public MqttsnWillDataImpl() {
+    public WillDataImpl() {
 
     }
 
-    public MqttsnWillDataImpl(TopicPath topicPath, byte[] data, int qos, boolean retained) {
+    public WillDataImpl(TopicPath topicPath, byte[] data, int qos, boolean retained) {
         this.topicPath = topicPath;
         this.data = data;
         this.qos = qos;

@@ -29,7 +29,6 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 
 public class Result {
 
-    protected IMqttsnMessage responseMessage;
     protected STATUS status;
     protected String message;
     protected int returnCode;
@@ -84,14 +83,6 @@ public class Result {
 
     public boolean isError(){
         return STATUS.ERROR == status;
-    }
-
-    public IMqttsnMessage getResponseMessage() {
-        return responseMessage;
-    }
-
-    public void setResponseMessage(IMqttsnMessage responseMessage) {
-        this.responseMessage = responseMessage;
     }
 
     @Override

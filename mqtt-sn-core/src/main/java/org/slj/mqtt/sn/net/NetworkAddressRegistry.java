@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.net;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.INetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
@@ -43,8 +43,8 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     static Logger logger = LoggerFactory.getLogger(NetworkAddressRegistry.class.getName());
 
     final protected Map<NetworkAddress, INetworkContext> networkRegistry;
-    final protected Map<IMqttsnContext, INetworkContext> mqttsnContextRegistry;
-    final protected Map<INetworkContext, IMqttsnContext> networkContextRegistry;
+    final protected Map<IClientIdentifierContext, INetworkContext> mqttsnContextRegistry;
+    final protected Map<INetworkContext, IClientIdentifierContext> networkContextRegistry;
 
     final private Object mutex = new Object();
 
@@ -62,7 +62,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     }
 
     @Override
-    public INetworkContext getContext(IMqttsnContext sessionContext) {
+    public INetworkContext getContext(IClientIdentifierContext sessionContext) {
         INetworkContext context = mqttsnContextRegistry.get(sessionContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get network route for session " + sessionContext);
@@ -72,8 +72,8 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     }
 
     @Override
-    public IMqttsnContext getMqttsnContext(INetworkContext networkContext){
-        IMqttsnContext context = networkContextRegistry.get(networkContext);
+    public IClientIdentifierContext getMqttsnContext(INetworkContext networkContext){
+        IClientIdentifierContext context = networkContextRegistry.get(networkContext);
         if(context == null)
             throw new MqttsnRuntimeException("unable to get session context for network route " + networkContext);
 
@@ -95,7 +95,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     }
 
     @Override
-    public Optional<IMqttsnContext> findForClientId(String clientId) {
+    public Optional<IClientIdentifierContext> findForClientId(String clientId) {
         if(clientId == null) return null;
         synchronized (mqttsnContextRegistry){
             return mqttsnContextRegistry.keySet().stream().
@@ -115,7 +115,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     }
 
     @Override
-    public void bindContexts(INetworkContext context, IMqttsnContext sessionContext) {
+    public void bindContexts(INetworkContext context, IClientIdentifierContext sessionContext) {
         synchronized (networkRegistry){
             mqttsnContextRegistry.put(sessionContext, context);
             networkContextRegistry.put(context, sessionContext);
@@ -125,16 +125,16 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
     @Override
     public boolean hasBoundSessionContext(INetworkContext context){
-        IMqttsnContext c = networkContextRegistry.get(context);
+        IClientIdentifierContext c = networkContextRegistry.get(context);
         return c != null;
     }
 
     @Override
     public boolean removeExistingClientId(String clientId){
         synchronized (mqttsnContextRegistry) {
-            Iterator<IMqttsnContext> itr = mqttsnContextRegistry.keySet().iterator();
+            Iterator<IClientIdentifierContext> itr = mqttsnContextRegistry.keySet().iterator();
             while (itr.hasNext()) {
-                IMqttsnContext m = itr.next();
+                IClientIdentifierContext m = itr.next();
                 if(m.getId().equals(clientId)){
                     INetworkContext c = mqttsnContextRegistry.get(m);
                     itr.remove();

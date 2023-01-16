@@ -24,11 +24,11 @@
 
 package org.slj.mqtt.sn.impl.ram;
 
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IDataRef;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.impl.QueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.IMqttsnObjectReaderWriter;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -52,7 +52,7 @@ public class MqttsnFileBackedInMemoryMessageQueue
 
     static final String DIR = "_message-queues-overflow";
     private final IMqttsnObjectReaderWriter readWriter;
-    private Set<IMqttsnDataRef> refs;
+    private Set<IDataRef> refs;
     private Map<String, AtomicInteger> countMap;
     private volatile File root = null;
 
@@ -82,7 +82,7 @@ public class MqttsnFileBackedInMemoryMessageQueue
     }
 
     @Override
-    protected void offerInternal(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    protected void offerInternal(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
         try {
             synchronized (locks.mutex(session.getContext().getId())) {
@@ -114,14 +114,14 @@ public class MqttsnFileBackedInMemoryMessageQueue
     }
 
     @Override
-    public IMqttsnQueuedPublishMessage poll(IMqttsnSession session){
+    public IQueuedPublishMessage poll(ISession session){
         synchronized (locks.mutex(session.getContext().getId())){
             return super.poll(session);
         }
     }
 
     @Override
-    public IMqttsnQueuedPublishMessage peek(IMqttsnSession session){
+    public IQueuedPublishMessage peek(ISession session){
 
         try {
             synchronized (locks.mutex(session.getContext().getId())){
@@ -151,7 +151,7 @@ public class MqttsnFileBackedInMemoryMessageQueue
                                     baos.write(b);
                                 }
                                 super.offerInternal(session,
-                                        readWriter.load(MqttsnQueuedPublishMessageImpl.class,
+                                        readWriter.load(QueuedPublishMessageImpl.class,
                                                 baos.toByteArray()));
                                 incrementFileObjectCount(session, -1);
                                 baos = new ByteArrayOutputStream();
@@ -170,7 +170,7 @@ public class MqttsnFileBackedInMemoryMessageQueue
     }
 
     @Override
-    public long queueSize(IMqttsnSession session) throws MqttsnException {
+    public long queueSize(ISession session) throws MqttsnException {
         try {
             synchronized (locks.mutex(session.getContext().getId())){
                 long combinedQueue = super.queueSize(session);
@@ -184,13 +184,13 @@ public class MqttsnFileBackedInMemoryMessageQueue
         }
     }
 
-    private boolean hasOverflow(IMqttsnSession session) throws IOException {
+    private boolean hasOverflow(ISession session) throws IOException {
         synchronized (locks.mutex(session.getContext().getId())){
             return countMap.containsKey(session.getContext().getId());
         }
     }
 
-    private File getFileForSession(IMqttsnSession session, boolean createIfNotExists) throws IOException {
+    private File getFileForSession(ISession session, boolean createIfNotExists) throws IOException {
         File f = new File(root, fileNameSafe(session.getContext().getId()));
         if(createIfNotExists && !f.exists()){
             f.createNewFile();
@@ -200,14 +200,14 @@ public class MqttsnFileBackedInMemoryMessageQueue
         return f;
     }
 
-    private void incrementFileObjectCount(IMqttsnSession session, int value){
+    private void incrementFileObjectCount(ISession session, int value){
         AtomicInteger c = countMap.get(session.getContext().getId());
         if(c != null) {
             int newVal = c.addAndGet(value);
         }
     }
 
-    private int getFileObjectCount(IMqttsnSession session){
+    private int getFileObjectCount(ISession session){
         AtomicInteger c = countMap.get(session.getContext().getId());
         if(c != null) {
             return c.get();

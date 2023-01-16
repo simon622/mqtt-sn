@@ -24,13 +24,6 @@
 
 package org.slj.mqtt.sn.model;
 
-public interface IMqttsnContext extends IContextObject {
-
-    String getId();
-
-    int getProtocolVersion();
-
-    boolean isAssignedClientId();
-
-    void setAssignedClientId(boolean clientId);
+public enum ClientState {
+    ACTIVE, DISCONNECTED, AWAKE, ASLEEP, LOST
 }

@@ -48,5 +48,7 @@
 
     <logger name="org.slj" level="ERROR"/>
     <logger name="ch.qos.logback" level="OFF"/>
+    <logger name="io.netty" level="ERROR"/>
+    <logger name="org.apache.plc4x" level="INFO"/>
 
 </configuration>

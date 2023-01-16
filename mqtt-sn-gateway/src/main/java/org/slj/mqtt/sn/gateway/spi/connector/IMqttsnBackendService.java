@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.gateway.spi.connector;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnService;
@@ -44,17 +44,17 @@ public interface IMqttsnBackendService extends IMqttsnService  {
 
     IMqttsnGatewayRuntimeRegistry getRegistry();
 
-    boolean isConnected(IMqttsnContext context) throws MqttsnConnectorException;
+    boolean isConnected(IClientIdentifierContext context) throws MqttsnConnectorException;
 
-    ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException;
+    ConnectResult connect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException;
+    DisconnectResult disconnect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    PublishResult publish(IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException;
+    PublishResult publish(IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException;
+    SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException;
 
-    UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException;
+    UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException;
 
     void receive(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException;
 

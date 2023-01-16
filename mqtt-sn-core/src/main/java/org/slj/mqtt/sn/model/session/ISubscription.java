@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.model.session;
 
 import org.slj.mqtt.sn.utils.TopicPath;
 
-public interface IMqttsnSubscription {
+public interface ISubscription {
 
     TopicPath getTopicPath();
 

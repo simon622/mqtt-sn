@@ -25,7 +25,7 @@
 package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnClientCredentials;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.IMqttsnAuthenticationService;
@@ -36,7 +36,7 @@ public class MqttsnGatewayAuthenticationService
         extends AbstractMqttsnService implements IMqttsnAuthenticationService {
 
     @Override
-    public boolean allowConnect(IMqttsnContext context, String clientId) {
+    public boolean allowConnect(IClientIdentifierContext context, String clientId) {
         MqttsnClientCredentials credentials = ((MqttsnGatewayOptions)registry.getOptions()).getClientCredentials();
         if(credentials == null) {
             logger.warn("credentials not defined on runtime options.. deny all");

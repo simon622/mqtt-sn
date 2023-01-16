@@ -25,7 +25,7 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageRegistry;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IDataRef;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
@@ -36,7 +36,7 @@ import java.util.WeakHashMap;
 public class MqttsnInMemoryMessageRegistry
         extends AbstractMqttsnMessageRegistry {
 
-    protected Map<IMqttsnDataRef, MessageImpl> messageLookup;
+    protected Map<IDataRef, MessageImpl> messageLookup;
 
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
@@ -46,14 +46,14 @@ public class MqttsnInMemoryMessageRegistry
     }
 
     @Override
-    public boolean remove(IMqttsnDataRef messageId) throws MqttsnException {
+    public boolean remove(IDataRef messageId) throws MqttsnException {
         synchronized(messageLookup){
             return messageLookup.remove(messageId) != null;
         }
     }
 
     @Override
-    protected IMqttsnDataRef storeInternal(IMqttsnDataRef ref, MessageImpl message) {
+    protected IDataRef storeInternal(IDataRef ref, MessageImpl message) {
         synchronized(messageLookup){
             messageLookup.put(ref, message);
             return ref;
@@ -61,7 +61,7 @@ public class MqttsnInMemoryMessageRegistry
     }
 
     @Override
-    protected MessageImpl readInternal(IMqttsnDataRef messageId) {
+    protected MessageImpl readInternal(IDataRef messageId) {
         return messageLookup.get(messageId);
     }
 
@@ -74,9 +74,9 @@ public class MqttsnInMemoryMessageRegistry
     public void tidy() {
         long now = System.currentTimeMillis();
         synchronized (messageLookup){
-            Iterator<IMqttsnDataRef> itr = messageLookup.keySet().iterator();
+            Iterator<IDataRef> itr = messageLookup.keySet().iterator();
             while(itr.hasNext()){
-                IMqttsnDataRef id = itr.next();
+                IDataRef id = itr.next();
                 if(id != null){
                     MessageImpl m = messageLookup.get(id);
                     if(m.getExpires() < now){

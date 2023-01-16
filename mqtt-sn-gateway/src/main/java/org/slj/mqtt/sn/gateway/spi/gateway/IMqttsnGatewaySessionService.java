@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.gateway.spi.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -35,17 +35,17 @@ import org.slj.mqtt.sn.spi.MqttsnService;
 @MqttsnService(order = MqttsnService.LAST)
 public interface IMqttsnGatewaySessionService extends IMqttsnService {
 
-    void markSessionLost(IMqttsnSession state) throws MqttsnException;
+    void markSessionLost(ISession state) throws MqttsnException;
 
     //-- methods that delegate to the backend
 
-    ConnectResult connect(IMqttsnSession state, IMqttsnMessage message) throws MqttsnException;
+    ConnectResult connect(ISession state, IMqttsnMessage message) throws MqttsnException;
 
-    SubscribeResult subscribe(IMqttsnSession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
+    SubscribeResult subscribe(ISession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
 
-    UnsubscribeResult unsubscribe(IMqttsnSession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
+    UnsubscribeResult unsubscribe(ISession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
 
-    RegisterResult register(IMqttsnSession state, String topicPath) throws MqttsnException;
+    RegisterResult register(ISession state, String topicPath) throws MqttsnException;
 
-    DisconnectResult disconnect(IMqttsnSession state, IMqttsnMessage message) throws MqttsnException;
+    DisconnectResult disconnect(ISession state, IMqttsnMessage message) throws MqttsnException;
 }

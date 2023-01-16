@@ -24,9 +24,9 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 import org.slj.mqtt.sn.spi.IMqttsnDeadLetterQueue;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
@@ -35,7 +35,7 @@ public abstract class AbstractDeadLetterQueue
         extends AbstractMqttsnService implements IMqttsnDeadLetterQueue {
 
     @Override
-    public void add(MqttsnDeadLetterQueueBean.REASON reason, String message, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage) throws MqttsnException {
+    public void add(MqttsnDeadLetterQueueBean.REASON reason, String message, IClientIdentifierContext context, IQueuedPublishMessage applicationMessage) throws MqttsnException {
 
         MqttsnDeadLetterQueueBean bean = new MqttsnDeadLetterQueueBean();
         bean.setContext(context);
@@ -46,7 +46,7 @@ public abstract class AbstractDeadLetterQueue
     }
 
     @Override
-    public void add(MqttsnDeadLetterQueueBean.REASON reason, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage) throws MqttsnException {
+    public void add(MqttsnDeadLetterQueueBean.REASON reason, IClientIdentifierContext context, IQueuedPublishMessage applicationMessage) throws MqttsnException {
         add(reason, null, context, applicationMessage);
     }
 

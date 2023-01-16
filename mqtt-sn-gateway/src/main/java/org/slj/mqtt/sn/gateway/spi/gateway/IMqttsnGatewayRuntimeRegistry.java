@@ -24,15 +24,20 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
+import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridge;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+
+import java.util.List;
 
 public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
 
     IMqttsnBackendService getBackendService();
 
     IMqttsnConnector getConnector();
+
+    List<IProtocolBridge> getProtocolBridges();
 
     IMqttsnGatewaySessionService getGatewaySessionService();
 
@@ -43,5 +48,7 @@ public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
     IMqttsnGatewayExpansionHandler getExpansionHandler();
 
     IMqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector);
+
+    IMqttsnGatewayRuntimeRegistry withProtocolBridge(IProtocolBridge protocolBridge);
 
 }

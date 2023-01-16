@@ -25,7 +25,7 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageStateService;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.InflightMessage;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
@@ -37,7 +37,7 @@ import java.util.*;
 public class MqttsnInMemoryMessageStateService
         extends AbstractMqttsnMessageStateService {
 
-    protected Map<IMqttsnContext, Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>>> inflightMessages;
+    protected Map<IClientIdentifierContext, Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>>> inflightMessages;
 
     public MqttsnInMemoryMessageStateService(boolean clientMode) {
         super(clientMode);
@@ -53,10 +53,10 @@ public class MqttsnInMemoryMessageStateService
     protected long doWork() {
         long nextWork = super.doWork();
         synchronized (inflightMessages) {
-            Iterator<IMqttsnContext> itr = inflightMessages.keySet().iterator();
+            Iterator<IClientIdentifierContext> itr = inflightMessages.keySet().iterator();
             while (itr.hasNext()) {
                 try {
-                    IMqttsnContext context = itr.next();
+                    IClientIdentifierContext context = itr.next();
                     clearInflightInternal(context, System.currentTimeMillis());
                     Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair =
                             inflightMessages.get(context);
@@ -73,18 +73,18 @@ public class MqttsnInMemoryMessageStateService
     }
 
     @Override
-    public void clear(IMqttsnContext context) throws MqttsnException{
+    public void clear(IClientIdentifierContext context) throws MqttsnException{
         inflightMessages.remove(context);
     }
 
     @Override
-    public InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
+    public InflightMessage removeInflight(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
         Map<Integer, InflightMessage> map = getInflightMessages(context, source);
         return map.remove(packetId);
     }
 
     @Override
-    protected void addInflightMessage(IMqttsnContext context, Integer messageId, InflightMessage message) {
+    protected void addInflightMessage(IClientIdentifierContext context, Integer messageId, InflightMessage message) {
         Map<Integer, InflightMessage> map = getInflightMessages(context, message.getOriginatingMessageSource());
         synchronized (map){
             map.put(messageId, message);
@@ -92,19 +92,19 @@ public class MqttsnInMemoryMessageStateService
     }
 
     @Override
-    protected InflightMessage getInflightMessage(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
+    protected InflightMessage getInflightMessage(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
         return getInflightMessages(context, source).get(packetId);
     }
 
     @Override
-    protected boolean inflightExists(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
+    protected boolean inflightExists(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) {
         boolean exists = getInflightMessages(context, source).containsKey(packetId);
         logger.debug("context {} -> inflight exists for id {} ? {}", context, packetId, exists);
         return exists;
     }
 
     @Override
-    public Map<Integer, InflightMessage> getInflightMessages(IMqttsnContext context, IMqttsnOriginatingMessageSource source) {
+    public Map<Integer, InflightMessage> getInflightMessages(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source) {
         Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair = inflightMessages.get(context);
         if(pair == null){
             synchronized (this){
@@ -121,12 +121,12 @@ public class MqttsnInMemoryMessageStateService
         return source == IMqttsnOriginatingMessageSource.LOCAL ? pair.getLeft() : pair.getRight();
     }
 
-    public List<IMqttsnContext> getActiveInflights(){
-        List<IMqttsnContext> l = new ArrayList<>();
+    public List<IClientIdentifierContext> getActiveInflights(){
+        List<IClientIdentifierContext> l = new ArrayList<>();
         synchronized (inflightMessages){
-            Iterator<IMqttsnContext> itr = inflightMessages.keySet().iterator();
+            Iterator<IClientIdentifierContext> itr = inflightMessages.keySet().iterator();
             while(itr.hasNext()){
-                IMqttsnContext c = itr.next();
+                IClientIdentifierContext c = itr.next();
                 l.add(c);
             }
         }

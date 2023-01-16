@@ -25,9 +25,9 @@
 package org.slj.mqtt.sn.model.session.impl;
 
 import org.slj.mqtt.sn.PublishData;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IDataRef;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 
 import java.io.Serializable;
 
@@ -36,20 +36,20 @@ import java.io.Serializable;
  * the message itself NOR the topic specification are included, this can be obtained JIT from the
  * appropriate registries so we don't duplicate data across many queues.
  */
-public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable, IMqttsnQueuedPublishMessage {
+public class QueuedPublishMessageImpl implements Serializable, Comparable, IQueuedPublishMessage {
 
     private PublishData data;
     private long created;
     private int retryCount;
-    private IMqttsnDataRef dataRefId;
+    private IDataRef dataRefId;
     private int packetId;
     private transient MqttsnWaitToken token;
     private int grantedQoS;
 
-    public MqttsnQueuedPublishMessageImpl() {
+    public QueuedPublishMessageImpl() {
     }
 
-    public MqttsnQueuedPublishMessageImpl(IMqttsnDataRef dataRefId, PublishData data) {
+    public QueuedPublishMessageImpl(IDataRef dataRefId, PublishData data) {
         this.created = System.currentTimeMillis();
         this.dataRefId = dataRefId;
         this.data = data;
@@ -57,11 +57,11 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
         this.grantedQoS = data.getQos();
     }
 
-    public IMqttsnDataRef getDataRefId() {
+    public IDataRef getDataRefId() {
         return dataRefId;
     }
 
-    public void setDataRefId(IMqttsnDataRef dataRefId) {
+    public void setDataRefId(IDataRef dataRefId) {
         this.dataRefId = dataRefId;
     }
 
@@ -129,8 +129,8 @@ public class MqttsnQueuedPublishMessageImpl implements Serializable, Comparable,
 
     @Override
     public int compareTo(Object o) {
-        if(o instanceof MqttsnQueuedPublishMessageImpl){
-            return (int) (created - ((MqttsnQueuedPublishMessageImpl)o).getCreated());
+        if(o instanceof QueuedPublishMessageImpl){
+            return (int) (created - ((QueuedPublishMessageImpl)o).getCreated());
 //            return created.compareTo(((MqttsnQueuedPublishMessageImpl)o).getCreated());
         }
         return 0;

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.spi.*;
@@ -222,17 +222,17 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 //        }
     }
 
-    protected final void messageReceived(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
+    protected final void messageReceived(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
         logger.debug("publish received by application {}, notifying {} listeners", topicPath, receivedListeners.size());
         receivedListeners.forEach(p -> p.receive(context, topicPath, qos, retained, data, message));
     }
 
-    protected final void messageSent(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
+    protected final void messageSent(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
         logger.debug("sent confirmed by application {}, notifying {} listeners", topicPath, sentListeners.size());
         sentListeners.forEach(p -> p.sent(context, topicPath, qos, retained, data, message));
     }
 
-    protected final void messageSendFailure(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
+    protected final void messageSendFailure(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
         logger.debug("message failed sending {}, notifying {} listeners", topicPath, sendFailureListeners.size());
         sendFailureListeners.forEach(p -> p.sendFailure(context, topicPath, qos, retained, data, message, retryCount));
     }
@@ -287,7 +287,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param context - The context who sent the DISCONNECT
      * @return should the local runtime send a DISCONNECT in reponse
      */
-    public boolean handleRemoteDisconnect(IMqttsnContext context){
+    public boolean handleRemoteDisconnect(IClientIdentifierContext context){
         logger.debug("notified of remote disconnect [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyRemoteDisconnect(context));
         return true;
@@ -302,7 +302,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @return was the exception handled, if so, the trace is not thrown up to the transport layer,
      * if not, the exception is reported into the transport layer
      */
-    public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
+    public boolean handleLocalDisconnect(IClientIdentifierContext context, Throwable t){
         logger.debug("notified of local disconnect [{} !- {}] - {}", registry.getOptions().getContextId(), context, t.getMessage());
         connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
@@ -314,7 +314,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param context - The context whose state encountered the problem thag caused the DISCONNECT
      * @param t - the exception that was encountered
      */
-    public void handleConnectionLost(IMqttsnContext context, Throwable t){
+    public void handleConnectionLost(IClientIdentifierContext context, Throwable t){
         logger.debug("notified of connection lost [{} !- {}] - {}", registry.getOptions().getContextId(), context, t == null ? null : t.getMessage());
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
@@ -323,7 +323,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * Reported the when a CONNECTION is successfully established
      * @param context
      */
-    public void handleConnected(IMqttsnContext context){
+    public void handleConnected(IClientIdentifierContext context){
         logger.debug("notified of new connection [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyConnected(context));
     }
@@ -335,7 +335,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      *
      * @param context - the context who hasnt been heard of since the timeout
      */
-    public void handleActiveTimeout(IMqttsnContext context){
+    public void handleActiveTimeout(IClientIdentifierContext context){
         logger.debug("notified of active timeout [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
     }

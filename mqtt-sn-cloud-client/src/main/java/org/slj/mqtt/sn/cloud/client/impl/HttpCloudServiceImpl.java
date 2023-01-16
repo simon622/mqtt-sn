@@ -123,13 +123,13 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
     }
 
     @Override
-    public List<MqttsnBridgeDescriptor> getAvailableBridges() throws MqttsnCloudServiceException {
+    public List<ProtocolBridgeDescriptor> getAvailableBridges() throws MqttsnCloudServiceException {
         checkConnectivity();
-        List<MqttsnBridgeDescriptor> bridges =
+        List<ProtocolBridgeDescriptor> bridges =
                 httpGetList(
                         loadDescriptor(
                                 MqttsnCloudServiceDescriptor.BRIDGE_LISTING).getServiceEndpoint(),
-                        MqttsnBridgeDescriptor.class);
+                        ProtocolBridgeDescriptor.class);
         return bridges;
     }
 

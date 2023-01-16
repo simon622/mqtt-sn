@@ -25,17 +25,17 @@
 package org.slj.mqtt.sn.model.session.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.session.ISession;
 
 import java.util.Date;
+import java.util.Objects;
 
-public class MqttsnSessionImpl implements IMqttsnSession {
+public class SessionImpl implements ISession {
 
-    protected final IMqttsnContext context;
-    protected volatile MqttsnClientState state;
+    protected final IClientIdentifierContext context;
+    protected volatile ClientState state;
     protected Date lastSeen;
     protected int keepAlive;
     protected long sessionExpiryInterval;
@@ -43,11 +43,15 @@ public class MqttsnSessionImpl implements IMqttsnSession {
     protected int maxPacketSize;
     protected int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
 
-
-    public MqttsnSessionImpl(final IMqttsnContext context, MqttsnClientState state){
+    public SessionImpl(final IClientIdentifierContext context, ClientState state){
         this.context = context;
         sessionStarted = new Date();
         this.state = state;
+    }
+
+    @Override
+    public IClientIdentifierContext getContext() {
+        return (IClientIdentifierContext) context;
     }
 
     public int getProtocolVersion() {
@@ -58,18 +62,14 @@ public class MqttsnSessionImpl implements IMqttsnSession {
         this.protocolVersion = protocolVersion;
     }
 
-    @Override
-    public IMqttsnContext getContext() {
-        return context;
-    }
 
     @Override
-    public MqttsnClientState getClientState() {
+    public ClientState getClientState() {
         return state;
     }
 
 
-    public void setClientState(MqttsnClientState state) {
+    public void setClientState(ClientState state) {
         this.state = state;
     }
 
@@ -120,7 +120,7 @@ public class MqttsnSessionImpl implements IMqttsnSession {
 
     @Override
     public String toString() {
-        return "MqttsnSessionImpl{" +
+        return "SessionImpl{" +
                 "context=" + context +
                 ", state=" + state +
                 ", lastSeen=" + lastSeen +
@@ -132,7 +132,7 @@ public class MqttsnSessionImpl implements IMqttsnSession {
     }
 
     public void clearAll(){
-        state = MqttsnClientState.DISCONNECTED;
+        state = ClientState.DISCONNECTED;
         keepAlive = 0;
         sessionExpiryInterval = 0;
         sessionStarted = null;
@@ -144,12 +144,12 @@ public class MqttsnSessionImpl implements IMqttsnSession {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MqttsnSessionImpl that = (MqttsnSessionImpl) o;
-        return context.equals(that.context);
+        SessionImpl that = (SessionImpl) o;
+        return Objects.equals(context, that.context);
     }
 
     @Override
     public int hashCode() {
-        return context.hashCode();
+        return Objects.hash(context);
     }
 }

@@ -22,26 +22,17 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model.session;
+package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.PublishData;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
-import org.slj.mqtt.sn.model.MqttsnWaitToken;
+public interface IClientIdentifierContext {
 
-import java.io.Serializable;
+    int getProtocolVersion();
 
-public interface IMqttsnQueuedPublishMessage extends Serializable {
+    String getId();
 
-    PublishData getData();
-    long getCreated();
-    int getRetryCount();
-    int getGrantedQoS();
-    IMqttsnDataRef getDataRefId();
-    int getPacketId();
-    MqttsnWaitToken getToken();
-    void setToken(MqttsnWaitToken token);
-    void incrementRetry();
-    void setPacketId(int packetId);
-    void setRetryCount(int retryCount);
+    boolean isAssignedClientId();
+
+    void setAssignedClientId(boolean clientId);
+
 
 }

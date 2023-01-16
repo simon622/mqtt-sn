@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
 /**
  * NOTE: this is optional
@@ -41,7 +41,7 @@ public interface IMqttsnQueueProcessorStateService extends IMqttsnService {
      * @return - Is the context in a position to receive message
      * @throws MqttsnException - An error has occurred
      */
-    boolean canReceive(IMqttsnContext context) throws MqttsnException;
+    boolean canReceive(IClientIdentifierContext context) throws MqttsnException;
 
     /**
      * Having flushed >= 1 messages to a context, this method will be notified to allow any final
@@ -49,5 +49,5 @@ public interface IMqttsnQueueProcessorStateService extends IMqttsnService {
      * @return - Is the context in a position to receive message
      * @throws MqttsnException - An error has occurred
      */
-    void queueEmpty(IMqttsnContext context) throws MqttsnException;
+    void queueEmpty(IClientIdentifierContext context) throws MqttsnException;
 }

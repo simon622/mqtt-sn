@@ -22,8 +22,26 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session;
 
-public enum MqttsnClientState {
-    ACTIVE, DISCONNECTED, AWAKE, ASLEEP, LOST
+import org.slj.mqtt.sn.PublishData;
+import org.slj.mqtt.sn.model.IDataRef;
+import org.slj.mqtt.sn.model.MqttsnWaitToken;
+
+import java.io.Serializable;
+
+public interface IQueuedPublishMessage extends Serializable {
+
+    PublishData getData();
+    long getCreated();
+    int getRetryCount();
+    int getGrantedQoS();
+    IDataRef getDataRefId();
+    int getPacketId();
+    MqttsnWaitToken getToken();
+    void setToken(MqttsnWaitToken token);
+    void incrementRetry();
+    void setPacketId(int packetId);
+    void setRetryCount(int retryCount);
+
 }

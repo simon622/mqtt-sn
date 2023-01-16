@@ -25,9 +25,9 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractTopicRegistry;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
-import org.slj.mqtt.sn.model.session.impl.MqttsnTopicRegistrationImpl;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.ITopicRegistration;
+import org.slj.mqtt.sn.model.session.impl.TopicRegistrationImpl;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
@@ -39,9 +39,9 @@ public class MqttsnInMemoryTopicRegistry
         extends AbstractTopicRegistry {
 
     @Override
-    public Set<IMqttsnTopicRegistration> getRegistrations(IMqttsnSession session) throws MqttsnException {
-        Map<String, IMqttsnTopicRegistration> registrations = getSessionBean(session).getRegistrations();
-        Set<IMqttsnTopicRegistration> set;
+    public Set<ITopicRegistration> getRegistrations(ISession session) throws MqttsnException {
+        Map<String, ITopicRegistration> registrations = getSessionBean(session).getRegistrations();
+        Set<ITopicRegistration> set;
         synchronized (registrations){
             set = registrations.values().stream().collect(
                     Collectors.toSet());
@@ -52,30 +52,30 @@ public class MqttsnInMemoryTopicRegistry
 
 
     @Override
-    protected boolean addOrUpdateRegistration(IMqttsnSession session, String topicPath, int alias) throws MqttsnException {
+    protected boolean addOrUpdateRegistration(ISession session, String topicPath, int alias) throws MqttsnException {
 
         if(topicPath == null || topicPath.trim().length() == 0)
             throw new MqttsnExpectationFailedException("null or empty topic path not allowed");
-        return getSessionBean(session).addTopicRegistration(new MqttsnTopicRegistrationImpl(topicPath, alias, true));
+        return getSessionBean(session).addTopicRegistration(new TopicRegistrationImpl(topicPath, alias, true));
     }
 
     @Override
-    protected Map<String, Integer> getPredefinedTopicsForString(IMqttsnSession session) {
+    protected Map<String, Integer> getPredefinedTopicsForString(ISession session) {
         Map<String, Integer> m = registry.getOptions().getPredefinedTopics();
         return m == null ? Collections.emptyMap() : m;
     }
 
     @Override
-    protected Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnSession session) {
+    protected Map<String, Integer> getPredefinedTopicsForInteger(ISession session) {
         return getPredefinedTopicsForString(session);
     }
 
     @Override
-    public void clear(IMqttsnSession session, boolean hardClear) throws MqttsnException {
+    public void clear(ISession session, boolean hardClear) throws MqttsnException {
         if(hardClear){
             getSessionBean(session).clearRegistrations();
         } else{
-            Map<String, IMqttsnTopicRegistration> map =
+            Map<String, ITopicRegistration> map =
                     getSessionBean(session).getRegistrations();
             synchronized (map){
                 map.values().stream().forEach(t -> t.setConfirmed(false));
@@ -84,7 +84,7 @@ public class MqttsnInMemoryTopicRegistry
     }
 
     @Override
-    public void clear(IMqttsnSession session) {
+    public void clear(ISession session) {
         try {
             clear(session, true);
         } catch(MqttsnException e){

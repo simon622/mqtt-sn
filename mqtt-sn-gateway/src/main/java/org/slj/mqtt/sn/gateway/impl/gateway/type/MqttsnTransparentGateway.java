@@ -29,7 +29,7 @@ import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 /**
@@ -58,12 +58,12 @@ public class MqttsnTransparentGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    protected IMqttsnConnectorConnection getConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
+    protected IMqttsnConnectorConnection getConnectionInternal(IClientIdentifierContext context) throws MqttsnConnectorException {
         return null;
     }
 
     @Override
-    public boolean isConnected(IMqttsnContext context) throws MqttsnConnectorException {
+    public boolean isConnected(IClientIdentifierContext context) throws MqttsnConnectorException {
         return false;
     }
 

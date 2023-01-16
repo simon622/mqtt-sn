@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.IPacketTXRXJob;
@@ -80,7 +80,7 @@ public abstract class AbstractMqttsnTransport
                     authd = registry.getMessageHandler().authorizeContext(networkContext, clientId, protocolVersion, assignedClientId);
                 } else {
                     //-- need to check the context from the network matches the supplied clientId in case of address reuse..
-                    IMqttsnContext mqttsnContext = registry.getNetworkRegistry().getMqttsnContext(networkContext);
+                    IClientIdentifierContext mqttsnContext = registry.getNetworkRegistry().getMqttsnContext(networkContext);
                     if(clientId == null || "".equals(clientId.trim()) && message.getMessageType() == MqttsnConstants.PINGREQ){
                         logger.info("{} received with no clientId, continue with previous clientId on network address {}",
                                 message, mqttsnContext);

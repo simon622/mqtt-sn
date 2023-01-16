@@ -22,11 +22,17 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model;
+package org.slj.mqtt.sn.model.session;
 
-import java.io.Serializable;
+import org.slj.mqtt.sn.utils.TopicPath;
 
-public interface IMqttsnDataRef<T> extends Serializable  {
+public interface IWillData {
 
-    T getId();
+    TopicPath getTopicPath();
+
+    byte[] getData();
+
+    boolean isRetained();
+
+    int getQos();
 }

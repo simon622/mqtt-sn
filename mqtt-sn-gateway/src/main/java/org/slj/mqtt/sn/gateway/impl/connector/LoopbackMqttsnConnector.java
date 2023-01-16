@@ -30,8 +30,8 @@ import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 
 public class LoopbackMqttsnConnector
-        extends AbstractMqttsnConnector<LoopbackMqttsnConnectorConnection>
-            implements IMqttsnConnector<LoopbackMqttsnConnectorConnection> {
+        extends AbstractMqttsnConnector<LoopbackMqttsnConnection>
+            implements IMqttsnConnector<LoopbackMqttsnConnection> {
 
     public static final MqttsnConnectorDescriptor DESCRIPTOR = new MqttsnConnectorDescriptor();
     static {
@@ -48,9 +48,9 @@ public class LoopbackMqttsnConnector
     }
 
     @Override
-    public LoopbackMqttsnConnectorConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
+    public LoopbackMqttsnConnection createConnection(MqttsnConnectorOptions options, String clientId) throws MqttsnConnectorException {
         try {
-            LoopbackMqttsnConnectorConnection connection = new LoopbackMqttsnConnectorConnection(options, clientId);
+            LoopbackMqttsnConnection connection = new LoopbackMqttsnConnection(options, clientId);
             connection.connect();
             return connection;
         } catch(Exception e){

@@ -28,8 +28,8 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnSessionBeanRegistry;
 import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnMessageQueue;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TransientObjectLocks;
@@ -40,12 +40,12 @@ public class MqttsnInMemoryMessageQueue
     protected final TransientObjectLocks locks = new TransientObjectLocks();
 
     @Override
-    public long queueSize(IMqttsnSession session) throws MqttsnException {
+    public long queueSize(ISession session) throws MqttsnException {
         return getSessionBean(session).getQueueSize();
     }
 
     @Override
-    public final void offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    public final void offer(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
         synchronized (locks.mutex(session.getContext().getId())){
@@ -60,7 +60,7 @@ public class MqttsnInMemoryMessageQueue
     }
 
     @Override
-    public final MqttsnWaitToken offerWithToken(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    public final MqttsnWaitToken offerWithToken(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
         synchronized (locks.mutex(session.getContext().getId())){
@@ -76,7 +76,7 @@ public class MqttsnInMemoryMessageQueue
         }
     }
 
-    protected void checkQueueSizeRestrictions(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    protected void checkQueueSizeRestrictions(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
         long size;
         if((size = queueSize(session)) >= getMaxQueueSize()){
@@ -89,25 +89,25 @@ public class MqttsnInMemoryMessageQueue
     }
 
     @Override
-    public void clear(IMqttsnSession session)  {
+    public void clear(ISession session)  {
         if(session != null){
             getSessionBean(session).clearMessageQueue();
         }
     }
 
-    protected void offerInternal(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    protected void offerInternal(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException {
 
         getSessionBean(session).offer(message);
     }
 
     @Override
-    public IMqttsnQueuedPublishMessage poll(IMqttsnSession session) {
+    public IQueuedPublishMessage poll(ISession session) {
         return getSessionBean(session).poll();
     }
 
     @Override
-    public IMqttsnQueuedPublishMessage peek(IMqttsnSession session) {
+    public IQueuedPublishMessage peek(ISession session) {
         return getSessionBean(session).peek();
     }
 

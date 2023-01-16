@@ -24,13 +24,13 @@
 
 package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 
 public class MqttsnMessageContext implements IMqttsnMessageContext {
 
     private final INetworkContext networkContext;
-    private IMqttsnContext mqttsnContext;
-    private IMqttsnSession mqttsnSession;
+    private IClientIdentifierContext mqttsnContext;
+    private ISession mqttsnSession;
 
     public MqttsnMessageContext(INetworkContext networkContext) {
         this.networkContext = networkContext;
@@ -42,19 +42,19 @@ public class MqttsnMessageContext implements IMqttsnMessageContext {
     }
 
     @Override
-    public IMqttsnContext getMqttsnContext() {
+    public IClientIdentifierContext getMqttsnContext() {
         return mqttsnContext;
     }
 
-    public void setMqttsnContext(IMqttsnContext mqttsnContext) {
+    public void setMqttsnContext(IClientIdentifierContext mqttsnContext) {
         this.mqttsnContext = mqttsnContext;
     }
 
-    public IMqttsnSession getMqttsnSession() {
+    public ISession getMqttsnSession() {
         return mqttsnSession;
     }
 
-    public void setMqttsnSession(IMqttsnSession mqttsnSession) {
+    public void setMqttsnSession(ISession mqttsnSession) {
         this.mqttsnSession = mqttsnSession;
     }
 

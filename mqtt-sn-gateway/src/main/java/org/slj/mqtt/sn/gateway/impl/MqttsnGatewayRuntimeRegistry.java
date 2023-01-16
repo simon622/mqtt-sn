@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.impl;
 
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
+import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridge;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.gateway.*;
@@ -34,6 +35,8 @@ import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
+
+import java.util.List;
 
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
 
@@ -86,6 +89,12 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
         return this;
     }
 
+    @Override
+    public IMqttsnGatewayRuntimeRegistry withProtocolBridge(IProtocolBridge protocolBridge) {
+        withService(protocolBridge);
+        return this;
+    }
+
     public MqttsnGatewayRuntimeRegistry withGatewaySessionService(IMqttsnGatewaySessionService sessionService){
         withService(sessionService);
         return this;
@@ -114,6 +123,11 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     @Override
     public IMqttsnConnector getConnector() {
         return getService(IMqttsnConnector.class);
+    }
+
+    @Override
+    public List<IProtocolBridge> getProtocolBridges() {
+        return getServices(IProtocolBridge.class);
     }
 
     @Override

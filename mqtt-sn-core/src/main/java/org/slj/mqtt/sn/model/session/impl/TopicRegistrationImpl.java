@@ -24,47 +24,60 @@
 
 package org.slj.mqtt.sn.model.session.impl;
 
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.model.session.ITopicRegistration;
 
-import java.util.Objects;
+public class TopicRegistrationImpl implements ITopicRegistration {
 
-public class MqttsnSubscriptionImpl implements IMqttsnSubscription {
+    private boolean confirmed;
+    private final String topicPath;
+    private int aliasId;
 
-    private final TopicPath topicPath;
-    private int grantedQoS;
-
-    public MqttsnSubscriptionImpl(final TopicPath topicPath){
+    public TopicRegistrationImpl(final String topicPath, final int aliasId, final boolean confirmed){
         this.topicPath = topicPath;
+        this.aliasId = aliasId;
+        this.confirmed = confirmed;
     }
 
-    public MqttsnSubscriptionImpl(final TopicPath topicPath, int qoS) {
-        this.topicPath = topicPath;
-        grantedQoS = qoS;
+    public boolean isConfirmed() {
+        return confirmed;
     }
 
-    public TopicPath getTopicPath() {
+    public void setConfirmed(boolean confirmed) {
+        this.confirmed = confirmed;
+    }
+
+    public String getTopicPath() {
         return topicPath;
     }
 
-    public int getGrantedQoS() {
-        return grantedQoS;
+    public int getAliasId() {
+        return aliasId;
     }
 
-    public void setGrantedQoS(int qoS) {
-        grantedQoS = qoS;
+    public void setAliasId(int aliasId) {
+        this.aliasId = aliasId;
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnTopicRegistrationImpl{" +
+                "confirmed=" + confirmed +
+                ", topicPath='" + topicPath + '\'' +
+                ", aliasId=" + aliasId +
+                '}';
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MqttsnSubscriptionImpl that = (MqttsnSubscriptionImpl) o;
-        return Objects.equals(topicPath, that.topicPath);
+        TopicRegistrationImpl that = (TopicRegistrationImpl) o;
+        return topicPath.equals(that.topicPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(topicPath);
+        int result = topicPath.hashCode();
+        return result;
     }
 }

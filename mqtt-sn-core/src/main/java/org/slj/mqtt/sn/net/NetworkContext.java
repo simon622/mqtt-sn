@@ -25,7 +25,6 @@
 package org.slj.mqtt.sn.net;
 
 import org.slj.mqtt.sn.model.AbstractContextObject;
-import org.slj.mqtt.sn.model.IMqttsnContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 

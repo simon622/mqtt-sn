@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 
 import java.io.Serializable;
 
@@ -41,19 +41,19 @@ public class MqttsnDeadLetterQueueBean implements Serializable {
     }
 
 
-    private IMqttsnContext context;
-    private IMqttsnQueuedPublishMessage applicationMessage;
+    private IClientIdentifierContext context;
+    private IQueuedPublishMessage applicationMessage;
     private REASON reason;
     private String message;
 
     public MqttsnDeadLetterQueueBean() {
     }
 
-    public IMqttsnContext getContext() {
+    public IClientIdentifierContext getContext() {
         return context;
     }
 
-    public void setContext(IMqttsnContext context) {
+    public void setContext(IClientIdentifierContext context) {
         this.context = context;
     }
 
@@ -69,11 +69,11 @@ public class MqttsnDeadLetterQueueBean implements Serializable {
         this.message = message;
     }
 
-    public IMqttsnQueuedPublishMessage getApplicationMessage() {
+    public IQueuedPublishMessage getApplicationMessage() {
         return applicationMessage;
     }
 
-    public void setApplicationMessage(IMqttsnQueuedPublishMessage applicationMessage) {
+    public void setApplicationMessage(IQueuedPublishMessage applicationMessage) {
         this.applicationMessage = applicationMessage;
     }
 

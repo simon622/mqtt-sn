@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slj.mqtt.sn.model.MqttsnContext;
+import org.slj.mqtt.sn.model.ClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
@@ -79,7 +79,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
                 String key = itr.next();
                 NetworkAddress address = options.getNetworkAddressEntries().get(key);
                 NetworkContext networkContext = new NetworkContext(getDefaultTransport(), address);
-                MqttsnContext sessionContext = new MqttsnContext(key);
+                ClientIdentifierContext sessionContext = new ClientIdentifierContext(key);
                 sessionContext.setProtocolVersion(getCodec().getProtocolVersion());
                 networkAddressRegistry.bindContexts(networkContext, sessionContext);
             }

@@ -26,11 +26,11 @@ package org.slj.mqtt.sn.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
 
 public class MqttsnMessageQueueProcessor
@@ -44,10 +44,10 @@ public class MqttsnMessageQueueProcessor
         this.clientMode = clientMode;
     }
 
-    public RESULT process(IMqttsnContext context) throws MqttsnException {
+    public RESULT process(IClientIdentifierContext context) throws MqttsnException {
 
         IMqttsnQueueProcessorStateService stateCheckService = getRegistry().getQueueProcessorStateCheckService();
-        IMqttsnSession session = getSessionFromContext(context);
+        ISession session = getSessionFromContext(context);
 
         //-- if the queue is empty, then something will happen to retrigger this process, ie. message in or out
         //-- so safe to remove
@@ -76,7 +76,7 @@ public class MqttsnMessageQueueProcessor
             return RESULT.BACKOFF_PROCESS;
         }
 
-        IMqttsnQueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(session);
+        IQueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(session);
         if(queuedMessage != null){
             return processNextMessage(context);
         } else {
@@ -87,10 +87,10 @@ public class MqttsnMessageQueueProcessor
     /**
      * Uses the next message and establishes a register if no support topic alias's exist
      */
-    protected RESULT processNextMessage(IMqttsnContext context) throws MqttsnException {
+    protected RESULT processNextMessage(IClientIdentifierContext context) throws MqttsnException {
 
-        IMqttsnSession session = getSessionFromContext(context);
-        IMqttsnQueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(session);
+        ISession session = getSessionFromContext(context);
+        IQueuedPublishMessage queuedMessage = registry.getMessageQueue().peek(session);
         String topicPath = queuedMessage.getData().getTopicPath();
         TopicInfo info = registry.getTopicRegistry().lookup(session, topicPath, true);
         if(info == null){
@@ -118,10 +118,10 @@ public class MqttsnMessageQueueProcessor
         }
     }
 
-    protected RESULT dequeAndPublishNextMessage(IMqttsnContext context, TopicInfo info) throws MqttsnException {
+    protected RESULT dequeAndPublishNextMessage(IClientIdentifierContext context, TopicInfo info) throws MqttsnException {
 
-        IMqttsnSession session = getSessionFromContext(context);
-        IMqttsnQueuedPublishMessage queuedMessage = registry.getMessageQueue().poll(session);
+        ISession session = getSessionFromContext(context);
+        IQueuedPublishMessage queuedMessage = registry.getMessageQueue().poll(session);
         if (queuedMessage != null) {
             queuedMessage.incrementRetry();
             //-- let the reaper check on delivery
@@ -152,12 +152,12 @@ public class MqttsnMessageQueueProcessor
         }
     }
 
-    protected IMqttsnSession getSessionFromContext(IMqttsnContext context)
+    protected ISession getSessionFromContext(IClientIdentifierContext context)
             throws MqttsnNotFoundException {
 
         try {
             if(context == null) throw new NullPointerException("unable to session from <null> context");
-            IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+            ISession session = getRegistry().getSessionRegistry().getSession(context, false);
             if(session == null){
                 throw new MqttsnNotFoundException("no session found for " + context.getId());
             }

@@ -24,9 +24,9 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 
 import java.util.List;
 
@@ -38,10 +38,10 @@ import java.util.List;
 @MqttsnService
 public interface IMqttsnDeadLetterQueue extends IMqttsnService {
 
-    void add(MqttsnDeadLetterQueueBean.REASON reason, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage)
+    void add(MqttsnDeadLetterQueueBean.REASON reason, IClientIdentifierContext context, IQueuedPublishMessage applicationMessage)
             throws MqttsnException ;
 
-    void add(MqttsnDeadLetterQueueBean.REASON reason, String message, IMqttsnContext context, IMqttsnQueuedPublishMessage applicationMessage)
+    void add(MqttsnDeadLetterQueueBean.REASON reason, String message, IClientIdentifierContext context, IQueuedPublishMessage applicationMessage)
             throws MqttsnException ;
 
     List<MqttsnDeadLetterQueueBean> readMostRecent(int count);

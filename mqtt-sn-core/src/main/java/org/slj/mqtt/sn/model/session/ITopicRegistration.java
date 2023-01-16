@@ -24,15 +24,13 @@
 
 package org.slj.mqtt.sn.model.session;
 
-import org.slj.mqtt.sn.utils.TopicPath;
+public interface ITopicRegistration {
 
-public interface IMqttsnWillData {
+    String getTopicPath();
 
-    TopicPath getTopicPath();
+    int getAliasId();
 
-    byte[] getData();
+    boolean isConfirmed();
 
-    boolean isRetained();
-
-    int getQos();
+    void setConfirmed(boolean confirmed);
 }

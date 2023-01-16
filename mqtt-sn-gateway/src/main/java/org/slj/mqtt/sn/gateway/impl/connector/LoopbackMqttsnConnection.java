@@ -29,7 +29,7 @@ import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -40,15 +40,15 @@ import org.slf4j.LoggerFactory;
  * @author simonjohnson
  *
  */
-public class LoopbackMqttsnConnectorConnection extends AbstractMqttsnBackendConnection {
+public class LoopbackMqttsnConnection extends AbstractMqttsnBackendConnection {
 
-    private Logger logger = LoggerFactory.getLogger(LoopbackMqttsnConnectorConnection.class.getName());
+    private Logger logger = LoggerFactory.getLogger(LoopbackMqttsnConnection.class.getName());
     protected MqttsnConnectorOptions options;
     protected final String clientId;
 
     volatile boolean connected = false;
 
-    public LoopbackMqttsnConnectorConnection(MqttsnConnectorOptions options, String clientId) {
+    public LoopbackMqttsnConnection(MqttsnConnectorOptions options, String clientId) {
         this.options = options;
         this.clientId = clientId;
     }
@@ -69,7 +69,7 @@ public class LoopbackMqttsnConnectorConnection extends AbstractMqttsnBackendConn
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             if(connected){
                 receive(topicPath.toString(), qos, retained, payload);

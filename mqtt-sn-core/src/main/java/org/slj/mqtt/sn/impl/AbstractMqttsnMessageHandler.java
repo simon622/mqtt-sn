@@ -27,12 +27,12 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.IWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
@@ -42,7 +42,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     public boolean temporaryAuthorizeContext(INetworkContext context) {
         try {
-            IMqttsnContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context,
+            IClientIdentifierContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context,
                     getRegistry().getCodec().getProtocolVersion());
             if(mqttsnContext != null){
                 logger.warn("temporary auth context created {}", mqttsnContext);
@@ -66,7 +66,7 @@ public abstract class AbstractMqttsnMessageHandler
                 logger.warn("clientId format not valid, refuse auth");
             } else {
                 registry.getNetworkRegistry().removeExistingClientId(clientId);
-                IMqttsnContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
+                IClientIdentifierContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
                 if(mqttsnContext != null){
                     registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                     mqttsnContext.setAssignedClientId(assignedClientId);
@@ -439,7 +439,7 @@ public abstract class AbstractMqttsnMessageHandler
         }
 
         if(!isError){
-            IMqttsnSession session = context.getMqttsnSession();
+            ISession session = context.getMqttsnSession();
             if(topicIdType == MqttsnConstants.TOPIC_NORMAL){
                 registry.getTopicRegistry().register(session, topicPath, topicId);
             } else {
@@ -523,7 +523,7 @@ public abstract class AbstractMqttsnMessageHandler
 
         IMqttsnMessage response = null;
 
-        IMqttsnSession session = context.getMqttsnSession();
+        ISession session = context.getMqttsnSession();
 
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);
         String topicPath = registry.getTopicRegistry().topicPath(session, info, true);
@@ -599,7 +599,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     protected IMqttsnMessage handleWillmsgreq(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException {
 
-        IMqttsnWillData willData = registry.getWillRegistry().getWillMessage(context.getMqttsnSession());
+        IWillData willData = registry.getWillRegistry().getWillMessage(context.getMqttsnSession());
         byte[] willMsg = willData.getData();
         return registry.getMessageFactory().createWillMsg(willMsg);
     }
@@ -625,7 +625,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     protected IMqttsnMessage handleWilltopicreq(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException {
 
-        IMqttsnWillData willData = registry.getWillRegistry().getWillMessage(context.getMqttsnSession());
+        IWillData willData = registry.getWillRegistry().getWillMessage(context.getMqttsnSession());
         int QoS = willData.getQos();
         boolean retain = willData.isRetained();
         String topicPath = willData.getTopicPath().toString();

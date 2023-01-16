@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.cloud;
 
 import java.io.Serializable;
 
-public class MqttsnDescriptorProperty implements Serializable {
+public class DescriptorProperty implements Serializable {
 
     private static final long serialVersionUID = -3454277721177449328L;
 
@@ -38,7 +38,7 @@ public class MqttsnDescriptorProperty implements Serializable {
     private String description;
     private String displayName;
 
-    public MqttsnDescriptorProperty() {
+    public DescriptorProperty() {
     }
 
     public String getDescription() {

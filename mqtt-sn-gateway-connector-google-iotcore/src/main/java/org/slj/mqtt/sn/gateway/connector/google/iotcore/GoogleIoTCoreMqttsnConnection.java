@@ -40,7 +40,7 @@ import org.slj.mqtt.sn.gateway.spi.PublishResult;
 import org.slj.mqtt.sn.gateway.spi.Result;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
@@ -86,7 +86,7 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
     }
 
     @Override
-    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
+    public ConnectResult connect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         if(isConnected()){
             logger.info("attaching {} device by clientId", context.getId());
             IMqttsnMessageFactory factory = backendService.getRegistry().getCodec().createMessageFactory();
@@ -106,7 +106,7 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
+    public DisconnectResult disconnect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         if(isConnected()){
             logger.info("detaching gateway device " + context.getId());
             IMqttsnMessageFactory factory = backendService.getRegistry().getCodec().createMessageFactory();
@@ -120,12 +120,12 @@ public class GoogleIoTCoreMqttsnConnection extends PahoMqttsnBrokerConnection {
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) throws MqttsnConnectorException {
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) throws MqttsnConnectorException {
         return super.publish(context, topicPath, qos, retained, data, message);
     }
 
     @Override
-    public boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message) {
+    public boolean canAccept(IClientIdentifierContext context, TopicPath topicPath, byte[] data, IMqttsnMessage message) {
         return MqttsnUtils.in(topicPath.toString(), new String[] {
                 String.format("/devices/%s/state", context.getId()),
                 String.format("/devices/%s/events", context.getId())

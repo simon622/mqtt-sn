@@ -26,17 +26,17 @@ package org.slj.mqtt.sn.model;
 
 import java.util.Objects;
 
-public class MqttsnContext extends AbstractContextObject implements IMqttsnContext {
+public class ClientIdentifierContext extends AbstractContextObject implements IClientIdentifierContext {
 
-    private String id;
-    private int protocolVersion;
-    private boolean assignedClientId;
+    protected String id;
+    protected boolean assignedClientId;
+    protected int protocolVersion;
 
-    public MqttsnContext(){
+    public ClientIdentifierContext(){
 
     }
 
-    public MqttsnContext(String id) {
+    public ClientIdentifierContext(String id) {
         this.id = id;
     }
 
@@ -50,6 +50,14 @@ public class MqttsnContext extends AbstractContextObject implements IMqttsnConte
     }
 
     @Override
+    public boolean isAssignedClientId() {
+        return assignedClientId;
+    }
+
+    public void setAssignedClientId(boolean assignedClientId) {
+        this.assignedClientId = assignedClientId;
+    }
+
     public int getProtocolVersion() {
         return protocolVersion;
     }
@@ -59,19 +67,10 @@ public class MqttsnContext extends AbstractContextObject implements IMqttsnConte
     }
 
     @Override
-    public boolean isAssignedClientId() {
-        return assignedClientId;
-    }
-
-    public void setAssignedClientId(boolean assignedClientId) {
-        this.assignedClientId = assignedClientId;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MqttsnContext that = (MqttsnContext) o;
+        ClientIdentifierContext that = (ClientIdentifierContext) o;
         return id.equals(that.id);
     }
 

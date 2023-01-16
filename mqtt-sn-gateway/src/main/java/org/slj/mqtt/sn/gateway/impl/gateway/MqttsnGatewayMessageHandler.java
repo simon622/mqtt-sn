@@ -32,9 +32,9 @@ import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageHandler;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
@@ -48,10 +48,10 @@ public class MqttsnGatewayMessageHandler
         return (IMqttsnGatewayRuntimeRegistry) super.getRegistry();
     }
 
-    protected IMqttsnSession getActiveSession(IMqttsnMessageContext context)
+    protected ISession getActiveSession(IMqttsnMessageContext context)
             throws MqttsnInvalidSessionStateException {
-        IMqttsnSession session = context.getMqttsnSession();
-        if(session == null || session.getClientState() == MqttsnClientState.DISCONNECTED)
+        ISession session = context.getMqttsnSession();
+        if(session == null || session.getClientState() == ClientState.DISCONNECTED)
             throw new MqttsnInvalidSessionStateException("session not available for context");
         return session;
     }
@@ -92,7 +92,7 @@ public class MqttsnGatewayMessageHandler
         super.afterHandle(context, messageIn, messageOut);
 
         try {
-            IMqttsnSession session = getActiveSession(context);
+            ISession session = getActiveSession(context);
             if(session != null){
                 getRegistry().getSessionRegistry().modifyLastSeen(session);
             }
@@ -113,13 +113,13 @@ public class MqttsnGatewayMessageHandler
                 registry.getNetworkRegistry().removeExistingClientId(context.getMqttsnContext().getId());
             }
 
-            IMqttsnSession session = context.getMqttsnSession();
+            ISession session = context.getMqttsnSession();
             if(session != null){
                 //active session means we can try and see if there is anything to flush here if its a terminal message
                 if(messageIn != null && MqttsnMessageRules.isTerminalMessage(getRegistry().getCodec(), messageIn) && !messageIn.isErrorMessage() ||
                         messageOut != null && MqttsnMessageRules.isTerminalMessage(getRegistry().getCodec(), messageOut) && !messageOut.isErrorMessage() ){
                     if(MqttsnUtils.in(session.getClientState(),
-                            MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE)) {
+                            ClientState.ACTIVE, ClientState.AWAKE)) {
                         logger.debug("scheduling flush based on outbound message {} -> inflight {}", messageOut == null ? messageIn : messageOut,
                                     getRegistry().getMessageStateService().countInflight(context.getMqttsnContext(), IMqttsnOriginatingMessageSource.LOCAL));
                         registry.getMessageStateService().scheduleFlush(context.getMqttsnContext());
@@ -173,7 +173,7 @@ public class MqttsnGatewayMessageHandler
         }
 
         //-- THIS IS WHERE A SESSION IS CREATED ON THE GATEWAY SIDE
-        IMqttsnSession session = context.getMqttsnSession();
+        ISession session = context.getMqttsnSession();
         String assignedClientId = context.getMqttsnContext().isAssignedClientId() ? context.getMqttsnContext().getId() : null;
         boolean stateExisted = session != null;
         if(session == null){
@@ -223,10 +223,10 @@ public class MqttsnGatewayMessageHandler
             reasonString = d.getReasonString();
         }
 
-        IMqttsnSession state = getActiveSession(context);
+        ISession state = getActiveSession(context);
         boolean needsResponse = initialDisconnect != null ||
-                (state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED));
-        if(state != null && !MqttsnUtils.in(state.getClientState(), MqttsnClientState.DISCONNECTED)){
+                (state != null && !MqttsnUtils.in(state.getClientState(), ClientState.DISCONNECTED));
+        if(state != null && !MqttsnUtils.in(state.getClientState(), ClientState.DISCONNECTED)){
             getRegistry().getGatewaySessionService().disconnect(state, receivedDisconnect);
         }
         return needsResponse ?
@@ -257,21 +257,21 @@ public class MqttsnGatewayMessageHandler
         }
 
 
-        IMqttsnSession session = getActiveSession(context);
-        if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.ACTIVE)){
+        ISession session = getActiveSession(context);
+        if(MqttsnUtils.in(session.getClientState(), ClientState.ACTIVE)){
             if(getRegistry().getMessageQueue().queueSize(session) > 0){
                 getRegistry().getMessageStateService().scheduleFlush(context.getMqttsnContext());
             }
         }
-        if(MqttsnUtils.in(session.getClientState(), MqttsnClientState.ASLEEP, MqttsnClientState.AWAKE)){
+        if(MqttsnUtils.in(session.getClientState(), ClientState.ASLEEP, ClientState.AWAKE)){
             //-- only wake the client if there is messages outstanding
             if(registry.getMessageQueue().queueSize(session) > 0){
-                if(session.getClientState() == MqttsnClientState.ASLEEP){
+                if(session.getClientState() == ClientState.ASLEEP){
                     //-- this is the waking ping.. all is ok
-                    getRegistry().getSessionRegistry().modifyClientState(session, MqttsnClientState.AWAKE);
+                    getRegistry().getSessionRegistry().modifyClientState(session, ClientState.AWAKE);
                     getRegistry().getMessageStateService().scheduleFlush(context.getMqttsnContext());
 
-                } else if(session.getClientState() == MqttsnClientState.AWAKE){
+                } else if(session.getClientState() == ClientState.AWAKE){
                     //-- this is the client issuing multiple pings when it should be waiting on the messages.. humph
                     logger.warn("multiple pings are being sent, clear up and try again the client is getting confused..");
                     registry.getMessageStateService().clearInflight(context.getMqttsnContext());
@@ -314,7 +314,7 @@ public class MqttsnGatewayMessageHandler
             return registry.getMessageFactory().createSuback(0, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         }
 
-        IMqttsnSession state = getActiveSession(context);
+        ISession state = getActiveSession(context);
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData,
                 topicIdType == 0);
 
@@ -351,7 +351,7 @@ public class MqttsnGatewayMessageHandler
             return registry.getMessageFactory().createUnsuback(MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         }
 
-        IMqttsnSession state = getActiveSession(context);
+        ISession state = getActiveSession(context);
         TopicInfo info = registry.getTopicRegistry().normalize((byte) unsubscribe.getTopicType(), unsubscribe.getTopicData(), true);
         UnsubscribeResult result = getRegistry().getGatewaySessionService().unsubscribe(state, info, message);
         processSessionResult(result);
@@ -368,7 +368,7 @@ public class MqttsnGatewayMessageHandler
             logger.warn("invalid topic {} received during register, reply with error code", register.getTopicName());
             return registry.getMessageFactory().createRegack(MqttsnConstants.TOPIC_NORMAL, 0, MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID);
         } else {
-            IMqttsnSession state = getActiveSession(context);
+            ISession state = getActiveSession(context);
             RegisterResult result = getRegistry().getGatewaySessionService().register(state, register.getTopicName());
             processSessionResult(result);
 
@@ -392,7 +392,7 @@ public class MqttsnGatewayMessageHandler
             QoS = publish.getQoS();
         }
 
-        IMqttsnSession state = null;
+        ISession state = null;
         try {
             state = getActiveSession(context);
         } catch(MqttsnInvalidSessionStateException e){

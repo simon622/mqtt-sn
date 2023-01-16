@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.IMqttsnTopicModifier;
 
@@ -34,7 +34,7 @@ import org.slj.mqtt.sn.spi.IMqttsnTopicModifier;
 public class MqttsnDefaultTopicModifier extends AbstractMqttsnService implements IMqttsnTopicModifier {
 
     @Override
-    public String modifyTopic(IMqttsnContext context, String topicName) {
+    public String modifyTopic(IClientIdentifierContext context, String topicName) {
         return topicName;
     }
 }

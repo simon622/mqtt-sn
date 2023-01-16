@@ -24,16 +24,15 @@
 
 package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnOriginatingMessageSource;
 
 public class RequeueableInflightMessage extends InflightMessage {
 
-    IMqttsnQueuedPublishMessage queuedPublishMessage;
+    IQueuedPublishMessage queuedPublishMessage;
 
-    public RequeueableInflightMessage(IMqttsnQueuedPublishMessage queuedPublishMessage, IMqttsnMessage message) {
+    public RequeueableInflightMessage(IQueuedPublishMessage queuedPublishMessage, IMqttsnMessage message) {
         super(message, IMqttsnOriginatingMessageSource.LOCAL, queuedPublishMessage.getToken());
         if(queuedPublishMessage.getToken() != null)
             queuedPublishMessage.getToken().setMessage(message);
@@ -41,11 +40,11 @@ public class RequeueableInflightMessage extends InflightMessage {
         this.queuedPublishMessage = queuedPublishMessage;
     }
 
-    public IMqttsnQueuedPublishMessage getQueuedPublishMessage() {
+    public IQueuedPublishMessage getQueuedPublishMessage() {
         return queuedPublishMessage;
     }
 
-    public void setQueuedPublishMessage(IMqttsnQueuedPublishMessage queuedPublishMessage) {
+    public void setQueuedPublishMessage(IQueuedPublishMessage queuedPublishMessage) {
         this.queuedPublishMessage = queuedPublishMessage;
     }
 }

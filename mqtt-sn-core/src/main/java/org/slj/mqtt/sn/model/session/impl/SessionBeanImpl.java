@@ -24,45 +24,45 @@
 
 package org.slj.mqtt.sn.model.session.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.ISubscription;
+import org.slj.mqtt.sn.model.session.ITopicRegistration;
+import org.slj.mqtt.sn.model.session.IWillData;
 
 import java.util.*;
 import java.util.concurrent.PriorityBlockingQueue;
 
-public class MqttsnSessionBeanImpl extends MqttsnSessionImpl {
+public class SessionBeanImpl extends SessionImpl {
 
     private static final int INITIAL_CAPACITY = 8;
-    private Set<IMqttsnSubscription> subscriptionSet = new HashSet<>(INITIAL_CAPACITY);
-    private Map<String, IMqttsnTopicRegistration> registrationMap = new HashMap<>(INITIAL_CAPACITY);
-    private Queue<IMqttsnQueuedPublishMessage> messageQueue = new PriorityBlockingQueue<>(INITIAL_CAPACITY);
-    private IMqttsnWillData willData;
+    private Set<ISubscription> subscriptionSet = new HashSet<>(INITIAL_CAPACITY);
+    private Map<String, ITopicRegistration> registrationMap = new HashMap<>(INITIAL_CAPACITY);
+    private Queue<IQueuedPublishMessage> messageQueue = new PriorityBlockingQueue<>(INITIAL_CAPACITY);
+    private IWillData willData;
 
-    public MqttsnSessionBeanImpl(IMqttsnContext context, MqttsnClientState state) {
+    public SessionBeanImpl(IClientIdentifierContext context, ClientState state) {
         super(context, state);
     }
 
-    public boolean addSubscription(IMqttsnSubscription subscription){
+    public boolean addSubscription(ISubscription subscription){
         return subscriptionSet.add(subscription);
     }
 
-    public boolean removeSubscription(IMqttsnSubscription subscription){
+    public boolean removeSubscription(ISubscription subscription){
         return subscriptionSet.remove(subscription);
     }
 
-    public boolean addTopicRegistration(IMqttsnTopicRegistration registration){
+    public boolean addTopicRegistration(ITopicRegistration registration){
         return registrationMap.put(registration.getTopicPath(), registration) == null;
     }
 
-    public boolean removeTopicRegistration(IMqttsnTopicRegistration registration){
+    public boolean removeTopicRegistration(ITopicRegistration registration){
         return registrationMap.remove(registration.getTopicPath()) != null;
     }
 
-    public boolean offer(IMqttsnQueuedPublishMessage message){
+    public boolean offer(IQueuedPublishMessage message){
         synchronized (messageQueue){
             return messageQueue.offer(message);
         }
@@ -72,11 +72,11 @@ public class MqttsnSessionBeanImpl extends MqttsnSessionImpl {
         return messageQueue.size();
     }
 
-    public IMqttsnQueuedPublishMessage peek(){
+    public IQueuedPublishMessage peek(){
         return messageQueue.peek();
     }
 
-    public IMqttsnQueuedPublishMessage poll(){
+    public IQueuedPublishMessage poll(){
         return messageQueue.poll();
     }
 
@@ -84,19 +84,19 @@ public class MqttsnSessionBeanImpl extends MqttsnSessionImpl {
         subscriptionSet.clear();
     }
 
-    public Set<IMqttsnSubscription> getSubscriptions(){
+    public Set<ISubscription> getSubscriptions(){
         return Collections.unmodifiableSet(subscriptionSet);
     }
 
-    public Map<String, IMqttsnTopicRegistration> getRegistrations(){
+    public Map<String, ITopicRegistration> getRegistrations(){
         return Collections.unmodifiableMap(registrationMap);
     }
 
-    public IMqttsnWillData getWillData() {
+    public IWillData getWillData() {
         return willData;
     }
 
-    public void setWillData(IMqttsnWillData willData) {
+    public void setWillData(IWillData willData) {
         this.willData = willData;
     }
 

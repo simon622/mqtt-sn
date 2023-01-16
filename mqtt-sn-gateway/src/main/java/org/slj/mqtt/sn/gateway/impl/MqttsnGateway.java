@@ -26,8 +26,8 @@ package org.slj.mqtt.sn.gateway.impl;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnConnectionStateListener;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
@@ -50,27 +50,27 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
 
         registerConnectionListener(new IMqttsnConnectionStateListener() {
             @Override
-            public void notifyConnected(IMqttsnContext context) {
+            public void notifyConnected(IClientIdentifierContext context) {
             }
 
             @Override
-            public void notifyRemoteDisconnect(IMqttsnContext context) {
+            public void notifyRemoteDisconnect(IClientIdentifierContext context) {
                 notifyCluster(context);
             }
 
             @Override
-            public void notifyActiveTimeout(IMqttsnContext context) {
+            public void notifyActiveTimeout(IClientIdentifierContext context) {
             }
 
             @Override
-            public void notifyLocalDisconnect(IMqttsnContext context, Throwable t) {
+            public void notifyLocalDisconnect(IClientIdentifierContext context, Throwable t) {
                 notifyCluster(context);
             }
 
             @Override
-            public void notifyConnectionLost(IMqttsnContext context, Throwable t) {
+            public void notifyConnectionLost(IClientIdentifierContext context, Throwable t) {
                 try {
-                    IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                    ISession session = registry.getSessionRegistry().getSession(context, false);
                     if(session != null){
                         ((IMqttsnGatewayRuntimeRegistry) registry).
                                 getGatewaySessionService().markSessionLost(session);
@@ -82,7 +82,7 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
                 }
             }
 
-            private void notifyCluster(IMqttsnContext context){
+            private void notifyCluster(IClientIdentifierContext context){
                 if(((MqttsnGatewayRuntimeRegistry)registry).getGatewayClusterService() != null){
                     try {
                         ((MqttsnGatewayRuntimeRegistry)registry).getGatewayClusterService().notifyDisconnection(context);
@@ -94,11 +94,11 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         });
     }
 
-    public boolean handleRemoteDisconnect(IMqttsnContext context) {
+    public boolean handleRemoteDisconnect(IClientIdentifierContext context) {
         return true;
     }
 
-    public boolean handleLocalDisconnectError(IMqttsnContext context, Throwable t) {
+    public boolean handleLocalDisconnectError(IClientIdentifierContext context, Throwable t) {
         return true;
     }
 

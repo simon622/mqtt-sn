@@ -26,8 +26,8 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.ITopicRegistration;
 import org.slj.mqtt.sn.spi.IMqttsnTopicRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
@@ -41,7 +41,7 @@ public abstract class AbstractTopicRegistry
         implements IMqttsnTopicRegistry {
 
     @Override
-    public TopicInfo register(IMqttsnSession session, String topicPath) throws MqttsnException {
+    public TopicInfo register(ISession session, String topicPath) throws MqttsnException {
         Map<String, Integer> map = getRegistrationMapInternal(session, false);
         if(map.size() >= registry.getOptions().getMaxTopicsInRegistry()){
             logger.warn("max number of registered topics reached for client {} >= {}", session, map.size());
@@ -64,7 +64,7 @@ public abstract class AbstractTopicRegistry
     }
 
     @Override
-    public void register(IMqttsnSession session, String topicPath, int topicAlias) throws MqttsnException {
+    public void register(ISession session, String topicPath, int topicAlias) throws MqttsnException {
 
         logger.debug("mqtt-sn topic-registry [{} -> {}] registering {} -> {}", registry.getOptions().getContextId(), session, topicPath, topicAlias);
 
@@ -84,13 +84,13 @@ public abstract class AbstractTopicRegistry
     }
 
     @Override
-    public boolean registered(IMqttsnSession session, String topicPath) throws MqttsnException {
+    public boolean registered(ISession session, String topicPath) throws MqttsnException {
         Map<String, Integer> map = getRegistrationMapInternal(session, false);
         return map.containsKey(getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
     }
 
     @Override
-    public String topicPath(IMqttsnSession session, TopicInfo topicInfo, boolean considerContext) throws MqttsnException {
+    public String topicPath(ISession session, TopicInfo topicInfo, boolean considerContext) throws MqttsnException {
         String topicPath = null;
         switch (topicInfo.getType()){
             case SHORT:
@@ -118,7 +118,7 @@ public abstract class AbstractTopicRegistry
     }
 
     @Override
-    public String lookupRegistered(IMqttsnSession session, int topicAlias) throws MqttsnException {
+    public String lookupRegistered(ISession session, int topicAlias) throws MqttsnException {
         Map<String, Integer> map = getRegistrationMapInternal(session, false);
         synchronized (map){
             Iterator<String> itr = map.keySet().iterator();
@@ -133,19 +133,19 @@ public abstract class AbstractTopicRegistry
     }
 
     @Override
-    public Integer lookupRegistered(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException {
+    public Integer lookupRegistered(ISession session, String topicPath, boolean confirmedOnly) throws MqttsnException {
         Map<String, Integer> map = getRegistrationMapInternal(session, confirmedOnly);
         return map.get(getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
     }
 
     @Override
-    public Integer lookupPredefined(IMqttsnSession session, String topicPath) throws MqttsnException {
+    public Integer lookupPredefined(ISession session, String topicPath) throws MqttsnException {
         Map<String, Integer> predefinedMap = getPredefinedTopicsForString(session);
         return predefinedMap.get(getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
     }
 
     @Override
-    public String lookupPredefined(IMqttsnSession session, int topicAlias) throws MqttsnException {
+    public String lookupPredefined(ISession session, int topicAlias) throws MqttsnException {
         Map<String, Integer> predefinedMap = getPredefinedTopicsForInteger(session);
         synchronized (predefinedMap){
             Iterator<String> itr = predefinedMap.keySet().iterator();
@@ -160,7 +160,7 @@ public abstract class AbstractTopicRegistry
     }
 
     @Override
-    public TopicInfo lookup(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException {
+    public TopicInfo lookup(ISession session, String topicPath, boolean confirmedOnly) throws MqttsnException {
         topicPath = getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath);
 
         //-- check normal first
@@ -192,7 +192,7 @@ public abstract class AbstractTopicRegistry
     }
 
     @Override
-    public TopicInfo lookup(IMqttsnSession session, String topicPath) throws MqttsnException {
+    public TopicInfo lookup(ISession session, String topicPath) throws MqttsnException {
         return lookup(session, topicPath, false);
     }
 
@@ -234,12 +234,12 @@ public abstract class AbstractTopicRegistry
         return info;
     }
 
-    protected Map<String, Integer> getRegistrationMapInternal(IMqttsnSession session, boolean confirmedOnly) throws MqttsnException{
-        Set<IMqttsnTopicRegistration> set = getRegistrations(session);
+    protected Map<String, Integer> getRegistrationMapInternal(ISession session, boolean confirmedOnly) throws MqttsnException{
+        Set<ITopicRegistration> set = getRegistrations(session);
         Map<String, Integer> map = new HashMap<>();
-        Iterator<IMqttsnTopicRegistration> itr = set.iterator();
+        Iterator<ITopicRegistration> itr = set.iterator();
         while(itr.hasNext()){
-            IMqttsnTopicRegistration reg = itr.next();
+            ITopicRegistration reg = itr.next();
             if(!confirmedOnly || reg.isConfirmed()){
                 map.put(reg.getTopicPath(), reg.getAliasId());
             }
@@ -247,9 +247,9 @@ public abstract class AbstractTopicRegistry
         return map;
     }
 
-    protected abstract boolean addOrUpdateRegistration(IMqttsnSession session, String topicPath, int alias) throws MqttsnException;
+    protected abstract boolean addOrUpdateRegistration(ISession session, String topicPath, int alias) throws MqttsnException;
 
-    protected abstract Map<String, Integer> getPredefinedTopicsForInteger(IMqttsnSession session) throws MqttsnException;
+    protected abstract Map<String, Integer> getPredefinedTopicsForInteger(ISession session) throws MqttsnException;
 
-    protected abstract Map<String, Integer> getPredefinedTopicsForString(IMqttsnSession session) throws MqttsnException;
+    protected abstract Map<String, Integer> getPredefinedTopicsForString(ISession session) throws MqttsnException;
 }

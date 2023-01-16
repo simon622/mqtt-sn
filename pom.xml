@@ -65,6 +65,7 @@
         <module>mqtt-sn-gateway-connector-paho</module>
         <module>mqtt-sn-load-test</module>
         <module>mqtt-sn-gateway-console</module>
+        <module>mqtt-sn-plc4j</module>
     </modules>
 
     <properties>

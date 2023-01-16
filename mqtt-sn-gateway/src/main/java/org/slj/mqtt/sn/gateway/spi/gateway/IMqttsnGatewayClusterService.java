@@ -24,8 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
@@ -34,10 +33,10 @@ import org.slj.mqtt.sn.spi.MqttsnException;
  */
 public interface IMqttsnGatewayClusterService extends IMqttsnService {
 
-    void notifyConnection(IMqttsnContext context) throws MqttsnException;
+    void notifyConnection(IClientIdentifierContext context) throws MqttsnException;
 
-    void notifyAwake(IMqttsnContext context) throws MqttsnException;
+    void notifyAwake(IClientIdentifierContext context) throws MqttsnException;
 
-    void notifyDisconnection(IMqttsnContext context) throws MqttsnException;
+    void notifyDisconnection(IClientIdentifierContext context) throws MqttsnException;
 
 }

@@ -36,7 +36,7 @@ import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -148,12 +148,12 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public boolean isConnected(IMqttsnContext context) throws MqttsnConnectorException {
+    public boolean isConnected(IClientIdentifierContext context) throws MqttsnConnectorException {
         return !stopped && connection != null && connection.isConnected();
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             if(isConnected(context)){
                 if(!connection.canAccept(context, topicPath, payload, message)){
@@ -210,7 +210,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    protected IMqttsnConnectorConnection getConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException {
+    protected IMqttsnConnectorConnection getConnectionInternal(IClientIdentifierContext context) throws MqttsnConnectorException {
         if(stopped) throw new MqttsnConnectorException("broker service is in the process or shutting down");
         initConnection();
         return connection;
@@ -311,7 +311,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
+    public SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
 
         try {
             if(!getRegistry().getSubscriptionRegistry().
@@ -327,7 +327,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
+    public UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             //-- only need to unsubscribe if we will NO LONGER have any subscriptions
             if(getRegistry().getSubscriptionRegistry().
@@ -374,7 +374,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     }
 
     static class BrokerPublishOperation {
-        public IMqttsnContext context;
+        public IClientIdentifierContext context;
         public TopicPath topicPath;
         public byte[] payload;
         public boolean retained;

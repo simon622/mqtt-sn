@@ -22,28 +22,9 @@
  * under the License.
  */
 
-package org.slj.mqtt.sn.model.session;
+package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
+public interface IPreferenceNamespace {
 
-import java.util.Date;
-
-public interface IMqttsnSession {
-
-    IMqttsnContext getContext();
-
-    MqttsnClientState getClientState();
-
-    Date getLastSeen();
-
-    Date getSessionStarted();
-
-    int getMaxPacketSize();
-
-    int getKeepAlive();
-
-    long getSessionExpiryInterval();
-
-    int getProtocolVersion();
+    String getNamespace();
 }

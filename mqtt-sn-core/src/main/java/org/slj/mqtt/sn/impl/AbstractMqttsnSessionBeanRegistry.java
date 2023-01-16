@@ -24,18 +24,18 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.impl.MqttsnSessionBeanImpl;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.impl.SessionBeanImpl;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 
 public abstract class AbstractMqttsnSessionBeanRegistry
         extends AbstractMqttsnService {
 
-    protected MqttsnSessionBeanImpl getSessionBean(IMqttsnSession session){
-        if(session instanceof MqttsnSessionBeanImpl){
-            return (MqttsnSessionBeanImpl) session;
+    protected SessionBeanImpl getSessionBean(ISession session){
+        if(session instanceof SessionBeanImpl){
+            return (SessionBeanImpl) session;
         } else {
             throw new MqttsnRuntimeException("cannot derive session bean from session object");
         }
@@ -45,11 +45,11 @@ public abstract class AbstractMqttsnSessionBeanRegistry
         throw new UnsupportedOperationException("bean-registry provides no mechanism to clear by session");
     }
 
-    public void clear(IMqttsnSession session){
+    public void clear(ISession session){
         throw new UnsupportedOperationException("bean-registry provides no mechanism to clear by session");
     }
 
-    public void clear(IMqttsnContext context){
+    public void clear(IClientIdentifierContext context){
         throw new UnsupportedOperationException("bean-registry provides no mechanism to clear by context");
     }
 }

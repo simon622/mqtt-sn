@@ -28,8 +28,8 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnMessageRules;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -48,11 +48,11 @@ public abstract class AbstractMqttsnMessageStateService
 
     protected static final Integer WEAK_ATTACH_ID = new Integer(MqttsnConstants.UNSIGNED_MAX_16 + 1);
     protected boolean clientMode;
-    protected Map<IMqttsnContext, Long> lastActiveMessage;
-    protected Map<IMqttsnContext, Long> lastMessageSent;
-    protected Map<IMqttsnContext, Long> lastMessageReceived;
+    protected Map<IClientIdentifierContext, Long> lastActiveMessage;
+    protected Map<IClientIdentifierContext, Long> lastMessageSent;
+    protected Map<IClientIdentifierContext, Long> lastMessageReceived;
     protected Map<LastIdContext, Integer> lastUsedMsgIds;
-    protected Map<IMqttsnContext, ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT>> flushOperations;
+    protected Map<IClientIdentifierContext, ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT>> flushOperations;
     protected ScheduledExecutorService executorService = null;
     protected int loopTimeout;
 
@@ -73,7 +73,7 @@ public abstract class AbstractMqttsnMessageStateService
         super.start(runtime);
     }
 
-    protected void scheduleWork(IMqttsnContext context, int time, TimeUnit unit){
+    protected void scheduleWork(IClientIdentifierContext context, int time, TimeUnit unit){
         ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT> future =
                 executorService.schedule(() -> {
                     IMqttsnMessageQueueProcessor.RESULT result =
@@ -123,7 +123,7 @@ public abstract class AbstractMqttsnMessageStateService
         }
     }
 
-    protected IMqttsnMessageQueueProcessor.RESULT processQueue(IMqttsnContext context){
+    protected IMqttsnMessageQueueProcessor.RESULT processQueue(IClientIdentifierContext context){
         try {
             return registry.getQueueProcessor().process(context);
         } catch(Exception e){
@@ -133,7 +133,7 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     @Override
-    public void unscheduleFlush(IMqttsnContext context) {
+    public void unscheduleFlush(IClientIdentifierContext context) {
         ScheduledFuture<?> future = null;
         if(!flushOperations.containsKey(context)) {
             synchronized (flushOperations) {
@@ -148,7 +148,7 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     @Override
-    public void scheduleFlush(IMqttsnContext context)  {
+    public void scheduleFlush(IClientIdentifierContext context)  {
         if(!flushOperations.containsKey(context) ||
                 flushOperations.get(context).isDone()){
             
@@ -168,13 +168,13 @@ public abstract class AbstractMqttsnMessageStateService
         //-- monitor active context timeouts
         int activeMessageTimeout = registry.getOptions().getActiveContextTimeout();
         if(activeMessageTimeout > 0){
-            Set<IMqttsnContext> copy = null;
+            Set<IClientIdentifierContext> copy = null;
             synchronized (lastActiveMessage){
                 copy = new HashSet<>(lastActiveMessage.keySet());
             }
-            Iterator<IMqttsnContext> itr = copy.iterator();
+            Iterator<IClientIdentifierContext> itr = copy.iterator();
             while(itr.hasNext()){
-                IMqttsnContext context = itr.next();
+                IClientIdentifierContext context = itr.next();
                 Long time = lastActiveMessage.get(context);
                 if((time + activeMessageTimeout) < System.currentTimeMillis()){
                     //-- context is timedout
@@ -192,17 +192,17 @@ public abstract class AbstractMqttsnMessageStateService
         return Math.max(loopTimeout, 1);
     }
 
-    protected boolean allowedToSend(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+    protected boolean allowedToSend(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnException {
         return true;
     }
 
     @Override
-    public MqttsnWaitToken sendMessage(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+    public MqttsnWaitToken sendMessage(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnException {
         return sendMessageInternal(context, message, null);
     }
 
     @Override
-    public MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
+    public MqttsnWaitToken sendPublishMessage(IClientIdentifierContext context, TopicInfo info, IQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
 
         byte[] payload = registry.getMessageRegistry().get(queuedPublishMessage.getDataRefId());
 
@@ -233,11 +233,11 @@ public abstract class AbstractMqttsnMessageStateService
         return sendMessageInternal(context, publish, queuedPublishMessage);
     }
 
-    protected boolean isDUPDelivery(IMqttsnQueuedPublishMessage message){
+    protected boolean isDUPDelivery(IQueuedPublishMessage message){
         return message.getRetryCount() > 1 || message.getPacketId() > 0;
     }
 
-    protected MqttsnWaitToken sendMessageInternal(IMqttsnContext context, IMqttsnMessage message, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
+    protected MqttsnWaitToken sendMessageInternal(IClientIdentifierContext context, IMqttsnMessage message, IQueuedPublishMessage queuedPublishMessage) throws MqttsnException {
 
         if(!allowedToSend(context, message)){
             logger.warn("allowed to send {} check failed {}", message, context);
@@ -322,12 +322,12 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     @Override
-    public Optional<IMqttsnMessage> waitForCompletion(IMqttsnContext context, final MqttsnWaitToken token) throws MqttsnExpectationFailedException {
+    public Optional<IMqttsnMessage> waitForCompletion(IClientIdentifierContext context, final MqttsnWaitToken token) throws MqttsnExpectationFailedException {
         return waitForCompletion(context, token, registry.getOptions().getMaxWait());
     }
 
     @Override
-    public Optional<IMqttsnMessage> waitForCompletion(IMqttsnContext context, final MqttsnWaitToken token, int waitTime) throws MqttsnExpectationFailedException {
+    public Optional<IMqttsnMessage> waitForCompletion(IClientIdentifierContext context, final MqttsnWaitToken token, int waitTime) throws MqttsnExpectationFailedException {
         try {
             if(token == null){
                 logger.warn("cannot wait for a <null> token");
@@ -382,7 +382,7 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     @Override
-    public IMqttsnMessage notifyMessageReceived(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+    public IMqttsnMessage notifyMessageReceived(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnException {
 
         if(registry.getCodec().isActiveMessage(message) && !message.isErrorMessage()){
             lastActiveMessage.put(context, System.currentTimeMillis());
@@ -451,7 +451,7 @@ public abstract class AbstractMqttsnMessageStateService
 
                         if (inflight instanceof RequeueableInflightMessage) {
                             try {
-                                IMqttsnQueuedPublishMessage m = ((RequeueableInflightMessage) inflight).getQueuedPublishMessage();
+                                IQueuedPublishMessage m = ((RequeueableInflightMessage) inflight).getQueuedPublishMessage();
                                 if(m.getRetryCount() >= registry.getOptions().getMaxErrorRetries()){
                                     logger.warn("publish message {} exceeded max retries {}, discard and notify application", registry.getOptions().getMaxErrorRetries(), m);
                                     PublishData data = registry.getCodec().getData(confirmedMessage);
@@ -460,7 +460,7 @@ public abstract class AbstractMqttsnMessageStateService
                                             data.getData(), confirmedMessage, m.getRetryCount());
                                 } else {
                                     logger.info("message was re-queueable offer to queue {}", context);
-                                    IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                                    ISession session = registry.getSessionRegistry().getSession(context, false);
                                     if(session != null){
                                         registry.getMessageQueue().offer(session, m);
                                     }
@@ -537,7 +537,7 @@ public abstract class AbstractMqttsnMessageStateService
     protected void confirmPublish(final CommitOperation operation) {
 
         getRegistry().getRuntime().generalPurposeSubmit(() -> {
-            IMqttsnContext context = operation.context;
+            IClientIdentifierContext context = operation.context;
             byte[] payload = operation.data.getData();
             if(registry.getSecurityService().payloadIntegrityEnabled()){
                 try {
@@ -567,7 +567,7 @@ public abstract class AbstractMqttsnMessageStateService
         });
     }
 
-    protected MqttsnWaitToken markInflight(IMqttsnOriginatingMessageSource source, IMqttsnContext context, IMqttsnMessage message, IMqttsnQueuedPublishMessage queuedPublishMessage)
+    protected MqttsnWaitToken markInflight(IMqttsnOriginatingMessageSource source, IClientIdentifierContext context, IMqttsnMessage message, IQueuedPublishMessage queuedPublishMessage)
             throws MqttsnException {
 
         //may have old inbound messages kicking around depending on reap settings, to just allow these to come in
@@ -633,12 +633,12 @@ public abstract class AbstractMqttsnMessageStateService
         return startAt;
     }
 
-    public void clearInflight(IMqttsnContext context) throws MqttsnException {
+    public void clearInflight(IClientIdentifierContext context) throws MqttsnException {
         clearInflightInternal(context, 0);
     }
 
     @Override
-    public void clear(IMqttsnContext context) throws MqttsnException {
+    public void clear(IClientIdentifierContext context) throws MqttsnException {
         logger.info("clearing down message state for context {}", context);
         unscheduleFlush(context);
         lastActiveMessage.remove(context);
@@ -648,7 +648,7 @@ public abstract class AbstractMqttsnMessageStateService
         lastUsedMsgIds.remove(LastIdContext.from(context, IMqttsnOriginatingMessageSource.LOCAL));
     }
 
-    protected void clearInflightInternal(IMqttsnContext context, long evictionTime) throws MqttsnException {
+    protected void clearInflightInternal(IClientIdentifierContext context, long evictionTime) throws MqttsnException {
         logger.debug("clearing all inflight messages for context {}, forced = {}", context, evictionTime == 0);
         if(registry.getOptions().isReapReceivingMessages()){
             clearInternal(context, getInflightMessages(context, IMqttsnOriginatingMessageSource.REMOTE), evictionTime);
@@ -656,7 +656,7 @@ public abstract class AbstractMqttsnMessageStateService
         clearInternal(context, getInflightMessages(context, IMqttsnOriginatingMessageSource.LOCAL), evictionTime);
     }
 
-    private final void clearInternal(IMqttsnContext context, Map<Integer, InflightMessage> messages, long evictionTime) throws MqttsnException {
+    private final void clearInternal(IClientIdentifierContext context, Map<Integer, InflightMessage> messages, long evictionTime) throws MqttsnException {
         if(messages != null && !messages.isEmpty()){
             synchronized (messages){
                 Iterator<Integer> messageItr = messages.keySet().iterator();
@@ -675,7 +675,7 @@ public abstract class AbstractMqttsnMessageStateService
         }
     }
 
-    protected void reapInflight(IMqttsnContext context, InflightMessage inflight) throws MqttsnException {
+    protected void reapInflight(IClientIdentifierContext context, InflightMessage inflight) throws MqttsnException {
 
         IMqttsnMessage message = inflight.getMessage();
         logger.info("clearing message {} destined for {} aged {} from inflight",
@@ -698,7 +698,7 @@ public abstract class AbstractMqttsnMessageStateService
             if(registry.getMessageQueue() != null &&
                     registry.getOptions().isRequeueOnInflightTimeout() &&
                     requeueableInflightMessage.getQueuedPublishMessage() != null) {
-                IMqttsnQueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
+                IQueuedPublishMessage queuedPublishMessage = requeueableInflightMessage.getQueuedPublishMessage();
                 queuedPublishMessage.setToken(null);
                 boolean maxRetries = queuedPublishMessage.getRetryCount() >= registry.getOptions().getMaxErrorRetries();
                 try {
@@ -711,7 +711,7 @@ public abstract class AbstractMqttsnMessageStateService
                     } else {
                         logger.info("re-queuing publish message {} for {}", context,
                                 queuedPublishMessage);
-                        IMqttsnSession session = registry.getSessionRegistry().getSession(context, false);
+                        ISession session = registry.getSessionRegistry().getSession(context, false);
                         if(session != null){
                             registry.getMessageQueue().offer(session, queuedPublishMessage);
                         }
@@ -728,13 +728,13 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     @Override
-    public int countInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException {
+    public int countInflight(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException {
         Map<Integer, InflightMessage> map = getInflightMessages(context, source);
         return map.size();
     }
 
     @Override
-    public boolean canSend(IMqttsnContext context) throws MqttsnException {
+    public boolean canSend(IClientIdentifierContext context) throws MqttsnException {
         int inflight = countInflight(context, IMqttsnOriginatingMessageSource.LOCAL);
         boolean canSend = inflight <
                 registry.getOptions().getMaxMessagesInflight();
@@ -745,20 +745,20 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     @Override
-    public Long getMessageLastSentToContext(IMqttsnContext context) {
+    public Long getMessageLastSentToContext(IClientIdentifierContext context) {
         return lastMessageSent.get(context);
     }
 
     @Override
-    public Long getMessageLastReceivedFromContext(IMqttsnContext context) {
+    public Long getMessageLastReceivedFromContext(IClientIdentifierContext context) {
         return lastMessageReceived.get(context);
     }
 
-    public Long getLastActiveMessage(IMqttsnContext context){
+    public Long getLastActiveMessage(IClientIdentifierContext context){
         return lastActiveMessage.get(context);
     }
 
-    protected String getTopicPathFromPublish(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException {
+    protected String getTopicPathFromPublish(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnException {
 
         int topicIdType;
         byte[] topicData;
@@ -775,32 +775,32 @@ public abstract class AbstractMqttsnMessageStateService
 
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);
 
-        IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+        ISession session = getRegistry().getSessionRegistry().getSession(context, false);
         String topicPath = registry.getTopicRegistry().topicPath(session, info, true);
         return topicPath;
     }
 
-    public abstract InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException;
+    public abstract InflightMessage removeInflight(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException;
 
-    protected abstract void addInflightMessage(IMqttsnContext context, Integer packetId, InflightMessage message) throws MqttsnException ;
+    protected abstract void addInflightMessage(IClientIdentifierContext context, Integer packetId, InflightMessage message) throws MqttsnException ;
 
-    protected abstract InflightMessage getInflightMessage(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException ;
+    protected abstract InflightMessage getInflightMessage(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException ;
 
-    protected abstract Map<Integer, InflightMessage>  getInflightMessages(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException;
+    protected abstract Map<Integer, InflightMessage>  getInflightMessages(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException;
 
-    protected abstract boolean inflightExists(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException;
+    protected abstract boolean inflightExists(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException;
 
     static class CommitOperation {
 
         protected PublishData data;
         protected IMqttsnMessage message;
-        protected IMqttsnContext context;
+        protected IClientIdentifierContext context;
         protected long timestamp;
-        protected IMqttsnDataRef messageId;
+        protected IDataRef messageId;
         //-- TODO this should encapsulate the source enum for consistency
         protected boolean inbound;
 
-        public CommitOperation(IMqttsnContext context, PublishData data, IMqttsnMessage message, boolean inbound){
+        public CommitOperation(IClientIdentifierContext context, PublishData data, IMqttsnMessage message, boolean inbound){
             this.context = context;
             this.data = data;
             this.message = message;
@@ -808,11 +808,11 @@ public abstract class AbstractMqttsnMessageStateService
             this.timestamp = System.currentTimeMillis();
         }
 
-        public static CommitOperation inbound(IMqttsnContext context, PublishData data, IMqttsnMessage message){
+        public static CommitOperation inbound(IClientIdentifierContext context, PublishData data, IMqttsnMessage message){
             return new CommitOperation(context, data, message, true);
         }
 
-        public static CommitOperation outbound(IMqttsnContext context, IMqttsnDataRef messageId, PublishData data, IMqttsnMessage message){
+        public static CommitOperation outbound(IClientIdentifierContext context, IDataRef messageId, PublishData data, IMqttsnMessage message){
             CommitOperation c = new CommitOperation(context, data, message, false);
             c.messageId = messageId;
             return c;
@@ -833,10 +833,10 @@ public abstract class AbstractMqttsnMessageStateService
 
     protected static class LastIdContext {
 
-        protected final IMqttsnContext context;
+        protected final IClientIdentifierContext context;
         protected final IMqttsnOriginatingMessageSource source;
 
-        public LastIdContext(IMqttsnContext context, IMqttsnOriginatingMessageSource source) {
+        public LastIdContext(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source) {
             this.context = context;
             this.source = source;
         }
@@ -862,7 +862,7 @@ public abstract class AbstractMqttsnMessageStateService
                     '}';
         }
 
-        public static LastIdContext from(IMqttsnContext context, IMqttsnOriginatingMessageSource source){
+        public static LastIdContext from(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source){
             return new LastIdContext(context, source);
         }
     }

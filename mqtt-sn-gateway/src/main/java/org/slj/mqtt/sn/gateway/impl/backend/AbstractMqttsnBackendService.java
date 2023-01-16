@@ -29,7 +29,7 @@ import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.connector.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -56,7 +56,7 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
+    public ConnectResult connect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
@@ -66,7 +66,7 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
+    public DisconnectResult disconnect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
@@ -76,7 +76,7 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
@@ -86,7 +86,7 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
+    public SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
         IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
@@ -96,7 +96,7 @@ public abstract class AbstractMqttsnBackendService
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
+    public UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topic, IMqttsnMessage message) throws MqttsnConnectorException {
         IMqttsnConnectorConnection connection = getConnection(context);
         if(!connection.isConnected()){
             throw new MqttsnConnectorException("underlying broker connection was not connected");
@@ -105,7 +105,7 @@ public abstract class AbstractMqttsnBackendService
         return res;
     }
 
-    protected IMqttsnConnectorConnection getConnection(IMqttsnContext context) throws MqttsnConnectorException {
+    protected IMqttsnConnectorConnection getConnection(IClientIdentifierContext context) throws MqttsnConnectorException {
         synchronized (this){
             IMqttsnConnectorConnection connection = getConnectionInternal(context);
             if(!connection.isConnected()){
@@ -204,5 +204,5 @@ public abstract class AbstractMqttsnBackendService
 
     protected abstract void close(IMqttsnConnectorConnection connection) throws MqttsnConnectorException;
 
-    protected abstract IMqttsnConnectorConnection getConnectionInternal(IMqttsnContext context) throws MqttsnConnectorException;
+    protected abstract IMqttsnConnectorConnection getConnectionInternal(IClientIdentifierContext context) throws MqttsnConnectorException;
 }

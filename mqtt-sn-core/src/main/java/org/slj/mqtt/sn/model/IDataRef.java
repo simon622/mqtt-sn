@@ -24,7 +24,9 @@
 
 package org.slj.mqtt.sn.model;
 
-public interface IMqttsnPreferenceNamespace {
+import java.io.Serializable;
 
-    String getNamespace();
+public interface IDataRef<T> extends Serializable  {
+
+    T getId();
 }

@@ -25,8 +25,8 @@
 package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.ITopicRegistration;
 
 import java.util.Set;
 
@@ -40,30 +40,30 @@ public interface IMqttsnTopicRegistry extends IMqttsnService  {
 
     TopicInfo normalize(byte topicIdType, byte[] topicData, boolean normalAsLong) throws MqttsnException;
 
-    TopicInfo register(IMqttsnSession session, String topicPath) throws MqttsnException;
+    TopicInfo register(ISession session, String topicPath) throws MqttsnException;
 
-    void register(IMqttsnSession session, String topicPath, int alias) throws MqttsnException;
+    void register(ISession session, String topicPath, int alias) throws MqttsnException;
 
-    boolean registered(IMqttsnSession session, String topicPath) throws MqttsnException;
+    boolean registered(ISession session, String topicPath) throws MqttsnException;
 
-    TopicInfo lookup(IMqttsnSession session, String topicPath) throws MqttsnException;
+    TopicInfo lookup(ISession session, String topicPath) throws MqttsnException;
 
-    TopicInfo lookup(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException;
+    TopicInfo lookup(ISession session, String topicPath, boolean confirmedOnly) throws MqttsnException;
 
-    String topicPath(IMqttsnSession session, TopicInfo topicInfo, boolean considerContext) throws MqttsnException ;
+    String topicPath(ISession session, TopicInfo topicInfo, boolean considerContext) throws MqttsnException ;
 
     //-- lookup specific parts of the registry
-    Integer lookupRegistered(IMqttsnSession session, String topicPath, boolean confirmedOnly) throws MqttsnException;
+    Integer lookupRegistered(ISession session, String topicPath, boolean confirmedOnly) throws MqttsnException;
 
-    String lookupRegistered(IMqttsnSession session, int topicAlias) throws MqttsnException;
+    String lookupRegistered(ISession session, int topicAlias) throws MqttsnException;
 
-    Integer lookupPredefined(IMqttsnSession session, String topicPath) throws MqttsnException;
+    Integer lookupPredefined(ISession session, String topicPath) throws MqttsnException;
 
-    String lookupPredefined(IMqttsnSession session, int topicAlias) throws MqttsnException;
+    String lookupPredefined(ISession session, int topicAlias) throws MqttsnException;
 
-    void clear(IMqttsnSession session, boolean hardClear) throws MqttsnException;
+    void clear(ISession session, boolean hardClear) throws MqttsnException;
 
-    void clear(IMqttsnSession session) throws MqttsnException;
+    void clear(ISession session) throws MqttsnException;
 
-    Set<IMqttsnTopicRegistration> getRegistrations(IMqttsnSession session) throws MqttsnException;
+    Set<ITopicRegistration> getRegistrations(ISession session) throws MqttsnException;
 }

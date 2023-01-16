@@ -46,7 +46,7 @@
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <logger name="org.slj" level="ERROR"/>
+    <logger name="org.slj" level="INFO"/>
     <logger name="ch.qos.logback" level="OFF"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="org.apache.plc4x" level="INFO"/>

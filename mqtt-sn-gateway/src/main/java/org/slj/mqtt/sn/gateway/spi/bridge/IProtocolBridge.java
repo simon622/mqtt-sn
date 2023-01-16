@@ -25,16 +25,15 @@
 package org.slj.mqtt.sn.gateway.spi.bridge;
 
 import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnService;
 
 @MqttsnService(order = MqttsnService.LAST)
-public interface IProtocolBridge<T extends IProtocolBridgeConnection> extends IMqttsnService {
+public interface IProtocolBridge<T extends IProtocolBridgeConnection> {
 
-    T createConnection(ProtocolBridgeOptions options, IMqttsnRuntimeRegistry registry, String clientId) throws ProtocolBridgeException;
-
-    T createConnection(IMqttsnRuntimeRegistry registry, String clientId) throws ProtocolBridgeException;
+    T createConnection() throws ProtocolBridgeException;
 
     String getConnectionString();
 

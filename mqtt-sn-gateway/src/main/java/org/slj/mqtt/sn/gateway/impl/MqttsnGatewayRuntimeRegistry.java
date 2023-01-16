@@ -24,8 +24,10 @@
 
 package org.slj.mqtt.sn.gateway.impl;
 
+import org.slj.mqtt.sn.gateway.impl.bridge.ProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
 import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridge;
+import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.gateway.*;
@@ -71,6 +73,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withClientIdFactory(new MqttsnDefaultClientIdFactory()).
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
 
+        registry.withProtocolBridgeService(new ProtocolBridgeService());
         return registry;
     }
 
@@ -86,12 +89,6 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
 
     public MqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector){
         withServiceReplaceIfExists(IMqttsnConnector.class, connector);
-        return this;
-    }
-
-    @Override
-    public IMqttsnGatewayRuntimeRegistry withProtocolBridge(IProtocolBridge protocolBridge) {
-        withService(protocolBridge);
         return this;
     }
 
@@ -126,11 +123,6 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
     }
 
     @Override
-    public List<IProtocolBridge> getProtocolBridges() {
-        return getServices(IProtocolBridge.class);
-    }
-
-    @Override
     public IMqttsnGatewayAdvertiseService getGatewayAdvertiseService() {
         return getOptionalService(IMqttsnGatewayAdvertiseService.class).orElse(null);
     }
@@ -142,5 +134,16 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
 
     public IMqttsnGatewayExpansionHandler getExpansionHandler() {
         return getService(IMqttsnGatewayExpansionHandler.class);
+    }
+
+    @Override
+    public IMqttsnGatewayRuntimeRegistry withProtocolBridgeService(IProtocolBridgeService protocolBridge) {
+        withService(protocolBridge);
+        return this;
+    }
+
+    @Override
+    public IProtocolBridgeService getProtocolBridgeService() {
+        return getService(IProtocolBridgeService.class);
     }
 }

@@ -30,11 +30,11 @@ public interface IMqttsnMessageContext {
 
     INetworkContext getNetworkContext();
 
-    IClientIdentifierContext getMqttsnContext();
+    IClientIdentifierContext getClientContext();
 
-    ISession getMqttsnSession();
+    ISession getSession();
 
-    void setMqttsnSession(ISession session);
+    void setSession(ISession session);
 
     int getProtocolVersion();
 }

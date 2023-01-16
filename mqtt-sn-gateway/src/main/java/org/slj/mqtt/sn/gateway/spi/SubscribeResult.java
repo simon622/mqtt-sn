@@ -41,6 +41,10 @@ public class SubscribeResult extends Result {
         super(status);
     }
 
+    public SubscribeResult(STATUS status, String message) {
+        super(status, message);
+    }
+
     public SubscribeResult(TopicInfo info, int grantedQoS) {
         super(STATUS.SUCCESS);
         this.topicInfo = info;

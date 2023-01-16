@@ -34,19 +34,21 @@ import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 public abstract class AbstractProtocolBridge<T extends IProtocolBridgeConnection>
-    extends AbstractMqttsnService
         implements IProtocolBridge<T> {
 
-    protected ProtocolBridgeDescriptor descriptor;
-    protected ProtocolBridgeOptions options;
+    protected final ProtocolBridgeDescriptor descriptor;
+    protected final ProtocolBridgeOptions options;
+    protected final IMqttsnGatewayRuntimeRegistry registry;
 
-    public AbstractProtocolBridge(ProtocolBridgeDescriptor descriptor, ProtocolBridgeOptions options) {
+    public AbstractProtocolBridge(IMqttsnGatewayRuntimeRegistry registry, ProtocolBridgeDescriptor descriptor, ProtocolBridgeOptions options) {
         this.descriptor = descriptor;
         this.options = options;
+        this.registry = registry;
     }
 
     @Override
@@ -59,8 +61,7 @@ public abstract class AbstractProtocolBridge<T extends IProtocolBridgeConnection
         return options;
     }
 
-    @Override
-    public T createConnection(IMqttsnRuntimeRegistry registry, String clientId) throws ProtocolBridgeException {
-        return createConnection(getDefaultOptions(), registry, clientId);
+    public IMqttsnGatewayRuntimeRegistry getRegistry() {
+        return registry;
     }
 }

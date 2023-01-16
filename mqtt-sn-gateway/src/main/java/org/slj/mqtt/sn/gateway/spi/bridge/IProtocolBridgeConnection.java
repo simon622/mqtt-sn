@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.gateway.spi.bridge;
 
+import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -31,6 +32,8 @@ import org.slj.mqtt.sn.utils.TopicPath;
 import java.io.Closeable;
 
 public interface IProtocolBridgeConnection extends Closeable {
+
+    ProtocolBridgeDescriptor getDescriptor();
 
     boolean isConnected() throws ProtocolBridgeException;
 

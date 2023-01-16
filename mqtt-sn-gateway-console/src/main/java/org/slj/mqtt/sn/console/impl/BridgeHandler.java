@@ -32,8 +32,9 @@ import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.HttpException;
 import org.slj.mqtt.sn.console.http.HttpInternalServerError;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
+import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridgeConnection;
+import org.slj.mqtt.sn.gateway.spi.bridge.ProtocolBridgeException;
 import org.slj.mqtt.sn.gateway.spi.bridge.ProtocolBridgeOptions;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -51,11 +52,11 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
     static final String STOP = "stop";
     static final String BRIDGE_DETAILS = "bridgeDetails";
 
-    protected IMqttsnCloudService cloudService;
+    protected IMqttsnCloudService cloudServices;
 
     public BridgeHandler(IMqttsnCloudService cloudService, ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
         super(mapper, registry);
-        this.cloudService = cloudService;
+        this.cloudServices = cloudService;
     }
 
     protected void handleHttpPost(IHttpRequestResponse request) throws HttpException, IOException {
@@ -64,10 +65,8 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
             Iterator<String> itr = form.getProperties().keySet().iterator();
             List<ProtocolBridgeDescriptor> descriptors = runtimeBridges().bridges;
 
-
-            MqttsnConnectorDescriptor descriptor = getRegistry().getBackendService().getDescriptorById(
+            ProtocolBridgeDescriptor descriptor = getRegistry().getProtocolBridgeService().getDescriptorById(
                     descriptors, form.getProperties().get("bridgeId"));
-
 
             IMqttsnStorageService storageService = getRegistry().getStorageService().
                     getPreferenceNamespace(descriptor);
@@ -80,14 +79,14 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
             //-- restart the server
             ProtocolBridgeOptions options = new ProtocolBridgeOptions();
             storageService.initializeFieldsFromStorage(options);
+            if(getRegistry().getProtocolBridgeService().initializeBridge(descriptor, options)){
+                writeMessageBeanResponse(request, HttpConstants.SC_OK,
+                        new Message("Connector successfully initialised", true));
+            } else {
+                writeHTMLResponse(request, HttpConstants.SC_INTERNAL_SERVER_ERROR, "Connection could not be established, please review details");
+            }
 
-
-            getRegistry().getBackendService().initializeConnector(descriptor, options);
-
-            writeMessageBeanResponse(request, HttpConstants.SC_OK,
-                    new Message("Connector successfully initialised", true));
-
-        } catch(MqttsnCloudServiceException | MqttsnException e){
+        } catch(Exception e){
             writeHTMLResponse(request, HttpConstants.SC_INTERNAL_SERVER_ERROR,
                     General.getRootCauseMessage(e));
         }
@@ -99,24 +98,22 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
 
             List<ProtocolBridgeDescriptor> descriptors = runtimeBridges().bridges;
 
-            ProtocolBridgeDescriptor descriptor = getRegistry().getBackendService().getInstalledDescriptor(descriptors);
-
             String action = null;
             if((action = getParameter(request, ACTION)) != null){
-                String connectorId = null;
+                String bridgeId = getMandatoryParameter(request, BRIDGE);
+                ProtocolBridgeDescriptor descriptor =
+                        getRegistry().getProtocolBridgeService().getDescriptorById(descriptors, bridgeId);
                 if(STOP.equals(action)){
-                    connectorId = getMandatoryParameter(request, BRIDGE);
-                    getRegistry().getBackendService().stop();
+                    IProtocolBridgeConnection conn = getRegistry().getProtocolBridgeService().getActiveConnectionIfExists(descriptor);
+                    if(conn != null){
+                        getRegistry().getProtocolBridgeService().close(conn);
+                    }
                     writeSimpleOKResponse(request);
                 } else if(START.equals(action)){
-                    connectorId = getMandatoryParameter(request, BRIDGE);
-                    getRegistry().getBackendService().start(getRegistry());
                     writeSimpleOKResponse(request);
                 }
                 else if(BRIDGE_DETAILS.equals(action)){
-                    connectorId = getMandatoryParameter(request, BRIDGE);
-                    writeJSONBeanResponse(request, HttpConstants.SC_OK,
-                            getRegistry().getBackendService().getDescriptorById(descriptors, connectorId));
+                    writeJSONBeanResponse(request, HttpConstants.SC_OK, descriptor);
                 }
             } else {
                 //return the connector bean list
@@ -131,13 +128,13 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
     protected BeanList runtimeBridges() throws MqttsnCloudServiceException {
 
         List<ProtocolBridgeDescriptor> bridges = null;
-        if(cloudService != null && bridges == null){
-            bridges = cloudService.getAvailableBridges();
+        if(cloudServices != null && bridges == null){
+            bridges = cloudServices.getAvailableBridges();
         }
 
         //for each connector apply its local runtime status
         if(bridges != null && !bridges.isEmpty()){
-            bridges = applyRuntimeStatus(bridges);
+            bridges = applyAllRuntimeStatus(bridges);
         }
 
         BeanList beanList = new BeanList();
@@ -145,7 +142,7 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
         return beanList;
     }
 
-    protected List<ProtocolBridgeDescriptor> applyRuntimeStatus(List<ProtocolBridgeDescriptor> list){
+    protected List<ProtocolBridgeDescriptor> applyAllRuntimeStatus(List<ProtocolBridgeDescriptor> list){
 
         List<ProtocolBridgeDescriptor> runtimeBridges = new ArrayList<>();
         Iterator<ProtocolBridgeDescriptor> itr = list.iterator();
@@ -153,20 +150,22 @@ public class BridgeHandler extends MqttsnConsoleAjaxRealmHandler {
             ProtocolBridgeDescriptor bean = itr.next();
             RuntimeBridgeBean runtimeBean = new RuntimeBridgeBean(bean);
             try {
-                applyRuntimeStatus(runtimeBean);
+                applyRuntimeStatus(list, runtimeBean);
                 runtimeBridges.add(runtimeBean);
-            } catch(MqttsnConnectorException e){
+            } catch(ProtocolBridgeException | MqttsnCloudServiceException e){
                 //ignore
+                e.printStackTrace();
             }
         }
         return runtimeBridges;
     }
 
-    private void applyRuntimeStatus(RuntimeBridgeBean runtimeBean) throws MqttsnConnectorException{
+    private void applyRuntimeStatus(List<ProtocolBridgeDescriptor> list, RuntimeBridgeBean runtimeBean) throws MqttsnCloudServiceException, ProtocolBridgeException {
 
-        runtimeBean.available = getRegistry().getBackendService().connectorAvailable(runtimeBean);
-        runtimeBean.running = getRegistry().getBackendService().matchesRunningConnector(runtimeBean) &&
-                getRegistry().getBackendService().isConnected(null);
+        runtimeBean.available = getRegistry().getProtocolBridgeService().bridgeAvailable(runtimeBean);
+        runtimeBean.running = getRegistry().getProtocolBridgeService().getActiveBridges(list).
+                contains(runtimeBean);
+
         //-- check if its running
         if(runtimeBean.available){
             //-- decorate the properties with those that would be used

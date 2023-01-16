@@ -1,8 +1,7 @@
-package org.slj.mqtt.sn.plc;
+package org.slj.mqtt.sn.plc.opcua;
 
 import org.apache.plc4x.java.PlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
-import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
 import org.apache.plc4x.java.api.messages.*;
 import org.apache.plc4x.java.api.metadata.PlcConnectionMetadata;
 import org.apache.plc4x.java.api.model.PlcSubscriptionHandle;
@@ -15,8 +14,6 @@ import org.slj.mqtt.sn.utils.StringTableWriters;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 
 @MqttsnService
 public class OPCUAIIoTBridgeService  extends AbstractMqttsnService {

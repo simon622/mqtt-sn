@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridge;
+import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
@@ -37,8 +38,6 @@ public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
 
     IMqttsnConnector getConnector();
 
-    List<IProtocolBridge> getProtocolBridges();
-
     IMqttsnGatewaySessionService getGatewaySessionService();
 
     IMqttsnGatewayAdvertiseService getGatewayAdvertiseService();
@@ -49,6 +48,8 @@ public interface IMqttsnGatewayRuntimeRegistry extends IMqttsnRuntimeRegistry {
 
     IMqttsnGatewayRuntimeRegistry withConnector(IMqttsnConnector connector);
 
-    IMqttsnGatewayRuntimeRegistry withProtocolBridge(IProtocolBridge protocolBridge);
+    IMqttsnGatewayRuntimeRegistry withProtocolBridgeService(IProtocolBridgeService protocolBridge);
+
+    IProtocolBridgeService getProtocolBridgeService();
 
 }

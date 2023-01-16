@@ -45,6 +45,7 @@ public class ProtocolBridgeOptions {
     private String certificateFileLocation = null;
     private String privateKeyFileLocation = null;
     private String clientId = null;
+    private String resourcePath = null;
 
     public ProtocolBridgeOptions(){
 
@@ -163,6 +164,15 @@ public class ProtocolBridgeOptions {
         return privateKeyFileLocation;
     }
 
+    public String getResourcePath() {
+        return resourcePath;
+    }
+
+    public ProtocolBridgeOptions withResourcePath(String resourcePath){
+        this.resourcePath = resourcePath;
+        return this;
+    }
+
     public String getClientId() {
         return clientId;
     }
@@ -170,19 +180,20 @@ public class ProtocolBridgeOptions {
     @Override
     public String toString() {
         return "ProtocolBridgeOptions{" +
-                "clientId='" + clientId + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", keepAlive=" + keepAlive +
+                "keepAlive=" + keepAlive +
                 ", connectionTimeout=" + connectionTimeout +
-                ", hostName='" + hostName + '\'' +
                 ", port=" + port +
                 ", protocol='" + protocol + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", hostName='" + hostName + '\'' +
                 ", keystoreLocation='" + keystoreLocation + '\'' +
                 ", keystorePassword='" + keystorePassword + '\'' +
                 ", keyPassword='" + keyPassword + '\'' +
                 ", certificateFileLocation='" + certificateFileLocation + '\'' +
                 ", privateKeyFileLocation='" + privateKeyFileLocation + '\'' +
+                ", clientId='" + clientId + '\'' +
+                ", resourcePath='" + resourcePath + '\'' +
                 '}';
     }
 }

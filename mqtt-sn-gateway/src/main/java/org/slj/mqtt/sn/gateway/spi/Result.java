@@ -57,6 +57,11 @@ public class Result {
         this.message = message;
     }
 
+    public Result(STATUS status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+
     public STATUS getStatus() {
         return status;
     }

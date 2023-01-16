@@ -29,8 +29,8 @@ import org.slj.mqtt.sn.model.session.ISession;
 public class MqttsnMessageContext implements IMqttsnMessageContext {
 
     private final INetworkContext networkContext;
-    private IClientIdentifierContext mqttsnContext;
-    private ISession mqttsnSession;
+    private IClientIdentifierContext clientContext;
+    private ISession session;
 
     public MqttsnMessageContext(INetworkContext networkContext) {
         this.networkContext = networkContext;
@@ -42,33 +42,33 @@ public class MqttsnMessageContext implements IMqttsnMessageContext {
     }
 
     @Override
-    public IClientIdentifierContext getMqttsnContext() {
-        return mqttsnContext;
+    public IClientIdentifierContext getClientContext() {
+        return clientContext;
     }
 
-    public void setMqttsnContext(IClientIdentifierContext mqttsnContext) {
-        this.mqttsnContext = mqttsnContext;
+    public void setClientContext(IClientIdentifierContext clientContext) {
+        this.clientContext = clientContext;
     }
 
-    public ISession getMqttsnSession() {
-        return mqttsnSession;
+    public ISession getSession() {
+        return session;
     }
 
-    public void setMqttsnSession(ISession mqttsnSession) {
-        this.mqttsnSession = mqttsnSession;
+    public void setSession(ISession session) {
+        this.session = session;
     }
 
     @Override
     public int getProtocolVersion() {
-        return getMqttsnContext().getProtocolVersion();
+        return getClientContext().getProtocolVersion();
     }
 
     @Override
     public String toString() {
         return "MqttsnMessageContext{" +
                 "networkContext=" + networkContext +
-                ", mqttsnContext=" + mqttsnContext +
-                ", mqttsnSession=" + mqttsnSession +
+                ", clientContext=" + clientContext +
+                ", session=" + session +
                 '}';
     }
 }

@@ -69,11 +69,11 @@ public class MqttsnContextFactory
         MqttsnMessageContext connectionContext = new MqttsnMessageContext(networkContext);
 
         IClientIdentifierContext mqttsnContext = getRegistry().getNetworkRegistry().getMqttsnContext(networkContext);
-        connectionContext.setMqttsnContext(mqttsnContext);
+        connectionContext.setClientContext(mqttsnContext);
 
         ISession session =
                 getRegistry().getSessionRegistry().getSession(mqttsnContext, false);
-        connectionContext.setMqttsnSession(session);
+        connectionContext.setSession(session);
 
         logger.info("creating mqtt-sn message context for processing {}", connectionContext);
 

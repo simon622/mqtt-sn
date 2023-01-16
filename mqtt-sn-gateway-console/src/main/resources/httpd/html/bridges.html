@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<div id="connectors" class="row row-cols-4">
+<div id="bridges" class="row row-cols-4">
 </div>
 
 <div class="modal fade" id="propertyModal" tabindex="-1" aria-labelledby="" aria-hidden="true">
@@ -98,11 +98,11 @@
     }
 
     function update(){
-        $.getJSON("/console/connectors", function(data) {
-            var root = document.getElementById('connectors');
+        $.getJSON("/console/bridges", function(data) {
+            var root = document.getElementById('bridges');
             removeChildren(root);
             // console.log(JSON.stringify(data));
-            data['connectors'].forEach(function(element, i) {
+            data['bridges'].forEach(function(element, i) {
 
                 var stopButtonDisabled = "";
                 var startButtonDisabled = "";

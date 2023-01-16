@@ -46,6 +46,7 @@ public class ProtocolBridgeOptions {
     private String privateKeyFileLocation = null;
     private String clientId = null;
     private String resourcePath = null;
+    private String subscriptions = null;
 
     public ProtocolBridgeOptions(){
 
@@ -173,8 +174,17 @@ public class ProtocolBridgeOptions {
         return this;
     }
 
+    public ProtocolBridgeOptions withSubscriptions(String subscriptions){
+        this.subscriptions = subscriptions;
+        return this;
+    }
+
     public String getClientId() {
         return clientId;
+    }
+
+    public String getSubscriptions() {
+        return subscriptions;
     }
 
     @Override
@@ -194,6 +204,7 @@ public class ProtocolBridgeOptions {
                 ", privateKeyFileLocation='" + privateKeyFileLocation + '\'' +
                 ", clientId='" + clientId + '\'' +
                 ", resourcePath='" + resourcePath + '\'' +
+                ", subscriptions='" + subscriptions + '\'' +
                 '}';
     }
 }

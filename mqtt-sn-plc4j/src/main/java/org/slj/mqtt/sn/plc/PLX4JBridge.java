@@ -6,11 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
 import org.slj.mqtt.sn.gateway.impl.bridge.AbstractProtocolBridge;
 import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridgeConnection;
-import org.slj.mqtt.sn.gateway.spi.bridge.ProtocolBridgeException;
 import org.slj.mqtt.sn.gateway.spi.bridge.ProtocolBridgeOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.MqttsnException;
 
 public class PLX4JBridge extends AbstractProtocolBridge {
 

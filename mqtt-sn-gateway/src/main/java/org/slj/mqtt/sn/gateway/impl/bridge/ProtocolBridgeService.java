@@ -1,5 +1,6 @@
 package org.slj.mqtt.sn.gateway.impl.bridge;
 
+import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
 import org.slj.mqtt.sn.gateway.spi.ConnectResult;
 import org.slj.mqtt.sn.gateway.spi.bridge.*;
@@ -8,6 +9,7 @@ import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.*;
 
@@ -83,6 +85,11 @@ public class ProtocolBridgeService extends AbstractMqttsnService implements IPro
                         return false;
                     } else {
                         connections.put(descriptor, connection);
+                        if(options.getSubscriptions() != null){
+                            if(MqttsnSpecificationValidator.isValidSubscriptionTopic(options.getSubscriptions())){
+                                connection.subscribe(context, new TopicPath(options.getSubscriptions()));
+                            }
+                        }
                         return true;
                     }
                 }

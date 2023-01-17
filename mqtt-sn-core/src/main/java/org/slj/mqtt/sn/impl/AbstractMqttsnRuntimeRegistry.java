@@ -334,7 +334,9 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     @Override
     public AbstractMqttsnRuntimeRegistry withService(IMqttsnService service){
         synchronized (services){
-            services.add(service);
+            if(service != null){
+                services.add(service);
+            }
         }
         return this;
     }
@@ -349,7 +351,9 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
                         serviceInterface.getName());
                 services.remove(existing.get());
             }
-            services.add(serviceInstance);
+            if(serviceInstance != null) {
+                services.add(serviceInstance);
+            }
         }
         return this;
     }

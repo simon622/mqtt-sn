@@ -34,6 +34,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -253,17 +254,26 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
             if(options.getClientCredentials() != null){
                 writeCredentials(options.getClientCredentials());
             }
+            if(options.getPredefinedTopics() != null && !options.getPredefinedTopics().isEmpty()){
+                writePredefinedTopics(options.getPredefinedTopics());
+            }
         } else {
             //load it all
             MqttsnClientCredentials credsFromFilesystem = readCredentials();
             if(credsFromFilesystem != null){
                 options.withClientCredentials(credsFromFilesystem);
             }
+            Map<String, Integer> alias = readPredefinedTopics();
+            if(alias != null){
+                options.getPredefinedTopics().clear();
+                options.getPredefinedTopics().putAll(alias);
+            }
         }
     }
 
     public void writeRuntimeOptions(MqttsnOptions options) throws MqttsnException {
         writeCredentials(options.getClientCredentials());
+        writePredefinedTopics(options.getPredefinedTopics());
     }
 
     protected void writeCredentials(MqttsnClientCredentials credentials) throws MqttsnException {
@@ -271,6 +281,25 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
             saveFile(IMqttsnStorageService.CREDENTIALS_FILENAME,
                     readerWriter.write(credentials));
         }
+    }
+
+    protected void writePredefinedTopics(Map<String, Integer> alias) throws MqttsnException {
+        if(readerWriter != null){
+            saveFile(IMqttsnStorageService.PREDEFINED_FILENAME,
+                    readerWriter.write(new Predefined(alias)));
+        }
+    }
+
+    protected Map<String, Integer> readPredefinedTopics() throws MqttsnException {
+        if(readerWriter != null){
+            Optional<byte[]> data = loadFileIfExists(IMqttsnStorageService.PREDEFINED_FILENAME);
+            if(data.isPresent()){
+                return readerWriter.load(Predefined.class, data.get()).alias;
+            } else {
+                return null;
+            }
+        }
+        throw new MqttsnRuntimeException("unable to initialise filesystem with null reader");
     }
 
     protected MqttsnClientCredentials readCredentials() throws MqttsnException {
@@ -502,5 +531,13 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
                 return MqttsnFilesystemStorageService.this.running();
             }
         };
+    }
+}
+
+class Predefined implements Serializable {
+    public Map<String, Integer> alias;
+    public Predefined(){}
+    public Predefined(final Map<String, Integer> alias){
+        this.alias = alias;
     }
 }

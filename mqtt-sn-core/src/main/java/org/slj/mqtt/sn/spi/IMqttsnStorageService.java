@@ -40,6 +40,7 @@ public interface IMqttsnStorageService extends IMqttsnService {
     String DEFAULT_FOLDER_NAME = "mqtt-sn-runtimes";
     String DEFAULT_SETTINGS_FILENAME = "mqtt-sn-settings.xml";
     String CREDENTIALS_FILENAME = "mqtt-sn-client-credentials";
+    String PREDEFINED_FILENAME = "mqtt-sn-predefined-alias";
 
     static Class DEFAULT_NAMESPACE = IMqttsnStorageService.class;
 

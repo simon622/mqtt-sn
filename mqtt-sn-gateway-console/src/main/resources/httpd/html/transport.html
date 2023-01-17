@@ -1,0 +1,37 @@
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Transport</h5>
+            <p>
+                MQTT-SN can be delivered over a number of transport layers. These can be plugged into the system independently.
+            </p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Transport Name</th>
+                    <th scope="col">Port</th>
+                    <th scope="col">Description</th>
+                </tr>
+                </thead>
+                <tbody id="propertyRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function update(){
+        $.getJSON("/console/transport", function(data) {
+            console.log(JSON.stringify(data));
+            $.each(data, function(key,val) {
+                $( "#" + key ).html(data[key])
+            });
+            var root = document.getElementById('propertyRoot');
+            removeChildren(root);
+            data['properties'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.name}</td><td>${element.port}</td><td>${element.description}</td></tr>`));
+        })
+    }
+
+    update();
+</script>

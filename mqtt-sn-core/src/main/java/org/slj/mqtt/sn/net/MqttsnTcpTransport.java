@@ -566,6 +566,17 @@ public class MqttsnTcpTransport
     public String getName() {
         return "mqtt-sn-tcp";
     }
+
+    @Override
+    public int getPort() {
+        return options.getPort();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Exposes a TCP/IP port which is optionally protected by TLS. TCP requires a socket connection to the gateway which is created using a SYN, SYN ACK and ACK.";
+    }
+
 }
 
 interface ClosedListener {

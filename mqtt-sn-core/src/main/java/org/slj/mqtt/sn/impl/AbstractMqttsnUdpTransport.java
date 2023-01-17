@@ -58,4 +58,14 @@ public abstract class AbstractMqttsnUdpTransport
     public String getName() {
         return "mqtt-sn-udp";
     }
+
+    @Override
+    public int getPort() {
+        return options.getPort();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Exposes a UDP port which is optionally protected by TLS. UDP is a connectionless datagram protocol.";
+    }
 }

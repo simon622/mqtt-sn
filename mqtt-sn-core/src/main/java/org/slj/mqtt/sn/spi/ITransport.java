@@ -20,4 +20,9 @@ public interface ITransport extends IMqttsnService {
     StringTable getTransportDetails();
 
     String getName();
+
+    int getPort();
+
+    String getDescription();
+
 }

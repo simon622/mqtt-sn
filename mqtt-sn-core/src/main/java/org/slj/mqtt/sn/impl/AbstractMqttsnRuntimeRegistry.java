@@ -103,6 +103,10 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         withService(topicModifier);
         return this;
     }
+    public AbstractMqttsnRuntimeRegistry withPayloadModifier(IMqttsnPayloadModifier payloadModifier){
+        withService(payloadModifier);
+        return this;
+    }
     public AbstractMqttsnRuntimeRegistry withContextFactory(IMqttsnContextFactory contextFactory){
         withService(contextFactory);
         return this;
@@ -219,6 +223,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     @Override
     public List<IMqttsnTransport> getTransports() {
         return getServices(IMqttsnTransport.class);
+    }
+
+    @Override
+    public List<IMqttsnPayloadModifier> getPayloadModifiers() {
+        return getServices(IMqttsnPayloadModifier.class);
     }
 
     public IMqttsnTransport getDefaultTransport(){

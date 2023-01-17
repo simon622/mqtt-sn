@@ -90,6 +90,8 @@ public interface IMqttsnRuntimeRegistry {
      */
     List<IMqttsnTransport> getTransports();
 
+    List<IMqttsnPayloadModifier> getPayloadModifiers();
+
     /**
      * When mulitple transport mechanisms are installed, which is considered default
      * @return The default transport

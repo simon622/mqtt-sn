@@ -90,17 +90,13 @@ public abstract class AbstractMqttsnMessageStateService
                                 synchronized (flushOperations){
                                     flushOperations.remove(context);
                                 }
-
                                 logger.debug("removed context from work list {}", context);
-
                                 break;
                             case BACKOFF_PROCESS:
                                 Long lastReceived = lastMessageReceived.get(context);
                                 long delta = lastReceived == null ? 0 : System.currentTimeMillis() - lastReceived;
                                 boolean remove = registry.getOptions().getActiveContextTimeout() < delta;
-
                                 logger.debug("backoff requested for {}, activity delta is {}, remove work ? {}", context, delta, remove);
-
                                 if(remove){
                                     synchronized (flushOperations){
                                         flushOperations.remove(context);

@@ -60,6 +60,8 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     @Override
     public ISession createNewSession(IClientIdentifierContext context) {
         if(!running()) throw new MqttsnRuntimeException("unable to create session on, service not running");
+        if(context.getId() == null) throw new MqttsnRuntimeException("unable to create session with <null> clientId");
+
         logger.info("creating new session for {}", context);
         ISession session = new SessionBeanImpl(context, ClientState.DISCONNECTED);
         sessionLookup.put(context, session);

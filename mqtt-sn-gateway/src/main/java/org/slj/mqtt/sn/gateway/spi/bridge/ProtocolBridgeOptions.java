@@ -47,11 +47,17 @@ public class ProtocolBridgeOptions {
     private String clientId = null;
     private String resourcePath = null;
     private String subscriptions = null;
+    private String topic = null;
+    private int interval = 1000;
 
     public ProtocolBridgeOptions(){
 
     }
 
+    public ProtocolBridgeOptions withInterval(int interval){
+        this.interval = interval;
+        return this;
+    }
     public ProtocolBridgeOptions withClientId(String clientId){
         this.clientId = clientId;
         return this;
@@ -74,6 +80,11 @@ public class ProtocolBridgeOptions {
 
     public ProtocolBridgeOptions withKeystorePassword(String keystorePassword){
         this.keystorePassword = keystorePassword;
+        return this;
+    }
+
+    public ProtocolBridgeOptions withTopic(String topic){
+        this.topic = topic;
         return this;
     }
 
@@ -145,6 +156,10 @@ public class ProtocolBridgeOptions {
         return protocol;
     }
 
+    public String getTopic() {
+        return topic;
+    }
+
     public String getKeystoreLocation() {
         return keystoreLocation;
     }
@@ -186,6 +201,9 @@ public class ProtocolBridgeOptions {
     public String getSubscriptions() {
         return subscriptions;
     }
+    public int getInterval() {
+        return interval;
+    }
 
     @Override
     public String toString() {
@@ -205,6 +223,7 @@ public class ProtocolBridgeOptions {
                 ", clientId='" + clientId + '\'' +
                 ", resourcePath='" + resourcePath + '\'' +
                 ", subscriptions='" + subscriptions + '\'' +
+                ", topic='" + topic + '\'' +
                 '}';
     }
 }

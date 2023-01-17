@@ -210,6 +210,12 @@ public class MqttsnUtils {
         return buff.toString();
     }
 
+    public static byte[] randomBytes(int length){
+        byte[] a = new byte[length];
+        ThreadLocalRandom.current().nextBytes(a);
+        return a;
+    }
+
     public static void main(String[] args) {
 
         for (int i =0; i < 10; i++){

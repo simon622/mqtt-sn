@@ -130,10 +130,12 @@ public class ProtocolBridgeService extends AbstractMqttsnService implements IPro
     public ProtocolBridgeClientContext createContextForBridge(ProtocolBridgeDescriptor descriptor, ProtocolBridgeOptions options) throws ProtocolBridgeException{
 
         try {
+            String clientId = options.getClientId();
+            if(clientId == null) clientId = descriptor.getClassName();
             NetworkAddress address = new NetworkAddress(options.getPort(), options.getHostName());
             INetworkContext networkContext =
                     getRegistry().getContextFactory().createInitialNetworkContext(null, address);
-            ProtocolBridgeClientContext context = new ProtocolBridgeClientContext(options.getClientId(), descriptor, options);
+            ProtocolBridgeClientContext context = new ProtocolBridgeClientContext(clientId, descriptor, options);
             getRegistry().getNetworkRegistry().bindContexts(networkContext, context);
             return context;
         } catch(Exception e){

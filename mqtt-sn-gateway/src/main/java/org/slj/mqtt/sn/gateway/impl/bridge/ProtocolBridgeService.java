@@ -5,23 +5,28 @@ import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
 import org.slj.mqtt.sn.gateway.spi.ConnectResult;
 import org.slj.mqtt.sn.gateway.spi.bridge.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class ProtocolBridgeService extends AbstractMqttsnService implements IProtocolBridgeService {
 
     protected Map<ProtocolBridgeDescriptor, IProtocolBridgeConnection> connections;
+    protected ScheduledExecutorService bridgePollingService;
     private final Object mutex = new Object();
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         connections = Collections.synchronizedMap(new HashMap<>());
+        bridgePollingService = runtime.getRuntime().createManagedScheduledExecutorService("mqtt-sn-scheduled-bridge-polling-",
+                2);
     }
 
     @Override
@@ -149,5 +154,10 @@ public class ProtocolBridgeService extends AbstractMqttsnService implements IPro
         } catch(Exception e){
             throw new ProtocolBridgeException(e);
         }
+    }
+
+    @Override
+    public ScheduledFuture<?> schedulePolling(Runnable runnable, long initialDelay, long period, TimeUnit unit){
+        return bridgePollingService.scheduleAtFixedRate(runnable, initialDelay, period, unit);
     }
 }

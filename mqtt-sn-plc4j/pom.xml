@@ -46,6 +46,12 @@
             <version>${plc4x.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.plc4x</groupId>
+            <artifactId>plc4j-driver-modbus</artifactId>
+            <version>${plc4x.version}</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
 </project>

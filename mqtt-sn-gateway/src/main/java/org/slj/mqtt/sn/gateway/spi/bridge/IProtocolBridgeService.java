@@ -4,6 +4,8 @@ import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
 import org.slj.mqtt.sn.spi.IMqttsnService;
 
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public interface IProtocolBridgeService extends IMqttsnService {
 
@@ -18,4 +20,7 @@ public interface IProtocolBridgeService extends IMqttsnService {
     IProtocolBridgeConnection getActiveConnectionIfExists(ProtocolBridgeDescriptor descriptor) throws ProtocolBridgeException;
 
     void close(IProtocolBridgeConnection connection) throws ProtocolBridgeException;
+
+    ScheduledFuture<?> schedulePolling(Runnable runnable, long initialDelay, long period, TimeUnit unit);
+
 }

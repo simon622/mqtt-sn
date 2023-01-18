@@ -150,6 +150,7 @@
                 data.properties.forEach(function (property){
                     var required = property.required ? " required" : "";
                     var val = property.value === null ? "" : property.value;
+
                     form.insertAdjacentHTML('afterbegin', `<div class="mb-3"><div class="form-floating"><input type="text" class="form-control" id="${property.name}" name="${property.name}" value="${val}" ${required}><label for="${property.name}" class="col-form-label">${property.displayName}</label></div></div>`);
 
                 });

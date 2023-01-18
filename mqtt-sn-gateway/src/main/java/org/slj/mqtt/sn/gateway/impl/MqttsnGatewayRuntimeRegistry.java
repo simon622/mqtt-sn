@@ -57,9 +57,9 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).
                 withWillRegistry(new MqttsnInMemoryWillRegistry()).
                 withTopicModifier(new MqttsnDefaultTopicModifier()).
-//                withMessageQueue(new MqttsnInMemoryMessageQueue()).
-                withMessageQueue(new MqttsnFileBackedInMemoryMessageQueue(
-                        new MqttsnJacksonReaderWriter())).
+                withMessageQueue(new MqttsnInMemoryMessageQueue()).
+//                withMessageQueue(new MqttsnFileBackedInMemoryMessageQueue(
+//                        new MqttsnJacksonReaderWriter())).
                 withContextFactory(new MqttsnContextFactory()).
                 withSessionRegistry(new MqttsnSessionRegistry()).
                 withSecurityService(new MqttsnSecurityService()).

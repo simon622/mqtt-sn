@@ -322,22 +322,25 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return getOptionalService(IMqttsnDeadLetterQueue.class).orElse(null);
     }
 
-    @Override
-    public List<IMqttsnService> getServices() {
+    protected List<IMqttsnService> getServicesInternal(){
         synchronized (services){
-            ArrayList sorted = new ArrayList(services);
-            Collections.sort(sorted, new ServiceSort());
-            return Collections.unmodifiableList(sorted);
+            return new ArrayList(services);
         }
     }
 
     @Override
+    public List<IMqttsnService> getServices() {
+        List<IMqttsnService> sorted = getServicesInternal();
+        Collections.sort(sorted, new ServiceSort());
+        return Collections.unmodifiableList(sorted);
+
+    }
+
+    @Override
     public AbstractMqttsnRuntimeRegistry withService(IMqttsnService service){
-        synchronized (services){
-            if(service != null){
-                services.add(service);
-            }
-        }
+        List<IMqttsnService> localCopy = getServicesInternal();
+        localCopy.add(service);
+        services = localCopy;
         return this;
     }
 
@@ -360,36 +363,34 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     @Override
     public <T extends IMqttsnService> T getService(Class<T> clz){
-        synchronized (services){
-            List<IMqttsnService> all = services.stream().filter(s ->
-                            clz.isAssignableFrom(s.getClass())).
-                    collect(Collectors.toList());
-            if(all.size() > 1){
-                throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
-            }
-            else if(all.size() == 0){
-                throw new MqttsnRuntimeException("unable to find instance of "+clz+" service found");
-            }
-            return (T) all.get(0);
+        List<IMqttsnService> localCopy = getServicesInternal();
+        List<IMqttsnService> all = localCopy.stream().filter(s ->
+                        clz.isAssignableFrom(s.getClass())).
+                collect(Collectors.toList());
+        if(all.size() > 1){
+            throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
         }
+        else if(all.size() == 0){
+            throw new MqttsnRuntimeException("unable to find instance of "+clz+" service found");
+        }
+        return (T) all.get(0);
+
     }
 
     @Override
     public <T extends IMqttsnService> List<T> getServices(Class<T> clz){
-        synchronized (services){
-            List<IMqttsnService> all = services.stream().filter(s ->
-                    clz.isAssignableFrom(s.getClass())).
-                    collect(Collectors.toList());
-            return (List<T>) all;
-        }
+        List<IMqttsnService> localCopy = getServicesInternal();
+        List<IMqttsnService> all = localCopy.stream().filter(s ->
+                clz.isAssignableFrom(s.getClass())).
+                collect(Collectors.toList());
+        return (List<T>) all;
     }
 
     @Override
     public <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz){
-        synchronized (services){
-            return (Optional<T>) services.stream().filter(s ->
-                            clz.isAssignableFrom(s.getClass())).findFirst();
-        }
+        List<IMqttsnService> localCopy = getServicesInternal();
+        return (Optional<T>) localCopy.stream().filter(s ->
+                clz.isAssignableFrom(s.getClass())).findFirst();
     }
 
 

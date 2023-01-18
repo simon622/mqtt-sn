@@ -392,13 +392,15 @@ public class PathTriesTree<T> {
                 if(members.size() + membersIn.length > PathTriesTree.this.getMaxMembersAtLevel()){
                     throw new TriesTreeLimitExceededException("member limit exceeded at level");
                 }
-                members.addAll(Arrays.asList(membersIn));
+                synchronized (members){
+                    members.addAll(Arrays.asList(membersIn));
+                }
             }
         }
 
         public boolean removeMember(T member){
             if(members != null){
-                synchronized (this){
+                synchronized (members){
                     return members.remove(member);
                 }
             }
@@ -409,8 +411,8 @@ public class PathTriesTree<T> {
             if(members == null){
                 return Collections.emptySet();
             } else {
-                synchronized (this){
-                    return Collections.unmodifiableSet(members);
+                synchronized (members){
+                    return Collections.unmodifiableSet(new HashSet<>(members));
                 }
             }
         }

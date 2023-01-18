@@ -217,7 +217,13 @@ public class MqttsnOptions extends AbstractOptions {
      */
     public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 60 * 60 * 24 * 365;
 
+    /**
+     * By default, set to the 1.2 specification maximum 23 bytes
+     */
+    public static final int MAX_CLIENT_ID_LENGTH = 23;
+
     public String contextId;
+    public int maxClientIdLength = MAX_CLIENT_ID_LENGTH;
     public long sessionExpiryInterval = DEFAULT_SESSION_EXPIRY_INTERVAL;
     public int defaultMaxAwakeMessages = DEFAULT_MAX_AWAKE_MESSAGES;
     public int transportIngressThreadCount = DEFAULT_TRANSPORT_INGRESS_THREAD_COUNT;
@@ -793,6 +799,10 @@ public class MqttsnOptions extends AbstractOptions {
 
     public String getContextId() {
         return contextId;
+    }
+
+    public int getMaxClientIdLength() {
+        return maxClientIdLength;
     }
 
     public int getMaxTimeInflight() {

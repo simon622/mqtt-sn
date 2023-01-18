@@ -61,9 +61,11 @@ public abstract class AbstractMqttsnMessageHandler
     public boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion, boolean assignedClientId) {
         try {
             boolean authorized = false;
-            if(!MqttsnSpecificationValidator.validClientId(clientId, false)){
+            if(!MqttsnSpecificationValidator.validClientId(clientId, false,
+                    registry.getOptions().getMaxClientIdLength())){
                 authorized = false;
-                logger.warn("clientId format not valid, refuse auth");
+                logger.warn("clientId format not valid {} (max. length set at {}), refuse auth", clientId,
+                        registry.getOptions().getMaxClientIdLength());
             } else {
                 registry.getNetworkRegistry().removeExistingClientId(clientId);
                 IClientIdentifierContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);

@@ -90,7 +90,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.slj.mqtt.sn.console.MqttsnGatewayWithConsoleMain</mainClass>
+                                    <mainClass>org.slj.mqtt.sn.console.MqttsnGatewayMainCLI</mainClass>
                                 </transformer>
                             </transformers>
                             <!--minimizeJar>true</minimizeJar-->

@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.client.impl;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageHandler;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;

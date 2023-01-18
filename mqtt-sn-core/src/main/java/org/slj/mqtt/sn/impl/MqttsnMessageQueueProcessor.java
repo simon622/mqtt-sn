@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.TopicInfo;
@@ -111,7 +112,7 @@ public class MqttsnMessageQueueProcessor
                 logger.warn("unable to send message, try again later", e);
             }
             //-- with a register we should come back when the registration is complete and attempt delivery
-            return RESULT.REPROCESS;
+            return session.getClientState() == ClientState.ACTIVE ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
         } else {
             //-- only deque when we have confirmed we can deliver
             return dequeAndPublishNextMessage(context, info);

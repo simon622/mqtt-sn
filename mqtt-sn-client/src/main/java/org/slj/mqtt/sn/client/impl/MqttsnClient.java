@@ -688,12 +688,14 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         registry.getMessageStateService().unscheduleFlush(session.getContext());
         callShutdown(registry.getMessageHandler());
         callShutdown(registry.getMessageStateService());
+        callShutdown(registry.getDefaultTransport());
     }
 
     private void startProcessing(boolean processQueue) throws MqttsnException {
 
         callStartup(registry.getMessageStateService());
         callStartup(registry.getMessageHandler());
+        callStartup(registry.getDefaultTransport());
         if(processQueue){
             if(managedConnection){
                 activateManagedConnection();
@@ -750,7 +752,9 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         public void notifyRemoteDisconnect(IClientIdentifierContext context) {
             try {
                 disconnect(false, true);
-            } catch(Exception e){}
+            } catch(Exception e){
+                logger.warn("error encountered handling remote disconnect", e);
+            }
         }
 
         @Override

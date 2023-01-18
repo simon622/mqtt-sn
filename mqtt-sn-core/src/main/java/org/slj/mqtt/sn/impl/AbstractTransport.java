@@ -1,5 +1,7 @@
 package org.slj.mqtt.sn.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.IPacketTXRXJob;
 import org.slj.mqtt.sn.model.PacketTXRXJob;
@@ -14,6 +16,8 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
 
     protected ExecutorService ingressProtocolProcessor;
     protected ExecutorService egressProtocolProcessor;
+
+    protected final Logger wireLogger = LoggerFactory.getLogger("wire");
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
@@ -56,11 +60,8 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
             throw new MqttsnRuntimeException("cannot send messages larger than allowed max");
         }
 
-        logger.debug("writing {} bytes to {} on thread {}",
-                data.length, context, Thread.currentThread().getName());
-
         if(registry.getOptions().isWireLoggingEnabled()){
-            logger.info("writing {} ",
+            wireLogger.info("wire {} tx {} ", context.getNetworkAddress(),
                     MqttsnWireUtils.toBinary(data));
         }
 
@@ -106,7 +107,8 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
         }
 
         if (registry.getOptions().isWireLoggingEnabled()) {
-            logger.info("receiving [{}] ", MqttsnWireUtils.toBinary(data));
+            wireLogger.info("wire {} rx {} ", context.getNetworkAddress(),
+                    MqttsnWireUtils.toBinary(data));
         }
 
         if(registry.getSecurityService().protocolIntegrityEnabled()){

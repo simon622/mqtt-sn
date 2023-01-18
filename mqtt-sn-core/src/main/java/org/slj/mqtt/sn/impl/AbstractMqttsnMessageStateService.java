@@ -74,49 +74,58 @@ public abstract class AbstractMqttsnMessageStateService
     }
 
     protected void scheduleWork(IClientIdentifierContext context, int time, TimeUnit unit){
-        ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT> future =
-                executorService.schedule(() -> {
-                    IMqttsnMessageQueueProcessor.RESULT result =
-                            IMqttsnMessageQueueProcessor.RESULT.REMOVE_PROCESS;
-                    boolean process = !flushOperations.containsKey(context) ||
-                            !flushOperations.get(context).isDone();
+        boolean process = !flushOperations.containsKey(context) ||
+                !flushOperations.get(context).isDone();
+        ScheduledFuture<IMqttsnMessageQueueProcessor.RESULT> future = null;
+        if(process){
+            future = executorService.schedule(() -> {
+                        IMqttsnMessageQueueProcessor.RESULT result =
+                                IMqttsnMessageQueueProcessor.RESULT.REMOVE_PROCESS;
+                        boolean shouldProcess = !flushOperations.containsKey(context) ||
+                                !flushOperations.get(context).isDone();
 
-                    logger.debug("processing scheduled work for context {} -> {}", context, process);
+                        logger.debug("processing scheduled work for context {} -> {}", context, shouldProcess);
 
-                    if(process){
-                        result = processQueue(context);
-                        switch(result){
-                            case REMOVE_PROCESS:
-                                synchronized (flushOperations){
-                                    flushOperations.remove(context);
-                                }
-                                logger.debug("removed context from work list {}", context);
-                                break;
-                            case BACKOFF_PROCESS:
-                                Long lastReceived = lastMessageReceived.get(context);
-                                long delta = lastReceived == null ? 0 : System.currentTimeMillis() - lastReceived;
-                                boolean remove = registry.getOptions().getActiveContextTimeout() < delta;
-                                logger.debug("backoff requested for {}, activity delta is {}, remove work ? {}", context, delta, remove);
-                                if(remove){
+                        if(shouldProcess){
+                            result = processQueue(context);
+                            switch(result){
+                                case REMOVE_PROCESS:
                                     synchronized (flushOperations){
                                         flushOperations.remove(context);
                                     }
-                                }
-                                else {
-                                    scheduleWork(context, Math.max(100, registry.getOptions().getMinFlushTime()), TimeUnit.MILLISECONDS);
-                                }
-                                break;
-                            case REPROCESS:
-                                scheduleWork(context, registry.getOptions().getMinFlushTime(), TimeUnit.MILLISECONDS);
+                                    logger.debug("removed context from work list {}", context);
+                                    break;
+                                case BACKOFF_PROCESS:
+                                    Long lastReceived = lastMessageReceived.get(context);
+                                    long delta = lastReceived == null ? 0 : System.currentTimeMillis() - lastReceived;
+                                    boolean remove = registry.getOptions().getActiveContextTimeout() < delta;
+                                    logger.debug("backoff requested for {}, activity delta is {}, remove work ? {}", context, delta, remove);
+                                    if(remove){
+                                        synchronized (flushOperations){
+                                            flushOperations.remove(context);
+                                        }
+                                    }
+                                    else {
+                                        scheduleWork(context, Math.max(100, registry.getOptions().getMinFlushTime()), TimeUnit.MILLISECONDS);
+                                    }
+                                    break;
+                                case REPROCESS:
+                                    scheduleWork(context, registry.getOptions().getMinFlushTime(), TimeUnit.MILLISECONDS);
+                            }
+                        } else {
+                            flushOperations.remove(context);
                         }
-                    }
-
-                    logger.debug("context {} flush completed with {}", context, result);
-                    return result;
-        }, time, unit);
-        synchronized (flushOperations){
-            flushOperations.put(context, future);
+                        logger.debug("context {} flush completed with {}", context, result);
+                        return result;
+                    }, time, unit);
         }
+
+        if(future != null){
+            synchronized (flushOperations){
+                flushOperations.put(context, future);
+            }
+        }
+
     }
 
     protected IMqttsnMessageQueueProcessor.RESULT processQueue(IClientIdentifierContext context){
@@ -131,15 +140,13 @@ public abstract class AbstractMqttsnMessageStateService
     @Override
     public void unscheduleFlush(IClientIdentifierContext context) {
         ScheduledFuture<?> future = null;
-        if(!flushOperations.containsKey(context)) {
+        if(flushOperations.containsKey(context)) {
             synchronized (flushOperations) {
                 future = flushOperations.remove(context);
             }
         }
         if(future != null){
-            if(!future.isDone()){
-                future.cancel(false);
-            }
+            future.cancel(false);
         }
     }
 

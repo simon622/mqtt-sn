@@ -45,13 +45,12 @@ public abstract class AbstractMqttsnTransport
 
 
     protected void receiveFromTransportInternal(INetworkContext networkContext, byte[] data) {
+
+        boolean isDisconnect = false;
         try {
-            if (!registry.getMessageHandler().running()) {
-                return;
-            }
 
             IMqttsnMessage message = getRegistry().getCodec().decode(data);
-
+            isDisconnect = registry.getCodec().isDisconnect(message);
             logger.debug("receiving {} protocol bytes {} from {} on thread {}",
                         data.length, message.getMessageName(), networkContext, Thread.currentThread().getName());
 
@@ -65,6 +64,7 @@ public abstract class AbstractMqttsnTransport
                     throw new MqttsnCodecException("unsupported codec version");
                 }
             }
+
 
             boolean assignedClientId = false;
             if (message instanceof IMqttsnIdentificationPacket) {
@@ -119,25 +119,35 @@ public abstract class AbstractMqttsnTransport
                 IMqttsnMessageContext messageContext = getRegistry().getContextFactory().createMessageContext(networkContext);
                 registry.getMessageHandler().receiveMessage(messageContext, message);
             } else {
-                logger.warn("auth could not be established, send disconnect that is not processed by application");
-                writeMqttSnMessageToTransport(networkContext,
-                        registry.getMessageFactory().createDisconnect(), false);
+                if(!isDisconnect){
+                    logger.warn("auth could not be established for {}, send disconnect that is not processed by application",
+                            networkContext.getNetworkAddress());
+                    writeMqttSnMessageToTransport(networkContext,
+                            registry.getMessageFactory().createDisconnect(), false);
+                } else {
+                    logger.warn("received DISCONNECT from not authd context, ignore {}",
+                            networkContext.getNetworkAddress());
+                }
             }
         }
         catch(MqttsnCodecException e){
             logger.error("protocol error - sending payload format error disconnect;", e);
-            writeMqttSnMessageToTransport(networkContext,
-                    registry.getMessageFactory().createDisconnect(
-                            MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
+            if(!isDisconnect){
+                writeMqttSnMessageToTransport(networkContext,
+                        registry.getMessageFactory().createDisconnect(
+                                MqttsnConstants.RETURN_CODE_PAYLOAD_FORMAT_INVALID, e.getMessage()), false);
+            }
         }
         catch(MqttsnSecurityException e){
             logger.error("security exception encountered processing, drop packet;", e);
         }
         catch(Throwable t){
             logger.error("error, send generic error disconnect;", t);
-            writeMqttSnMessageToTransport(networkContext,
-                    registry.getMessageFactory().createDisconnect(
-                            MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, t.getMessage()), false);
+            if(!isDisconnect){
+                writeMqttSnMessageToTransport(networkContext,
+                        registry.getMessageFactory().createDisconnect(
+                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, t.getMessage()), false);
+            }
         }
     }
 

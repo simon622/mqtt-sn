@@ -62,6 +62,7 @@ public class MqttsnTcpTransport
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         try {
             super.start(runtime);
+            options.processFromSystemPropertyOverrides();
             running = false;
             if(clientMode){
                 logger.info("running in client mode, establishing tcp connection...");

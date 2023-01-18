@@ -42,14 +42,11 @@ public abstract class AbstractMqttsnUdpTransport
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         try {
             super.start(runtime);
+            options.processFromSystemPropertyOverrides();
             bind();
         } catch(Exception e){
             throw new MqttsnException(e);
         }
-    }
-
-    public MqttsnUdpOptions getUdpOptions(){
-        return options;
     }
 
     protected abstract void bind() throws Exception;

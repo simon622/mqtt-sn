@@ -24,11 +24,13 @@
 
 package org.slj.mqtt.sn.net;
 
+import org.slj.mqtt.sn.model.AbstractOptions;
+
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-public class MqttsnTcpOptions {
+public class MqttsnTcpOptions extends AbstractOptions {
 
     /**
      * Default connect timeout is 10000 milliseconds

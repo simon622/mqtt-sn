@@ -91,6 +91,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
                     getRegistry().getStorageService().getClass().getSimpleName());
 
             registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
+            registry.getOptions().processFromSystemPropertyOverrides();
 
             running = true;
 

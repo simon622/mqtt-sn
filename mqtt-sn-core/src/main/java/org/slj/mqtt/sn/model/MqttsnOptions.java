@@ -38,7 +38,7 @@ import java.util.Map;
  * Default values have been specified to be sensible for use in most cases. It is advised that defaults are only
  * changed when you have a solid understanding of what you are changing, the imnpacts the changes could have.
  */
-public class MqttsnOptions {
+public class MqttsnOptions extends AbstractOptions {
 
     /**
      * By default, contexts active message timeout will not be monitored
@@ -174,12 +174,12 @@ public class MqttsnOptions {
     /**
      * How many threads will process general protocol messages (from inbound and outbound lifecycle)
      */
-    public static final int DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT = 1;
+    public static final int DEFAULT_TRANSPORT_INGRESS_THREAD_COUNT = 1;
 
     /**
      * How many threads will process outbound PUBLISH messages
      */
-    public static final int DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT = 1;
+    public static final int DEFAULT_TRANSPORT_EGRESS_THREAD_COUNT = 1;
 
     /**
      * Used to handle the outbound queue processing layer, when running as a gateway this should
@@ -217,46 +217,45 @@ public class MqttsnOptions {
      */
     public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 60 * 60 * 24 * 365;
 
-    private String contextId;
-    private long sessionExpiryInterval = DEFAULT_SESSION_EXPIRY_INTERVAL;
-    private int defaultMaxAwakeMessages = DEFAULT_MAX_AWAKE_MESSAGES;
-    private int transportProtocolHandoffThreadCount = DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT;
-    private int transportPublishHandoffThreadCount = DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT;
-    private int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
-    private int generalPurposeThreadCount = DEFAULT_GENERAL_PURPOSE_THREAD_COUNT;
-    private int queueBackPressure = DEFAULT_WORK_QUEUE_BACKPRESSURE;
-    private boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;
-    private boolean sleepClearsRegistrations = DEFAULT_SLEEP_CLEARS_REGISTRATIONS;
-    private int minFlushTime = DEFAULT_MIN_FLUSH_TIME;
-    private int maxTopicsInRegistry = DEFAULT_MAX_TOPICS_IN_REGISTRY;
-    private int msgIdStartAt = DEFAULT_MSG_ID_STARTS_AT;
-    private int aliasStartAt = DEFAULT_ALIAS_STARTS_AT;
-    private int maxMessagesInflight = DEFAULT_MAX_MESSAGES_IN_FLIGHT;
-    private int maxMessagesInQueue = DEFAULT_MAX_MESSAGE_IN_QUEUE;
-    private boolean requeueOnInflightTimeout = DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT;
-    private int maxMessagesInDeadLetterQueue = DEFAULT_MAX_MESSAGE_IN_DLQ;
-    private int maxNetworkAddressEntries = DEFAULT_MAX_NETWORK_ADDRESS_ENTRIES;
-    private int maxWait = DEFAULT_MAX_WAIT;
-    private int maxTimeInflight = DEFAULT_MAX_TIME_INFLIGHT;
-    private int searchGatewayRadius = DEFAULT_SEARCH_GATEWAY_RADIUS;
-    private int discoveryTime = DEFAULT_DISCOVERY_TIME_SECONDS;
-    private int pingDivisor = DEFAULT_PING_DIVISOR;
-    private int maxProtocolMessageSize = DEFAULT_MAX_PROTOCOL_SIZE;
-    private boolean wireLoggingEnabled = DEFAULT_WIRE_LOGGING_ENABLED;
-    private int activeContextTimeout = DEFAULT_ACTIVE_CONTEXT_TIMEOUT;
-    private int stateLoopTimeout = DEFAULT_STATE_LOOP_TIMEOUT;
-    private String logPattern = DEFAULT_SIMPLE_LOG_PATTERN;
-    private int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
-    private int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
-    private int congestionWait = DEFAULT_CONGESTION_WAIT;
-    private boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
-    private boolean metricsEnabled = DEFAULT_METRICS_ENABLED;
-
-    private int messageQueueDiskStorageThreshold = DEFAULT_MESSAGE_QUEUE_DISK_STORAGE_THRESHOLD;
-    private MqttsnSecurityOptions securityOptions;
-    private Map<String, Integer> predefinedTopics = new HashMap<>();
-    private volatile Map<String, NetworkAddress> networkAddressEntries;
-    private MqttsnClientCredentials clientCredentials =
+    public String contextId;
+    public long sessionExpiryInterval = DEFAULT_SESSION_EXPIRY_INTERVAL;
+    public int defaultMaxAwakeMessages = DEFAULT_MAX_AWAKE_MESSAGES;
+    public int transportIngressThreadCount = DEFAULT_TRANSPORT_INGRESS_THREAD_COUNT;
+    public int transportEgressThreadCount = DEFAULT_TRANSPORT_EGRESS_THREAD_COUNT;
+    public int queueProcessorThreadCount = DEFAULT_QUEUE_PROCESSOR_THREAD_COUNT;
+    public int generalPurposeThreadCount = DEFAULT_GENERAL_PURPOSE_THREAD_COUNT;
+    public int queueBackPressure = DEFAULT_WORK_QUEUE_BACKPRESSURE;
+    public boolean enableDiscovery = DEFAULT_DISCOVERY_ENABLED;
+    public boolean sleepClearsRegistrations = DEFAULT_SLEEP_CLEARS_REGISTRATIONS;
+    public int minFlushTime = DEFAULT_MIN_FLUSH_TIME;
+    public int maxTopicsInRegistry = DEFAULT_MAX_TOPICS_IN_REGISTRY;
+    public int msgIdStartAt = DEFAULT_MSG_ID_STARTS_AT;
+    public int aliasStartAt = DEFAULT_ALIAS_STARTS_AT;
+    public int maxMessagesInflight = DEFAULT_MAX_MESSAGES_IN_FLIGHT;
+    public int maxMessagesInQueue = DEFAULT_MAX_MESSAGE_IN_QUEUE;
+    public boolean requeueOnInflightTimeout = DEFAULT_REQUEUE_ON_INFLIGHT_TIMEOUT;
+    public int maxMessagesInDeadLetterQueue = DEFAULT_MAX_MESSAGE_IN_DLQ;
+    public int maxNetworkAddressEntries = DEFAULT_MAX_NETWORK_ADDRESS_ENTRIES;
+    public int maxWait = DEFAULT_MAX_WAIT;
+    public int maxTimeInflight = DEFAULT_MAX_TIME_INFLIGHT;
+    public int searchGatewayRadius = DEFAULT_SEARCH_GATEWAY_RADIUS;
+    public int discoveryTime = DEFAULT_DISCOVERY_TIME_SECONDS;
+    public int pingDivisor = DEFAULT_PING_DIVISOR;
+    public int maxProtocolMessageSize = DEFAULT_MAX_PROTOCOL_SIZE;
+    public boolean wireLoggingEnabled = DEFAULT_WIRE_LOGGING_ENABLED;
+    public int activeContextTimeout = DEFAULT_ACTIVE_CONTEXT_TIMEOUT;
+    public int stateLoopTimeout = DEFAULT_STATE_LOOP_TIMEOUT;
+    public String logPattern = DEFAULT_SIMPLE_LOG_PATTERN;
+    public int maxErrorRetries = DEFAULT_MAX_ERROR_RETRIES;
+    public int maxErrorRetryTime = DEFAULT_MAX_ERROR_RETRY_TIME;
+    public int congestionWait = DEFAULT_CONGESTION_WAIT;
+    public boolean reapReceivingMessages = DEFAULT_REAP_RECEIVING_MESSAGES;
+    public boolean metricsEnabled = DEFAULT_METRICS_ENABLED;
+    public int messageQueueDiskStorageThreshold = DEFAULT_MESSAGE_QUEUE_DISK_STORAGE_THRESHOLD;
+    public MqttsnSecurityOptions securityOptions;
+    public Map<String, Integer> predefinedTopics = new HashMap<>();
+    public volatile Map<String, NetworkAddress> networkAddressEntries;
+    public MqttsnClientCredentials clientCredentials =
             new MqttsnClientCredentials(true);
 
     /**
@@ -412,29 +411,28 @@ public class MqttsnOptions {
     }
 
     /**
-     * When threadHandoffFromTransport is set to true, how many threads should be made available in the
-     * managed pool to handle processing.
+     * How many threads should be made available in the managed pool to handle ingress processing.
      *
-     * @param transportProtocolHandoffThreadCount - When transportProtocolHandoffThreadCount is set to true, how many threads should be made available in the
+     * @param transportIngressThreadCount - When transportProtocolHandoffThreadCount is set to true, how many threads should be made available in the
      *                                            managed pool to handle processing
      * @return this configuration
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_PROTOCOL_HANDOFF_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_INGRESS_THREAD_COUNT}
      */
-    public MqttsnOptions withTransportProtocolHandoffThreadCount(int transportProtocolHandoffThreadCount) {
-        this.transportProtocolHandoffThreadCount = transportProtocolHandoffThreadCount;
+    public MqttsnOptions withTransportIngressThreadCount(int transportIngressThreadCount) {
+        this.transportIngressThreadCount = transportIngressThreadCount;
         return this;
     }
 
     /**
-     * How many threads should be made available in the managed pool to handle egress publish processing.
+     * How many threads should be made available in the managed pool to handle egress processing.
      *
-     * @param transportPublishHandoffThreadCount - How many threads should be made available in the
+     * @param transportEgressThreadCount - How many threads should be made available in the
      *                                        managed pool to handle processing
      * @return this configuration
-     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_PUBLISH_HANDOFF_THREAD_COUNT}
+     * @see {@link MqttsnOptions#DEFAULT_TRANSPORT_EGRESS_THREAD_COUNT}
      */
-    public MqttsnOptions withTransportPublishHandoffThreadCount(int transportPublishHandoffThreadCount) {
-        this.transportPublishHandoffThreadCount = transportPublishHandoffThreadCount;
+    public MqttsnOptions withTransportEgressThreadCount(int transportEgressThreadCount) {
+        this.transportEgressThreadCount = transportEgressThreadCount;
         return this;
     }
 
@@ -877,12 +875,12 @@ public class MqttsnOptions {
         return queueProcessorThreadCount;
     }
 
-    public int getTransportProtocolHandoffThreadCount() {
-        return transportProtocolHandoffThreadCount;
+    public int getTransportIngressThreadCount() {
+        return transportIngressThreadCount;
     }
 
-    public int getTransportPublishHandoffThreadCount() {
-        return transportPublishHandoffThreadCount;
+    public int getTransportEgressThreadCount() {
+        return transportEgressThreadCount;
     }
 
     public int getGeneralPurposeThreadCount() {
@@ -932,4 +930,5 @@ public class MqttsnOptions {
     public long getSessionExpiryInterval() {
         return sessionExpiryInterval;
     }
+
 }

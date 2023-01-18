@@ -20,10 +20,10 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
         super.start(runtime);
         ingressProtocolProcessor = runtime.getRuntime().createManagedExecutorService(
                 String.format("%s-transport-ingress-%s-", getName(), System.identityHashCode(runtime)),
-                runtime.getOptions().getTransportProtocolHandoffThreadCount());
+                runtime.getOptions().getTransportIngressThreadCount());
         egressProtocolProcessor = runtime.getRuntime().createManagedExecutorService(
                 String.format("%s-transport-egress-%s-", getName(), System.identityHashCode(runtime)),
-                runtime.getOptions().getTransportPublishHandoffThreadCount());
+                runtime.getOptions().getTransportEgressThreadCount());
     }
 
     @Override

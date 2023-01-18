@@ -367,7 +367,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             }
 
             message(String.format("Gateway listening for datagram traffic on port %s",
-                    getStorageService().getIntegerPreference(GatewayConfig.LISTEN_PORT, null)));
+                    getRuntimeRegistry().getDefaultTransport().getPort()));
         } catch(Exception e){
             message(cli_red("Unable to connect to broker"));
             message("Please check the connection details supplied");

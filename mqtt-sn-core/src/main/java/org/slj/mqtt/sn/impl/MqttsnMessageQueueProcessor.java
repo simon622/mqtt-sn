@@ -112,7 +112,8 @@ public class MqttsnMessageQueueProcessor
                 logger.warn("unable to send message, try again later", e);
             }
             //-- with a register we should come back when the registration is complete and attempt delivery
-            return session.getClientState() == ClientState.ACTIVE ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
+            return session.getClientState() == ClientState.ACTIVE ||
+                    session.getClientState()== ClientState.AWAKE ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
         } else {
             //-- only deque when we have confirmed we can deliver
             return dequeAndPublishNextMessage(context, info);
@@ -139,7 +140,7 @@ public class MqttsnMessageQueueProcessor
                 }
 
                 RESULT res = ((registry.getMessageQueue().queueSize(session) > 0) ||
-                        queuedMessage.getData().getQos() == 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
+                        queuedMessage.getData().getQos() <= 0)  ? RESULT.REPROCESS : RESULT.REMOVE_PROCESS;
                 logger.debug("sending complete returning {} for {}", res, context);
                 return res;
             } catch (MqttsnException e) {

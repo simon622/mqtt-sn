@@ -35,7 +35,7 @@ public class ClientInteractiveMain {
     public static void main(String[] args) throws Exception {
         MqttsnInteractiveClientLauncher.launch(new MqttsnInteractiveClient() {
             protected AbstractMqttsnRuntimeRegistry createRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options, IMqttsnTransport transport) {
-                options.withMaxMessagesInQueue(100000);
+                options.withMaxMessagesInQueue(1000);
                 options.withMinFlushTime(1);
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                         withTransport(transport).

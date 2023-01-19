@@ -45,7 +45,7 @@ public abstract class AbstractMqttsnMessageHandler
             IClientIdentifierContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context,
                     getRegistry().getCodec().getProtocolVersion());
             if(mqttsnContext != null){
-                logger.warn("temporary auth context created {}", mqttsnContext);
+                logger.info("temporary auth context created {}", mqttsnContext);
                 registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                 return true;
             }

@@ -58,10 +58,6 @@ public class MqttsnSpecificationValidator {
         return true;
     }
 
-    public static boolean validClientId(String clientId, boolean allowNull) {
-        return validClientId(clientId, allowNull, MqttsnConstants.MAX_CLIENT_ID_LENGTH);
-    }
-
     public static void validateSubscribePath(String topicPath) throws MqttsnCodecException {
         if(!isValidSubscriptionTopic(topicPath))
             throw new MqttsnCodecException("invalid subscribe topic - " + topicPath);

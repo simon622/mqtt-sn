@@ -57,7 +57,8 @@ public class MqttsnGatewayQueueProcessorStateService extends AbstractMqttsnServi
                         getRegistry().getMessageFactory().createDisconnect(session.getKeepAlive()));
                 //-- need to send the closing ping-resp
                 IMqttsnMessage pingResp = getRegistry().getMessageFactory().createPingresp();
-                getRegistry().getTransportLocator().writeToTransport(getRegistry().getNetworkRegistry().getContext(context), pingResp);
+                getRegistry().getTransportLocator().writeToTransport(
+                        getRegistry().getNetworkRegistry().getContext(context), pingResp);
             }
         }
     }

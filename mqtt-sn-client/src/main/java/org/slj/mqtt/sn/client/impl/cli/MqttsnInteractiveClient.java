@@ -300,18 +300,11 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         }
                         getRuntimeRegistry().getMessageStateService().scheduleFlush(
                                 client.getSessionState().getContext());
-                        try {
-                            Thread.sleep(1000);
-                        } catch(Exception e){
-                        }
                     } finally{
                         if(stopAfterUse) getRuntimeRegistry().getQueueProcessor().stop();
                     }
-                    message("DONE - message sent and flushed on DISCONNECTED session");
                 }
-                else {
-                    message("DONE - message queued for sending");
-                }
+                message("** message queued for sending");
             } catch(MqttsnQueueAcceptException e){
                 error("Client Reporting Queue Accept Error", e);
             }

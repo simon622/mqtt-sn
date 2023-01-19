@@ -143,6 +143,13 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         withService(transport);
         return this;
     }
+
+    public AbstractMqttsnRuntimeRegistry withTransportLocator(ITransportLocator locator){
+        withService(locator);
+        return this;
+    }
+
+
     public AbstractMqttsnRuntimeRegistry withNetworkAddressRegistry(INetworkAddressRegistry networkAddressRegistry){
         this.networkAddressRegistry = networkAddressRegistry;
         return this;
@@ -371,7 +378,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
             throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
         }
         else if(all.size() == 0){
-            throw new MqttsnRuntimeException("unable to find instance of "+clz+" service found");
+            throw new MqttsnRuntimeException("unable to find instance of "+clz+" in service list");
         }
         return (T) all.get(0);
 

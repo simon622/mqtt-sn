@@ -84,7 +84,7 @@ public abstract class AbstractMqttsnMessageStateService
                         boolean shouldProcess = !flushOperations.containsKey(context) ||
                                 !flushOperations.get(context).isDone();
 
-                        logger.debug("processing scheduled work for context {} -> {}", context, shouldProcess);
+                        logger.debug("!! processing scheduled work for context {} -> {}", context, shouldProcess);
 
                         if(shouldProcess){
                             result = processQueue(context);
@@ -110,7 +110,7 @@ public abstract class AbstractMqttsnMessageStateService
                                     }
                                     break;
                                 case REPROCESS:
-                                    scheduleWork(context, registry.getOptions().getMinFlushTime(), TimeUnit.MILLISECONDS);
+                                    scheduleWork(context, Math.max(1, registry.getOptions().getMinFlushTime()), TimeUnit.MILLISECONDS);
                             }
                         } else {
                             flushOperations.remove(context);
@@ -159,7 +159,7 @@ public abstract class AbstractMqttsnMessageStateService
             if(executorService != null &&
                     !executorService.isTerminated() && !executorService.isShutdown()){
                 scheduleWork(context,
-                        ThreadLocalRandom.current().nextInt(1, 250), TimeUnit.MILLISECONDS);
+                        ThreadLocalRandom.current().nextInt(1, 10), TimeUnit.MILLISECONDS);
             }
 
         }

@@ -59,11 +59,11 @@ java -jar <path-to>/mqtt-sn-client-VERSION.jar
 
 ![Client CLI](/images/client-cli.png)
 
-#### Gateway CLI
-The latest interactive gateway build can be obtained from the releases section. This build is the loopback configuration which requires no backend broker. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.18-alpha/mqtt-sn-gateway-console-0.1.18.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
+#### Gateway
+The latest gateway build can be obtained from the releases section. This build is the loopback configuration which requires no backend broker. It can be used to configure a backend connection as well [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.18-alpha/mqtt-sn-gateway-console-0.1.18.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar
+java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar <port> <gatewayId>
 ```
 ![Gateway CLI](/images/gateway-cli.png)
 
@@ -341,30 +341,31 @@ UNSUBACK | MODIFIED | :heavy_check_mark:
 ## Configuration
 
 The default client/gateway behaviour can be customised using configuration options. Sensible defaults have been specified which allow it to all work out of the box.
-Many of the options below are applicable for both the client and gateway runtimes.
+Many of the options below are applicable for both the client and gateway runtimes. You can change the value of these settings in code OR from a system property where the system property matches the configuration parameter. For example -DmaxClientSessions=45 will change the maximum number of sessions allowed on the gateway.
 
 Options | Default Value | Type | Description
------------- | ------------- | ------------- | -------------
-contextId | NULL | String | This is used as either the clientId (when in a client runtime) or the gatewayId (when in a gateway runtime). **NB: This is a required field and must be set by the application.**
-maxWait | 10000 | int | Time in milliseconds to wait for a confirmation message where required. When calling a blocking method, this is the time the method will block until either the confirmation is received OR the timeout expires.
-generalPurposeThreadCount | 1 | int | How many threads are used to provide general purpose asynchronicity 
-transportProtocolHandoffThreadCount | 1 | int | How many threads are used to process protocol messages (those inbound from clients and acks outbound)
-transportSendHandoffThreadCount | 1 | int | How many threads are used to process outbound publish messages (gateway to device publish messages)
-queueProcessorThreadCount | 1 | int | How many threads should be used to process connected context message queues (should scale with the number of expected connected clients and the level of concurrency)
-discoveryEnabled | false | boolean | When discovery is enabled the client will listen for broadcast messages from local gateways and add them to its network registry as it finds them.
-maxTopicsInRegistry | 128 | int | Max number of topics which can reside in the CLIENT registry. This does NOT include predefined alias's.
-msgIdStartAt | 1 | int (max. 65535) | Starting number for message Ids sent from the client to the gateways (each gateway has a unique count).
-aliasStartAt | 1 | int (max. 65535) | Starting number for alias's used to store topic values (NB: only applicable to gateways).
-maxMessagesInflight | 1 | int (max. 65535) | In theory, a gateway and broker can have multiple messages inflight concurrently. The spec suggests only 1 confirmation message is inflight at any given time. (NB: do NOT change this).
-maxMessagesInQueue | 100 | int | Max number of messages allowed in a client's queue. When the max is reached any new messages will be discarded.
-requeueOnInflightTimeout | true | boolean | When a publish message fails to confirm, should it be re-queued for DUP sending at a later point.
-predefinedTopics | Config| Map | Where a client or gateway both know a topic alias in advance, any messages or subscriptions to the topic will be made using the predefined IDs.
-networkAddressEntries | Config | Map | You can pre-specify known locations for gateways and clients in the network address registry. NB. The runtime will dynamically update the registry with new clients / gateways as they are discovered. In the case of clients, they are unable to connect or message until at least 1 gateway is defined in config OR discovered.
-sleepClearsRegistrations  | true | boolean | When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the next AWAKE or ACTIVE states.
-minFlushTime  | 25 | int | Minimum time in milliseconds between last interaction and next interaction (allows gateway to be slowed down go allow constrained devices time to process)
-discoveryTime  | 3600 | int | The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
-pingDivisor  | 4 | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
-maxProtocolMessageSize | 1024 | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
+------------ |---------------| ------------- | -------------
+contextId | NULL          | String | This is used as either the clientId (when in a client runtime) or the gatewayId (when in a gateway runtime). **NB: This is a required field and must be set by the application.**
+maxWait | 10000         | int | Time in milliseconds to wait for a confirmation message where required. When calling a blocking method, this is the time the method will block until either the confirmation is received OR the timeout expires.
+maxClientSessions | 100           | int | The maximum number of sessions allowed on the gateway
+generalPurposeThreadCount | 1             | int | How many threads are used to provide general purpose asynchronicity
+transportIngressThreadCount | 1             | int | How many threads are used to process protocol messages (those inbound from clients and acks outbound)
+transportEgressThreadCount | 1             | int | How many threads are used to process outbound publish messages (gateway to device publish messages)
+queueProcessorThreadCount | 1             | int | How many threads should be used to process connected context message queues (should scale with the number of expected connected clients and the level of concurrency)
+discoveryEnabled | false         | boolean | When discovery is enabled the client will listen for broadcast messages from local gateways and add them to its network registry as it finds them.
+maxTopicsInRegistry | 128           | int | Max number of topics which can reside in the CLIENT registry. This does NOT include predefined alias's.
+msgIdStartAt | 1             | int (max. 65535) | Starting number for message Ids sent from the client to the gateways (each gateway has a unique count).
+aliasStartAt | 1             | int (max. 65535) | Starting number for alias's used to store topic values (NB: only applicable to gateways).
+maxMessagesInflight | 1             | int (max. 65535) | In theory, a gateway and broker can have multiple messages inflight concurrently. The spec suggests only 1 confirmation message is inflight at any given time. (NB: do NOT change this).
+maxMessagesInQueue | 100           | int | Max number of messages allowed in a client's queue. When the max is reached any new messages will be discarded.
+requeueOnInflightTimeout | true          | boolean | When a publish message fails to confirm, should it be re-queued for DUP sending at a later point.
+predefinedTopics | Config        | Map | Where a client or gateway both know a topic alias in advance, any messages or subscriptions to the topic will be made using the predefined IDs.
+networkAddressEntries | Config        | Map | You can pre-specify known locations for gateways and clients in the network address registry. NB. The runtime will dynamically update the registry with new clients / gateways as they are discovered. In the case of clients, they are unable to connect or message until at least 1 gateway is defined in config OR discovered.
+sleepClearsRegistrations  | true          | boolean | When a client enters the ASLEEP state, should the NORMAL topic registered alias's be cleared down and reestablished during the next AWAKE or ACTIVE states.
+minFlushTime  | 25            | int | Minimum time in milliseconds between last interaction and next interaction (allows gateway to be slowed down go allow constrained devices time to process)
+discoveryTime  | 3600          | int | The time (in seconds) a client will wait for a broadcast during CONNECT before giving up
+pingDivisor  | 4             | int | The divisor to use for the ping window, the dividend being the CONNECT keepAlive resulting in the quotient which is the time (since last sent message) each ping will be issued
+maxProtocolMessageSize | 1024          | int | The max allowable size (in bytes) of protocol messages that will be sent or received by the system. **NB: this differs from transport level max sizes which will be determined and constrained by the MTU of the transport**
 
 ## Cloud Platform Deployments
 It has become more common to want to deploy a gateway and combine it with IoT cloud support. There are a number of ways of achieving this, utilising the cloud SDKS for which examples are provided. Deployment of the gateway on the edge is normal; however it has also become more common to deploy a gateway as a cloud service in its own right.

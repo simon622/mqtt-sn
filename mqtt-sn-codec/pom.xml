@@ -31,7 +31,7 @@
     <parent>
         <groupId>org.slj</groupId>
         <artifactId>mqtt-sn</artifactId>
-        <version>0.1.18</version>
+        <version>0.1.19</version>
     </parent>
 
     <artifactId>mqtt-sn-codec</artifactId>

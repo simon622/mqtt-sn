@@ -57,24 +57,19 @@ public class OpenConnectionNoStateTestMain {
         InetAddress address = InetAddress.getByName(host);
         boolean shouldSubscribe = true;
 
-        for(int i = 0; i < 50000; i++){
+        for(int i = 0; i < 20000; i++){
             DatagramSocket socket =null;
             try {
-                socket = new DatagramSocket(localBindPort++, null);
+                socket = new DatagramSocket(++localBindPort, null);
                 byte[] connect = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
-                        createConnect(UUID.randomUUID().toString(), 3600, false, true, 0, 0, 0));
+                        createConnect("" + localBindPort, 3600, false, true, 0, 0, 0));
                 DatagramPacket packet = new DatagramPacket(connect, connect.length, address, port);
                 socket.send(packet);
 
                 if(shouldSubscribe){
 
-//                    byte[] register = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
-//                            createRegister("/some/random/" + ThreadLocalRandom.current().nextInt()));
-//                    packet = new DatagramPacket(register, register.length, address, port);
-//                    socket.send(packet);
-
                     byte[] subscribeRandom = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
-                            createSubscribe(2, "/some/random/" + ThreadLocalRandom.current().nextInt()));
+                            createSubscribe(2, "/some/random/" + localBindPort));
                     packet = new DatagramPacket(subscribeRandom, subscribeRandom.length, address, port);
                     socket.send(packet);
 

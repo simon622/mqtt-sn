@@ -67,8 +67,8 @@ public abstract class AbstractMqttsnMessageHandler
                 logger.warn("clientId format not valid {} (max. length set at {}), refuse auth", clientId,
                         registry.getOptions().getMaxClientIdLength());
             } else {
-                registry.getNetworkRegistry().removeExistingClientId(clientId);
                 IClientIdentifierContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
+                registry.getNetworkRegistry().removeExistingClientId(mqttsnContext);
                 if(mqttsnContext != null){
                     registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                     mqttsnContext.setAssignedClientId(assignedClientId);

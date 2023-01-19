@@ -135,7 +135,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
                     session.getContext(), clearNetworking);
             if(clearNetworking){
                 getRegistry().getNetworkRegistry().
-                        removeExistingClientId(session.getContext().getId());
+                        removeExistingClientId(session.getContext());
             }
             cleanSession(session.getContext(), true);
         } finally {

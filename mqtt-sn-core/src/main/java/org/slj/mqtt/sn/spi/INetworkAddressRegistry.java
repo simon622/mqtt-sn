@@ -60,7 +60,7 @@ public interface INetworkAddressRegistry {
 
     Iterator<INetworkContext> iterator() throws NetworkRegistryException ;
 
-    boolean removeExistingClientId(String clientId);
+    boolean removeExistingClientId(IClientIdentifierContext clientId);
 
     boolean hasBoundSessionContext(INetworkContext context);
 

@@ -110,7 +110,7 @@ public class MqttsnGatewayMessageHandler
                     registry.getCodec().isConnect(messageIn)){
                 //-- this is an error in CONNECT - remove from network registry so we dont leak
                 logger.warn("connect for {} was rejected, tidy up network layer after response is sent", context);
-                registry.getNetworkRegistry().removeExistingClientId(context.getClientContext().getId());
+                registry.getNetworkRegistry().removeExistingClientId(context.getClientContext());
             }
 
             ISession session = context.getSession();

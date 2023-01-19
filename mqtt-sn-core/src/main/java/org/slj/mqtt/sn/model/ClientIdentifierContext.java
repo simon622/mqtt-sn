@@ -28,25 +28,21 @@ import java.util.Objects;
 
 public class ClientIdentifierContext extends AbstractContextObject implements IClientIdentifierContext {
 
-    protected String id;
+    protected final String id;
+    protected final int hashCode;
+
     protected boolean assignedClientId;
     protected int protocolVersion;
 
-    public ClientIdentifierContext(){
-
-    }
 
     public ClientIdentifierContext(String id) {
         this.id = id;
+        this.hashCode = Objects.hashCode(id);
     }
 
     @Override
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     @Override
@@ -76,7 +72,7 @@ public class ClientIdentifierContext extends AbstractContextObject implements IC
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return hashCode;
     }
 
     @Override

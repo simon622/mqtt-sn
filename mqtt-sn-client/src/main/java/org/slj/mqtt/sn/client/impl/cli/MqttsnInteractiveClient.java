@@ -372,16 +372,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
             throws MqttsnException, IOException {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null){
-            stop();
-            message("Client stopped - bye :-)");
-        }
-    }
-
-    public void stop()
-            throws MqttsnException, IOException {
-        MqttsnClient client = (MqttsnClient) getRuntime();
-        if(client != null){
             client.close();
+            message("Client stopped - bye :-)");
         }
     }
 

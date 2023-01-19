@@ -519,18 +519,18 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     /**
      * @see {@link IMqttsnClient#close()}
      */
-    public void close() throws IOException {
+    public void close() {
         try {
             disconnect();
         } catch(MqttsnException e){
-            throw new IOException(e);
+            throw new RuntimeException(e);
         } finally {
             try {
                 if(registry != null)
                     stop();
             }
             catch(MqttsnException e){
-                throw new IOException (e);
+                throw new RuntimeException(e);
             } finally {
                 if(managedConnectionThread != null){
                     synchronized (connectionMonitor){

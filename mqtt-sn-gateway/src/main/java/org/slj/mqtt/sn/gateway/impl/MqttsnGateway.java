@@ -24,14 +24,19 @@
 
 package org.slj.mqtt.sn.gateway.impl;
 
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnConnectionStateListener;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class MqttsnGateway extends AbstractMqttsnRuntime {
 
@@ -102,12 +107,4 @@ public class MqttsnGateway extends AbstractMqttsnRuntime {
         return true;
     }
 
-    @Override
-    public void close() throws IOException {
-        try {
-            stop();
-        } catch(Exception e){
-            throw new IOException(e);
-        }
-    }
 }

@@ -26,12 +26,15 @@ package org.slj.mqtt.sn.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.utils.Environment;
@@ -164,7 +167,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     private void bindShutdownHook(){
         Runtime.getRuntime().addShutdownHook(new Thread(getThreadGroup(), () -> {
             try {
-                AbstractMqttsnRuntime.this.stop();
+                close();
             } catch(Exception e){
                 logger.error("encountered error executing shutdown hook", e);
             }
@@ -525,6 +528,39 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         logger.error("uncaught error in thread-pool", t);
     }
 
-    public abstract void close() throws IOException ;
+    private void notifySessions(){
+        try {
+            Iterator<ISession> sessionIterator = getRegistry().getSessionRegistry().iterator();
+            while(sessionIterator.hasNext()){
+                ISession session = sessionIterator.next();
+                if(session.getClientState() != ClientState.LOST){
+                    //notify all sessions of going away exception LOST sessions
+                    try {
+                        logger.warn("notifying {} is going away", session);
+                        IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
+                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, "Gateway going away");
+                        getRegistry().getTransportLocator().writeToTransport(
+                                getRegistry().getNetworkRegistry().getContext(session.getContext()), disconnect);
+                    } catch(Exception e){
+                        logger.warn("unable to send disconnect {}", e.getMessage());
+                    }
+                }
+            }
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 
+    public void close() {
+        try {
+            notifySessions();
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                stop();
+            } catch (MqttsnException e) {
+            }
+        }
+    }
 }

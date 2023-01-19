@@ -278,7 +278,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         MqttsnGatewayOptions opts = (MqttsnGatewayOptions) runtimeRegistry.getOptions();
         if(runtime != null) {
             boolean connected = getRuntimeRegistry().getBackendService().isConnected(null);
-            int maxClients = opts.getMaxConnectedClients();
+            int maxClients = opts.getMaxClientSessions();
             int advertiseTime = opts.getGatewayAdvertiseTime();
 
             //-- general stuff
@@ -335,7 +335,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected MqttsnOptions createOptions(IMqttsnStorageService storageService) {
         MqttsnGatewayOptions options = new MqttsnGatewayOptions();
-        options.withMaxConnectedClients(100).
+        options.withMaxClientSessions(100).
                 withGatewayId(101).
                 withContextId(storageService.getStringPreference(GatewayConfig.CLIENTID, null)).
                 withSessionExpiryInterval(60 * 60).

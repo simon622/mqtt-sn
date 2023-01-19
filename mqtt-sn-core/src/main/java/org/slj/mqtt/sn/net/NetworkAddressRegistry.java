@@ -51,13 +51,9 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
     final private Object mutex = new Object();
 
     public NetworkAddressRegistry(int initialCapacity){
-//        networkRegistry = Collections.synchronizedMap(new HashMap<>(initialCapacity));
-//        mqttsnContextRegistry = Collections.synchronizedMap(new HashMap<>(initialCapacity));
-//        networkContextRegistry = Collections.synchronizedMap(new HashMap<>(initialCapacity));
-        networkRegistry = new ConcurrentHashMap();
-        mqttsnContextRegistry = new ConcurrentHashMap();
-        networkContextRegistry = new ConcurrentHashMap();
-
+        networkRegistry = new ConcurrentHashMap(initialCapacity);
+        mqttsnContextRegistry = new ConcurrentHashMap(initialCapacity);
+        networkContextRegistry = new ConcurrentHashMap(initialCapacity);
     }
 
     @Override
@@ -89,44 +85,36 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
 
     @Override
     public Optional<INetworkContext> first() throws NetworkRegistryException {
-//        synchronized (networkRegistry){
-            Iterator<NetworkAddress> itr = networkRegistry.keySet().iterator();
-            while(itr.hasNext()){
-                NetworkAddress address = itr.next();
-                INetworkContext c = networkRegistry.get(address);
-                return Optional.of(c);
-            }
-//        }
+        Iterator<NetworkAddress> itr = networkRegistry.keySet().iterator();
+        while(itr.hasNext()){
+            NetworkAddress address = itr.next();
+            INetworkContext c = networkRegistry.get(address);
+            return Optional.of(c);
+        }
         return Optional.empty();
     }
 
     @Override
     public Optional<IClientIdentifierContext> findForClientId(String clientId) {
         if(clientId == null) return null;
-//        synchronized (mqttsnContextRegistry){
             return mqttsnContextRegistry.keySet().stream().
                     filter(s -> s.getId() != null).
                     filter(s -> s.getId().equals(clientId)).findFirst();
-//        }
     }
 
     @Override
     public void putContext(INetworkContext context) {
-//        synchronized (networkRegistry){
-            networkRegistry.put(context.getNetworkAddress(), context);
-            synchronized(mutex){
-                mutex.notifyAll();
-            }
-//        }
+        networkRegistry.put(context.getNetworkAddress(), context);
+        synchronized(mutex){
+            mutex.notifyAll();
+        }
     }
 
     @Override
     public void bindContexts(INetworkContext context, IClientIdentifierContext sessionContext) {
-//        synchronized (networkRegistry){
-            mqttsnContextRegistry.put(sessionContext, context);
-            networkContextRegistry.put(context, sessionContext);
-            putContext(context);
-//        }
+        mqttsnContextRegistry.put(sessionContext, context);
+        networkContextRegistry.put(context, sessionContext);
+        putContext(context);
     }
 
     @Override
@@ -145,19 +133,6 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
             logger.info("removing network,session & address from RAM registry - {}", clientId);
             return true;
         }
-//        Iterator<IClientIdentifierContext> itr = mqttsnContextRegistry.keySet().iterator();
-//        while (itr.hasNext()) {
-//            IClientIdentifierContext m = itr.next();
-//            if(m.getId().equals(clientId)){
-//                INetworkContext c = mqttsnContextRegistry.get(m);
-//                itr.remove();
-//                networkRegistry.remove(c.getNetworkAddress());
-//                networkContextRegistry.remove(c);
-//                logger.info("removing network,session & address from RAM registry - {}", clientId);
-//                return true;
-//            }
-//        }
-
         return false;
     }
 

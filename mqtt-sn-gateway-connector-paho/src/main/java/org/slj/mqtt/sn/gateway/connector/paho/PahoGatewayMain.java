@@ -71,7 +71,7 @@ public class PahoGatewayMain {
         //-- configure your gateway runtime
         MqttsnGatewayOptions gatewayOptions = new MqttsnGatewayOptions();
         gatewayOptions.withGatewayId(1).
-                withMaxConnectedClients(10).
+                withMaxClientSessions(10).
                 withContextId(clientId);
         gatewayOptions.withPredefinedTopic("/my/example/topic/1", 1);
 

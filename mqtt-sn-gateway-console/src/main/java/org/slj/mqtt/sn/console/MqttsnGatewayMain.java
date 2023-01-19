@@ -26,12 +26,10 @@ package org.slj.mqtt.sn.console;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.console.impl.MqttsnConsoleService;
-import org.slj.mqtt.sn.gateway.connector.custom.CustomMqttBrokerConnector;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.gateway.impl.connector.LoopbackMqttsnConnector;
 import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
-import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
@@ -56,7 +54,6 @@ public class MqttsnGatewayMain {
         //-- configure your gateway runtime
         MqttsnGatewayOptions gatewayOptions = new MqttsnGatewayOptions();
         gatewayOptions.withGatewayId(1).
-                withMaxConnectedClients(100000).
                 withMaxMessagesInQueue(25).
                 withContextId(gatewayId);
         gatewayOptions.withPredefinedTopic("/my/example/topic/1", 1);

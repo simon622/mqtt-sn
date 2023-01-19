@@ -341,7 +341,7 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     protected ConnectResult checkSessionSize(){
-        int maxConnectedClients = ((MqttsnGatewayOptions) registry.getOptions()).getMaxConnectedClients();
+        int maxConnectedClients = ((MqttsnGatewayOptions) registry.getOptions()).getMaxClientSessions();
         if(getRegistry().getSessionRegistry().countTotalSessions() >= maxConnectedClients){
             return new ConnectResult(Result.STATUS.ERROR, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION,
                     "gateway has reached capacity");

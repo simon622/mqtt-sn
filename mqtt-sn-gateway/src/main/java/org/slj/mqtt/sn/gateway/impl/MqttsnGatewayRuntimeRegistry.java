@@ -26,7 +26,6 @@ package org.slj.mqtt.sn.gateway.impl;
 
 import org.slj.mqtt.sn.gateway.impl.bridge.ProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
-import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridge;
 import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
@@ -38,8 +37,6 @@ import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.ContextTransportLocator;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
-
-import java.util.List;
 
 public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry implements IMqttsnGatewayRuntimeRegistry {
 
@@ -56,7 +53,7 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withMessageHandler(new MqttsnGatewayMessageHandler()).
                 withTransportLocator(new ContextTransportLocator()).
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).
-                withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).
+                withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxClientSessions())).
                 withWillRegistry(new MqttsnInMemoryWillRegistry()).
                 withTopicModifier(new MqttsnDefaultTopicModifier()).
                 withMessageQueue(new MqttsnInMemoryMessageQueue()).

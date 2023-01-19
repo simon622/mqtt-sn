@@ -38,7 +38,7 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     /**
      * A default gateway will allow 100 simultaneous connects to reside on the gateway
      */
-    public static final int DEFAULT_MAX_CONNECTED_CLIENTS = 100;
+    public static final int DEFAULT_MAX_CLIENT_SESSIONS = 100;
 
     /**
      * The default advertise time is 60 seconds
@@ -56,21 +56,21 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
      */
     public static final int DEFAULT_MAX_BACKEND_QUEUE_SIZE = 10000;
 
-    private int maxConnectedClients = DEFAULT_MAX_CONNECTED_CLIENTS;
-    private double maxBrokerPublishesPerSecond = DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND;
+    public int maxClientSessions = DEFAULT_MAX_CLIENT_SESSIONS;
+    public double maxBrokerPublishesPerSecond = DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND;
 
-    private int maxBackendQueueSize = DEFAULT_MAX_BACKEND_QUEUE_SIZE;
+    public int maxBackendQueueSize = DEFAULT_MAX_BACKEND_QUEUE_SIZE;
 
-    private int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
-    private int gatewayId = DEFAULT_GATEWAY_ID;
+    public int gatewayAdvertiseTime = DEFAULT_GATEWAY_ADVERTISE_TIME;
+    public int gatewayId = DEFAULT_GATEWAY_ID;
 
     public MqttsnGatewayOptions withMaxBrokerPublishesPerSecond(double maxBrokerPublishesPerSecond){
         this.maxBrokerPublishesPerSecond = maxBrokerPublishesPerSecond;
         return this;
     }
 
-    public MqttsnGatewayOptions withMaxConnectedClients(int maxConnectedClients){
-        this.maxConnectedClients = maxConnectedClients;
+    public MqttsnGatewayOptions withMaxClientSessions(int maxClientSessions){
+        this.maxClientSessions = maxClientSessions;
         return this;
     }
 
@@ -92,8 +92,8 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
         return gatewayId;
     }
 
-    public int getMaxConnectedClients() {
-        return maxConnectedClients;
+    public int getMaxClientSessions() {
+        return maxClientSessions;
     }
 
     public Set<String> getAllowedClientIds() {
@@ -119,7 +119,7 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     }
 
     public void withPerformanceProfile(MqttsnGatewayPerformanceProfile profile){
-        withMaxConnectedClients(profile.getMaxConnectedClients());
+        withMaxClientSessions(profile.getMaxConnectedClients());
         withMaxMessagesInQueue(profile.getMaxSessionQueueSize());
         withTransportIngressThreadCount(profile.getTransportProtocolHandoffThreadCount());
         withTransportEgressThreadCount(profile.getTransportPublishHandoffThreadCount());

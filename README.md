@@ -51,7 +51,7 @@ I have created simple interactive command lines for both client and gateway comp
 can be used to evaluate / test the software. For more complex use, please refer to the source build and configuration.
 
 #### Client CLI
-The latest interactive client build can be obtained from the releases section. The client will connect to any compliant version 1.2 or version 2.0 gateway. You will need to input the remote gateway details when requested by the wizard. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.18-alpha/mqtt-sn-client-0.1.18-alpha.jar) the mqtt-sn-client-VERSION.jar and run locally using;
+The latest interactive client build can be obtained from the releases section. The client will connect to any compliant version 1.2 or version 2.0 gateway. You will need to input the remote gateway details when requested by the wizard. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.18-alpha/mqtt-sn-client-0.1.18.jar) the mqtt-sn-client-VERSION.jar and run locally using;
 
 ```shell script
 java -jar <path-to>/mqtt-sn-client-VERSION.jar
@@ -60,10 +60,10 @@ java -jar <path-to>/mqtt-sn-client-VERSION.jar
 ![Client CLI](/images/client-cli.png)
 
 #### Gateway CLI
-The latest interactive gateway build can be obtained from the releases section. This build is the loopback configuration which requires no backend broker. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.18-alpha/mqtt-sn-gateway-console-0.1.18-alpha.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
+The latest interactive gateway build can be obtained from the releases section. This build is the loopback configuration which requires no backend broker. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.1.18-alpha/mqtt-sn-gateway-console-0.1.18.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-loopback-VERSION.jar
+java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar
 ```
 ![Gateway CLI](/images/gateway-cli.png)
 
@@ -97,7 +97,7 @@ This will yield a file in your mqtt-sn-gateway-connector-paho/target directory t
 from a command line using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-VERSION.jar
+java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar
 ```
 You can then follow the on screen instructions to get a gateway up and running.
 

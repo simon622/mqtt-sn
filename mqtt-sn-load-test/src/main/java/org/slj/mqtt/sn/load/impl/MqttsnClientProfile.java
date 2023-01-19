@@ -30,7 +30,7 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.load.*;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
@@ -124,19 +124,19 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     }
 
     protected void bindReceiveLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishReceivedListener((IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+        createOrGetClient().registerPublishReceivedListener((IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             getProgress().incrementProgress(1);
         });
     }
 
     protected void bindSendLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishSentListener((IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+        createOrGetClient().registerPublishSentListener((IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             getProgress().incrementProgress(1);
         });
     }
 
     protected void bindFailedLatch() throws UnknownHostException, MqttsnException {
-        createOrGetClient().registerPublishFailedListener((IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retry) -> {
+        createOrGetClient().registerPublishFailedListener((IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retry) -> {
             getProgress().incrementProgress(1);
         });
     }

@@ -51,7 +51,7 @@ public class OpenConnectionTestMain {
             try {
                 MqttsnClient client = createClient(TestHelper.getTestStorageService(), host, port);
                 client.connect(60 * 60, true);
-                client.subscribe("foo", 2);
+                client.subscribe("/test", 2);
                 Thread.sleep(10);
                 client.stop();
             } catch(Exception e){
@@ -72,6 +72,7 @@ public class OpenConnectionTestMain {
                 withPredefinedTopic("my/predefined/example/topic/1", 1);
         AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storage, options).
                 withTransport(new MqttsnUdpTransport(udpOptions)).
+                withMetrics(null).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 
         MqttsnClient client = new MqttsnClient(false, false);

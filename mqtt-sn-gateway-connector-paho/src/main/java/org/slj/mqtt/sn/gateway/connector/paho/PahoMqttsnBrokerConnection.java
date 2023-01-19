@@ -36,7 +36,7 @@ import org.slj.mqtt.sn.gateway.spi.SubscribeResult;
 import org.slj.mqtt.sn.gateway.spi.UnsubscribeResult;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -160,7 +160,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
+    public SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             int QoS = message == null ? MqttsnConstants.QoS2 : backendService.getRegistry().getCodec().getQoS(message, true);
             if(isConnected()) {
@@ -175,7 +175,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
+    public UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
             logger.info("unsubscribing connection from [{}]", topicPath);
             if(isConnected()){
@@ -189,7 +189,7 @@ public class PahoMqttsnBrokerConnection extends AbstractMqttsnBackendConnection 
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         try {
            if(isConnected()){
                client.publish(topicPath.toString(), payload, qos, retained);

@@ -26,7 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slj.mqtt.sn.model.MqttsnContext;
+import org.slj.mqtt.sn.model.ClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
@@ -79,7 +79,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
                 String key = itr.next();
                 NetworkAddress address = options.getNetworkAddressEntries().get(key);
                 NetworkContext networkContext = new NetworkContext(getDefaultTransport(), address);
-                MqttsnContext sessionContext = new MqttsnContext(key);
+                ClientIdentifierContext sessionContext = new ClientIdentifierContext(key);
                 sessionContext.setProtocolVersion(getCodec().getProtocolVersion());
                 networkAddressRegistry.bindContexts(networkContext, sessionContext);
             }
@@ -101,6 +101,10 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
     public AbstractMqttsnRuntimeRegistry withTopicModifier(IMqttsnTopicModifier topicModifier){
         withService(topicModifier);
+        return this;
+    }
+    public AbstractMqttsnRuntimeRegistry withPayloadModifier(IMqttsnPayloadModifier payloadModifier){
+        withService(payloadModifier);
         return this;
     }
     public AbstractMqttsnRuntimeRegistry withContextFactory(IMqttsnContextFactory contextFactory){
@@ -139,6 +143,13 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         withService(transport);
         return this;
     }
+
+    public AbstractMqttsnRuntimeRegistry withTransportLocator(ITransportLocator locator){
+        withService(locator);
+        return this;
+    }
+
+
     public AbstractMqttsnRuntimeRegistry withNetworkAddressRegistry(INetworkAddressRegistry networkAddressRegistry){
         this.networkAddressRegistry = networkAddressRegistry;
         return this;
@@ -219,6 +230,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     @Override
     public List<IMqttsnTransport> getTransports() {
         return getServices(IMqttsnTransport.class);
+    }
+
+    @Override
+    public List<IMqttsnPayloadModifier> getPayloadModifiers() {
+        return getServices(IMqttsnPayloadModifier.class);
     }
 
     public IMqttsnTransport getDefaultTransport(){
@@ -313,20 +329,25 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return getOptionalService(IMqttsnDeadLetterQueue.class).orElse(null);
     }
 
-    @Override
-    public List<IMqttsnService> getServices() {
+    protected List<IMqttsnService> getServicesInternal(){
         synchronized (services){
-            ArrayList sorted = new ArrayList(services);
-            Collections.sort(sorted, new ServiceSort());
-            return Collections.unmodifiableList(sorted);
+            return new ArrayList(services);
         }
     }
 
     @Override
+    public List<IMqttsnService> getServices() {
+        List<IMqttsnService> sorted = getServicesInternal();
+        Collections.sort(sorted, new ServiceSort());
+        return Collections.unmodifiableList(sorted);
+
+    }
+
+    @Override
     public AbstractMqttsnRuntimeRegistry withService(IMqttsnService service){
-        synchronized (services){
-            services.add(service);
-        }
+        List<IMqttsnService> localCopy = getServicesInternal();
+        localCopy.add(service);
+        services = localCopy;
         return this;
     }
 
@@ -340,43 +361,43 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
                         serviceInterface.getName());
                 services.remove(existing.get());
             }
-            services.add(serviceInstance);
+            if(serviceInstance != null) {
+                services.add(serviceInstance);
+            }
         }
         return this;
     }
 
     @Override
     public <T extends IMqttsnService> T getService(Class<T> clz){
-        synchronized (services){
-            List<IMqttsnService> all = services.stream().filter(s ->
-                            clz.isAssignableFrom(s.getClass())).
-                    collect(Collectors.toList());
-            if(all.size() > 1){
-                throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
-            }
-            else if(all.size() == 0){
-                throw new MqttsnRuntimeException("unable to find instance of "+clz+" service found");
-            }
-            return (T) all.get(0);
+        List<IMqttsnService> localCopy = getServicesInternal();
+        List<IMqttsnService> all = localCopy.stream().filter(s ->
+                        clz.isAssignableFrom(s.getClass())).
+                collect(Collectors.toList());
+        if(all.size() > 1){
+            throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
         }
+        else if(all.size() == 0){
+            throw new MqttsnRuntimeException("unable to find instance of "+clz+" in service list");
+        }
+        return (T) all.get(0);
+
     }
 
     @Override
     public <T extends IMqttsnService> List<T> getServices(Class<T> clz){
-        synchronized (services){
-            List<IMqttsnService> all = services.stream().filter(s ->
-                    clz.isAssignableFrom(s.getClass())).
-                    collect(Collectors.toList());
-            return (List<T>) all;
-        }
+        List<IMqttsnService> localCopy = getServicesInternal();
+        List<IMqttsnService> all = localCopy.stream().filter(s ->
+                clz.isAssignableFrom(s.getClass())).
+                collect(Collectors.toList());
+        return (List<T>) all;
     }
 
     @Override
     public <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz){
-        synchronized (services){
-            return (Optional<T>) services.stream().filter(s ->
-                            clz.isAssignableFrom(s.getClass())).findFirst();
-        }
+        List<IMqttsnService> localCopy = getServicesInternal();
+        return (Optional<T>) localCopy.stream().filter(s ->
+                clz.isAssignableFrom(s.getClass())).findFirst();
     }
 
 

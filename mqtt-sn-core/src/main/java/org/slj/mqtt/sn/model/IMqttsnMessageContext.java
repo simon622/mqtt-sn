@@ -24,17 +24,17 @@
 
 package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 
 public interface IMqttsnMessageContext {
 
     INetworkContext getNetworkContext();
 
-    IMqttsnContext getMqttsnContext();
+    IClientIdentifierContext getClientContext();
 
-    IMqttsnSession getMqttsnSession();
+    ISession getSession();
 
-    void setMqttsnSession(IMqttsnSession session);
+    void setSession(ISession session);
 
     int getProtocolVersion();
 }

@@ -28,7 +28,7 @@ import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnectorConnection;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.utils.TopicPath;
@@ -52,32 +52,32 @@ public abstract class AbstractMqttsnBackendConnection implements IMqttsnConnecto
     }
 
     @Override
-    public boolean canAccept(IMqttsnContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) {
+    public boolean canAccept(IClientIdentifierContext context, TopicPath topicPath, byte[] payload, IMqttsnMessage message) {
         return true;
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
+    public DisconnectResult disconnect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         return new DisconnectResult(Result.STATUS.NOOP);
     }
 
     @Override
-    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) throws MqttsnConnectorException {
+    public ConnectResult connect(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnConnectorException {
         return new ConnectResult(Result.STATUS.NOOP);
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
+    public SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         return new SubscribeResult(Result.STATUS.NOOP);
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
+    public UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topicPath, IMqttsnMessage message) throws MqttsnConnectorException {
         return new UnsubscribeResult(Result.STATUS.NOOP);
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message) throws MqttsnConnectorException {
         return new PublishResult(Result.STATUS.NOOP);
     }
 }

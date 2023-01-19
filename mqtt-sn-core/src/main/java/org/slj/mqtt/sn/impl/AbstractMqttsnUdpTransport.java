@@ -42,21 +42,27 @@ public abstract class AbstractMqttsnUdpTransport
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         try {
             super.start(runtime);
+            options.processFromSystemPropertyOverrides();
             bind();
         } catch(Exception e){
             throw new MqttsnException(e);
         }
     }
 
-    public MqttsnUdpOptions getUdpOptions(){
-        return options;
-    }
-
-    public boolean restartOnLoss(){
-        return false;
-    }
-
     protected abstract void bind() throws Exception;
 
-    public abstract void writeToTransport(INetworkContext context, byte[] data) throws MqttsnException ;
+    @Override
+    public String getName() {
+        return "mqtt-sn-udp";
+    }
+
+    @Override
+    public int getPort() {
+        return options.getPort();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Exposes a UDP port which is optionally protected by TLS. UDP is a connectionless datagram protocol.";
+    }
 }

@@ -24,12 +24,12 @@
 
 package org.slj.mqtt.sn.cloud;
 
-import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
+import org.slj.mqtt.sn.model.IPreferenceNamespace;
 
 import java.io.Serializable;
 import java.util.List;
 
-public class MqttsnConnectorDescriptor implements Serializable, IMqttsnPreferenceNamespace {
+public class MqttsnConnectorDescriptor implements Serializable, IPreferenceNamespace {
     private String name;
     private String description;
     private String signupLink;
@@ -44,16 +44,16 @@ public class MqttsnConnectorDescriptor implements Serializable, IMqttsnPreferenc
     private int rateLimit;
     private boolean remote;
 
-    private List<MqttsnConnectorDescriptorProperty> properties;
+    private List<DescriptorProperty> properties;
 
     public MqttsnConnectorDescriptor(){
     }
 
-    public List<MqttsnConnectorDescriptorProperty> getProperties() {
+    public List<DescriptorProperty> getProperties() {
         return properties;
     }
 
-    public void setProperties(List<MqttsnConnectorDescriptorProperty> properties) {
+    public void setProperties(List<DescriptorProperty> properties) {
         this.properties = properties;
     }
 

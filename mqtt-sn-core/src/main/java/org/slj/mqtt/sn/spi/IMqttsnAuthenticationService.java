@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
 /**
  * Optional - when installed it will be consulted to determine whether a remote context can perform certain
@@ -42,6 +42,6 @@ public interface IMqttsnAuthenticationService extends IMqttsnService {
      * @return true if the client is allowed to CONNECT (yielding CONNACK ok) or false if not allowed (yielding CONNACK error)
      * @throws MqttsnException an error occurred
      */
-    boolean allowConnect(IMqttsnContext context, String clientId) throws MqttsnException;
+    boolean allowConnect(IClientIdentifierContext context, String clientId) throws MqttsnException;
 
 }

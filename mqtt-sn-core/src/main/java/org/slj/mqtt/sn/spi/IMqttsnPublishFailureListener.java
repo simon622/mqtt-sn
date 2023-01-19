@@ -24,11 +24,11 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 public interface IMqttsnPublishFailureListener {
 
-    void sendFailure(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount);
+    void sendFailure(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount);
 
 }

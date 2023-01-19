@@ -24,8 +24,8 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.IWillData;
 
 /**
  * Stores and Maintains will data associated with a given context
@@ -33,16 +33,16 @@ import org.slj.mqtt.sn.model.session.IMqttsnWillData;
 @MqttsnService
 public interface IMqttsnWillRegistry extends IMqttsnService {
 
-    void setWillMessage(IMqttsnSession session, IMqttsnWillData willData);
+    void setWillMessage(ISession session, IWillData willData);
 
-    void updateWillTopic(IMqttsnSession session, String topicPath, int qos, boolean retain);
+    void updateWillTopic(ISession session, String topicPath, int qos, boolean retain);
 
-    void updateWillMessage(IMqttsnSession session, byte[] data);
+    void updateWillMessage(ISession session, byte[] data);
 
-    IMqttsnWillData getWillMessage(IMqttsnSession session);
+    IWillData getWillMessage(ISession session);
 
-    boolean hasWillMessage(IMqttsnSession session);
+    boolean hasWillMessage(ISession session);
 
-    void clear(IMqttsnSession session) throws MqttsnException;
+    void clear(ISession session) throws MqttsnException;
 
 }

@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.model;
 
-public class IntegerDataRef implements IMqttsnDataRef<Integer>{
+public class IntegerDataRef implements IDataRef<Integer> {
 
     private static final long serialVersionUID = -6335546138645330614L;
     private Integer id;

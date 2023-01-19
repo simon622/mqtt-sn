@@ -24,9 +24,9 @@
 
 package org.slj.mqtt.sn.impl;
 
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.model.session.impl.MqttsnSubscriptionImpl;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.ISubscription;
+import org.slj.mqtt.sn.model.session.impl.SubscriptionImpl;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -38,18 +38,18 @@ public abstract class AbstractSubscriptionRegistry
         implements IMqttsnSubscriptionRegistry {
 
     @Override
-    public boolean subscribe(IMqttsnSession session, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException {
+    public boolean subscribe(ISession session, String topicPath, int QoS) throws MqttsnException, MqttsnIllegalFormatException {
         TopicPath path = new TopicPath(
                 getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
-        return addSubscription(session, new MqttsnSubscriptionImpl(path, QoS));
+        return addSubscription(session, new SubscriptionImpl(path, QoS));
     }
 
     @Override
-    public boolean unsubscribe(IMqttsnSession session, String topicPath) throws MqttsnException {
-        Set<IMqttsnSubscription> paths = readSubscriptions(session);
+    public boolean unsubscribe(ISession session, String topicPath) throws MqttsnException {
+        Set<ISubscription> paths = readSubscriptions(session);
         TopicPath path = new TopicPath(
                 getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath));
-        MqttsnSubscriptionImpl sub = new MqttsnSubscriptionImpl(path);
+        SubscriptionImpl sub = new SubscriptionImpl(path);
         if(paths.contains(sub)){
             return removeSubscription(session, sub);
         }
@@ -57,14 +57,14 @@ public abstract class AbstractSubscriptionRegistry
     }
 
     @Override
-    public int getQos(IMqttsnSession session, String topicPath) throws MqttsnException {
-        Set<IMqttsnSubscription> paths = readSubscriptions(session);
+    public int getQos(ISession session, String topicPath) throws MqttsnException {
+        Set<ISubscription> paths = readSubscriptions(session);
         if(paths != null && !paths.isEmpty()) {
-            Iterator<IMqttsnSubscription> pathItr = paths.iterator();
+            Iterator<ISubscription> pathItr = paths.iterator();
             client:
             while (pathItr.hasNext()) {
                 try {
-                    IMqttsnSubscription sub = pathItr.next();
+                    ISubscription sub = pathItr.next();
                     TopicPath path = sub.getTopicPath();
                     if (path.matches(
                             getRegistry().getTopicModifier().modifyTopic(session.getContext(), topicPath))) {
@@ -78,11 +78,11 @@ public abstract class AbstractSubscriptionRegistry
         throw new MqttsnException("no matching subscription found for client");
     }
 
-    public abstract Set<IMqttsnSubscription> readSubscriptions(IMqttsnSession session) throws MqttsnException ;
+    public abstract Set<ISubscription> readSubscriptions(ISession session) throws MqttsnException ;
 
-    public abstract void clear(IMqttsnSession session) ;
+    public abstract void clear(ISession session) ;
 
-    protected abstract boolean addSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnException, MqttsnIllegalFormatException;
+    protected abstract boolean addSubscription(ISession session, ISubscription subscription) throws MqttsnException, MqttsnIllegalFormatException;
 
-    protected abstract boolean removeSubscription(IMqttsnSession session, IMqttsnSubscription subscription) throws MqttsnException ;
+    protected abstract boolean removeSubscription(ISession session, ISubscription subscription) throws MqttsnException ;
 }

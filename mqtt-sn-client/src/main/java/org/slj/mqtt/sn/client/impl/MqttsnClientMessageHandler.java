@@ -26,9 +26,8 @@ package org.slj.mqtt.sn.client.impl;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.impl.AbstractMqttsnMessageHandler;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnRegister;
@@ -40,7 +39,7 @@ public class MqttsnClientMessageHandler
     protected IMqttsnMessage handleRegister(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException, MqttsnCodecException {
         MqttsnRegister register = (MqttsnRegister) message;
         if(register.getTopicId() > 0 && register.getTopicName() != null){
-            registry.getTopicRegistry().register(context.getMqttsnSession(), register.getTopicName(), register.getTopicId());
+            registry.getTopicRegistry().register(context.getSession(), register.getTopicName(), register.getTopicId());
         }
         return super.handleRegister(context, message);
     }

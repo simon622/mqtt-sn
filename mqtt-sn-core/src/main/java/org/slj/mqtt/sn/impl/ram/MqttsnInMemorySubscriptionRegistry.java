@@ -27,9 +27,9 @@ package org.slj.mqtt.sn.impl.ram;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.impl.AbstractSubscriptionRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.ISubscription;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
@@ -42,38 +42,39 @@ import java.util.Set;
 public class MqttsnInMemorySubscriptionRegistry
         extends AbstractSubscriptionRegistry {
 
-    private PathTriesTree<IMqttsnContext> tree;
+    private PathTriesTree<IClientIdentifierContext> tree;
 
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        tree.setMaxMembersAtLevel(1024 * 1024);
         tree.addWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
         tree.addWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);
     }
 
     @Override
-    public Set<IMqttsnContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException {
+    public Set<IClientIdentifierContext> matches(String topicPath) throws MqttsnException, MqttsnIllegalFormatException {
 
         if (!MqttsnSpecificationValidator.isValidPublishTopic(
                 topicPath)) {
             throw new MqttsnIllegalFormatException("invalid topic format detected");
         }
-        Set<IMqttsnContext> treeMatches = matchFromTree(topicPath);
+        Set<IClientIdentifierContext> treeMatches = matchFromTree(topicPath);
         return treeMatches;
     }
 
-    protected Set<IMqttsnContext> matchFromTree(String topicPath) throws MqttsnException {
+    protected Set<IClientIdentifierContext> matchFromTree(String topicPath) throws MqttsnException {
         return tree.searchMembers(topicPath);
     }
 
     @Override
-    public Set<IMqttsnSubscription> readSubscriptions(IMqttsnSession session){
+    public Set<ISubscription> readSubscriptions(ISession session){
         return getSessionBean(session).getSubscriptions();
     }
 
     @Override
-    protected boolean addSubscription(IMqttsnSession session, IMqttsnSubscription subscription)
+    protected boolean addSubscription(ISession session, ISubscription subscription)
             throws MqttsnIllegalFormatException {
 
         if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(
@@ -94,7 +95,7 @@ public class MqttsnInMemorySubscriptionRegistry
     }
 
     @Override
-    protected boolean removeSubscription(IMqttsnSession session, IMqttsnSubscription subscription){
+    protected boolean removeSubscription(ISession session, ISubscription subscription){
         boolean removed = getSessionBean(session).removeSubscription(subscription);
         if(removed){
             tree.removeMemberFromPath(subscription.getTopicPath().toString(), session.getContext());
@@ -110,7 +111,7 @@ public class MqttsnInMemorySubscriptionRegistry
     }
 
     @Override
-    public void clear(IMqttsnSession session) {
+    public void clear(ISession session) {
         getSessionBean(session).clearSubscriptions();
     }
 

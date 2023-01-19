@@ -29,7 +29,7 @@
 
     <groupId>org.slj</groupId>
     <artifactId>mqtt-sn</artifactId>
-    <version>0.1.17</version>
+    <version>0.1.18</version>
 
     <packaging>pom</packaging>
 
@@ -65,6 +65,7 @@
         <module>mqtt-sn-gateway-connector-paho</module>
         <module>mqtt-sn-load-test</module>
         <module>mqtt-sn-gateway-console</module>
+        <module>mqtt-sn-plc4j</module>
     </modules>
 
     <properties>
@@ -79,7 +80,7 @@
         <maven.build.shade.version>3.4.1</maven.build.shade.version>
         <jackson.version>2.10.2</jackson.version>
         <yaml.version>1.11</yaml.version>
-        <mqtt-sn.version>0.1.17</mqtt-sn.version>
+        <mqtt-sn.version>0.1.18</mqtt-sn.version>
     </properties>
 
     <dependencies>
@@ -92,11 +93,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>${yaml.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

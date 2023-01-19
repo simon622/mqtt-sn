@@ -27,12 +27,12 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.IWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
@@ -42,10 +42,10 @@ public abstract class AbstractMqttsnMessageHandler
 
     public boolean temporaryAuthorizeContext(INetworkContext context) {
         try {
-            IMqttsnContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context,
+            IClientIdentifierContext mqttsnContext = registry.getContextFactory().createTemporaryApplicationContext(context,
                     getRegistry().getCodec().getProtocolVersion());
             if(mqttsnContext != null){
-                logger.warn("temporary auth context created {}", mqttsnContext);
+                logger.info("temporary auth context created {}", mqttsnContext);
                 registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                 return true;
             }
@@ -61,12 +61,14 @@ public abstract class AbstractMqttsnMessageHandler
     public boolean authorizeContext(INetworkContext context, String clientId, int protocolVersion, boolean assignedClientId) {
         try {
             boolean authorized = false;
-            if(!MqttsnSpecificationValidator.validClientId(clientId, false)){
+            if(!MqttsnSpecificationValidator.validClientId(clientId, false,
+                    registry.getOptions().getMaxClientIdLength())){
                 authorized = false;
-                logger.warn("clientId format not valid, refuse auth");
+                logger.warn("clientId format not valid {} (max. length set at {}), refuse auth", clientId,
+                        registry.getOptions().getMaxClientIdLength());
             } else {
-                registry.getNetworkRegistry().removeExistingClientId(clientId);
-                IMqttsnContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
+                IClientIdentifierContext mqttsnContext = registry.getContextFactory().createInitialApplicationContext(context, clientId, protocolVersion);
+                registry.getNetworkRegistry().removeExistingClientId(mqttsnContext);
                 if(mqttsnContext != null){
                     registry.getNetworkRegistry().bindContexts(context, mqttsnContext);
                     mqttsnContext.setAssignedClientId(assignedClientId);
@@ -116,11 +118,11 @@ public abstract class AbstractMqttsnMessageHandler
             if(registry.getMessageStateService() != null){
                 try {
                     originatingMessage =
-                            registry.getMessageStateService().notifyMessageReceived(context.getMqttsnContext(), message);
+                            registry.getMessageStateService().notifyMessageReceived(context.getClientContext(), message);
                 } catch(MqttsnException e){
                     errord = true;
                     logger.warn("mqtt-sn handler [{} <- {}] state service errord, allow message lifecycle to handle {} -> {}",
-                            registry.getOptions().getContextId(), context.getMqttsnContext().getId(), message, e.getMessage());
+                            registry.getOptions().getContextId(), context.getClientContext().getId(), message, e.getMessage());
                 }
             }
 
@@ -152,7 +154,7 @@ public abstract class AbstractMqttsnMessageHandler
             logger.warn("handled with disconnect error encountered during receive;", e);
             handleResponse(context,
                     registry.getMessageFactory().createDisconnect());
-            if(!registry.getRuntime().handleLocalDisconnect(context.getMqttsnContext(), e)) {
+            if(!registry.getRuntime().handleLocalDisconnect(context.getClientContext(), e)) {
                 throw e;
             }
         }
@@ -173,14 +175,14 @@ public abstract class AbstractMqttsnMessageHandler
             case MqttsnConstants.CONNECT:
                 response = handleConnect(context, message);
                 if(!errord && !response.isErrorMessage()){
-                    registry.getRuntime().handleConnected(context.getMqttsnContext());
+                    registry.getRuntime().handleConnected(context.getClientContext());
                 }
                 break;
             case MqttsnConstants.CONNACK:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     handleConnack(context, originatingMessage, message);
                     if(!errord && !message.isErrorMessage()){
-                        registry.getRuntime().handleConnected(context.getMqttsnContext());
+                        registry.getRuntime().handleConnected(context.getClientContext());
                     }
                 }
                 break;
@@ -311,7 +313,7 @@ public abstract class AbstractMqttsnMessageHandler
         if(response != null && response.isErrorMessage()){
             //we need to remove any message that was marked inflight
             if(message.needsId()){
-                if(registry.getMessageStateService().removeInflight(context.getMqttsnContext(), IMqttsnOriginatingMessageSource.REMOTE, message.getId()) != null){
+                if(registry.getMessageStateService().removeInflight(context.getClientContext(), IMqttsnOriginatingMessageSource.REMOTE, message.getId()) != null){
                     logger.warn("tidied up bad message that was marked inflight and yeilded error response");
                 }
             }
@@ -341,7 +343,7 @@ public abstract class AbstractMqttsnMessageHandler
 
         boolean will = false;
 
-        if(messageContext.getMqttsnContext().getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+        if(messageContext.getClientContext().getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnConnect_V2_0 connectMessage = (MqttsnConnect_V2_0) connect ;
             will = connectMessage.isWill();
         } else {
@@ -366,7 +368,7 @@ public abstract class AbstractMqttsnMessageHandler
             logger.info("disconnect received in response to my disconnect, dont send another!");
             return null;
         } else {
-            if(registry.getRuntime().handleRemoteDisconnect(context.getMqttsnContext())){
+            if(registry.getRuntime().handleRemoteDisconnect(context.getClientContext())){
                 return registry.getMessageFactory().createDisconnect();
             }
             return null;
@@ -439,7 +441,7 @@ public abstract class AbstractMqttsnMessageHandler
         }
 
         if(!isError){
-            IMqttsnSession session = context.getMqttsnSession();
+            ISession session = context.getSession();
             if(topicIdType == MqttsnConstants.TOPIC_NORMAL){
                 registry.getTopicRegistry().register(session, topicPath, topicId);
             } else {
@@ -458,7 +460,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     protected void handleUnsuback(IMqttsnMessageContext context, IMqttsnMessage unsubscribe, IMqttsnMessage unsuback) throws MqttsnException {
         String topicPath = ((MqttsnUnsubscribe)unsubscribe).getTopicName();
-        registry.getSubscriptionRegistry().unsubscribe(context.getMqttsnSession(), topicPath);
+        registry.getSubscriptionRegistry().unsubscribe(context.getSession(), topicPath);
     }
 
     protected IMqttsnMessage handleRegister(IMqttsnMessageContext context, IMqttsnMessage message)
@@ -489,7 +491,7 @@ public abstract class AbstractMqttsnMessageHandler
                 getRegistry().getOptions().getPredefinedTopics().put(topicPath, topicId);
                 logger.warn("received PREDEFINED regack response (v2), registering {}; Msg={}", context, response);
             } else if(topicIdType == MqttsnConstants.TOPIC_NORMAL){
-                registry.getTopicRegistry().register(context.getMqttsnSession(), topicPath, topicId);
+                registry.getTopicRegistry().register(context.getSession(), topicPath, topicId);
             }
         } else {
             logger.warn("received error regack response {}; Msg={}", context, response);
@@ -523,12 +525,12 @@ public abstract class AbstractMqttsnMessageHandler
 
         IMqttsnMessage response = null;
 
-        IMqttsnSession session = context.getMqttsnSession();
+        ISession session = context.getSession();
 
         TopicInfo info = registry.getTopicRegistry().normalize((byte) topicIdType, topicData, false);
         String topicPath = registry.getTopicRegistry().topicPath(session, info, true);
         if(registry.getAuthorizationService() != null){
-            if(!registry.getAuthorizationService().allowedToPublish(context.getMqttsnContext(), topicPath, data.length, QoS)){
+            if(!registry.getAuthorizationService().allowedToPublish(context.getClientContext(), topicPath, data.length, QoS)){
                 logger.warn("authorization service rejected publish from {} to {}", context, topicPath);
                 response = registry.getMessageFactory().createPuback(topicDataAsInt, MqttsnConstants.RETURN_CODE_REJECTED_CONGESTION);
             }
@@ -599,7 +601,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     protected IMqttsnMessage handleWillmsgreq(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException {
 
-        IMqttsnWillData willData = registry.getWillRegistry().getWillMessage(context.getMqttsnSession());
+        IWillData willData = registry.getWillRegistry().getWillMessage(context.getSession());
         byte[] willMsg = willData.getData();
         return registry.getMessageFactory().createWillMsg(willMsg);
     }
@@ -608,7 +610,7 @@ public abstract class AbstractMqttsnMessageHandler
 
         MqttsnWillmsg update = (MqttsnWillmsg) message;
         byte[] data = update.getMsgData();
-        registry.getWillRegistry().updateWillMessage(context.getMqttsnSession(), data);
+        registry.getWillRegistry().updateWillMessage(context.getSession(), data);
         return registry.getMessageFactory().createConnack(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
@@ -616,7 +618,7 @@ public abstract class AbstractMqttsnMessageHandler
 
         MqttsnWillmsgupd update = (MqttsnWillmsgupd) message;
         byte[] data = update.getMsgData();
-        registry.getWillRegistry().updateWillMessage(context.getMqttsnSession(), data);
+        registry.getWillRegistry().updateWillMessage(context.getSession(), data);
         return registry.getMessageFactory().createWillMsgResp(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 
@@ -625,7 +627,7 @@ public abstract class AbstractMqttsnMessageHandler
 
     protected IMqttsnMessage handleWilltopicreq(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException {
 
-        IMqttsnWillData willData = registry.getWillRegistry().getWillMessage(context.getMqttsnSession());
+        IWillData willData = registry.getWillRegistry().getWillMessage(context.getSession());
         int QoS = willData.getQos();
         boolean retain = willData.isRetained();
         String topicPath = willData.getTopicPath().toString();
@@ -640,7 +642,7 @@ public abstract class AbstractMqttsnMessageHandler
         int qos = update.getQoS();
         boolean retain = update.isRetainedPublish();
         String topicPath = update.getWillTopicData();
-        registry.getWillRegistry().updateWillTopic(context.getMqttsnSession(), topicPath, qos, retain);
+        registry.getWillRegistry().updateWillTopic(context.getSession(), topicPath, qos, retain);
         return registry.getMessageFactory().createWillMsgReq();
     }
 
@@ -649,7 +651,7 @@ public abstract class AbstractMqttsnMessageHandler
         String topicPath = update.getWillTopicData();
         int qos = update.getQoS();
         boolean retain = update.isRetainedPublish();
-        registry.getWillRegistry().updateWillTopic(context.getMqttsnSession(), topicPath, qos, retain);
+        registry.getWillRegistry().updateWillTopic(context.getSession(), topicPath, qos, retain);
         return registry.getMessageFactory().createWillTopicResp(MqttsnConstants.RETURN_CODE_ACCEPTED);
     }
 

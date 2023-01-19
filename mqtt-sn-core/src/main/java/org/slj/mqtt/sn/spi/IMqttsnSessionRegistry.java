@@ -24,9 +24,9 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.session.ISession;
 
 import java.util.Iterator;
 import java.util.List;
@@ -35,28 +35,28 @@ import java.util.Optional;
 @MqttsnService
 public interface IMqttsnSessionRegistry extends IMqttsnService {
 
-    Optional<IMqttsnContext> lookupClientIdSession(String clientId) throws MqttsnException;
-    IMqttsnSession createNewSession(IMqttsnContext context) throws MqttsnException;
-    IMqttsnSession getSession(IMqttsnContext context, boolean createIfNotExists) throws MqttsnException;
-    Iterator<IMqttsnSession> iterator();
-    boolean cleanSession(IMqttsnContext context, boolean deepClean) throws MqttsnException ;
-    void clear(IMqttsnSession session, boolean clearNetworking) throws MqttsnException;
-    void clear(IMqttsnSession session) throws MqttsnException ;
+    Optional<IClientIdentifierContext> lookupClientIdSession(String clientId) throws MqttsnException;
+    ISession createNewSession(IClientIdentifierContext context) throws MqttsnException;
+    ISession getSession(IClientIdentifierContext context, boolean createIfNotExists) throws MqttsnException;
+    Iterator<ISession> iterator();
+    boolean cleanSession(IClientIdentifierContext context, boolean deepClean) throws MqttsnException ;
+    void clear(ISession session, boolean clearNetworking) throws MqttsnException;
+    void clear(ISession session) throws MqttsnException ;
 
-    long countSessions(MqttsnClientState state) ;
+    long countSessions(ClientState state) ;
 
     long countTotalSessions();
-    boolean hasSession(IMqttsnContext context);
+    boolean hasSession(IClientIdentifierContext context);
 
     List<String> prefixSearch(String prefix);
 
     //-- attributes of the session setters
-    void modifyClientState(IMqttsnSession session, MqttsnClientState state);
-    void modifyLastSeen(IMqttsnSession session);
-    void modifyKeepAlive(IMqttsnSession session, int keepAlive);
-    void modifySessionExpiryInterval(IMqttsnSession session, long sessionExpiryInterval);
-    void modifyMaxPacketSize(IMqttsnSession session, int maxPacketSize);
+    void modifyClientState(ISession session, ClientState state);
+    void modifyLastSeen(ISession session);
+    void modifyKeepAlive(ISession session, int keepAlive);
+    void modifySessionExpiryInterval(ISession session, long sessionExpiryInterval);
+    void modifyMaxPacketSize(ISession session, int maxPacketSize);
 
-    void modifyProtocolVersion(IMqttsnSession session, int protocolVersion);
+    void modifyProtocolVersion(ISession session, int protocolVersion);
 
 }

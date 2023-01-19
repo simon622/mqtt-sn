@@ -27,7 +27,7 @@ package org.slj.mqtt.sn.gateway.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IDataRef;
 import org.slj.mqtt.sn.model.IntegerDataRef;
 import org.slj.mqtt.sn.spi.IMqttsnObjectReaderWriter;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -46,7 +46,7 @@ public class MqttsnJacksonReaderWriter implements IMqttsnObjectReaderWriter {
     protected void initializeMapper(){
         mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule()
-                .addAbstractTypeMapping(IMqttsnDataRef.class, IntegerDataRef.class);
+                .addAbstractTypeMapping(IDataRef.class, IntegerDataRef.class);
         mapper.registerModule(module);
     }
 

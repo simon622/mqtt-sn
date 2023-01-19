@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.net.NetworkAddress;
 
@@ -42,9 +42,9 @@ public interface INetworkAddressRegistry {
 
     INetworkContext getContext(NetworkAddress address) throws NetworkRegistryException ;
 
-    INetworkContext getContext(IMqttsnContext sessionContext);
+    INetworkContext getContext(IClientIdentifierContext sessionContext);
 
-    IMqttsnContext getMqttsnContext(INetworkContext networkContext);
+    IClientIdentifierContext getMqttsnContext(INetworkContext networkContext);
 
     Optional<INetworkContext> first() throws NetworkRegistryException ;
 
@@ -52,7 +52,7 @@ public interface INetworkAddressRegistry {
 
     void putContext(INetworkContext context) throws NetworkRegistryException ;
 
-    void bindContexts(INetworkContext context, IMqttsnContext sessionContext);
+    void bindContexts(INetworkContext context, IClientIdentifierContext sessionContext);
 
     Optional<INetworkContext> waitForContext(int time, TimeUnit unit) throws InterruptedException, NetworkRegistryException;
 
@@ -60,9 +60,9 @@ public interface INetworkAddressRegistry {
 
     Iterator<INetworkContext> iterator() throws NetworkRegistryException ;
 
-    boolean removeExistingClientId(String clientId);
+    boolean removeExistingClientId(IClientIdentifierContext clientId);
 
     boolean hasBoundSessionContext(INetworkContext context);
 
-    Optional<IMqttsnContext> findForClientId(String clientId);
+    Optional<IClientIdentifierContext> findForClientId(String clientId);
 }

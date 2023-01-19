@@ -25,22 +25,22 @@
 package org.slj.mqtt.sn.impl.ram;
 
 import org.slj.mqtt.sn.impl.AbstractWillRegistry;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
-import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.IWillData;
+import org.slj.mqtt.sn.model.session.impl.WillDataImpl;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 public class MqttsnInMemoryWillRegistry
         extends AbstractWillRegistry {
 
     @Override
-    public void updateWillTopic(IMqttsnSession session, String topicPath, int qos, boolean retained) {
+    public void updateWillTopic(ISession session, String topicPath, int qos, boolean retained) {
 
-        MqttsnWillDataImpl willData = getWillMessageInternal(session);
+        WillDataImpl willData = getWillMessageInternal(session);
         if(willData == null){
             synchronized (this){
                 if(willData == null){
-                    willData = new MqttsnWillDataImpl();
+                    willData = new WillDataImpl();
                     setWillMessage(session, willData);
                 }
             }
@@ -55,12 +55,12 @@ public class MqttsnInMemoryWillRegistry
     }
 
     @Override
-    public void updateWillMessage(IMqttsnSession session, byte[] data) {
-        MqttsnWillDataImpl willData = getWillMessageInternal(session);
+    public void updateWillMessage(ISession session, byte[] data) {
+        WillDataImpl willData = getWillMessageInternal(session);
         if(willData == null){
             synchronized (this){
                 if(willData == null){
-                    willData = new MqttsnWillDataImpl();
+                    willData = new WillDataImpl();
                     setWillMessage(session, willData);
                 }
             }
@@ -73,26 +73,26 @@ public class MqttsnInMemoryWillRegistry
     }
 
     @Override
-    public void setWillMessage(IMqttsnSession session, IMqttsnWillData willData) {
+    public void setWillMessage(ISession session, IWillData willData) {
         getSessionBean(session).setWillData(willData);
     }
 
     @Override
-    public IMqttsnWillData getWillMessage(IMqttsnSession session) {
+    public IWillData getWillMessage(ISession session) {
         return getSessionBean(session).getWillData();
     }
 
-    public MqttsnWillDataImpl getWillMessageInternal(IMqttsnSession session) {
-        return (MqttsnWillDataImpl) getSessionBean(session).getWillData();
+    public WillDataImpl getWillMessageInternal(ISession session) {
+        return (WillDataImpl) getSessionBean(session).getWillData();
     }
 
     @Override
-    public boolean hasWillMessage(IMqttsnSession session) {
+    public boolean hasWillMessage(ISession session) {
         return getWillMessage(session) != null;
     }
 
     @Override
-    public void clear(IMqttsnSession session) {
+    public void clear(ISession session) {
         getSessionBean(session).setWillData(null);
     }
 }

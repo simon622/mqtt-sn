@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
@@ -78,7 +78,7 @@ public class Example {
             client.start(registry);
 
             //-- register any publish receive listeners you require
-            client.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+            client.registerPublishReceivedListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 receiveCounter.incrementAndGet();
                 System.err.println(String.format("received message [%s] [%s]",
                         receiveCounter.get(), new String(data, MqttsnConstants.CHARSET)));
@@ -86,7 +86,7 @@ public class Example {
             });
 
             //-- register any publish sent listeners you require
-            client.registerPublishSentListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+            client.registerPublishSentListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 System.err.println(String.format("sent message [%s]",
                         new String(data, MqttsnConstants.CHARSET)));
             });

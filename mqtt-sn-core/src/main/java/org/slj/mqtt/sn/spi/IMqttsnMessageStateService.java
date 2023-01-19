@@ -24,11 +24,11 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.InflightMessage;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.model.TopicInfo;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 
 import java.util.Optional;
 
@@ -48,7 +48,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @param message - the wire message to send
      * @throws MqttsnException
      */
-    MqttsnWaitToken sendMessage(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException;
+    MqttsnWaitToken sendMessage(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnException;
 
     /**
      * Dispatch a new message to the transport layer, binding it to the state service en route for tracking.
@@ -56,7 +56,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @param queuedPublishMessage - reference to the queues message who originated this send (when its of type Publish);
      * @throws MqttsnException
      */
-    MqttsnWaitToken sendPublishMessage(IMqttsnContext context, TopicInfo info, IMqttsnQueuedPublishMessage queuedPublishMessage) throws MqttsnException;
+    MqttsnWaitToken sendPublishMessage(IClientIdentifierContext context, TopicInfo info, IQueuedPublishMessage queuedPublishMessage) throws MqttsnException;
 
     /**
      * Notify into the state service that a new message has arrived from the transport layer.
@@ -65,7 +65,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @return the messsage (if any) that was confirmed by the receipt of the inbound message
      * @throws MqttsnException
      */
-    IMqttsnMessage notifyMessageReceived(IMqttsnContext context, IMqttsnMessage message) throws MqttsnException;
+    IMqttsnMessage notifyMessageReceived(IClientIdentifierContext context, IMqttsnMessage message) throws MqttsnException;
 
     /**
      * Join the message sent in waiting for the subsequent confirmation if it needs one
@@ -75,7 +75,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @throws MqttsnExpectationFailedException - When no confirmation was recieved in the time period
      * specified by the runtime options
      */
-    Optional<IMqttsnMessage> waitForCompletion(IMqttsnContext context, MqttsnWaitToken token) throws MqttsnExpectationFailedException;
+    Optional<IMqttsnMessage> waitForCompletion(IClientIdentifierContext context, MqttsnWaitToken token) throws MqttsnExpectationFailedException;
 
     /**
      * Join the message sent in waiting for the subsequent confirmation if it needs one
@@ -86,7 +86,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @throws MqttsnExpectationFailedException - When no confirmation was recieved in the time period
      * specified by the runtime options
      */
-    Optional<IMqttsnMessage> waitForCompletion(IMqttsnContext context, MqttsnWaitToken token, int customWaitTime) throws MqttsnExpectationFailedException;
+    Optional<IMqttsnMessage> waitForCompletion(IClientIdentifierContext context, MqttsnWaitToken token, int customWaitTime) throws MqttsnExpectationFailedException;
 
     /**
      * If a context has any messages inflight, notify the state service to clear them up, either requeuing or discarding
@@ -94,7 +94,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @param context - The context to whom you are speaking
      * @throws MqttsnException - an error has occurred
      */
-    void clearInflight(IMqttsnContext context) throws MqttsnException ;
+    void clearInflight(IClientIdentifierContext context) throws MqttsnException ;
 
     /**
      * Ccount the number of message inflight for a given direction and context
@@ -103,7 +103,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @return The number of messages inflight in a given direction
      * @throws MqttsnException - an error has occurred
      */
-    int countInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException ;
+    int countInflight(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source) throws MqttsnException ;
 
     /**
      * Remove a specific message from inflight using its messageId, returning the message.
@@ -113,7 +113,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @return - the corresponding message or NULL if not found
      * @throws MqttsnException - an error has occurred
      */
-    InflightMessage removeInflight(IMqttsnContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException ;
+    InflightMessage removeInflight(IClientIdentifierContext context, IMqttsnOriginatingMessageSource source, Integer packetId) throws MqttsnException ;
 
     /**
      * According to the state rules, are we in a position to send PUBLISH messages to the given context
@@ -121,21 +121,21 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @return true if the state service think we're ok to send PUBLISHES to the device, else false
      * @throws MqttsnException - an error has occurred
      */
-    boolean canSend(IMqttsnContext context) throws MqttsnException ;
+    boolean canSend(IClientIdentifierContext context) throws MqttsnException ;
 
     /**
      * Mark a context active to have its outbound queue processed
      * @param context - The context whose queue should be processed
      * @throws MqttsnException - an error has occurred
      */
-    void scheduleFlush(IMqttsnContext context) throws MqttsnException ;
+    void scheduleFlush(IClientIdentifierContext context) throws MqttsnException ;
 
     /**
      * UnMark a context active to have its outbound queue processed
      * @param context - The context whose queue should be processed
      * @throws MqttsnException - an error has occurred
      */
-    void unscheduleFlush(IMqttsnContext context) throws MqttsnException ;
+    void unscheduleFlush(IClientIdentifierContext context) throws MqttsnException ;
 
     /**
      * Tracks the point at which the last message was SENT to the context
@@ -143,7 +143,7 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @return Long representing the point at which the last message was SENT to the context
      * @throws MqttsnException
      */
-    Long getMessageLastSentToContext(IMqttsnContext context) throws MqttsnException ;
+    Long getMessageLastSentToContext(IClientIdentifierContext context) throws MqttsnException ;
 
     /**
      * Tracks the point at which the last message was RECEIVED from the context
@@ -151,9 +151,9 @@ public interface IMqttsnMessageStateService extends IMqttsnService {
      * @return Long representing the point at which the last message was SENT to the context
      * @throws MqttsnException
      */
-    Long getMessageLastReceivedFromContext(IMqttsnContext context) throws MqttsnException ;
+    Long getMessageLastReceivedFromContext(IClientIdentifierContext context) throws MqttsnException ;
 
-    Long getLastActiveMessage(IMqttsnContext context) throws MqttsnException;
+    Long getLastActiveMessage(IClientIdentifierContext context) throws MqttsnException;
 
-    void clear(IMqttsnContext context) throws MqttsnException;
+    void clear(IClientIdentifierContext context) throws MqttsnException;
 }

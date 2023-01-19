@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
 /**
  * The job of the queue processor is to (when requested) interact with a remote contexts' queue, processing
@@ -49,5 +49,5 @@ public interface IMqttsnMessageQueueProcessor
         REPROCESS
     }
 
-    RESULT process(IMqttsnContext context) throws MqttsnException ;
+    RESULT process(IClientIdentifierContext context) throws MqttsnException ;
 }

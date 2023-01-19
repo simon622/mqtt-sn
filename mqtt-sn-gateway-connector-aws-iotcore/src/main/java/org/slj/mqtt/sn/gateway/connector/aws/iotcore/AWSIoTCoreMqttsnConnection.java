@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnSubscribe;
@@ -162,7 +162,7 @@ public class AWSIoTCoreMqttsnConnection
     }
 
     @Override
-    public SubscribeResult subscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
+    public SubscribeResult subscribe(IClientIdentifierContext context, TopicPath topicPath, IMqttsnMessage message)
             throws MqttsnConnectorException {
         try {
             if(isConnected()){
@@ -189,7 +189,7 @@ public class AWSIoTCoreMqttsnConnection
     }
 
     @Override
-    public UnsubscribeResult unsubscribe(IMqttsnContext context, TopicPath topicPath, IMqttsnMessage message)
+    public UnsubscribeResult unsubscribe(IClientIdentifierContext context, TopicPath topicPath, IMqttsnMessage message)
             throws MqttsnConnectorException {
         try {
             if(isConnected()){
@@ -204,7 +204,7 @@ public class AWSIoTCoreMqttsnConnection
     }
 
     @Override
-    public PublishResult publish(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message)
+    public PublishResult publish(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] payload, IMqttsnMessage message)
             throws MqttsnConnectorException {
         try {
            if(isConnected()){
@@ -223,12 +223,12 @@ public class AWSIoTCoreMqttsnConnection
     }
 
     @Override
-    public DisconnectResult disconnect(IMqttsnContext context, IMqttsnMessage message) {
+    public DisconnectResult disconnect(IClientIdentifierContext context, IMqttsnMessage message) {
         return new DisconnectResult(Result.STATUS.SUCCESS);
     }
 
     @Override
-    public ConnectResult connect(IMqttsnContext context, IMqttsnMessage message) {
+    public ConnectResult connect(IClientIdentifierContext context, IMqttsnMessage message) {
         return new ConnectResult(Result.STATUS.SUCCESS);
     }
 

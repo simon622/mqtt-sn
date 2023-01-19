@@ -24,20 +24,20 @@
 
 package org.slj.mqtt.sn.model;
 
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 
 public class MqttsnWaitToken {
 
     private volatile boolean error = false;
     private volatile boolean complete = false;
-    private volatile IMqttsnQueuedPublishMessage queuedPublishMessage;
+    private volatile IQueuedPublishMessage queuedPublishMessage;
     private volatile IMqttsnMessage message;
     private volatile IMqttsnMessage responseMessage;
 
     private volatile String detail;
 
-    public MqttsnWaitToken(IMqttsnQueuedPublishMessage queuedPublishMessage){
+    public MqttsnWaitToken(IQueuedPublishMessage queuedPublishMessage){
         this.queuedPublishMessage = queuedPublishMessage;
     }
 
@@ -61,7 +61,7 @@ public class MqttsnWaitToken {
         this.responseMessage = responseMessage;
     }
 
-    public static MqttsnWaitToken from(IMqttsnQueuedPublishMessage message){
+    public static MqttsnWaitToken from(IQueuedPublishMessage message){
         return new MqttsnWaitToken(message);
     }
 

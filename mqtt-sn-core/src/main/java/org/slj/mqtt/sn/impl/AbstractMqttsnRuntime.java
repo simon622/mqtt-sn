@@ -26,12 +26,15 @@ package org.slj.mqtt.sn.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.utils.Environment;
@@ -91,6 +94,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
                     getRegistry().getStorageService().getClass().getSimpleName());
 
             registry.getStorageService().updateRuntimeOptionsFromStorage(registry.getOptions());
+            registry.getOptions().processFromSystemPropertyOverrides();
 
             running = true;
 
@@ -163,7 +167,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     private void bindShutdownHook(){
         Runtime.getRuntime().addShutdownHook(new Thread(getThreadGroup(), () -> {
             try {
-                AbstractMqttsnRuntime.this.stop();
+                close();
             } catch(Exception e){
                 logger.error("encountered error executing shutdown hook", e);
             }
@@ -222,17 +226,17 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 //        }
     }
 
-    protected final void messageReceived(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
+    protected final void messageReceived(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
         logger.debug("publish received by application {}, notifying {} listeners", topicPath, receivedListeners.size());
         receivedListeners.forEach(p -> p.receive(context, topicPath, qos, retained, data, message));
     }
 
-    protected final void messageSent(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
+    protected final void messageSent(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
         logger.debug("sent confirmed by application {}, notifying {} listeners", topicPath, sentListeners.size());
         sentListeners.forEach(p -> p.sent(context, topicPath, qos, retained, data, message));
     }
 
-    protected final void messageSendFailure(IMqttsnContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
+    protected final void messageSendFailure(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount){
         logger.debug("message failed sending {}, notifying {} listeners", topicPath, sendFailureListeners.size());
         sendFailureListeners.forEach(p -> p.sendFailure(context, topicPath, qos, retained, data, message, retryCount));
     }
@@ -287,7 +291,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param context - The context who sent the DISCONNECT
      * @return should the local runtime send a DISCONNECT in reponse
      */
-    public boolean handleRemoteDisconnect(IMqttsnContext context){
+    public boolean handleRemoteDisconnect(IClientIdentifierContext context){
         logger.debug("notified of remote disconnect [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyRemoteDisconnect(context));
         return true;
@@ -302,7 +306,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @return was the exception handled, if so, the trace is not thrown up to the transport layer,
      * if not, the exception is reported into the transport layer
      */
-    public boolean handleLocalDisconnect(IMqttsnContext context, Throwable t){
+    public boolean handleLocalDisconnect(IClientIdentifierContext context, Throwable t){
         logger.debug("notified of local disconnect [{} !- {}] - {}", registry.getOptions().getContextId(), context, t.getMessage());
         connectionListeners.forEach(p -> p.notifyLocalDisconnect(context, t));
         return true;
@@ -314,7 +318,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * @param context - The context whose state encountered the problem thag caused the DISCONNECT
      * @param t - the exception that was encountered
      */
-    public void handleConnectionLost(IMqttsnContext context, Throwable t){
+    public void handleConnectionLost(IClientIdentifierContext context, Throwable t){
         logger.debug("notified of connection lost [{} !- {}] - {}", registry.getOptions().getContextId(), context, t == null ? null : t.getMessage());
         connectionListeners.forEach(p -> p.notifyConnectionLost(context, t));
     }
@@ -323,7 +327,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      * Reported the when a CONNECTION is successfully established
      * @param context
      */
-    public void handleConnected(IMqttsnContext context){
+    public void handleConnected(IClientIdentifierContext context){
         logger.debug("notified of new connection [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyConnected(context));
     }
@@ -335,7 +339,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      *
      * @param context - the context who hasnt been heard of since the timeout
      */
-    public void handleActiveTimeout(IMqttsnContext context){
+    public void handleActiveTimeout(IClientIdentifierContext context){
         logger.debug("notified of active timeout [{} <- {}]", registry.getOptions().getContextId(), context);
         connectionListeners.forEach(p -> p.notifyActiveTimeout(context));
     }
@@ -376,40 +380,31 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     public synchronized ScheduledExecutorService createManagedScheduledExecutorService(String name, int threadCount){
 
         ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(Math.max(1, threadCount),
-                createManagedThreadFactory(name, Thread.MIN_PRIORITY + 4),
+                createManagedThreadFactory(name, Thread.NORM_PRIORITY),
                 new ThreadPoolExecutor.CallerRunsPolicy());//DiscardPolicy());
         managedExecutorServices.add(executorService);
         return executorService;
     }
 
-    public <T> Future<T> async(ExecutorService executorService, Runnable r, T result){
-        return running ? executorService.submit(r, result) : null;
+    public <T> Future<T> submit(ExecutorService executorService, Runnable task, T result){
+        if(running) {
+            return executorService.submit(task, result);
+        }
+        else {
+            throw new MqttsnRuntimeException("runtime is not active");
+        }
     }
 
-    public void async(ExecutorService executorService, Runnable r){
-        if(running) executorService.submit(r);
+    public void submit(ExecutorService executorService, Runnable task){
+        if(running){
+            executorService.submit(task);
+        } else {
+            throw new MqttsnRuntimeException("runtime is not active");
+        }
     }
 
-    public void asyncWithCallback(ExecutorService executorService, Runnable r, Runnable callback){
-        executorService.submit(() -> {
-            try {
-                r.run();
-            } finally {
-                callback.run();
-            }
-        });
-    }
-
-    /**
-     * Submit work for the main worker thread group, this could be
-     * transport operations or confirmations etc.
-     */
-    public <T> Future<T> async(Runnable r, T result){
-        return async(generalUseExecutorService, r, result);
-    }
-
-    public void async(Runnable r){
-        async(generalUseExecutorService, r);
+    public void generalPurposeSubmit(Runnable r){
+        submit(generalUseExecutorService, r);
     }
 
     /**
@@ -533,6 +528,39 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         logger.error("uncaught error in thread-pool", t);
     }
 
-    public abstract void close() throws IOException ;
+    private void notifySessions(){
+        try {
+            Iterator<ISession> sessionIterator = getRegistry().getSessionRegistry().iterator();
+            while(sessionIterator.hasNext()){
+                ISession session = sessionIterator.next();
+                if(session.getClientState() != ClientState.LOST){
+                    //notify all sessions of going away exception LOST sessions
+                    try {
+                        logger.warn("notifying {} is going away", session);
+                        IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
+                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, "Gateway going away");
+                        getRegistry().getTransportLocator().writeToTransport(
+                                getRegistry().getNetworkRegistry().getContext(session.getContext()), disconnect);
+                    } catch(Exception e){
+                        logger.warn("unable to send disconnect {}", e.getMessage());
+                    }
+                }
+            }
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 
+    public void close() {
+        try {
+            notifySessions();
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                stop();
+            } catch (MqttsnException e) {
+            }
+        }
+    }
 }

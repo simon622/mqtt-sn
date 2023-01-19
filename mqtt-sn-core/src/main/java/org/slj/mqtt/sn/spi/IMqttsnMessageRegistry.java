@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IDataRef;
 
 /**
  * The message registry is a normalised view of transiting messages, it context the raw payload of publish operations
@@ -41,15 +41,15 @@ public interface IMqttsnMessageRegistry extends IMqttsnService {
 
     void tidy() throws MqttsnException ;
 
-    IMqttsnDataRef add(byte[] data) throws MqttsnException ;
+    IDataRef add(byte[] data) throws MqttsnException ;
 
 //    Integer add(byte[] data, Date expires) throws MqttsnException;
 
-    boolean remove(IMqttsnDataRef messageId) throws MqttsnException;
+    boolean remove(IDataRef messageId) throws MqttsnException;
 
 //    boolean removeWhenCommitted(Integer messageId) throws MqttsnException;
 
-    byte[] get(IMqttsnDataRef messageId) throws MqttsnException;
+    byte[] get(IDataRef messageId) throws MqttsnException;
 
     long size();
 }

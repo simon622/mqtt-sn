@@ -37,6 +37,6 @@ public class MqttsnTestRuntime extends AbstractMqttsnRuntime {
     public static NetworkAddress TEST_ADDRESS = NetworkAddress.localhost(10001);
 
     @Override
-    public void close() throws IOException {
+    public void close() {
     }
 }

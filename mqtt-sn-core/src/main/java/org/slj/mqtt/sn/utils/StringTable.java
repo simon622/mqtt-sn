@@ -24,6 +24,7 @@
 
 package org.slj.mqtt.sn.utils;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -283,5 +284,28 @@ public class StringTable {
         if (null != collection && null != mapper) {
             collection.stream().forEach(r -> addRow(mapper.apply(r)));
         }
+    }
+
+    public static StringTable fromBean(Object o){
+        StringTable st = new StringTable("Field", "Value");
+        try {
+            st.setTableName(o.getClass().getName() + " instance");
+            Field[] fields = o.getClass().getDeclaredFields();
+            for (Field f : fields){
+                boolean changed = false;
+                if(!f.isAccessible()) {
+                    f.setAccessible(true);
+                    changed = true;
+                }
+                Object v = f.get(o);
+                st.addRow(f.getName(), String.valueOf(v));
+                if(changed){
+                    f.setAccessible(false);
+                }
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return st;
     }
 }

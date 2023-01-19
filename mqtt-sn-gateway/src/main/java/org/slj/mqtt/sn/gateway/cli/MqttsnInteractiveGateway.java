@@ -32,10 +32,9 @@ import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.impl.AbstractMqttsnUdpTransport;
 import org.slj.mqtt.sn.impl.ram.MqttsnInMemoryMessageStateService;
 import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.net.MqttsnUdpBatchTransport;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.spi.*;
@@ -235,10 +234,10 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     protected void inflight(){
         MqttsnGatewayRuntimeRegistry gatewayRuntimeRegistry = getRuntimeRegistry();
-        List<IMqttsnContext> m = ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getActiveInflights();
-        Iterator<IMqttsnContext> itr = m.iterator();
+        List<IClientIdentifierContext> m = ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getActiveInflights();
+        Iterator<IClientIdentifierContext> itr = m.iterator();
         while (itr.hasNext()){
-            IMqttsnContext c = itr.next();
+            IClientIdentifierContext c = itr.next();
             renderInflight(c,
                 ((MqttsnInMemoryMessageStateService)gatewayRuntimeRegistry.getMessageStateService()).getInflightMessages(c, IMqttsnOriginatingMessageSource.LOCAL));
             renderInflight(c,
@@ -246,7 +245,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         }
     }
 
-    private void renderInflight(IMqttsnContext context, Map<Integer, InflightMessage> msgs){
+    private void renderInflight(IClientIdentifierContext context, Map<Integer, InflightMessage> msgs){
         Iterator<Integer> i = msgs.keySet().iterator();
         while(i.hasNext()){
             Integer id = i.next();
@@ -261,10 +260,10 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
 
     protected void flush(String clientId) throws MqttsnException {
 
-        Optional<IMqttsnContext> context =
+        Optional<IClientIdentifierContext> context =
                 getRuntimeRegistry().getSessionRegistry().lookupClientIdSession(clientId);
         if(context.isPresent()) {
-            IMqttsnContext c = context.get();
+            IClientIdentifierContext c = context.get();
             getRuntimeRegistry().getMessageStateService().clearInflight(c);
             message(String.format("Inflight reaper run on: %s", clientId));
             getRuntimeRegistry().getMessageStateService().scheduleFlush(c);
@@ -279,7 +278,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
         MqttsnGatewayOptions opts = (MqttsnGatewayOptions) runtimeRegistry.getOptions();
         if(runtime != null) {
             boolean connected = getRuntimeRegistry().getBackendService().isConnected(null);
-            int maxClients = opts.getMaxConnectedClients();
+            int maxClients = opts.getMaxClientSessions();
             int advertiseTime = opts.getGatewayAdvertiseTime();
 
             //-- general stuff
@@ -309,20 +308,20 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
                 }
             }
 
-            Iterator<IMqttsnSession> sessionItr = getRuntimeRegistry().getSessionRegistry().iterator();
-            List<IMqttsnSession> allState = new ArrayList<>();
+            Iterator<ISession> sessionItr = getRuntimeRegistry().getSessionRegistry().iterator();
+            List<ISession> allState = new ArrayList<>();
             int queuedMessages = 0;
             while(sessionItr.hasNext()){
-                IMqttsnSession session = sessionItr.next();
+                ISession session = sessionItr.next();
                 allState.add(session);
                 queuedMessages += getRuntimeRegistry().getMessageQueue().queueSize(session);
             }
 
             message(String.format("Network registry count: %s", getRuntimeRegistry().getNetworkRegistry().size()));
-            message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE)).count()));
-            message(String.format("Current sleeping sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.ASLEEP).count()));
-            message(String.format("Current disconnected sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.DISCONNECTED).count()));
-            message(String.format("Current lost sessions: %s", allState.stream().filter(s -> s.getClientState() == MqttsnClientState.LOST).count()));
+            message(String.format("Current active/awake sessions: %s", allState.stream().filter(s -> MqttsnUtils.in(s.getClientState(), ClientState.ACTIVE, ClientState.AWAKE)).count()));
+            message(String.format("Current sleeping sessions: %s", allState.stream().filter(s -> s.getClientState() == ClientState.ASLEEP).count()));
+            message(String.format("Current disconnected sessions: %s", allState.stream().filter(s -> s.getClientState() == ClientState.DISCONNECTED).count()));
+            message(String.format("Current lost sessions: %s", allState.stream().filter(s -> s.getClientState() == ClientState.LOST).count()));
             message(String.format("All queued session messages: %s", queuedMessages));
 
             //-- broker stuff
@@ -336,7 +335,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
     @Override
     protected MqttsnOptions createOptions(IMqttsnStorageService storageService) {
         MqttsnGatewayOptions options = new MqttsnGatewayOptions();
-        options.withMaxConnectedClients(100).
+        options.withMaxClientSessions(100).
                 withGatewayId(101).
                 withContextId(storageService.getStringPreference(GatewayConfig.CLIENTID, null)).
                 withSessionExpiryInterval(60 * 60).
@@ -368,7 +367,7 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             }
 
             message(String.format("Gateway listening for datagram traffic on port %s",
-                    getStorageService().getIntegerPreference(GatewayConfig.LISTEN_PORT, null)));
+                    getRuntimeRegistry().getDefaultTransport().getPort()));
         } catch(Exception e){
             message(cli_red("Unable to connect to broker"));
             message("Please check the connection details supplied");

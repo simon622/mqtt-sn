@@ -33,6 +33,8 @@ public interface IMqttsnCloudService {
 
     List<MqttsnConnectorDescriptor> getAvailableConnectors() throws MqttsnCloudServiceException;
 
+    List<ProtocolBridgeDescriptor> getAvailableBridges() throws MqttsnCloudServiceException ;
+
     int getConnectedServiceCount() throws MqttsnCloudServiceException;
 
     boolean hasCloudConnectivity();

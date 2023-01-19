@@ -38,7 +38,6 @@ import java.io.InputStream;
 import java.util.*;
 
 public class HttpCloudServiceImpl implements IMqttsnCloudService {
-
     static Logger logger = LoggerFactory.getLogger(HttpCloudServiceImpl.class.getName());
     static final int DEFAULT_CLOUD_MONITOR_TIMEOUT = 10000;
     protected MqttsnCloudToken cloudToken;
@@ -121,6 +120,18 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
                         MqttsnConnectorDescriptor.class);
         return connectors;
     }
+
+    @Override
+    public List<ProtocolBridgeDescriptor> getAvailableBridges() throws MqttsnCloudServiceException {
+        checkConnectivity();
+        List<ProtocolBridgeDescriptor> bridges =
+                httpGetList(
+                        loadDescriptor(
+                                MqttsnCloudServiceDescriptor.BRIDGE_LISTING).getServiceEndpoint(),
+                        ProtocolBridgeDescriptor.class);
+        return bridges;
+    }
+
     @Override
     public int getConnectedServiceCount() throws MqttsnCloudServiceException {
         checkConnectivity();
@@ -251,7 +262,7 @@ public class HttpCloudServiceImpl implements IMqttsnCloudService {
         try {
             HttpResponse response =
                     HttpClient.get(getHeaders(), url, connectTimeoutMillis, readTimeoutMillis);
-            logger.debug("obtaining cloud service list from {} -> {}", url, response);
+            logger.debug("obtaining cloud service list from {} -> {} of type {}", url, response, cls.getName());
             checkResponse(response, true);
             return mapper.readValue(response.getResponseBody(),
                     mapper.getTypeFactory().constructCollectionType(List.class, cls));

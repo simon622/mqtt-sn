@@ -24,7 +24,9 @@
 
 package org.slj.mqtt.sn.gateway.impl;
 
+import org.slj.mqtt.sn.gateway.impl.bridge.ProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.impl.gateway.*;
+import org.slj.mqtt.sn.gateway.spi.bridge.IProtocolBridgeService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnBackendService;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.gateway.*;
@@ -32,6 +34,7 @@ import org.slj.mqtt.sn.impl.*;
 import org.slj.mqtt.sn.impl.metrics.MqttsnMetricsService;
 import org.slj.mqtt.sn.impl.ram.*;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.net.ContextTransportLocator;
 import org.slj.mqtt.sn.net.NetworkAddressRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 
@@ -48,13 +51,14 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withExpansionHandler(new MqttsnGatewayExpansionHandler()).
                 withGatewayAdvertiseService(new MqttsnGatewayAdvertiseService()).
                 withMessageHandler(new MqttsnGatewayMessageHandler()).
+                withTransportLocator(new ContextTransportLocator()).
                 withMessageRegistry(new MqttsnInMemoryMessageRegistry()).
-                withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxNetworkAddressEntries())).
+                withNetworkAddressRegistry(new NetworkAddressRegistry(options.getMaxClientSessions())).
                 withWillRegistry(new MqttsnInMemoryWillRegistry()).
                 withTopicModifier(new MqttsnDefaultTopicModifier()).
-//                withMessageQueue(new MqttsnInMemoryMessageQueue()).
-                withMessageQueue(new MqttsnFileBackedInMemoryMessageQueue(
-                        new MqttsnJacksonReaderWriter())).
+                withMessageQueue(new MqttsnInMemoryMessageQueue()).
+//                withMessageQueue(new MqttsnFileBackedInMemoryMessageQueue(
+//                        new MqttsnJacksonReaderWriter())).
                 withContextFactory(new MqttsnContextFactory()).
                 withSessionRegistry(new MqttsnSessionRegistry()).
                 withSecurityService(new MqttsnSecurityService()).
@@ -66,8 +70,10 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).
                 withAuthenticationService(new MqttsnGatewayAuthenticationService()).
                 withClientIdFactory(new MqttsnDefaultClientIdFactory()).
+
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
 
+        registry.withProtocolBridgeService(new ProtocolBridgeService());
         return registry;
     }
 
@@ -128,5 +134,16 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
 
     public IMqttsnGatewayExpansionHandler getExpansionHandler() {
         return getService(IMqttsnGatewayExpansionHandler.class);
+    }
+
+    @Override
+    public IMqttsnGatewayRuntimeRegistry withProtocolBridgeService(IProtocolBridgeService protocolBridge) {
+        withService(protocolBridge);
+        return this;
+    }
+
+    @Override
+    public IProtocolBridgeService getProtocolBridgeService() {
+        return getService(IProtocolBridgeService.class);
     }
 }

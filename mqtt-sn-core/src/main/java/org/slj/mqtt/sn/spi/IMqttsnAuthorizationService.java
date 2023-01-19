@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
 /**
  * Optional - when installed it will be consulted to determine whether a remote context can perform certain
@@ -44,7 +44,7 @@ public interface IMqttsnAuthorizationService extends IMqttsnService {
      * @return true if the client is allowed to SUBSCRIBE (yielding SUBACK ok) or false if not allowed (yielding SUBACK error)
      * @throws MqttsnException an error occurred
      */
-    boolean allowedToSubscribe(IMqttsnContext context, String topicPath) throws MqttsnException;
+    boolean allowedToSubscribe(IClientIdentifierContext context, String topicPath) throws MqttsnException;
 
     /**
      * What is the maximum granted QoS allowed on a given topicPath.
@@ -53,7 +53,7 @@ public interface IMqttsnAuthorizationService extends IMqttsnService {
      * @return one of 0,1,2 matching the maximum QoS that can be granted for this subscription
      * @throws MqttsnException an error occurred
      */
-    int allowedMaximumQoS(IMqttsnContext context, String topicPath) throws MqttsnException;
+    int allowedMaximumQoS(IClientIdentifierContext context, String topicPath) throws MqttsnException;
 
     /**
      * Is the context allowed to publish to the given topicPath.
@@ -63,5 +63,5 @@ public interface IMqttsnAuthorizationService extends IMqttsnService {
      * @return true if the client is allowed to PUBLISH (yielding PUBLISH normal lifecycle) or false if not allowed (yielding PUBACK error)
      * @throws MqttsnException an error occurred
      */
-    boolean allowedToPublish(IMqttsnContext context, String topicPath, int size, int QoS) throws MqttsnException;
+    boolean allowedToPublish(IClientIdentifierContext context, String topicPath, int size, int QoS) throws MqttsnException;
 }

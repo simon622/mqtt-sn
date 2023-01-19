@@ -24,6 +24,9 @@
 
 package org.slj.mqtt.sn.utils.tree;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -32,6 +35,8 @@ import java.util.regex.Pattern;
  * Simple TriesTree implementation designed to add members at each level of the tree and normalise the storage
  */
 public class PathTriesTree<T> {
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final int DEFAULT_MAX_PATH_SIZE = 1024;
     private static final int DEFAULT_MAX_PATH_SEGMENTS = 1024;
@@ -304,6 +309,8 @@ public class PathTriesTree<T> {
         private volatile Set<T> members;
         private TrieNode parent;
         private final boolean isRoot;
+        private final Object memberMutex = new Object();
+
         protected TrieNode(final TrieNode parent, final String pathSegment){
             this.parent = parent;
             this.pathSegment = pathSegment;
@@ -382,9 +389,9 @@ public class PathTriesTree<T> {
 
         public void addMembers(T... membersIn) throws TriesTreeLimitExceededException {
             if(members == null && membersIn != null && membersIn.length > 0) {
-                synchronized (this) {
+                synchronized (memberMutex) {
                     if(members == null)
-                        members = new HashSet<>(4);
+                        members = Collections.synchronizedSet(new HashSet<>(4));
                 }
             }
 
@@ -397,21 +404,29 @@ public class PathTriesTree<T> {
         }
 
         public boolean removeMember(T member){
-            if(members != null){
-                synchronized (this){
-                    return members.remove(member);
-                }
-            }
-            return false;
+            return members.remove(member);
+//            if(members != null){
+//                synchronized (members){
+//
+//                }
+//            }
+//            return false;
         }
 
         public Set<T> getMembers(){
             if(members == null){
                 return Collections.emptySet();
             } else {
-                synchronized (this){
-                    return Collections.unmodifiableSet(members);
+                long start = System.currentTimeMillis();
+                Set<T> t = null;
+                synchronized (members){
+                    t = Collections.unmodifiableSet(new HashSet<>(members));
                 }
+                if(System.currentTimeMillis() - start > 50){
+                    logger.warn("member copy operation took {} for {} members",
+                            System.currentTimeMillis() - start, t.size());
+                }
+                return t;
             }
         }
 

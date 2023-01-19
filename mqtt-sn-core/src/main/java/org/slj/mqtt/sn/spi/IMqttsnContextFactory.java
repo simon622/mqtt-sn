@@ -24,21 +24,21 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnContext;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.model.MqttsnContext;
+import org.slj.mqtt.sn.model.ClientIdentifierContext;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
 
 /**
  * A context factory deals with the initial construction of the context objects which identity
  * the remote connection to the application. There are 2 types of context; a {@link NetworkContext}
- * and a {@link MqttsnContext}. The network context identifies where (the network location) the identity
+ * and a {@link ClientIdentifierContext}. The network context identifies where (the network location) the identity
  * resides and the mqttsn-context identifies who the context is (generally this is the CliendId or GatewayId of
  * the connected resource).
  *
- * A {@link NetworkContext} can exist in isolation without an associated {@link MqttsnContext}, during a CONNECT attempt
+ * A {@link NetworkContext} can exist in isolation without an associated {@link ClientIdentifierContext}, during a CONNECT attempt
  *  (when the context has yet to be established), or during a failed CONNECTion. An application context cannot exist without
  * a network context.
  *
@@ -66,7 +66,7 @@ public interface IMqttsnContextFactory extends IMqttsnService {
      * @return the new instance of the application context coupled to the network context
      * @throws MqttsnSecurityException - The supplied clientId was not allowed on the gateway
      */
-    IMqttsnContext createInitialApplicationContext(INetworkContext context, String clientId, int protocolVersion) throws MqttsnSecurityException;
+    IClientIdentifierContext createInitialApplicationContext(INetworkContext context, String clientId, int protocolVersion) throws MqttsnSecurityException;
 
     /**
      * No application existed for the network context OR a new clientId was detected, so we
@@ -75,7 +75,7 @@ public interface IMqttsnContextFactory extends IMqttsnService {
      * @return the new instance of the application context coupled to the network context
      * @throws MqttsnSecurityException - The supplied clientId was not allowed on the gateway
      */
-    IMqttsnContext createTemporaryApplicationContext(INetworkContext context, int protocolVersion) throws MqttsnSecurityException;
+    IClientIdentifierContext createTemporaryApplicationContext(INetworkContext context, int protocolVersion) throws MqttsnSecurityException;
 
 
     /**

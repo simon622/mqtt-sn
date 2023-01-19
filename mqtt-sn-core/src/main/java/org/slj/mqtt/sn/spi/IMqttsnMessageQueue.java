@@ -26,8 +26,8 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
-import org.slj.mqtt.sn.model.session.IMqttsnQueuedPublishMessage;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
+import org.slj.mqtt.sn.model.session.ISession;
 
 /**
  * Queue implementation to store messages destined to and from gateways and clients. Queues will be flushed acccording
@@ -42,7 +42,7 @@ public interface IMqttsnMessageQueue extends IMqttsnService  {
      * @param session  - the session whose queue youd like to query
      * @return - the size of the queue for a given context
      */
-    long queueSize(IMqttsnSession session) throws MqttsnException;
+    long queueSize(ISession session) throws MqttsnException;
 
     /**
      * Offer the queue or a context a new message to add to the tail.
@@ -50,7 +50,7 @@ public interface IMqttsnMessageQueue extends IMqttsnService  {
      * @param message - the message metadata to queue
      * @throws MqttsnException - an error occurred, most likely the queue was full
      */
-    void offer(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    void offer(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException;
 
     /**
@@ -60,7 +60,7 @@ public interface IMqttsnMessageQueue extends IMqttsnService  {
      * @return - token if the message was added
      * @throws MqttsnException - an error occurred, most likely the queue was full
      */
-    MqttsnWaitToken offerWithToken(IMqttsnSession session, IMqttsnQueuedPublishMessage message)
+    MqttsnWaitToken offerWithToken(ISession session, IQueuedPublishMessage message)
             throws MqttsnException, MqttsnQueueAcceptException;
 
     /**
@@ -69,7 +69,7 @@ public interface IMqttsnMessageQueue extends IMqttsnService  {
      * @return the message from the head of the queue or NULL if the queue is empty
      * @throws MqttsnException - an error occurred
      */
-    IMqttsnQueuedPublishMessage poll(IMqttsnSession session) throws MqttsnException;
+    IQueuedPublishMessage poll(ISession session) throws MqttsnException;
 
     /**
      * Peek at the message on the head of the queue without removing it
@@ -77,8 +77,8 @@ public interface IMqttsnMessageQueue extends IMqttsnService  {
      * @return the message from the head of the queue or NULL if the queue is empty
      * @throws MqttsnException - an error occurred
      */
-    IMqttsnQueuedPublishMessage peek(IMqttsnSession session) throws MqttsnException;
+    IQueuedPublishMessage peek(ISession session) throws MqttsnException;
 
-    void clear(IMqttsnSession session) throws MqttsnException;
+    void clear(ISession session) throws MqttsnException;
 
 }

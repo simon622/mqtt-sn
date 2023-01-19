@@ -29,7 +29,7 @@
     <parent>
         <artifactId>mqtt-sn</artifactId>
         <groupId>org.slj</groupId>
-        <version>0.1.17</version>
+        <version>0.1.18</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -59,6 +59,11 @@
             <artifactId>mqtt-sn-gateway-connector-paho</artifactId>
             <version>${mqtt-sn.version}</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.slj</groupId>-->
+<!--            <artifactId>mqtt-sn-plc4j</artifactId>-->
+<!--            <version>${mqtt-sn.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>be.ceau</groupId>
             <artifactId>chart</artifactId>
@@ -85,7 +90,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.slj.mqtt.sn.console.MqttsnGatewayWithConsoleMain</mainClass>
+                                    <mainClass>org.slj.mqtt.sn.console.MqttsnGatewayMainCLI</mainClass>
                                 </transformer>
                             </transformers>
                             <!--minimizeJar>true</minimizeJar-->

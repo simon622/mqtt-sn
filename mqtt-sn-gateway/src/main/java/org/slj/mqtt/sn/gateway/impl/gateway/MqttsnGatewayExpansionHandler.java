@@ -27,12 +27,12 @@ package org.slj.mqtt.sn.gateway.impl.gateway;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.gateway.spi.GatewayMetrics;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayExpansionHandler;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.IMqttsnDataRef;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.IDataRef;
 import org.slj.mqtt.sn.model.MqttsnDeadLetterQueueBean;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.impl.MqttsnQueuedPublishMessageImpl;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.impl.QueuedPublishMessageImpl;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
@@ -51,7 +51,7 @@ public class MqttsnGatewayExpansionHandler extends AbstractMqttsnService impleme
 
     @Override
     public void receiveToSessions(String topicPath, int qos, boolean retained, byte[] payload) throws MqttsnException {
-        Set<IMqttsnContext> recipients = null;
+        Set<IClientIdentifierContext> recipients = null;
         try {
             recipients = getRegistry().getSubscriptionRegistry().matches(topicPath);
         } catch(MqttsnIllegalFormatException e){
@@ -60,16 +60,16 @@ public class MqttsnGatewayExpansionHandler extends AbstractMqttsnService impleme
 
         logger.debug("receiving broker side message into [{}] sessions", recipients.size());
 
-        IMqttsnDataRef dataId = getRegistry().getMessageRegistry().add(payload);
+        IDataRef dataId = getRegistry().getMessageRegistry().add(payload);
         int successfulExpansion = 0;
         PublishData data = new PublishData(topicPath, qos, retained);
 
-        for (IMqttsnContext context : recipients){
+        for (IClientIdentifierContext context : recipients){
             try {
-                IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+                ISession session = getRegistry().getSessionRegistry().getSession(context, false);
                 int grantedQos = registry.getSubscriptionRegistry().getQos(session, topicPath);
                 grantedQos = Math.min(grantedQos,qos);
-                MqttsnQueuedPublishMessageImpl impl = new MqttsnQueuedPublishMessageImpl(dataId, data);
+                QueuedPublishMessageImpl impl = new QueuedPublishMessageImpl(dataId, data);
                 impl.setGrantedQoS(grantedQos);
                 if(session != null){
                     if(session.getMaxPacketSize() != 0 &&

@@ -29,10 +29,10 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.model.*;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
-import org.slj.mqtt.sn.model.session.IMqttsnSubscription;
-import org.slj.mqtt.sn.model.session.IMqttsnTopicRegistration;
-import org.slj.mqtt.sn.model.session.IMqttsnWillData;
+import org.slj.mqtt.sn.model.session.ISession;
+import org.slj.mqtt.sn.model.session.ISubscription;
+import org.slj.mqtt.sn.model.session.ITopicRegistration;
+import org.slj.mqtt.sn.model.session.IWillData;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.Environment;
@@ -91,7 +91,7 @@ public abstract class AbstractInteractiveCli {
         }
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
-        runtime.registerPublishReceivedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+        runtime.registerPublishReceivedListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
                 if(enableOutput) asyncmessage(String.format("[>>>] Publish received [%s] bytes on [%s] from [%s] \"%s\"",
                         data.length, topic, context.getId(), new String(data)));
@@ -99,7 +99,7 @@ public abstract class AbstractInteractiveCli {
                 e.printStackTrace();
             }
         });
-        runtime.registerPublishSentListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
+        runtime.registerPublishSentListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
             try {
                 if(enableOutput) asyncmessage(String.format("[<<<] Publish sent [%s] bytes on [%s] to [%s] \"%s\"",
                         data.length, topic, context.getId(), new String(data)));
@@ -109,7 +109,7 @@ public abstract class AbstractInteractiveCli {
         });
         enableOutput();
         message("Adding runtime listeners.. DONE");
-        runtime.registerPublishFailedListener((IMqttsnContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
+        runtime.registerPublishFailedListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message, int retryCount) -> {
             try {
                 int QoS = runtimeRegistry.getCodec().getQoS(message, true);
                 asyncmessage(String.format("[xxx] Publish failure (tried [%s] times) [%s] bytes on topic [%s], at QoS [%s] \"%s\"",
@@ -374,11 +374,11 @@ public abstract class AbstractInteractiveCli {
     protected void session(String clientId)
             throws MqttsnException {
 
-        Optional<IMqttsnContext> context =
+        Optional<IClientIdentifierContext> context =
                 getRuntimeRegistry().getSessionRegistry().lookupClientIdSession(clientId);
         if(context.isPresent()){
-            IMqttsnContext c = context.get();
-            IMqttsnSession session = getRuntimeRegistry().getSessionRegistry().getSession(c, false);
+            IClientIdentifierContext c = context.get();
+            ISession session = getRuntimeRegistry().getSessionRegistry().getSession(c, false);
             if(session != null){
                 message(String.format("Session: %s", clientId));
                 message(String.format("Session started: %s", format(session.getSessionStarted())));
@@ -401,24 +401,24 @@ public abstract class AbstractInteractiveCli {
                 message(String.format("Inflight (Ingress):  %s", runtimeRegistry.getMessageStateService().countInflight(
                         session.getContext(), IMqttsnOriginatingMessageSource.REMOTE)));
 
-                Set<IMqttsnSubscription> subs = runtimeRegistry.getSubscriptionRegistry().readSubscriptions(session);
+                Set<ISubscription> subs = runtimeRegistry.getSubscriptionRegistry().readSubscriptions(session);
                 message("Subscription(s): ");
-                Iterator<IMqttsnSubscription> itr = subs.iterator();
+                Iterator<ISubscription> itr = subs.iterator();
                 while(itr.hasNext()){
-                    IMqttsnSubscription s = itr.next();
+                    ISubscription s = itr.next();
                     tabmessage(String.format("%s -> %s", s.getTopicPath(), s.getGrantedQoS()));
                 }
 
-                Set<IMqttsnTopicRegistration> regs = runtimeRegistry.getTopicRegistry().getRegistrations(session);
+                Set<ITopicRegistration> regs = runtimeRegistry.getTopicRegistry().getRegistrations(session);
                 message("Registrations(s): ");
-                Iterator<IMqttsnTopicRegistration> regItr = regs.iterator();
+                Iterator<ITopicRegistration> regItr = regs.iterator();
                 while(regItr.hasNext()){
-                    IMqttsnTopicRegistration s = regItr.next();
+                    ITopicRegistration s = regItr.next();
                     tabmessage(String.format("%s -> %s (%s)", s.getTopicPath(), s.getAliasId(), s.isConfirmed()));
                 }
 
                 if(runtimeRegistry.getWillRegistry().hasWillMessage(session)){
-                    IMqttsnWillData data = runtimeRegistry.getWillRegistry().getWillMessage(session);
+                    IWillData data = runtimeRegistry.getWillRegistry().getWillMessage(session);
                     message(String.format("Will QoS: %s", data.getQos()));
                     message(String.format("Will Topic: %s", data.getTopicPath()));
                     message(String.format("Will Retained: %s", data.isRetained()));
@@ -436,10 +436,10 @@ public abstract class AbstractInteractiveCli {
     }
 
     protected void sessions() throws MqttsnException {
-        Iterator<IMqttsnSession> itr = getRuntimeRegistry().getSessionRegistry().iterator();
+        Iterator<ISession> itr = getRuntimeRegistry().getSessionRegistry().iterator();
         message("Sessions(s): ");
         while(itr.hasNext()){
-            IMqttsnSession session = itr.next();
+            ISession session = itr.next();
             INetworkContext networkContext = getRuntimeRegistry().getNetworkRegistry().getContext(session.getContext());
             tabmessage(String.format("%s (%s) [%s] -> %s", session.getContext().getId(),
                     getRuntimeRegistry().getMessageQueue().queueSize(session),
@@ -577,7 +577,7 @@ public abstract class AbstractInteractiveCli {
         return sdf.format(d);
     }
 
-    public String getColorForState(MqttsnClientState state){
+    public String getColorForState(ClientState state){
         if(state == null) return cli_reset("N/a");
         switch(state){
             case AWAKE:

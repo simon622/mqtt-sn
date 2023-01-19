@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
-import org.slj.mqtt.sn.model.MqttsnClientState;
+import org.slj.mqtt.sn.model.ClientState;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.MqttsnException;
@@ -56,7 +56,7 @@ public class MqttsnUtils {
         return a;
     }
 
-    public static boolean in(MqttsnClientState state, MqttsnClientState... options){
+    public static boolean in(ClientState state, ClientState... options){
         if(options == null) return false;
         for (int i = 0; i < options.length; i++) {
             if(options[i] == state) return true;
@@ -208,6 +208,12 @@ public class MqttsnUtils {
                 buff.append(" ");
         }
         return buff.toString();
+    }
+
+    public static byte[] randomBytes(int length){
+        byte[] a = new byte[length];
+        ThreadLocalRandom.current().nextBytes(a);
+        return a;
     }
 
     public static void main(String[] args) {

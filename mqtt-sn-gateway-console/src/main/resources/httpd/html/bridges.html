@@ -1,0 +1,177 @@
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Bridges</h5>
+            <p>
+                Use bridges to connect your gateway to non-MQTT network entities that require adaptors. A bridge can send and receive messages and subscribe like MQTT clients can, but often is concerned with a different protocol.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="bridges" class="row row-cols-4">
+</div>
+
+<div class="modal fade" id="propertyModal" tabindex="-1" aria-labelledby="" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Activate Bridge</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you wish to activate this bridge?</p>
+                <form class="propsForm-needs-validation" id="propsForm">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-success" id="formbtn">
+                    <span class="">&nbsp;Yes, start the bridge</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var form = document.querySelector('.propsForm-needs-validation');
+    var btn = document.querySelector('#formbtn');
+
+    buttonClickListener(btn);
+    buttonReset(btn);
+
+    btn.addEventListener('click', () => {
+        const event = new Event('submit', {
+            'bubbles': true,
+            'cancelable': true
+        });
+        form.dispatchEvent(event);
+    })
+
+    form.addEventListener('submit', (event) => {
+        var btn = document.querySelector('#formbtn');
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            buttonReset(btn);
+        } else {
+            var formData = formToJSON(form.elements);
+            $.ajax({
+                type: "POST",
+                url: "/console/bridges",
+                data: JSON.stringify(formData),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                encode: false,
+            }).done(function (data, textStatus, jqXHR) {
+                var myModalEl = document.getElementById('propertyModal');
+                var modal = bootstrap.Modal.getInstance(myModalEl)
+                modal.hide();
+                buttonReset(btn);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                buttonReset(btn);
+                btn.textContent = " ! "+jqXHR.responseText+", Try again";
+                btn.classList.add("btn-danger");
+                btn.classList.remove("btn-success");
+            }).always(function(jqXHR, textStatus, errorThrown) {
+                update();
+            });
+        }
+        form.classList.add('was-validated');
+    }, false);
+
+    function buttonClickListener(btn){
+        btn.addEventListener('click', () => {
+            btn.insertAdjacentHTML('afterbegin', `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`);
+            btn.disabled = true;
+        });
+    }
+
+    function buttonReset(btn){
+        removeChildren(btn);
+        btn.insertAdjacentHTML('afterbegin', ` <span className="">&nbsp;Yes, start the Bridge</span>`);
+        btn.disabled = false;
+        btn.classList.remove("btn-danger");
+        btn.classList.add("btn-success");
+    }
+
+    function update(){
+        $.getJSON("/console/bridges", function(data) {
+            var root = document.getElementById('bridges');
+            removeChildren(root);
+            // console.log(JSON.stringify(data));
+            data['bridges'].forEach(function(element, i) {
+
+                var stopButtonDisabled = "";
+                var startButtonDisabled = "";
+                var ribbon = "";
+                var startLink = `onclick=start(\"${element.className}\")`;
+                var stopLink = `onclick=stop(\"${element.className}\")`;
+
+                if(element.running){
+                    startButtonDisabled = "disabled";
+                } else {
+                    stopButtonDisabled = "disabled";
+                }
+
+                if(!element.available){
+                    startButtonDisabled = "disabled";
+                    stopButtonDisabled = "disabled";
+                }
+
+                if(element.ribbon !== null){
+                    ribbon = `<div class="ribbon blue"><span>${element.ribbon}</span></div>`;
+                }
+
+                if(element.hasOwnProperty("properties")){
+                }
+
+                root.insertAdjacentHTML('afterbegin', `<div class="col mb-2"><div class="card" style="height: 100%;">${ribbon}<div class="d-flex align-items-center"><img src="${element.imageUrl}" class="img-fluid card-img-top" /></div><div class="card-body"><h5 class="card-title">${element.name}</h5><p class="card-text"><small class="text-muted">${element.companyName} - Version ${element.version}</small><br/><small class="text-muted">Protocol: ${element.protocol}</small><br/><small class="text-muted">Max throughput (m/ps): ${element.rateLimit}</small></p><p class="card-text">${element.description}</p></div><div class="card-footer justify-content-between"><div class="btn-group btn-group-sm" role="group" aria-label=""><button type="button" class="btn btn-success" id="${element.className}-start" ${startLink} ${startButtonDisabled}>Start</button><button type="button" class="btn btn-danger" id="${element.className}-stop" ${stopLink} ${stopButtonDisabled}>Stop</button></div></div></div></div>`);
+            });
+        })
+    }
+    update();
+
+    function start(className){
+        //modal
+        $.ajax({
+            type: "GET",
+            url: "/console/bridges?action=bridgeDetails&bridge=" + encodeURIComponent(className),
+            encode: true,
+        }).
+        done(function (data) {
+            var form = document.getElementById("propsForm");
+            removeChildren(form);
+            form.insertAdjacentHTML('afterbegin', `<input type="hidden" name="bridgeId" value="${className}">`);
+            $("#propertyModal").modal('show');
+            if(data.hasOwnProperty("properties")){
+                data.properties.forEach(function (property){
+                    var required = property.required ? " required" : "";
+                    var val = property.value === null ? "" : property.value;
+
+                    form.insertAdjacentHTML('afterbegin', `<div class="mb-3"><div class="form-floating"><input type="text" class="form-control" id="${property.name}" name="${property.name}" value="${val}" ${required}><label for="${property.name}" class="col-form-label">${property.displayName}</label></div></div>`);
+
+                });
+            }
+        });
+    }
+
+    function stop(className, el){
+
+        var el = document.getElementById(className + "-stop");
+        el.disabled = true;
+
+        $.ajax({
+            type: "GET",
+            url: "/console/bridges?action=stop&bridge=" + encodeURIComponent(className),
+            encode: true,
+        }).
+        done(function (data) {
+            renderMessage(data);
+            update();
+        });
+    }
+</script>
+

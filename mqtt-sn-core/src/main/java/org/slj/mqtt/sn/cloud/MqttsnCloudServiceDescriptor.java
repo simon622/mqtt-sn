@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.cloud;
 public class MqttsnCloudServiceDescriptor {
 
     public static final String
+            BRIDGE_LISTING = "BridgeListing",
             CONNECTOR_LISTING = "ConnectorListing",
             ACCOUNT_CREATE = "AccountCreate",
             ACCOUNT_AUTHORIZE = "AccountAuthorize",

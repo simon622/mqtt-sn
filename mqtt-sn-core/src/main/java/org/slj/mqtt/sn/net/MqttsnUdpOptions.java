@@ -24,10 +24,12 @@
 
 package org.slj.mqtt.sn.net;
 
+import org.slj.mqtt.sn.model.AbstractOptions;
+
 /**
  * Options to configure the behaviour of the UDP transport layer
  */
-public class MqttsnUdpOptions {
+public class MqttsnUdpOptions extends AbstractOptions {
 
     /**
      * Default max tranmission unit for UDP transport
@@ -69,16 +71,16 @@ public class MqttsnUdpOptions {
      */
     public static boolean DEFAULT_BIND_BROADCAST_LISTENER = false;
 
-    String host = DEFAULT_LOCAL_BIND_INTERFACE;
-    int port = DEFAULT_LOCAL_PORT;
-    int mtu = DEFAULT_MTU;
-    int securePort = DEFAULT_SECURE_PORT;
-    int broadcastPort = DEFAULT_BROADCAST_PORT;
-    int receiveBuffer = DEFAULT_RECEIVE_BUFFER_SIZE;
-    boolean bindBroadcastListener = DEFAULT_BIND_BROADCAST_LISTENER;
+    public String host = DEFAULT_LOCAL_BIND_INTERFACE;
+    public int port = DEFAULT_LOCAL_PORT;
+    public int mtu = DEFAULT_MTU;
+    public int securePort = DEFAULT_SECURE_PORT;
+    public int broadcastPort = DEFAULT_BROADCAST_PORT;
+    public int receiveBuffer = DEFAULT_RECEIVE_BUFFER_SIZE;
+    public boolean bindBroadcastListener = DEFAULT_BIND_BROADCAST_LISTENER;
 
     /**
-     * Max allowable tranmission unit
+     * Max allowable transmission unit
      *
      * @see {@link MqttsnUdpOptions#DEFAULT_MTU} for default gateway value
      *

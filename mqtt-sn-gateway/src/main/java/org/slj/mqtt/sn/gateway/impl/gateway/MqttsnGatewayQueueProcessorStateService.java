@@ -25,9 +25,9 @@
 package org.slj.mqtt.sn.gateway.impl.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
-import org.slj.mqtt.sn.model.IMqttsnContext;
-import org.slj.mqtt.sn.model.MqttsnClientState;
-import org.slj.mqtt.sn.model.session.IMqttsnSession;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 
@@ -39,25 +39,26 @@ public class MqttsnGatewayQueueProcessorStateService extends AbstractMqttsnServi
     }
 
     @Override
-    public boolean canReceive(IMqttsnContext context) throws MqttsnException {
-        IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
-        return session != null && MqttsnUtils.in(session.getClientState() , MqttsnClientState.ACTIVE, MqttsnClientState.AWAKE);
+    public boolean canReceive(IClientIdentifierContext context) throws MqttsnException {
+        ISession session = getRegistry().getSessionRegistry().getSession(context, false);
+        return session != null && MqttsnUtils.in(session.getClientState() , ClientState.ACTIVE, ClientState.AWAKE);
     }
 
     @Override
-    public void queueEmpty(IMqttsnContext context) throws MqttsnException {
+    public void queueEmpty(IClientIdentifierContext context) throws MqttsnException {
 
-        IMqttsnSession session = getRegistry().getSessionRegistry().getSession(context, false);
+        ISession session = getRegistry().getSessionRegistry().getSession(context, false);
         if(session != null){
             logger.debug("notified that the queue is empty, post process state is - {}", session);
-            if(MqttsnUtils.in(session.getClientState() , MqttsnClientState.AWAKE)){
+            if(MqttsnUtils.in(session.getClientState() , ClientState.AWAKE)){
                 logger.info("notified that the queue is empty, putting device back to sleep and sending ping-resp - {}", context);
                 //-- need to transition the device back to sleep
                 getRegistry().getGatewaySessionService().disconnect(session,
                         getRegistry().getMessageFactory().createDisconnect(session.getKeepAlive()));
                 //-- need to send the closing ping-resp
                 IMqttsnMessage pingResp = getRegistry().getMessageFactory().createPingresp();
-                getRegistry().getTransportLocator().writeToTransport(getRegistry().getNetworkRegistry().getContext(context), pingResp);
+                getRegistry().getTransportLocator().writeToTransport(
+                        getRegistry().getNetworkRegistry().getContext(context), pingResp);
             }
         }
     }

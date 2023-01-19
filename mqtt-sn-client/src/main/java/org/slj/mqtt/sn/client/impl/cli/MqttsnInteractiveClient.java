@@ -31,7 +31,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.model.MqttsnQueueAcceptException;
-import org.slj.mqtt.sn.model.session.impl.MqttsnWillDataImpl;
+import org.slj.mqtt.sn.model.session.impl.WillDataImpl;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
 import org.slj.mqtt.sn.net.NetworkAddress;
@@ -268,7 +268,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     protected void will(boolean retained, String topic, String data, int QoS) throws MqttsnException {
 
         MqttsnClient client = (MqttsnClient) getRuntime();
-        MqttsnWillDataImpl willData = new MqttsnWillDataImpl(new TopicPath(topic), data.getBytes(StandardCharsets.UTF_8), QoS, retained);
+        WillDataImpl willData = new WillDataImpl(new TopicPath(topic), data.getBytes(StandardCharsets.UTF_8), QoS, retained);
         client.setWillData(willData);
         message("DONE - successfully set will message data on runtime");
     }
@@ -300,18 +300,11 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                         }
                         getRuntimeRegistry().getMessageStateService().scheduleFlush(
                                 client.getSessionState().getContext());
-                        try {
-                            Thread.sleep(1000);
-                        } catch(Exception e){
-                        }
                     } finally{
                         if(stopAfterUse) getRuntimeRegistry().getQueueProcessor().stop();
                     }
-                    message("DONE - message sent and flushed on DISCONNECTED session");
                 }
-                else {
-                    message("DONE - message queued for sending");
-                }
+                message("** message queued for sending");
             } catch(MqttsnQueueAcceptException e){
                 error("Client Reporting Queue Accept Error", e);
             }
@@ -379,16 +372,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
             throws MqttsnException, IOException {
         MqttsnClient client = (MqttsnClient) getRuntime();
         if(client != null){
-            stop();
-            message("Client stopped - bye :-)");
-        }
-    }
-
-    public void stop()
-            throws MqttsnException, IOException {
-        MqttsnClient client = (MqttsnClient) getRuntime();
-        if(client != null){
             client.close();
+            message("Client stopped - bye :-)");
         }
     }
 

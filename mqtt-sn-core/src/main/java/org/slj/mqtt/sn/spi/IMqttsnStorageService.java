@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.spi;
 
-import org.slj.mqtt.sn.model.IMqttsnPreferenceNamespace;
+import org.slj.mqtt.sn.model.IPreferenceNamespace;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 
 import java.io.File;
@@ -40,6 +40,7 @@ public interface IMqttsnStorageService extends IMqttsnService {
     String DEFAULT_FOLDER_NAME = "mqtt-sn-runtimes";
     String DEFAULT_SETTINGS_FILENAME = "mqtt-sn-settings.xml";
     String CREDENTIALS_FILENAME = "mqtt-sn-client-credentials";
+    String PREDEFINED_FILENAME = "mqtt-sn-predefined-alias";
 
     static Class DEFAULT_NAMESPACE = IMqttsnStorageService.class;
 
@@ -72,7 +73,7 @@ public interface IMqttsnStorageService extends IMqttsnService {
 
     void writeRuntimeOptions(MqttsnOptions options) throws MqttsnException ;
 
-    IMqttsnStorageService getPreferenceNamespace(IMqttsnPreferenceNamespace namespace);
+    IMqttsnStorageService getPreferenceNamespace(IPreferenceNamespace namespace);
 
     void writeFieldsToStorage(Object configurableBean) throws MqttsnRuntimeException ;
 

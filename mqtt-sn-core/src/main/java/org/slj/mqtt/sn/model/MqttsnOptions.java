@@ -222,8 +222,11 @@ public class MqttsnOptions extends AbstractOptions {
      */
     public static final int MAX_CLIENT_ID_LENGTH = 23;
 
+    public static final boolean DEFAULT_ANONYMOUS_PUBLISH_ALLOWED = false;
+
     public String contextId;
     public int maxClientIdLength = MAX_CLIENT_ID_LENGTH;
+    public boolean anonymousPublishAllowed = DEFAULT_ANONYMOUS_PUBLISH_ALLOWED;
     public long sessionExpiryInterval = DEFAULT_SESSION_EXPIRY_INTERVAL;
     public int defaultMaxAwakeMessages = DEFAULT_MAX_AWAKE_MESSAGES;
     public int transportIngressThreadCount = DEFAULT_TRANSPORT_INGRESS_THREAD_COUNT;
@@ -274,6 +277,19 @@ public class MqttsnOptions extends AbstractOptions {
      */
     public MqttsnOptions withMessageQueueDiskStorageThreshold(int messageQueueDiskStorageThreshold) {
         this.messageQueueDiskStorageThreshold = messageQueueDiskStorageThreshold;
+        return this;
+    }
+
+    /**
+     * When enabled, the GW will allow publishes that have NO session context
+     * to publish at -1, otherwise to publish at -1 a previous context must have been established
+     *
+     * @param anonymousPublishAllowed
+     * @return this configuration
+     * @see {@link MqttsnOptions#DEFAULT_ANONYMOUS_PUBLISH_ALLOWED}
+     */
+    public MqttsnOptions withAnonymousPublishAllowed(boolean anonymousPublishAllowed) {
+        this.anonymousPublishAllowed = anonymousPublishAllowed;
         return this;
     }
 
@@ -941,4 +957,7 @@ public class MqttsnOptions extends AbstractOptions {
         return sessionExpiryInterval;
     }
 
+    public boolean getAnonymousPublishAllowed() {
+        return anonymousPublishAllowed;
+    }
 }

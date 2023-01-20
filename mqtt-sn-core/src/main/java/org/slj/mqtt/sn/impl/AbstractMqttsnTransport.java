@@ -109,8 +109,12 @@ public abstract class AbstractMqttsnTransport
                 }
                 if (!registry.getNetworkRegistry().hasBoundSessionContext(networkContext) &&
                         isPublish && qosM1) {
-                    logger.warn("detected non authorised publish -1, apply for temporary auth from network context {}", networkContext);
-                    authd = registry.getMessageHandler().temporaryAuthorizeContext(networkContext);
+                    if(registry.getOptions().getAnonymousPublishAllowed()){
+                        logger.info("detected non authorised publish -1, apply for temporary auth from network context {}", networkContext);
+                        authd = registry.getMessageHandler().temporaryAuthorizeContext(networkContext);
+                    } else {
+                        logger.warn("detected non authorised publish -1, this is configured to NOT be allowed, drop packet {}", networkContext);
+                    }
                 }
             }
 

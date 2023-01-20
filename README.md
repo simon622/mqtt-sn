@@ -60,7 +60,7 @@ java -jar <path-to>/mqtt-sn-client-VERSION.jar
 ![Client CLI](/images/client-cli.png)
 
 #### Gateway
-The latest gateway build can be obtained from the releases section. This build is the loopback configuration which requires no backend broker. It can be used to configure a backend connection as well [Download](https://github.com/simon622/mqtt-sn/releases/download/0.2.0-alpha/mqtt-sn-gateway-console-0.2.0.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
+The latest gateway build can be obtained from the releases section. This build is the console configuration which requires no backend broker. It can be used to configure a backend connection as well [Download](https://github.com/simon622/mqtt-sn/releases/download/0.2.0-alpha/mqtt-sn-gateway-console-0.2.0.jar) the mqtt-sn-gateway-VERSION.jar and run locally using;
 
 ```shell script
 java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar <port> <gatewayId>

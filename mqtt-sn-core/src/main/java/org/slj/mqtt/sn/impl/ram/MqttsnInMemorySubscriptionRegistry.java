@@ -112,7 +112,11 @@ public class MqttsnInMemorySubscriptionRegistry
 
     @Override
     public void clear(ISession session) {
-        getSessionBean(session).clearSubscriptions();
+        //need tp clear from index and lists
+        Set<ISubscription> all = readSubscriptions(session);
+        for(ISubscription s : all){
+            removeSubscription(session, s);
+        }
     }
 
     @Override

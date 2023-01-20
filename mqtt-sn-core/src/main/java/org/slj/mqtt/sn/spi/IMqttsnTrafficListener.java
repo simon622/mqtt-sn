@@ -35,6 +35,7 @@ import org.slj.mqtt.sn.model.INetworkContext;
  * upon to give an absolute timeline of traffic.
  *
  */
+@MqttsnService
 public interface IMqttsnTrafficListener {
 
     /**

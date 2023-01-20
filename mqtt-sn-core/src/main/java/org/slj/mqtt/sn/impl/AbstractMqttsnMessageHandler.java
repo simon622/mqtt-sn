@@ -336,7 +336,7 @@ public abstract class AbstractMqttsnMessageHandler
 
         logger.info("mqtt-sn handler [{} -> {}] sending outbound message {}",
                     registry.getOptions().getContextId(), context, response);
-        context.getNetworkContext().getTransport().writeToTransport(context.getNetworkContext(), response);
+        ((IMqttsnTransport)context.getNetworkContext().getTransport()).writeToTransport(context.getNetworkContext(), response);
     }
 
     protected IMqttsnMessage handleConnect(IMqttsnMessageContext messageContext, IMqttsnMessage connect) throws MqttsnException {

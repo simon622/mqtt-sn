@@ -35,6 +35,7 @@ import java.util.Optional;
 /**
  *
  */
+@MqttsnService
 public interface IMqttsnStorageService extends IMqttsnService {
 
     String DEFAULT_FOLDER_NAME = "mqtt-sn-runtimes";

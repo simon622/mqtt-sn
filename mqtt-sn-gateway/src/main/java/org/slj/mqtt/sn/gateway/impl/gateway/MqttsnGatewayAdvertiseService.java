@@ -29,6 +29,7 @@ import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 
 public class MqttsnGatewayAdvertiseService
@@ -55,7 +56,7 @@ public class MqttsnGatewayAdvertiseService
             IMqttsnMessage msg = registry.getMessageFactory().createAdvertise(
                     ((MqttsnGatewayOptions) registry.getOptions()).getGatewayId(),
                     timeout);
-            registry.getDefaultTransport().broadcast(msg);
+            ((IMqttsnTransport)registry.getDefaultTransport()).broadcast(msg);
             lastGatewayBroadcastTime = System.currentTimeMillis();
 
         } catch(Exception e){

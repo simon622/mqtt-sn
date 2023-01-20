@@ -86,9 +86,9 @@ public interface IMqttsnRuntimeRegistry {
     <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz);
 
     /**
-     * @see IMqttsnTransport
+     * @see ITransport
      */
-    List<IMqttsnTransport> getTransports();
+    List<ITransport> getTransports();
 
     List<IMqttsnPayloadModifier> getPayloadModifiers();
 
@@ -96,7 +96,7 @@ public interface IMqttsnRuntimeRegistry {
      * When mulitple transport mechanisms are installed, which is considered default
      * @return The default transport
      */
-    IMqttsnTransport getDefaultTransport();
+    ITransport getDefaultTransport();
 
     ITransportLocator getTransportLocator();
 

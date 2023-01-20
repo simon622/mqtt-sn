@@ -25,9 +25,7 @@
 package org.slj.mqtt.sn.model;
 
 import org.slj.mqtt.sn.net.NetworkAddress;
-import org.slj.mqtt.sn.spi.IMqttsnTransport;
-
-import java.io.Serializable;
+import org.slj.mqtt.sn.spi.ITransport;
 
 public interface INetworkContext extends IContextObject {
 
@@ -39,5 +37,5 @@ public interface INetworkContext extends IContextObject {
 
     void setNetworkAddress(NetworkAddress address);
 
-    IMqttsnTransport getTransport();
+    ITransport getTransport();
 }

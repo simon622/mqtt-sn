@@ -61,8 +61,8 @@ public class TransportHandler extends MqttsnConsoleAjaxRealmHandler {
 
     protected PropertiesBean populateBean() throws MqttsnException {
         PropertiesBean bean = new PropertiesBean();
-        List<IMqttsnTransport> l = registry.getTransports();
-        for(IMqttsnTransport t : l){
+        List<ITransport> l = registry.getTransports();
+        for(ITransport t : l){
             bean.add(t.getName(), String.valueOf(t.getPort()), String.valueOf(t.getDescription()), "");
         }
 

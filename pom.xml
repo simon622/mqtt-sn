@@ -29,7 +29,7 @@
 
     <groupId>org.slj</groupId>
     <artifactId>mqtt-sn</artifactId>
-    <version>0.1.19</version>
+    <version>0.2.0</version>
 
     <packaging>pom</packaging>
 
@@ -80,7 +80,7 @@
         <maven.build.shade.version>3.4.1</maven.build.shade.version>
         <jackson.version>2.10.2</jackson.version>
         <yaml.version>1.11</yaml.version>
-        <mqtt-sn.version>0.1.19</mqtt-sn.version>
+        <mqtt-sn.version>0.2.0</mqtt-sn.version>
     </properties>
 
     <dependencies>

@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.impl;
 
 import org.slj.mqtt.sn.spi.IMqttsnService;
 import org.slj.mqtt.sn.spi.MqttsnService;
+import org.slj.mqtt.sn.utils.ServiceUtils;
 
 import java.util.Comparator;
 
@@ -33,14 +34,15 @@ public class ServiceSort implements Comparator<IMqttsnService> {
 
     @Override
     public int compare(IMqttsnService o1, IMqttsnService o2) {
-        return getSortValue(o1) - getSortValue(o2);
+
+        return getSortValue(o2) - getSortValue(o1);
     }
 
 
     private static int getSortValue(IMqttsnService service){
-        if(service.getClass().isAnnotationPresent(MqttsnService.class)){
-            MqttsnService a = service.getClass().getAnnotation(MqttsnService.class);
-            return  a.order();
+        MqttsnService a = ServiceUtils.getAnnotationFromBind(service);
+        if(a != null){
+            return a.order();
         }
         return 0;
     }

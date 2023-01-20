@@ -2,11 +2,13 @@ package org.slj.mqtt.sn.gateway.spi.bridge;
 
 import org.slj.mqtt.sn.cloud.ProtocolBridgeDescriptor;
 import org.slj.mqtt.sn.spi.IMqttsnService;
+import org.slj.mqtt.sn.spi.MqttsnService;
 
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+@MqttsnService
 public interface IProtocolBridgeService extends IMqttsnService {
 
     boolean initializeBridge(ProtocolBridgeDescriptor descriptor, ProtocolBridgeOptions options) throws ProtocolBridgeException;

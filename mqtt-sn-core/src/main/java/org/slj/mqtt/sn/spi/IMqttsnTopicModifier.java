@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 
+@MqttsnService
 public interface IMqttsnTopicModifier extends IMqttsnService{
 
     /**

@@ -90,7 +90,7 @@ public class MqttsnGatewayExpansionHandler extends AbstractMqttsnService impleme
                     logger.warn("detected <null> session state for subscription ({})", context);
                 }
             } catch(MqttsnException e){
-                logger.warn("detected issue for session receipt.. ignore client ({})", context);
+                logger.warn("detected issue for session receipt.. ignore client ({})", context, e);
             } finally {
                 getRegistry().getMetrics().getMetric(GatewayMetrics.BACKEND_CONNECTOR_EXPANSION).increment(1);
             }

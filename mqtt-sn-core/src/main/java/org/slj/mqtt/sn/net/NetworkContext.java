@@ -27,21 +27,22 @@ package org.slj.mqtt.sn.net;
 import org.slj.mqtt.sn.model.AbstractContextObject;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
+import org.slj.mqtt.sn.spi.ITransport;
 
 public class NetworkContext extends AbstractContextObject implements INetworkContext {
 
-    protected IMqttsnTransport transport;
+    protected ITransport transport;
     protected NetworkAddress networkAddress;
     protected int receivePort;
 
     public NetworkContext(){}
 
-    public NetworkContext(IMqttsnTransport transport, NetworkAddress networkAddress){
+    public NetworkContext(ITransport transport, NetworkAddress networkAddress){
         this.transport = transport;
         this.networkAddress = networkAddress;
     }
 
-    public IMqttsnTransport getTransport() {
+    public ITransport getTransport() {
         return transport;
     }
 

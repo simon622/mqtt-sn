@@ -289,8 +289,8 @@ public abstract class MqttsnInteractiveGateway extends AbstractInteractiveCli {
             message(String.format("Max message size: %s", getRuntimeRegistry().getOptions().getMaxProtocolMessageSize()));
             message(String.format("Message registry size: %s", getRuntimeRegistry().getMessageRegistry().size()));
 
-            List<IMqttsnTransport> ts = getRuntimeRegistry().getTransports();
-            for (IMqttsnTransport t : ts){
+            List<ITransport> ts = getRuntimeRegistry().getTransports();
+            for (ITransport t : ts){
                 StringTable st = t.getTransportDetails();
                 tabmessage(StringTableWriters.writeStringTableAsASCII(st));
             }

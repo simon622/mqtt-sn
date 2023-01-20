@@ -35,6 +35,7 @@ import org.slj.mqtt.sn.model.session.ISession;
  *
  * Ideally the queue should be implemented to support FIFO where possible.
  */
+@MqttsnService
 public interface IMqttsnMessageQueue extends IMqttsnService  {
 
     /**

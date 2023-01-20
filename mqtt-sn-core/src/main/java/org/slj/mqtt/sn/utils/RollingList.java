@@ -53,8 +53,8 @@ public class RollingList<T> extends ArrayList<T> {
 
     @Override
     public boolean add(T o) {
-        int i = internalIdx.get();
         synchronized(this){
+            int i = internalIdx.get();
             if(i > (ceiling - 1)){
                 internalIdx.set(0);
                 i = 0;

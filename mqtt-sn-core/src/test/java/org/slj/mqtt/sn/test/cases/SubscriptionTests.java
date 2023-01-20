@@ -34,6 +34,7 @@ import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnSubscriptionRegistry;
+import org.slj.mqtt.sn.spi.IMqttsnTransport;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.test.MqttsnTestRuntime;
@@ -266,7 +267,7 @@ public class SubscriptionTests {
             throws MqttsnException {
 
         return runtime.getRegistry().getContextFactory().
-                createInitialNetworkContext(runtime.getRegistry().getDefaultTransport(), MqttsnTestRuntime.TEST_ADDRESS);
+                createInitialNetworkContext((IMqttsnTransport) runtime.getRegistry().getDefaultTransport(), MqttsnTestRuntime.TEST_ADDRESS);
     }
 
 

@@ -85,7 +85,7 @@ public class SessionBeanImpl extends SessionImpl {
     }
 
     public Set<ISubscription> getSubscriptions(){
-        return Collections.unmodifiableSet(subscriptionSet);
+        return Collections.unmodifiableSet(new HashSet<>(subscriptionSet));
     }
 
     public Map<String, ITopicRegistration> getRegistrations(){

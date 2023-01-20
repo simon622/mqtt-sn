@@ -655,7 +655,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             logger.warn("connection lost at transport layer", t);
             disconnect(false, true);
             //attempt to restart transport
-            IMqttsnTransport transport = getRegistry().getTransportLocator().
+            ITransport transport = getRegistry().getTransportLocator().
                     getTransport(
                             getRegistry().getNetworkRegistry().getContext(context));
             callShutdown(transport);

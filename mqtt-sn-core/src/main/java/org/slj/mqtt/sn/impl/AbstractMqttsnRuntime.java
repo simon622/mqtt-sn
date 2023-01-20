@@ -99,7 +99,8 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
             running = true;
 
             generalUseExecutorService =
-                    createManagedExecutorService("mqtt-sn-general-purpose-thread-", reg.getOptions().getGeneralPurposeThreadCount());
+                    createManagedExecutorService("mqtt-sn-general-purpose-thread-",
+                            reg.getOptions().getGeneralPurposeThreadCount());
             bindShutdownHook();
             startupServices();
             notifyServicesStarted();
@@ -363,9 +364,11 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
      */
     public synchronized ExecutorService createManagedExecutorService(String name, int threadCount){
 
+        int max = Math.max(1, threadCount);
+        int core = max / 2;
         BlockingQueue<Runnable> linkedBlockingDeque
                 = new LinkedBlockingDeque<>(registry.getOptions().getQueueBackPressure());
-        ExecutorService executorService = new ThreadPoolExecutor(1, Math.max(1, threadCount), 30,
+        ExecutorService executorService = new ThreadPoolExecutor(core, max, 30,
                 TimeUnit.SECONDS, linkedBlockingDeque,
                 createManagedThreadFactory(name, Thread.MIN_PRIORITY + 1),
                 new ThreadPoolExecutor.CallerRunsPolicy());

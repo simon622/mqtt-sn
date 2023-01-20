@@ -31,8 +31,11 @@ import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.net.NetworkContext;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.ServiceUtils;
 
+import java.lang.annotation.Annotation;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -53,12 +56,12 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     protected IMqttsnStorageService storageService;
     protected IMqttsnCodec codec;
     protected IMqttsnMessageFactory factory;
-    protected List<IMqttsnService> services;
+    protected Map<Class<? extends IMqttsnService>,List<IMqttsnService>> services;
 
     public AbstractMqttsnRuntimeRegistry(IMqttsnStorageService storageService, MqttsnOptions options){
         this.options = options;
         this.storageService = storageService;
-        services = new ArrayList<>();
+        this.services = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -228,8 +231,8 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
     }
 
     @Override
-    public List<IMqttsnTransport> getTransports() {
-        return getServices(IMqttsnTransport.class);
+    public List<ITransport> getTransports() {
+        return getServices(ITransport.class);
     }
 
     @Override
@@ -237,8 +240,8 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return getServices(IMqttsnPayloadModifier.class);
     }
 
-    public IMqttsnTransport getDefaultTransport(){
-        List<IMqttsnTransport> transports = getTransports();
+    public ITransport getDefaultTransport(){
+        List<ITransport> transports = getTransports();
         if(transports == null || transports.size() == 0)
             throw new MqttsnRuntimeException("no transports available on runtime");
         return transports.get(0);
@@ -329,15 +332,16 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return getOptionalService(IMqttsnDeadLetterQueue.class).orElse(null);
     }
 
-    protected List<IMqttsnService> getServicesInternal(){
-        synchronized (services){
-            return new ArrayList(services);
-        }
-    }
-
     @Override
     public List<IMqttsnService> getServices() {
-        List<IMqttsnService> sorted = getServicesInternal();
+        List<IMqttsnService> sorted = new ArrayList<>();
+        Iterator<Class<? extends IMqttsnService>> itr
+                = services.keySet().iterator();
+        while (itr.hasNext()) {
+            Class<?> cls = itr.next();
+            List<IMqttsnService> s = services.get(cls);
+            sorted.addAll(s);
+        }
         Collections.sort(sorted, new ServiceSort());
         return Collections.unmodifiableList(sorted);
 
@@ -345,61 +349,62 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
 
     @Override
     public AbstractMqttsnRuntimeRegistry withService(IMqttsnService service){
-        List<IMqttsnService> localCopy = getServicesInternal();
-        localCopy.add(service);
-        services = localCopy;
+        Class<? extends IMqttsnService> bindCls = ServiceUtils.getServiceBind(service);
+        List<IMqttsnService> l = services.get(bindCls);
+        if(l == null){
+            synchronized (services){
+                l = services.get(bindCls);
+                if (l == null) {
+                    l = new ArrayList<>();
+                    services.put(bindCls, l);
+                }
+            }
+        }
+        l.add(service);
         return this;
     }
 
     @Override
     public <T extends IMqttsnService> AbstractMqttsnRuntimeRegistry withServiceReplaceIfExists(Class<T> serviceInterface, IMqttsnService serviceInstance){
-        synchronized (services){
-            Optional<IMqttsnService> existing =
-                    getOptionalService((Class<IMqttsnService>) serviceInterface);
-            if(existing.isPresent()){
-                logger.info("found existing instance of {} in runtime, removing",
-                        serviceInterface.getName());
-                services.remove(existing.get());
-            }
-            if(serviceInstance != null) {
-                services.add(serviceInstance);
-            }
+        if(serviceInstance == null) {
+            throw new NullPointerException("cannot replace with null service");
+        }
+        List<IMqttsnService> l = services.get(serviceInterface);
+        if (l == null) {
+            withService(serviceInstance);
+        } else {
+            l.clear();
+            l.add(serviceInstance);
+            logger.info("found existing instance of {} in runtime, replacing",
+                    serviceInterface.getName());
         }
         return this;
     }
 
     @Override
     public <T extends IMqttsnService> T getService(Class<T> clz){
-        List<IMqttsnService> localCopy = getServicesInternal();
-        List<IMqttsnService> all = localCopy.stream().filter(s ->
-                        clz.isAssignableFrom(s.getClass())).
-                collect(Collectors.toList());
-        if(all.size() > 1){
-            throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
-        }
-        else if(all.size() == 0){
+        List<? extends IMqttsnService> l = services.get(clz);
+        if(l == null || l.isEmpty()) {
             throw new MqttsnRuntimeException("unable to find instance of "+clz+" in service list");
+        } else {
+            if(l.size() > 1){
+                throw new MqttsnRuntimeException("more than a single instance of "+clz+" service found");
+            }
         }
-        return (T) all.get(0);
-
+        return (T) l.get(0);
     }
 
     @Override
     public <T extends IMqttsnService> List<T> getServices(Class<T> clz){
-        List<IMqttsnService> localCopy = getServicesInternal();
-        List<IMqttsnService> all = localCopy.stream().filter(s ->
-                clz.isAssignableFrom(s.getClass())).
-                collect(Collectors.toList());
-        return (List<T>) all;
+        List<? extends IMqttsnService> l = services.get(clz);
+        return l == null ? Collections.emptyList() : (List<T>) Collections.unmodifiableList(l);
     }
 
     @Override
     public <T extends IMqttsnService> Optional<T> getOptionalService(Class<T> clz){
-        List<IMqttsnService> localCopy = getServicesInternal();
-        return (Optional<T>) localCopy.stream().filter(s ->
-                clz.isAssignableFrom(s.getClass())).findFirst();
+        List<? extends IMqttsnService> l = services.get(clz);
+        return l == null ? Optional.empty() : Optional.ofNullable((T) l.get(0));
     }
-
 
     protected void validateOnStartup() throws MqttsnRuntimeException {
         if(storageService == null) throw new MqttsnRuntimeException("storage service must be found for a valid runtime");

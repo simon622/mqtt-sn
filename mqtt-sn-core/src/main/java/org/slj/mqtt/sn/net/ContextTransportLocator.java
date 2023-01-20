@@ -11,11 +11,11 @@ public class ContextTransportLocator extends AbstractMqttsnService implements IT
     @Override
     public Future<IPacketTXRXJob> writeToTransport(INetworkContext context, IMqttsnMessage message)
             throws MqttsnException {
-        return context.getTransport().writeToTransport(context, message);
+        return ((IMqttsnTransport)context.getTransport()).writeToTransport(context, message);
     }
 
     @Override
-    public IMqttsnTransport getTransport(INetworkContext context) throws MqttsnException {
+    public ITransport getTransport(INetworkContext context) throws MqttsnException {
         return context.getTransport();
     }
 }

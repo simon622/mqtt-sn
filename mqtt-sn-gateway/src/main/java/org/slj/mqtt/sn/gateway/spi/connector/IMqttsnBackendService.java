@@ -28,10 +28,7 @@ import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.spi.*;
 import org.slj.mqtt.sn.gateway.spi.gateway.IMqttsnGatewayRuntimeRegistry;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
-import org.slj.mqtt.sn.spi.IMqttsnMessage;
-import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
-import org.slj.mqtt.sn.spi.IMqttsnService;
-import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.util.List;
@@ -40,6 +37,7 @@ import java.util.List;
  * The backend service determines the TYPE of behaviour of the gateway (ie. AGGREGATING, TRANSPARENT, FORWARDING), and is responsible
  * for passing the traffic on in the associated pattern to the installed and running connector
  */
+@MqttsnService(order = MqttsnService.LAST)
 public interface IMqttsnBackendService extends IMqttsnService  {
 
     IMqttsnGatewayRuntimeRegistry getRegistry();

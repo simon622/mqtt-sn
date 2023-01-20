@@ -316,7 +316,7 @@ public abstract class AbstractMqttsnMessageStateService
                 };
             }
             INetworkContext networkContext = registry.getNetworkRegistry().getContext(context);
-            networkContext.getTransport().writeToTransportWithCallback(networkContext, message, callback);
+            ((IMqttsnTransport)networkContext.getTransport()).writeToTransportWithCallback(networkContext, message, callback);
             return token;
 
         } catch(Exception e){

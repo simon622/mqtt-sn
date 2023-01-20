@@ -408,8 +408,8 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     }
                 }
 
-                List<IMqttsnTransport> ts = getRuntimeRegistry().getTransports();
-                for (IMqttsnTransport t : ts){
+                List<ITransport> ts = getRuntimeRegistry().getTransports();
+                for (ITransport t : ts){
                     StringTable st = t.getTransportDetails();
                     tabmessage(StringTableWriters.writeStringTableAsASCII(st));
                 }

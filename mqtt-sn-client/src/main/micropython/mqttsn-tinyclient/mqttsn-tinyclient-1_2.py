@@ -28,5 +28,8 @@ data += bytearray(msg_id.to_bytes(2, 'big'))
 data += payload
 
 # Set up the UDP socket and send the message
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.sendto(header + data, ("localhost", 2442))
+i = 1
+while i < 10:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(header + data, ("localhost", 2442))
+    i = i + 1

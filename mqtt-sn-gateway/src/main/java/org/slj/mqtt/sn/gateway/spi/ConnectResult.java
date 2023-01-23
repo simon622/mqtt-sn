@@ -40,4 +40,60 @@ public class ConnectResult extends Result {
         setMessage(message);
         setReturnCode(returnCode);
     }
+
+    private String assignedClientIdentifier;
+    private long sessionExpiryInterval;
+    private int keepAlive;
+    private int protocolVersion;
+    private boolean sessionExisted = false;
+    private int maxPacketSize;
+
+
+    public int getMaxPacketSize() {
+        return maxPacketSize;
+    }
+
+    public void setMaxPacketSize(int maxPacketSize) {
+        this.maxPacketSize = maxPacketSize;
+    }
+
+    public String getAssignedClientIdentifier() {
+        return assignedClientIdentifier;
+    }
+
+    public void setAssignedClientIdentifier(String assignedClientIdentifier) {
+        this.assignedClientIdentifier = assignedClientIdentifier;
+    }
+
+    public long getSessionExpiryInterval() {
+        return sessionExpiryInterval;
+    }
+
+    public void setSessionExpiryInterval(long sessionExpiryInterval) {
+        this.sessionExpiryInterval = sessionExpiryInterval;
+    }
+
+    public int getKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(int keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
+    public int getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public void setProtocolVersion(int protocolVersion) {
+        this.protocolVersion = protocolVersion;
+    }
+
+    public boolean isSessionExisted() {
+        return sessionExisted;
+    }
+
+    public void setSessionExisted(boolean sessionExisted) {
+        this.sessionExisted = sessionExisted;
+    }
 }

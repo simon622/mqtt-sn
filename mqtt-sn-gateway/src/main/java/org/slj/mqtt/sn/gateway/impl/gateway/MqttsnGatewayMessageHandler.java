@@ -135,30 +135,16 @@ public class MqttsnGatewayMessageHandler
     protected IMqttsnMessage handleConnect(IMqttsnMessageContext context, IMqttsnMessage connect) throws MqttsnException, MqttsnCodecException {
 
         String clientId = null;
-        boolean cleanStart = false;
-        int keepAlive = 0;
         boolean will = false;
-        long sessionExpiryInterval = MqttsnConstants.UNSIGNED_MAX_32;
-        int maxPacketSize = MqttsnConstants.UNSIGNED_MAX_16;
-        int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
-
         if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
             MqttsnConnect connectMessage = (MqttsnConnect) connect ;
             clientId = connectMessage.getClientId();
-            cleanStart = connectMessage.isCleanSession();
-            keepAlive = connectMessage.getDuration();
             will = connectMessage.isWill();
-            protocolVersion = MqttsnConstants.PROTOCOL_VERSION_1_2;
         }
         else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
             MqttsnConnect_V2_0 connectMessage = (MqttsnConnect_V2_0) connect ;
             clientId = connectMessage.getClientId();
-            cleanStart = connectMessage.isCleanStart();
             will = connectMessage.isWill();
-            keepAlive = connectMessage.getKeepAlive();
-            sessionExpiryInterval = connectMessage.getSessionExpiryInterval();
-            maxPacketSize = connectMessage.getMaxPacketSize();
-            protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
         }
 
         //-- just be careful here - the cliendId from the message may well not match the one on the context at this
@@ -172,17 +158,7 @@ public class MqttsnGatewayMessageHandler
             }
         }
 
-        //-- THIS IS WHERE A SESSION IS CREATED ON THE GATEWAY SIDE
-        ISession session = context.getSession();
-        String assignedClientId = context.getClientContext().isAssignedClientId() ? context.getClientContext().getId() : null;
-        boolean stateExisted = session != null;
-        if(session == null){
-            //ensure we update the context so the session is present for the rest of the message processing
-            session = getRegistry().getSessionRegistry().getSession(context.getClientContext(), true);
-            context.setSession(session);
-        }
-
-        ConnectResult result = getRegistry().getGatewaySessionService().connect(context.getSession(), connect);
+        ConnectResult result = getRegistry().getGatewaySessionService().connect(context, connect);
         processSessionResult(result);
         if(result.isError()){
             return registry.getMessageFactory().createConnack(result.getReturnCode());
@@ -191,18 +167,8 @@ public class MqttsnGatewayMessageHandler
             if(will){
                 return registry.getMessageFactory().createWillTopicReq();
             } else {
-                long sessionExpiryIntervalRequested = sessionExpiryInterval;
-                if(sessionExpiryInterval >
-                        registry.getOptions().getSessionExpiryInterval()){
-                    sessionExpiryInterval = Math.min(sessionExpiryInterval,
-                            registry.getOptions().getSessionExpiryInterval());
-                }
-                boolean changedFromRequested = sessionExpiryIntervalRequested != sessionExpiryInterval;
-                getRegistry().getSessionRegistry().modifySessionExpiryInterval(session, sessionExpiryInterval);
-                getRegistry().getSessionRegistry().modifyMaxPacketSize(session, maxPacketSize);
-                getRegistry().getSessionRegistry().modifyProtocolVersion(session, protocolVersion);
                 return registry.getMessageFactory().createConnack(
-                        result.getReturnCode(), stateExisted, assignedClientId, changedFromRequested ? sessionExpiryInterval : 0);
+                        result.getReturnCode(), result.isSessionExisted(), result.getAssignedClientIdentifier(), result.getSessionExpiryInterval());
             }
         }
     }

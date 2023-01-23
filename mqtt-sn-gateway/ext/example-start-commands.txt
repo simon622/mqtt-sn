@@ -2,12 +2,12 @@
 -DanonymousPublishAllowed=true
 -DwireLoggingEnabled=true
 -Dlogback.configurationFile=/path/to/config.xml
--DwireLoggingEnabled=true
 -DmaxClientSessions=25000
 -DtransportIngressThreadCount=1
 -DtransportIngressThreadCount=1
 -DgeneralPurposeThreadCount=2
 -DqueueProcessorThreadCount=2
 -DanonymousPublishAllowed=true
+-DconsolePort=8081
 
 java -jar <flags> mqtt-sn-gateway-console-0.2.0.jar <port> <gatewayId>

@@ -9,10 +9,10 @@ qos = 3
 
 # a pre-defined topic id (set to “0b01”)
 topic_id_type = 0b01
-topic_id = 0  # The topic ID to publish to (16-bit unsigned integer)
+topic_id = 5  # The topic ID to publish to (16-bit unsigned integer)
 
 # short topic name (set to “0b10”)
-topic_id_type = 0b10
+# topic_id_type = 0b10
 short_topic_name = b"ab"
 
 # Set up the MQTT-SN message header and payload

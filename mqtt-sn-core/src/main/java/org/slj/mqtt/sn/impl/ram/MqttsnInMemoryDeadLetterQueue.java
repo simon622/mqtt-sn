@@ -37,7 +37,7 @@ public class MqttsnInMemoryDeadLetterQueue extends AbstractDeadLetterQueue {
 
     private static final int INITIAL_CAPACITY = 250;
 
-    private List<MqttsnDeadLetterQueueBean> list = new ArrayList<>(INITIAL_CAPACITY);;
+    private List<MqttsnDeadLetterQueueBean> list = Collections.synchronizedList(new ArrayList<>(INITIAL_CAPACITY));
 
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
@@ -67,9 +67,9 @@ public class MqttsnInMemoryDeadLetterQueue extends AbstractDeadLetterQueue {
         }
         synchronized (list){
             int startIdx = Math.max(0, ((list.size() - count)));
-            List<MqttsnDeadLetterQueueBean> sub = list.subList(
+            List<MqttsnDeadLetterQueueBean> sub = new ArrayList(list.subList(
                     startIdx,
-                    startIdx + Math.min(list.size(), count));
+                    startIdx + Math.min(list.size(), count)));
             Collections.reverse(sub);
             return sub;
         }

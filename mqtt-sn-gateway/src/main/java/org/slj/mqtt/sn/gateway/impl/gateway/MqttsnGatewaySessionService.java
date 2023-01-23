@@ -33,6 +33,7 @@ import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnBackoffThreadService;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.ClientState;
+import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.model.session.IWillData;
@@ -41,6 +42,8 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
+import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnConnect_V2_0;
 
 import java.util.Date;
 import java.util.Iterator;
@@ -147,25 +150,71 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
     }
 
     @Override
-    public ConnectResult connect(ISession session, IMqttsnMessage message) throws MqttsnException {
+    public ConnectResult connect(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException {
 
-        String clientId = getRegistry().getCodec().getClientId(message);
+        String clientId = null;
+        boolean cleanStart = false;
+        int keepAlive = 0;
+        boolean will = false;
+        long sessionExpiryInterval = MqttsnConstants.UNSIGNED_MAX_32;
+        int maxPacketSize = MqttsnConstants.UNSIGNED_MAX_16;
+        int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
+
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_1_2){
+            MqttsnConnect connectMessage = (MqttsnConnect) message ;
+            clientId = connectMessage.getClientId();
+            cleanStart = connectMessage.isCleanSession();
+            keepAlive = connectMessage.getDuration();
+            will = connectMessage.isWill();
+            protocolVersion = MqttsnConstants.PROTOCOL_VERSION_1_2;
+        }
+        else if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            MqttsnConnect_V2_0 connectMessage = (MqttsnConnect_V2_0) message ;
+            clientId = connectMessage.getClientId();
+            cleanStart = connectMessage.isCleanStart();
+            will = connectMessage.isWill();
+            keepAlive = connectMessage.getKeepAlive();
+            sessionExpiryInterval = connectMessage.getSessionExpiryInterval();
+            maxPacketSize = connectMessage.getMaxPacketSize();
+            protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
+        }
+
         boolean cleanSession = getRegistry().getCodec().isCleanSession(message);
-        long keepAlive = getRegistry().getCodec().getKeepAlive(message);
 
+        ISession session = null;
         ConnectResult result = null;
         result = checkSessionSize();
         if(result == null){
-            synchronized (session.getContext()){
+
+            boolean existed = registry.getSessionRegistry().hasSession(context.getClientContext());
+            synchronized (context){
                 try {
+                    session = createNewSession(context);
                     result = getRegistry().getBackendService().connect(session.getContext(), message);
                 } finally {
                     if(result == null || !result.isError()){
                         //clear down all prior session state
+                        long sessionExpiryIntervalRequested = sessionExpiryInterval;
+                        if(sessionExpiryIntervalRequested >
+                                registry.getOptions().getSessionExpiryInterval()){
+                            sessionExpiryInterval = Math.min(sessionExpiryInterval,
+                                    registry.getOptions().getSessionExpiryInterval());
+                            result.setSessionExpiryInterval(sessionExpiryInterval);
+                        }
+
                         notifyCluster(session.getContext());
                         getRegistry().getSessionRegistry().cleanSession(session.getContext(), cleanSession);
                         getRegistry().getSessionRegistry().modifyKeepAlive(session, (int) keepAlive);
                         getRegistry().getSessionRegistry().modifyClientState(session, ClientState.ACTIVE);
+                        getRegistry().getSessionRegistry().modifySessionExpiryInterval(session, sessionExpiryInterval);
+                        getRegistry().getSessionRegistry().modifyMaxPacketSize(session, maxPacketSize);
+                        getRegistry().getSessionRegistry().modifyProtocolVersion(session, protocolVersion);
+
+                        result.setSessionExisted(existed);
+                        result.setAssignedClientIdentifier(clientId == null ? context.getClientContext().getId() : null);
+                        result.setKeepAlive(keepAlive);
+                        result.setProtocolVersion(protocolVersion);
+                        result.setMaxPacketSize(maxPacketSize);
                     }
                 }
             }
@@ -347,6 +396,17 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                     "gateway has reached capacity");
         }
         return null;
+    }
+
+    protected ISession createNewSession(IMqttsnMessageContext context) throws MqttsnException {
+        //-- THIS IS WHERE A SESSION IS CREATED ON THE GATEWAY SIDE
+        boolean stateExisted = context.getSession() != null;
+        //ensure we update the context so the session is present for the rest of the message processing
+        ISession session = getRegistry().getSessionRegistry().getSession(context.getClientContext(), true);
+        if(!stateExisted){
+            context.setSession(session);
+        }
+        return session;
     }
 
     @Override

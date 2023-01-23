@@ -1,0 +1,145 @@
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+
+            <h5>Session Information: '<span id="clientId"></span>'</h5>
+            <p>
+                A client session contains a number of objects and acts as a region of storage for a client to buffer data until the client is ready to receive it.
+            </p>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-5 py-y">
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h6 class="fw-bold mb-0 fs-6">Status</h6>
+                        <span class="metric" id="sessionState"></span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h6 class="fw-bold mb-0 fs-6">Queue Size</h6>
+                        <span class="metric" id="queueSize"></span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h6 class="fw-bold mb-0 fs-6">Inflight (Egress)</h6>
+                        <span class="metric" id="inflightEgress"></span>
+                    </div>
+                </div>
+                <div class="col d-flex align-items-start">
+                    <div>
+                        <h6 class="fw-bold mb-0 fs-6">Inflight (Ingress)</h6>
+                        <span class="metric" id="inflightIngress"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Session Details</h5>
+            <table class="table table-striped" id="sessionInfo">
+                <thead>
+                <tr>
+                    <th scope="col">Property</th>
+                    <th scope="col">Value</th>
+                </tr>
+                </thead>
+                <tr>
+                    <td class="label">Protocol Version</td>
+                    <td class="value" id="protocolVersion"></td>
+                </tr>
+                <tr>
+                    <td class="label">Session Started</td>
+                    <td class="value" id="sessionStarted"></td>
+                </tr>
+                <tr>
+                    <td class="label">Last seen</td>
+                    <td class="value" id="lastSeen"></td>
+                </tr>
+                <tr>
+                    <td class="label">Keep Alive</td>
+                    <td class="value" id="keepAlive"></td>
+                </tr>
+                <tr>
+                    <td class="label">Session Expiry Interval</td>
+                    <td class="value" id="sessionExpiryInterval"></td>
+                </tr>
+                <tr>
+                    <td class="label">Time Since Connect</td>
+                    <td class="value" id="timeSinceConnect"></td>
+                </tr>
+                <tr>
+                    <td class="label">Time Since Last Seen</td>
+                    <td class="value" id="timeSinceLastSeen"></td>
+                </tr>
+                <tr>
+                    <td class="label">Network Address</td>
+                    <td class="value" id="networkAddress"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Topic Subscriptions</h5>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Topic Filter</th>
+                    <th scope="col">Granted Quality Of Service</th>
+                </tr>
+                </thead>
+                <tbody id="subscriptionsRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Topic Registrations</h5>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Topic Filter</th>
+                    <th scope="col">Topic Alias</th>
+                    <th scope="col">Registration Confirmed ?</th>
+                </tr>
+                </thead>
+                <tbody id="registrationRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function update(){
+        $.getJSON("/console/session?clientId=" + sessionId, function(data) {
+            console.log(JSON.stringify(data));
+            $.each(data, function(key,val) {
+                $( "#" + key ).html(data[key])
+            });
+            var root = document.getElementById('subscriptionsRoot');
+            removeChildren(root);
+            data['subscriptions'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicFilter}</td><td>${element.QoS}</td></tr>`));
+            var regRoot = document.getElementById('registrationRoot');
+            removeChildren(regRoot);
+            data['registrations'].forEach(element => regRoot.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicFilter}</td><td>${element.alias}</td><td>${element.confirmed}</td></tr>`));
+        })
+    }
+
+    update();
+
+    pageTimer(updateTime, true, function (){
+        update();
+    })
+
+</script>

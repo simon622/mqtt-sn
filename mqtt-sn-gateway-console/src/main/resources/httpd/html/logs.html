@@ -1,0 +1,55 @@
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Logs</h5>
+            <p>
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Created</th>
+                    <th scope="col">Network</th>
+                    <th scope="col">Length</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Packet</th>
+                </tr>
+                </thead>
+                <tbody id="logRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function update(){
+        $.getJSON("/console/logs", function(data) {
+            console.log(JSON.stringify(data));
+            var root = document.getElementById('logRoot');
+            removeChildren(root);
+            data['logs'].forEach(element => {
+                var msg = element.message.id == 0 ? element.message.messageName : element.message.messageName + " (packetId="+element.message.id+")"
+                var error = element.error ? "Error!" : "OK";
+                var dir = element.direction == "INGRESS" ? "--->" : "<---";
+                var datetime = new Date(element.created).toUTCString();
+                dir += "  " + element.context.networkAddress.hostAddress + ":" + element.context.networkAddress.port;
+
+                var messageLink = `<a title='`+JSON.stringify(element.message)+`'>`+msg+`</a>`;
+                root.insertAdjacentHTML('afterbegin', `<tr><td>${datetime}</td><td>${dir}</td><td>${element.size}</td><td>${error}</td><td>${messageLink}</td></tr>`)
+            });
+        })
+    }
+    pageTimer(1000, true, function(){
+        update();
+    });
+</script>
+

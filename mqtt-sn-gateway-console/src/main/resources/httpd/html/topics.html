@@ -1,0 +1,160 @@
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Predefined Topics</h5>
+            <p>
+                Predefined topics can be setup on the runtime options. They are known by the client and the server. Add a new <a href="#" data-bs-toggle="modal" data-bs-target="#newTopic">Predefined Topic</a>.
+            </p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Topic Filter</th>
+                    <th scope="col">Topic Alias</th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="predefinedRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Subscriptions</h5>
+            <p>
+                The table below shows a list of distinct topic filters being used by the runtime and how many associated subscriptions they have. A topic filter can be transient in the system, as a subscription is removed, so the topic filter will disappear in the list below.
+            </p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Topic Filter</th>
+                    <th scope="col">Subscription Count</th>
+                </tr>
+                </thead>
+                <tbody id="normalRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" id="newTopic">
+    <form id="newTopicForm" class="topic-needs-validation" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Predefined Topic Alias</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="topic" class="form-label">Topic Name</label>
+                        <input type="text" class="form-control" id="topic" aria-describedby="topicHelp" required>
+                        <div id="topicHelp" class="form-text">A topic name must be well formed UTF-8 characters.</div>
+                        <div class="invalid-feedback">
+                            Please provide a valid Topic.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="topicAlias" class="form-label">Topic Alias</label>
+                        <input type="text" class="form-control" id="topicAlias" aria-describedby="topicAliasHelp" min="0" max="65353"
+                               required data-bind="value:replyNumber">
+                        <div id="topicAliasHelp" class="form-text">A topic alias must be a number between 1 - 65353.</div>
+                        <div class="invalid-feedback">
+                            Please provide a valid Topic Alias.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-sm btn-success formbtn">Add Predefined Topic Alias</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+
+    (() => {
+        'use strict';
+        //client id
+        const form = document.querySelector('.topic-needs-validation');
+        const btn = document.querySelector('.formbtn');
+
+        btn.addEventListener('click', () => {
+            // Creating the event
+            const event = new Event('submit', {
+                'bubbles': true,
+                'cancelable': true
+            });
+
+            form.dispatchEvent( event );
+        })
+
+        form.addEventListener('submit', (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                var formData = {
+                    topic: $("#topic").val(),
+                    topicAlias: $("#topicAlias").val()
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/console/topic/add?type=predefined",
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    encode: false,
+                }).
+                done(function (data) {
+                    renderMessage(data);
+                    update();
+                });
+
+                $("#topic").val('');
+                $("#topicAlias").val('');
+                var myModalEl = document.getElementById('newTopic');
+                var modal = bootstrap.Modal.getInstance(myModalEl)
+                modal.hide();
+            }
+            form.classList.add('was-validated');
+
+        }, false);
+    })();
+
+    function update(){
+        $.getJSON("/console/topic", function(data) {
+            var root = document.getElementById('predefinedRoot');
+            removeChildren(root);
+            data['predefinedTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.alias}</td><td><a href="#" onclick="removeTopic('${element.topicPath}');">remove</a></td></tr>`));
+
+            var root = document.getElementById('normalRoot');
+            removeChildren(root);
+            data['normalTopics'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.topicPath}</td><td>${element.subscriptionCount}</td></tr>`));
+        })
+    }
+
+    function removeTopic(topic){
+        $.ajax({
+            type: "GET",
+            url: "/console/topic?remove=" + encodeURIComponent(topic),
+            encode: true,
+        }).
+        done(function (data) {
+            renderMessage(data);
+            update();
+        });
+    }
+
+    update();
+
+    pageTimer(updateTime, true, function (){
+        update();
+    })
+</script>

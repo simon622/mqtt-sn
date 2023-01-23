@@ -1,0 +1,144 @@
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>MQTT-SN Cloud Access</h5>
+            <p>
+                You can link this installation with a cloud account which will give you access to some cloud services that would otherwise
+                not be available. Simply add your details below and click register / update.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <form id="account-needs-validation">
+            <h5>Cloud Registration</h5>
+
+            <div class="mb-3">
+                <label for="companyName" class="form-label">Company Name</label>
+                <input type="text" class="form-control" id="companyName" name="companyName" required>
+                <div class="invalid-feedback">
+                    You must provide a company name
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="emailAddress" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="emailAddress" name="emailAddress" aria-describedby="emailHelp" required>
+                <div id="emailHelp" class="form-text">Your email will never be shared with anyone.</div>
+                <div class="invalid-feedback">
+                    Please provide a valid Email Address.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="firstName" class="form-label">Firstname</label>
+                <input type="text" class="form-control" id="firstName" name="firstName">
+                <div class="invalid-feedback">
+                    Please provide a First name value.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="lastName" class="form-label">Lastname</label>
+                <input type="text" class="form-control" id="lastName" name="lastName">
+                <div class="invalid-feedback">
+                    Please provide a Last name value.
+                </div>
+            </div>
+            <button type="button" id="regbtn" class="btn btn-sm btn-success formbtn">Register</button>
+            <button type="button" id="deregbtn" class="btn btn-sm btn-danger" disabled>De-Register</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    (() => {
+        'use strict';
+        //client id
+        const form = document.querySelector('#account-needs-validation');
+        const btn = document.querySelector('.formbtn');
+        const deregister = document.querySelector('#deregbtn');
+
+        deregister.addEventListener('click', () => {
+            $.ajax({
+                type: "GET",
+                url: "/console/cloud?dereg=true",
+                success : function (data){
+                    updateTable();
+                    renderMessage(data);
+                },
+                error : function (data){
+                    updateTable();
+                    renderMessage(data);
+                }
+            });
+        })
+
+
+        btn.addEventListener('click', () => {
+            // Creating the event
+            const event = new Event('submit', {
+                'bubbles': true,
+                'cancelable': true
+            });
+
+            form.dispatchEvent( event );
+        })
+
+        form.addEventListener('submit', (event) => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                var formData = formToJSON(form.elements);
+                $.ajax({
+                    type: "POST",
+                    url: "/console/cloud",
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    encode: false,
+                }).
+                done(function (data) {
+                    updateTable();
+                    renderMessage(data);
+                });
+            }
+            form.classList.add('was-validated');
+
+        }, false);
+    })();
+
+    function updateTable(){
+        $.ajax({
+            type: "GET",
+            url: "/console/cloud",
+            success : function (data){
+                if(isEmpty(data)){
+                    document.getElementById('firstName').value = '';
+                    document.getElementById('lastName').value = '';
+                    document.getElementById('companyName').value = '';
+                    document.getElementById('emailAddress').value = '';
+                    document.getElementById('emailAddress').disabled = false;
+                    document.getElementById('regbtn').disabled = false;
+                    document.getElementById('deregbtn').disabled = true;
+                    disableCloudServices();
+                } else {
+                    console.log(JSON.stringify(data));
+                    document.getElementById('firstName').value = data.firstName;
+                    document.getElementById('lastName').value = data.lastName;
+                    document.getElementById('companyName').value = data.companyName;
+                    document.getElementById('emailAddress').value = data.emailAddress;
+                    document.getElementById('emailAddress').disabled = true;
+                    document.getElementById('regbtn').disabled = true;
+                    document.getElementById('deregbtn').disabled = false;
+                    enableCloudServices();
+                }
+            }
+        });
+    }
+    updateTable();
+</script>

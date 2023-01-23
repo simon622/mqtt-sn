@@ -1,0 +1,36 @@
+<div class="row">
+    <div class="col">
+        <div class="bd-callout bd-callout-info">
+            <h5>Dead Letter Queue</h5>
+            <p>
+                The dead letter queue is a place where messages are placed when they are unable to be delivered. The reasons for delivery failure could be things ranging from connectivity, max queue sizes exceeded, nature of payload or simply internal errors being encountered.
+            </p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Created</th>
+                    <th scope="col">Client Id</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">QoS</th>
+                    <th scope="col">Topic Path</th>
+                </tr>
+                </thead>
+                <tbody id="dlqRoot">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function update(){
+        $.getJSON("/console/dlq", function(data) {
+            var root = document.getElementById('dlqRoot');
+            removeChildren(root);
+
+            console.log(data['list']);
+            data['list'].forEach(element => root.insertAdjacentHTML('afterbegin', `<tr><td>${element.applicationMessage.created}</td><td>${element.context.id}</td><td>${element.reason}</td><td>${element.applicationMessage.grantedQoS}</td><td>${element.applicationMessage.data.topicPath}</td></tr>`));
+        })
+    }
+    update();
+</script>

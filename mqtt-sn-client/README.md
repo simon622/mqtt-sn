@@ -10,6 +10,9 @@ Configure your details using the code below and run Example.
 public class Example {
     public static void main(String[] args) throws Exception {
 
+        MqttsnFilesystemStorageService filesystemStorageService =
+                new MqttsnFilesystemStorageService();
+
         //-- use the client transport options, which will use random unallocated local ports
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
 
@@ -24,7 +27,7 @@ public class Example {
 
         //-- using a default configuration for the controllers will just work out of the box, alternatively
         //-- you can supply your own implementations to change underlying storage or business logic as is required
-        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(options).
+        AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(filesystemStorageService, options).
                 withTransport(new MqttsnUdpTransport(udpOptions)).
                 //-- select the codec you wish to use, support for SN 1.2 is standard or you can nominate your own
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
@@ -39,7 +42,7 @@ public class Example {
             client.start(registry);
 
             //-- register any publish receive listeners you require
-            client.registerReceivedListener((IMqttsnContext context, String topic, int qos, byte[] data) -> {
+            client.registerPublishReceivedListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 receiveCounter.incrementAndGet();
                 System.err.println(String.format("received message [%s] [%s]",
                         receiveCounter.get(), new String(data, MqttsnConstants.CHARSET)));
@@ -47,10 +50,12 @@ public class Example {
             });
 
             //-- register any publish sent listeners you require
-            client.registerSentListener((IMqttsnContext context, UUID messageId, String topic, int qos, byte[] data) -> {
+            client.registerPublishSentListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {
                 System.err.println(String.format("sent message [%s]",
                         new String(data, MqttsnConstants.CHARSET)));
             });
+
+
 
             //-- issue a connect command - the method will block until completion
             client.connect(360, true);
@@ -59,7 +64,7 @@ public class Example {
             client.subscribe("my/example/topic/1", 2);
 
             //-- issue a publish command - the method will queue the message for sending and return immediately
-            client.publish("my/example/topic/1", 1,  "hello world".getBytes());
+            client.publish("my/example/topic/1", 1,  false, "hello world".getBytes());
 
             //-- wait for the sent message to be looped back before closing
             latch.await(30, TimeUnit.SECONDS);

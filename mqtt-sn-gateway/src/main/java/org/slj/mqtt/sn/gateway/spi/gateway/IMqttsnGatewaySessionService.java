@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.gateway.spi.gateway;
 
 import org.slj.mqtt.sn.gateway.spi.*;
+import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
@@ -39,7 +40,7 @@ public interface IMqttsnGatewaySessionService extends IMqttsnService {
 
     //-- methods that delegate to the backend
 
-    ConnectResult connect(ISession state, IMqttsnMessage message) throws MqttsnException;
+    ConnectResult connect(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException;
 
     SubscribeResult subscribe(ISession state, TopicInfo info, IMqttsnMessage message) throws MqttsnException;
 

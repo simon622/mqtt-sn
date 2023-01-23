@@ -533,19 +533,21 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
 
     private void notifySessions(){
         try {
-            Iterator<ISession> sessionIterator = getRegistry().getSessionRegistry().iterator();
-            while(sessionIterator.hasNext()){
-                ISession session = sessionIterator.next();
-                if(session.getClientState() != ClientState.LOST){
-                    //notify all sessions of going away exception LOST sessions
-                    try {
-                        logger.warn("notifying {} is going away", session);
-                        IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
-                                MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, "Gateway going away");
-                        getRegistry().getTransportLocator().writeToTransport(
-                                getRegistry().getNetworkRegistry().getContext(session.getContext()), disconnect);
-                    } catch(Exception e){
-                        logger.warn("unable to send disconnect {}", e.getMessage());
+            if(getRegistry().getSessionRegistry().countTotalSessions() > 0){
+                Iterator<ISession> sessionIterator = getRegistry().getSessionRegistry().iterator();
+                while(sessionIterator.hasNext()){
+                    ISession session = sessionIterator.next();
+                    if(session.getClientState() != ClientState.LOST){
+                        //notify all sessions of going away exception LOST sessions
+                        try {
+                            logger.warn("notifying {} is going away", session);
+                            IMqttsnMessage disconnect = getRegistry().getMessageFactory().createDisconnect(
+                                    MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, "Gateway going away");
+                            getRegistry().getTransportLocator().writeToTransport(
+                                    getRegistry().getNetworkRegistry().getContext(session.getContext()), disconnect);
+                        } catch(Exception e){
+                            logger.warn("unable to send disconnect {}", e.getMessage());
+                        }
                     }
                 }
             }

@@ -162,8 +162,8 @@ public abstract class AbstractMqttsnTransport
 
     @Override
     public Future<IPacketTXRXJob> writeToTransport(INetworkContext context, IMqttsnMessage message) {
-        byte[] data = registry.getCodec().encode(message);
-        return super.writeToTransport(context, data);
+//        byte[] data = registry.getCodec().encode(message);
+        return writeMqttSnMessageToTransport(context, message, true);
     }
 
     protected Future<IPacketTXRXJob> writeMqttSnMessageToTransport(INetworkContext context, IMqttsnMessage message, boolean notifyListeners){

@@ -38,6 +38,7 @@ import org.slj.mqtt.sn.utils.radix.RadixTree;
 import org.slj.mqtt.sn.utils.radix.RadixTreeImpl;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created bean based session objects which can encapsulate the storage of session elements
@@ -49,7 +50,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         searchTree = new RadixTreeImpl<>();
         super.start(runtime);
-        sessionLookup = new HashMap();
+        sessionLookup = new ConcurrentHashMap<>();
         registerMetrics(runtime);
     }
 
@@ -92,6 +93,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
 
     @Override
     public Iterator<ISession> iterator() {
+        if(sessionLookup == null) return Collections.emptyIterator();
         synchronized (sessionLookup){
             return new HashSet<>(sessionLookup.values()).iterator();
         }
@@ -188,6 +190,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
 
     @Override
     public long countTotalSessions() {
+        if(sessionLookup == null) return 0;
         synchronized (sessionLookup){
             return sessionLookup.size();
         }
@@ -195,6 +198,7 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
 
     @Override
     public boolean hasSession(IClientIdentifierContext context) {
+
         return sessionLookup.containsKey(context);
     }
 

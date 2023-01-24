@@ -52,8 +52,14 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         return instance;
     }
 
+
     @Override
-    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval) throws MqttsnCodecException {
+    public IMqttsnMessage createAuth(String method, byte[] data) throws MqttsnCodecException {
+        return new MqttsnAuth(method, data);
+    }
+
+    @Override
+    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean auth, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval) throws MqttsnCodecException {
 
         MqttsnConnect_V2_0 msg = new MqttsnConnect_V2_0();
         msg.setClientId(clientId);
@@ -64,6 +70,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setDefaultAwakeMessages(defaultAwakeMessages);
         msg.setSessionExpiryInterval(sessionExpiryInterval);
         msg.validate();
+        msg.setAuth(auth);
         return msg;
     }
 

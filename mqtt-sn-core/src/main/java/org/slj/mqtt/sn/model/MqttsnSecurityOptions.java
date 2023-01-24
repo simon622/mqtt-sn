@@ -59,6 +59,11 @@ public class MqttsnSecurityOptions {
      */
     public final String DEFAULT_INTEGRITY_KEY = "u6670-sddsd-22ys8uj";
 
+    /**
+     * If present, provides SASL Auth exchange
+     */
+    private IAuthHandler authHandler;
+
     private String integrityKey = DEFAULT_INTEGRITY_KEY;
     private INTEGRITY_TYPE integrityType = DEFAULT_INTEGRITY_TYPE;
     private INTEGRITY_POINT integrityPoint = DEFAULT_INTEGRITY_POINT;
@@ -85,6 +90,10 @@ public class MqttsnSecurityOptions {
         return integrityChecksumAlgorithm;
     }
 
+    public IAuthHandler getAuthHandler(){
+        return authHandler;
+    }
+
     public MqttsnSecurityOptions withIntegrityKey(String integrityKey){
         this.integrityKey = integrityKey;
         return this;
@@ -107,6 +116,11 @@ public class MqttsnSecurityOptions {
 
     public MqttsnSecurityOptions withIntegrityType(INTEGRITY_TYPE integrityType){
         this.integrityType = integrityType;
+        return this;
+    }
+
+    public MqttsnSecurityOptions withAuthHandler(IAuthHandler authHandler){
+        this.authHandler = authHandler;
         return this;
     }
 }

@@ -44,7 +44,7 @@ public class ExampleUsage {
 
         //-- construct a connect message with your required configuration
         IMqttsnMessage connect =
-                factory.createConnect("testClientId", 60, false, true, 1024, 0, 0);
+                factory.createConnect("testClientId", 60, false, false,true, 1024, 0, 0);
 
         System.out.println(connect);
 

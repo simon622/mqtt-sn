@@ -47,7 +47,7 @@ public class MqttsnInMemorySubscriptionRegistry
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
         tree.setMaxMembersAtLevel(1024 * 1024);
         tree.addWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
         tree.addWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);

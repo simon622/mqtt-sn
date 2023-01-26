@@ -41,7 +41,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.slj</groupId>
+            <groupId>org.mqtt-sn</groupId>
             <artifactId>mqtt-sn-codec</artifactId>
             <version>${mqtt-sn.version}</version>
         </dependency>

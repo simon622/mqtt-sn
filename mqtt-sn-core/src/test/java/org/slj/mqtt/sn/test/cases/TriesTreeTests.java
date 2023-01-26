@@ -28,6 +28,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.utils.Environment;
 import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
 import org.slj.mqtt.sn.utils.tree.PathTriesTree;
 
@@ -82,6 +83,32 @@ public class TriesTreeTests {
         Arrays.fill(members, UUID.randomUUID().toString());
         tree.addPath(topic, members);
     }
+
+    @Test
+    public void testComp() throws Exception {
+//        Thread.sleep(20000);
+
+        long used = Environment.getUsedMemoryKb();
+        PathTriesTree<String> tree = createTreeDefaultConfig();
+        for (int i = 0; i < 10000; i++){
+            for(int x = 0; x < 1000; x++){
+                tree.addPath("some/topic/1/"+i, "subscriber"+x);
+            }
+        }
+        long after = Environment.getUsedMemoryKb();
+System.err.println("used " + (after -  used));
+        for (int i = 0; i < 100; i++){
+            long start = System.currentTimeMillis();
+            Set<String> s = tree.searchMembers("some/topic/1/" + i);
+System.err.println(System.currentTimeMillis() - start + "ms");
+            Assert.assertEquals(1000, s.size());
+
+        }
+
+
+    }
+
+
 
     @Test
     public void testTopLevelTokenMatch() throws TriesTreeLimitExceededException {
@@ -168,7 +195,7 @@ public class TriesTreeTests {
     @Test
     public void testPathExistenceInBigTree() throws TriesTreeLimitExceededException, InterruptedException {
 
-        PathTriesTree<Integer> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<Integer> tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
         String search = "some/member";
         String searchNoMem = "/some/member";
 
@@ -224,7 +251,7 @@ public class TriesTreeTests {
     }
 
     protected static PathTriesTree<String> createTreeDefaultConfig(){
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.TOPIC_SEPARATOR_REGEX, "/", true);
+        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
         tree.addWildcard("#");
         tree.addWildpath("+");
         return tree;

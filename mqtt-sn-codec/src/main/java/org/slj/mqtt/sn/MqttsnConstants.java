@@ -32,6 +32,7 @@ public interface MqttsnConstants {
     //-- topic path separator regex with lookahead and lookbehind to maintain tokens
     String TOPIC_SEPARATOR_REGEX = "((?<=/)|(?=/))";
 
+
     //-- protocol versions
     int PROTOCOL_VERSION_UNKNOWN = 0x00;
     int PROTOCOL_VERSION_1_2 = 0x01;

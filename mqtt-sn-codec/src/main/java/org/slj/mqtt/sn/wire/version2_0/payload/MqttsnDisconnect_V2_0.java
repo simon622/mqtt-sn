@@ -30,6 +30,7 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnDisconnectPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.nio.charset.StandardCharsets;
 
@@ -37,6 +38,10 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
 
     protected long sessionExpiryInterval;
     protected String reasonString;
+    protected boolean retainRegistrations;
+    protected boolean reasonStringExists;
+    protected boolean sessionExpiryIntervalSet;
+    protected boolean reasonCodeExists;
 
     @Override
     public int getMessageType() {
@@ -52,6 +57,7 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
     }
 
     public void setSessionExpiryInterval(long sessionExpiryInterval) {
+        sessionExpiryIntervalSet = true;
         this.sessionExpiryInterval = sessionExpiryInterval;
     }
 
@@ -59,18 +65,66 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
         return reasonString;
     }
 
+    public boolean isRetainRegistrations() {
+        return retainRegistrations;
+    }
+
+    public void setRetainRegistrations(boolean retainRegistrations) {
+        this.retainRegistrations = retainRegistrations;
+    }
+
     public void setReasonString(String reasonString) {
+        if(reasonString !=null ) reasonStringExists = true;
         this.reasonString = reasonString;
     }
 
     @Override
+    public void setReturnCode(int returnCode) {
+        reasonCodeExists = true;
+        super.setReturnCode(returnCode);
+    }
+
+    protected void readFlags(byte v) {
+        /**
+         Reserved       ReasonCodePresent       Session Exp Present     ReasonString Present RetainRegistrations
+         (7,6,5,4)     (3)                          (2)                     (1)                     (0)
+         **/
+
+        reasonCodeExists = (v & 0x08) != 0;
+        sessionExpiryIntervalSet = (v & 0x04) != 0;
+        reasonStringExists = (v & 0x02) != 0;
+        retainRegistrations = (v & 0x01) != 0;
+    }
+
+    protected byte writeFlags() {
+        /**
+         Reserved       ReasonCodePresent       Session Exp Present     ReasonString Present RetainRegistrations
+         (7,6,5,4)     (3)                          (2)                     (1)                     (0)
+         **/
+
+        byte v = 0x00;
+        if(getReturnCode() > 0) v |= 0x08;
+        if(sessionExpiryInterval > 0)  v |= 0x04;
+        if(reasonString != null)  v |= 0x02;
+        if(retainRegistrations)  v |= 0x01;
+        return v;
+    }
+
+    @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        returnCode = readUInt8Adjusted(data, 2);
-        if(data.length > 3){
-            sessionExpiryInterval = readUInt32Adjusted(data, 3);
-            if(data.length > 7){
-//                reasonString = new String(readRemainingBytesAdjusted(data, 7), MqttsnConstants.CHARSET);
-                reasonString = readUTF8EncodedStringAdjusted(data, 7);
+
+        if(data.length > 2){
+            readFlags(readHeaderByteWithOffset(data, 2));
+            int idx = 3;
+            if(reasonCodeExists){
+                returnCode = readUInt8Adjusted(data, idx++);
+            }
+            if(sessionExpiryIntervalSet){
+                sessionExpiryInterval = readUInt32Adjusted(data, idx);
+                idx += 4;
+            }
+            if(reasonStringExists){
+                reasonString = readRemainingUTF8EncodedAdjustedNoLength(data, idx);
             }
         }
     }
@@ -82,11 +136,15 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
         byte[] msg;
 
         int length = 3;
-        if(sessionExpiryInterval > 0 || reasonString != null){
+
+        if(returnCode > 0){
+            length += 1;
+        }
+        if(sessionExpiryInterval > 0){
             length += 4;
         }
         if(reasonString != null){
-            length += reasonString.length() + 2;
+            length += reasonString.length();
         }
 
         int idx = 0;
@@ -103,17 +161,19 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
         }
 
         msg[idx++] = (byte) getMessageType();
-        msg[idx++] = (byte) getReturnCode();
+        msg[idx++] = writeFlags();
 
+        if(returnCode > 0){
+            msg[idx++] = (byte) getReturnCode();
+        }
 
-        if(sessionExpiryInterval > 0 || reasonString != null){
+        if(sessionExpiryInterval > 0){
             writeUInt32(msg, idx, sessionExpiryInterval);
             idx += 4;
-            if(reasonString != null){
-                writeUTF8EncodedStringData(msg, idx, reasonString);
-//                byte[] reasonBytes = reasonString.getBytes(MqttsnConstants.CHARSET);
-//                System.arraycopy(reasonBytes, 0, msg, idx, reasonBytes.length);
-            }
+        }
+
+        if(reasonString != null){
+            writeUTF8EncodedStringDataNoLength(msg, idx, reasonString);
         }
 
         return msg;
@@ -123,14 +183,19 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateReturnCode(returnCode);
         if(sessionExpiryInterval > 0) MqttsnSpecificationValidator.validateUInt32(sessionExpiryInterval);
+        MqttsnSpecificationValidator.validStringData(reasonString, true);
     }
 
     @Override
     public String toString() {
         return "MqttsnDisconnect_V2_0{" +
-                "returnCode=" + returnCode +
+                "reasonCode=" + returnCode +
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", reasonString='" + reasonString + '\'' +
+                ", retainRegistrations=" + retainRegistrations +
+                ", reasonStringExists=" + reasonStringExists +
+                ", sessionExpiryIntervalSet=" + sessionExpiryIntervalSet +
+                ", reasonCodeExists=" + reasonCodeExists +
                 '}';
     }
 }

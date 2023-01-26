@@ -100,17 +100,10 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
 
     protected long readUInt32Adjusted(byte[] data, int startIdx) {
 
-        /*
-        return ((readHeaderByteWithOffset(data, startIdx) & 0xFF) <<  0) |
-                        ((readHeaderByteWithOffset(data, startIdx + 1) & 0xFF) <<  8) |
-                        ((readHeaderByteWithOffset(data, startIdx + 2) & 0xFF) << 16) |
-                        ((long) (readHeaderByteWithOffset(data, startIdx + 3) & 0xFF) << 24);
-         */
-
-        return ((readHeaderByteWithOffset(data, startIdx) & 0xFF) << 24) |
-                        ((readHeaderByteWithOffset(data, startIdx + 1) & 0xFF) <<  16) |
-                        ((readHeaderByteWithOffset(data, startIdx + 2) & 0xFF) << 8) |
-                        ((long) (readHeaderByteWithOffset(data, startIdx + 3) & 0xFF));
+        return  ((long) (readHeaderByteWithOffset(data, startIdx) & 0xFF) << 24) |
+                ((long) (readHeaderByteWithOffset(data, startIdx + 1) & 0xFF) <<  16) |
+                ((long) (readHeaderByteWithOffset(data, startIdx + 2) & 0xFF) << 8) |
+                ((long) (readHeaderByteWithOffset(data, startIdx + 3) & 0xFF));
     }
 
     protected String readUTF8EncodedStringAdjusted(byte[] data, int startIdx) {

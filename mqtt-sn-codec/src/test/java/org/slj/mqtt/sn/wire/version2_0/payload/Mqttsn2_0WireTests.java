@@ -106,7 +106,7 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
 
     @Test
     public void testMqttsnDisconnectWithSessionExpiry() throws MqttsnCodecException {
-        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_32 / 2);
+        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_32 / 2, false);
         testWireMessage(message);
 
         byte[] arr = codec.encode(message);
@@ -150,6 +150,43 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
 
         message = (MqttsnPublish_V2_0)
                 factory.createPublish(MqttsnConstants.QoSM1, true, true, "ab", payload(4));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnDisconnectSimple() throws MqttsnCodecException {
+
+        MqttsnDisconnect_V2_0 message = (MqttsnDisconnect_V2_0)
+                factory.createDisconnect();
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnDisconnectWithSEI() throws MqttsnCodecException {
+
+        MqttsnDisconnect_V2_0 message = (MqttsnDisconnect_V2_0)
+                factory.createDisconnect(6006, true);
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnDisconnectWithReturnCodeAndReason() throws MqttsnCodecException {
+
+        MqttsnDisconnect_V2_0 message = (MqttsnDisconnect_V2_0)
+                factory.createDisconnect(MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE, "The server is presently unavailable at this time");
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnDisconnectWithRetainRegistrations() throws MqttsnCodecException {
+
+
+        MqttsnDisconnect_V2_0 message = (MqttsnDisconnect_V2_0)
+                factory.createDisconnect(6006, false);
+        testWireMessage(message);
+
+        message = (MqttsnDisconnect_V2_0)
+                factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_32 - 1, true);
         testWireMessage(message);
     }
 }

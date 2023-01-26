@@ -70,8 +70,6 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     @Override
     public IMqttsnMessage createConnack(int returnCode) throws MqttsnCodecException {
 
-        //TODO
-
         MqttsnConnack_V2_0 msg = new MqttsnConnack_V2_0();
         msg.setReturnCode(returnCode);
         msg.setAssignedClientId(null);

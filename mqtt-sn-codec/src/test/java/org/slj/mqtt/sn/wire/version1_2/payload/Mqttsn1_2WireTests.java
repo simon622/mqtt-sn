@@ -131,6 +131,7 @@ public class Mqttsn1_2WireTests {
         testWireMessage(message);
     }
 
+
     @Test
     public void testMqttsnPublishNormalTopic() throws MqttsnCodecException {
 
@@ -157,6 +158,38 @@ public class Mqttsn1_2WireTests {
     public void testMqttsnPublishLong() throws MqttsnCodecException {
 
         IMqttsnMessage message = factory.createPublish(_qos, true, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoS0() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS0, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoS1() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS1, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoS2() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS2, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoSM1() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoSM1, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
                 payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
         testWireMessage(message);
     }
@@ -353,17 +386,19 @@ public class Mqttsn1_2WireTests {
         IMqttsnMessage decoded = codec.decode(arr);
         String afterToString = decoded.toString();
 
-        System.out.println(String.format("after [%s] -> [%s]", afterToString, codec.print(message)));
-
         //-- first ensure the toStrings match since they contain the important data fields for each type
         Assert.assertEquals("message content should match", toString, afterToString);
+
+        System.out.println(String.format("after [%s] -> [%s]", afterToString, codec.print(decoded)));
 
         //-- re-encode to ensure a full pass of all fields
         byte[] reencoded = codec.encode(decoded);
         Assert.assertArrayEquals("binary content should match", arr, reencoded);
+
+
     }
 
-    static byte[] payload(int size){
+    protected static byte[] payload(int size){
 
         byte[] arr = new byte[size];
         Arrays.fill(arr, _payload);

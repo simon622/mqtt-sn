@@ -118,6 +118,7 @@ public interface MqttsnConstants {
     byte REGISTER = 0x0A;
     byte REGACK = 0x0B;
     byte PUBLISH = 0x0C;
+    byte PUBLISH_M1 = 0x11;
     byte PUBACK = 0x0D;
     byte PUBCOMP = 0x0E;
     byte PUBREC = 0x0F;

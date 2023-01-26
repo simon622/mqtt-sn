@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css?family=JetBrains+Mono');
 
 :root {
-    --primary-color: rgb(205,102,89);
+    /*--primary-color: rgb(205,102,89);*/ /*intli red*/
     /*--primary-color: #244992;*//*blue*/
-    /*--primary-color: rgb(255, 192, 0);*//*yellow*/
+    --primary-color: rgb(255, 192, 0); /*yellow*/
     --secondary-color: #ffffff;
     /*--primary-background-color: rgb(43,43,43);*/
     --primary-background-color: rgb(45, 45, 45);

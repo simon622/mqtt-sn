@@ -132,4 +132,24 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
         Assert.assertEquals("reason string should be match", reason, disconnect.getReasonString());
         Assert.assertEquals("reason code should match", MqttsnConstants.RETURN_CODE_INVALID_TOPIC_ID, disconnect.getReturnCode());
     }
+
+    @Test
+    public void testMqttsnPublishQoSM1ContainsProtocol() throws MqttsnCodecException {
+
+        MqttsnPublish_V2_0 message = (MqttsnPublish_V2_0)
+                factory.createPublish(MqttsnConstants.QoSM1, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias, payload(4));
+        testWireMessage(message);
+
+        message = (MqttsnPublish_V2_0)
+                factory.createPublish(MqttsnConstants.QoSM1, true, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias, payload(4));
+        testWireMessage(message);
+
+        message = (MqttsnPublish_V2_0)
+                factory.createPublish(MqttsnConstants.QoSM1, true, true, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias, payload(4));
+        testWireMessage(message);
+
+        message = (MqttsnPublish_V2_0)
+                factory.createPublish(MqttsnConstants.QoSM1, true, true, "ab", payload(4));
+        testWireMessage(message);
+    }
 }

@@ -37,7 +37,7 @@ import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
 public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
         implements IMqttsnMessageValidator, IMqttsnIdentificationPacket, IMqttsnProtocolVersionPacket, IMqttsnConnectPacket {
 
-    protected int protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
+    protected short protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
     protected boolean auth;
     protected boolean will;
     protected boolean cleanStart;

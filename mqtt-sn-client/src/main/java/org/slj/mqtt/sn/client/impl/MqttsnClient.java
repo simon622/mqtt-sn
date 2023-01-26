@@ -402,7 +402,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
         logger.info("sleeping for {} seconds", sessionExpiryInterval);
         ISession state = checkSession(true);
-        IMqttsnMessage message = registry.getMessageFactory().createDisconnect(sessionExpiryInterval);
+        IMqttsnMessage message = registry.getMessageFactory().createDisconnect(sessionExpiryInterval, false);
         synchronized (functionMutex){
             MqttsnWaitToken token = registry.getMessageStateService().sendMessage(state.getContext(), message);
             Optional<IMqttsnMessage> response = registry.getMessageStateService().waitForCompletion(state.getContext(), token);

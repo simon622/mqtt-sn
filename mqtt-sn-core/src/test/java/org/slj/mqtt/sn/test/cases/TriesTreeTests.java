@@ -36,7 +36,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TriesTreeTests {
 
@@ -85,6 +87,64 @@ public class TriesTreeTests {
     }
 
     @Test
+    public void testConcurrency() throws Exception {
+
+        PathTriesTree<String> tree = createTreeDefaultConfig();
+
+        int loops = 100;
+        int threads = 50;
+        CountDownLatch latch = new CountDownLatch(loops * threads);
+        long start = System.currentTimeMillis();
+        long beforeRAM = Environment.getUsedMemoryKb();
+        AtomicInteger c = new AtomicInteger();
+
+        for(int t = 0;  t < threads; t++){
+            Thread tt = new Thread(new Runnable(){
+                @Override
+                public void run() {
+                    for (int i = 0; i < loops; i++){
+                        try {
+
+                            String subscriberId = ""+c.incrementAndGet();
+
+                            if(i % 2 == 0){
+                                tree.addPath("some/topic/1",subscriberId);
+                                tree.addPath("some/topic/2",subscriberId);
+                                tree.addPath("some/topic/3",subscriberId);
+                                tree.addPath("some/+/2",""+c.incrementAndGet());
+                                tree.addPath("#",""+c.incrementAndGet());
+                            } else {
+                                for(int r = 0; r < 1000; r++){
+                                    long start = System.currentTimeMillis();
+                                    Set<String> s = tree.searchMembers("some/topic/1");
+//                                    System.err.println("read took " + (System.currentTimeMillis() - start) + "ms for " + s.size());
+                                }
+                            }
+
+                        } catch(Exception e){
+                            e.printStackTrace();
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
+                }
+            });
+            tt.start();
+        }
+
+        latch.await();
+        long afterRAM = Environment.getUsedMemoryKb();
+
+        System.err.println("write took " + (System.currentTimeMillis() - start) + "ms");
+        System.err.println("used " + (afterRAM -  beforeRAM) + "kb of RAM");
+
+        start = System.currentTimeMillis();
+        Set<String> s = tree.searchMembers("some/topic/2");
+        System.err.println("path had " + s.size() + " subscribers in " + (System.currentTimeMillis() - start));
+        Assert.assertEquals("member output should match",7500, s.size());
+    }
+
+    @Test
     public void testComp() throws Exception {
 //        Thread.sleep(20000);
 
@@ -96,11 +156,11 @@ public class TriesTreeTests {
             }
         }
         long after = Environment.getUsedMemoryKb();
-System.err.println("used " + (after -  used));
+        System.err.println("used " + (after -  used));
         for (int i = 0; i < 100; i++){
             long start = System.currentTimeMillis();
             Set<String> s = tree.searchMembers("some/topic/1/" + i);
-System.err.println(System.currentTimeMillis() - start + "ms");
+            System.err.println(System.currentTimeMillis() - start + "ms");
             Assert.assertEquals(1000, s.size());
 
         }
@@ -254,6 +314,7 @@ System.err.println(System.currentTimeMillis() - start + "ms");
         PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
         tree.addWildcard("#");
         tree.addWildpath("+");
+        tree.setMaxMembersAtLevel(1000000);
         return tree;
     }
 }

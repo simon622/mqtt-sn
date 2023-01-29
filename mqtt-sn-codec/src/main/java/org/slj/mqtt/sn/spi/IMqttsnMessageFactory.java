@@ -388,7 +388,7 @@ public interface IMqttsnMessageFactory {
      *
      * @param sessionExpiryInterval - length of sleeping session
      */
-    IMqttsnMessage createDisconnect(long sessionExpiryInterval)
+    IMqttsnMessage createDisconnect(long sessionExpiryInterval, boolean retainRegistrations)
             throws MqttsnCodecException;
 
     /**

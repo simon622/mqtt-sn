@@ -59,11 +59,11 @@
             <artifactId>mqtt-sn-gateway-connector-paho</artifactId>
             <version>${mqtt-sn.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.slj</groupId>-->
-<!--            <artifactId>mqtt-sn-plc4j</artifactId>-->
-<!--            <version>${mqtt-sn.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.slj</groupId>
+            <artifactId>mqtt-sn-plc4j</artifactId>
+            <version>${mqtt-sn.version}</version>
+        </dependency>
         <dependency>
             <groupId>be.ceau</groupId>
             <artifactId>chart</artifactId>

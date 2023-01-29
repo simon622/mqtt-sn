@@ -382,7 +382,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createDisconnect(long duration) throws MqttsnCodecException {
+    public IMqttsnMessage createDisconnect(long duration, boolean retainRegistrations) throws MqttsnCodecException {
 
         if(duration > MqttsnConstants.UNSIGNED_MAX_16){
             throw new MqttsnCodecException("invalid disconnect duration for codec");

@@ -28,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -37,14 +39,11 @@ import java.util.regex.Pattern;
 public class PathTriesTree<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    final static String[] EMPTY = new String[0];
+    private final char split;
     private static final int DEFAULT_MAX_PATH_SIZE = 1024;
     private static final int DEFAULT_MAX_PATH_SEGMENTS = 1024;
     private static final int DEFAULT_MAX_MEMBERS_AT_LEVEL = 1024 * 10;
-
-    private final String pathSplitStr;
-    private final String pathSplitRegex;
-    private Pattern pattern;
     private Set<String> wildcards = new HashSet<>(4);
     private Set<String> wildpaths = new HashSet<>(4);
     private boolean selfPruningTree;
@@ -61,24 +60,8 @@ public class PathTriesTree<T> {
      * @param selfPruningTree - when removing members, when a leaf is determined to be empty subsequent to the removal operation, should the
      *                        tree at that level be pruned (where it is the last level of the tree)
      */
-    public PathTriesTree(final boolean selfPruningTree){
-        this(null, null, selfPruningTree);
-    }
-
-    /**
-     * Construct your tree taking the immutable configuration for the rest of the life of the tree.
-     *
-     * @param pathSplitRegex - the regex around which to split your tree path, for example '/my/tree/file/system' could be
-     *                       split around '/' which would yield a tree with 4 levels
-     * @param pathSplitStr - the string to use to reconstitute the tree when (NB: this is often the same as the @param pathSplitRegex,
-     *                     but sometimes differs when regex control characters are used).
-     * @param selfPruningTree - when removing members, when a leaf is determined to be empty subsequent to the removal operation, should the
-     *                        tree at that level be pruned (where it is the last level of the tree)
-     */
-    public PathTriesTree(final String pathSplitRegex, final String pathSplitStr, final boolean selfPruningTree){
-        this.pathSplitStr = pathSplitStr.intern();
-        this.pathSplitRegex = pathSplitRegex;
-        this.pattern = pathSplitRegex != null ? Pattern.compile(pathSplitRegex) : null;
+    public PathTriesTree(final char splitChar, final boolean selfPruningTree){
+        this.split = splitChar;
         this.selfPruningTree = selfPruningTree;
         this.root = new TrieNode<T>( null, null);
     }
@@ -163,7 +146,21 @@ public class PathTriesTree<T> {
     }
 
     public boolean hasMembers(final String path){
-        return !searchMembers(path).isEmpty();
+        TrieNode<T> node = getNodeIfExists(path);
+        return node == null ? false: node.hasMembers();
+    }
+
+    protected TrieNode<T> getNodeIfExists(final String path){
+
+        String[] segments = split(path);
+        PathTriesTree.TrieNode node = root;
+        for (int i=0; i < segments.length; i++){
+            node = node.getChild(segments[i]);
+            if(node == null) {
+                return null;
+            }
+        }
+        return node;
     }
 
     public boolean hasPath(String path){
@@ -200,17 +197,17 @@ public class PathTriesTree<T> {
     protected Set<T> searchTreeForMembers(TrieNode<T> node, String[] segments){
 
         if(node == null) throw new NullPointerException("cannot search a null node");
-        Set<T> merged = new HashSet<>();
+
+        Set<T> wildcardMembers = null;
+        Set<T> wildSegmentMembers = null;
+        Set<T> fullMembers = null;
 
         for (int i=0; i < segments.length; i++){
             if(!wildcards.isEmpty()){
                 for (String wildcard: wildcards) {
                     TrieNode<T> wild = node.getChild(wildcard);
                     if(wild != null){
-                        Set<T> members = wild.getMembers();
-                        if(members != null && !members.isEmpty()){
-                            merged.addAll(members);
-                        }
+                        wildcardMembers = wild.getMembers();
                     }
                 }
             }
@@ -222,10 +219,7 @@ public class PathTriesTree<T> {
                         String[] remainingSegments =
                                 Arrays.copyOfRange(segments, i + 1, segments.length);
                         //recurse point
-                        Set<T> wildMembers = searchTreeForMembers(wild, remainingSegments);
-                        if(wildMembers != null && !wildMembers.isEmpty()){
-                            merged.addAll(wildMembers);
-                        }
+                        wildSegmentMembers = searchTreeForMembers(wild, remainingSegments);
                     }
                 }
             }
@@ -234,11 +228,30 @@ public class PathTriesTree<T> {
         }
 
         if(node != null){
-            Set<T> members = node.getMembers();
-            if(!members.isEmpty()){
-                merged.addAll(members);
-            }
+            fullMembers = node.getMembers();
         }
+
+        //avoiding having to resize
+        int size = wildcardMembers != null ? wildcardMembers.size() : 0;
+        size += (wildSegmentMembers != null ? wildSegmentMembers.size() : 0);
+        size += (fullMembers != null ? fullMembers.size() : 0);
+        Set<T> merged = new HashSet<>(size);
+
+        if(wildcardMembers != null &&
+                !wildcardMembers.isEmpty()){
+            merged.addAll(wildcardMembers);
+        }
+
+        if(wildSegmentMembers != null &&
+                !wildSegmentMembers.isEmpty()){
+            merged.addAll(wildSegmentMembers);
+        }
+
+        if(fullMembers != null &&
+                !fullMembers.isEmpty()){
+            merged.addAll(fullMembers);
+        }
+
         return merged;
     }
 
@@ -300,7 +313,40 @@ public class PathTriesTree<T> {
     }
 
     protected String[] split(final String path){
-        return pattern == null ? new String[]{path} : pattern.split(path);
+        return splitNative(path, split, true);
+    }
+
+    protected String[] splitNative(final String str, char separatorChar, boolean preserve){
+        if (str == null) {
+            return null;
+        }
+        final int len = str.length();
+        if (len == 0) {
+            return EMPTY;
+        }
+        final List<String> list = new ArrayList<>();
+        int i = 0;
+        int start = 0;
+        boolean match = false;
+        boolean lMat = false;
+        while (i < len) {
+            if (str.charAt(i) == separatorChar) {
+                if (match || preserve) {
+                    list.add(str.substring(start, i));
+                    match = false;
+                    lMat = true;
+                }
+                start = ++i;
+                continue;
+            }
+            lMat = false;
+            match = true;
+            i++;
+        }
+        if (match || preserve && lMat) {
+            list.add(str.substring(start, i));
+        }
+        return list.toArray(EMPTY);
     }
 
     class TrieNode<T> {
@@ -310,6 +356,8 @@ public class PathTriesTree<T> {
         private TrieNode parent;
         private final boolean isRoot;
         private final Object memberMutex = new Object();
+        private final Object childrenMutex = new Object();
+        private AtomicInteger memberCount = new AtomicInteger(0);
 
         protected TrieNode(final TrieNode parent, final String pathSegment){
             this.parent = parent;
@@ -325,14 +373,14 @@ public class PathTriesTree<T> {
             if(pathSegment == null) throw new IllegalArgumentException("unable to mount <null> leaf to tree");
             TrieNode child;
             if(children == null) {
-                synchronized (this) {
+                synchronized (childrenMutex) {
                     if (children == null) {
-                        children = new HashMap<>(4);
+                        children = new HashMap(4);
                     }
                 }
             }
             if(!children.containsKey(pathSegment)){
-                synchronized (this){
+                synchronized (childrenMutex){
                     if(!children.containsKey(pathSegment)){
                         child = new TrieNode<>(this, pathSegment);
                         children.put(pathSegment, child);
@@ -343,7 +391,7 @@ public class PathTriesTree<T> {
             } else {
                 child = getChild(pathSegment);
             }
-            child.addMembers(membersIn);
+            if(membersIn.length > 0) child.addMembers(membersIn);
             return child;
         }
 
@@ -377,21 +425,25 @@ public class PathTriesTree<T> {
 
         public void removeChild(TrieNode node){
             if(children != null && children.containsKey(node.pathSegment)){
-                synchronized (children){
+                synchronized (childrenMutex){
                     TrieNode removed = children.remove(node.pathSegment);
                     if(removed != node){
                         throw new RuntimeException("node removal inconsistency");
+                    } else {
+                        removed.clear();
                     }
                 }
                 node.parent = null;
             }
         }
 
-        public void addMembers(T... membersIn) throws TriesTreeLimitExceededException {
+        public  void  addMembers(T... membersIn) throws TriesTreeLimitExceededException {
+
             if(members == null && membersIn != null && membersIn.length > 0) {
                 synchronized (memberMutex) {
-                    if(members == null)
-                        members = Collections.synchronizedSet(new HashSet<>(4));
+                    if(members == null){
+                        members = ConcurrentHashMap.newKeySet();
+                    }
                 }
             }
 
@@ -399,18 +451,23 @@ public class PathTriesTree<T> {
                 if(members.size() + membersIn.length > PathTriesTree.this.getMaxMembersAtLevel()){
                     throw new TriesTreeLimitExceededException("member limit exceeded at level");
                 }
-                members.addAll(Arrays.asList(membersIn));
+                for(T m : membersIn){
+                    if(members.add(m)){
+                        memberCount.incrementAndGet();
+                    }
+                }
             }
         }
 
+        public void clear(){
+            if(members != null){
+                members.clear();
+                members = null;
+                memberCount.set(0);
+            }
+        }
         public boolean removeMember(T member){
             return members.remove(member);
-//            if(members != null){
-//                synchronized (members){
-//
-//                }
-//            }
-//            return false;
         }
 
         public Set<T> getMembers(){
@@ -418,10 +475,7 @@ public class PathTriesTree<T> {
                 return Collections.emptySet();
             } else {
                 long start = System.currentTimeMillis();
-                Set<T> t = null;
-                synchronized (members){
-                    t = Collections.unmodifiableSet(new HashSet<>(members));
-                }
+                Set<T> t = Collections.unmodifiableSet(members);
                 if(System.currentTimeMillis() - start > 50){
                     logger.warn("member copy operation took {} for {} members",
                             System.currentTimeMillis() - start, t.size());

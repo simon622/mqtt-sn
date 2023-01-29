@@ -31,8 +31,8 @@ public class MqttsnWireUtils {
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
-    public static int read8bit(byte b1) {
-        return (b1 & 0xFF);
+    public static short read8bit(byte b1) {
+        return (short) (b1 & 0xFF);
     }
 
     public static int read16bit(byte b1, byte b2) {
@@ -65,5 +65,15 @@ public class MqttsnWireUtils {
         byte[] copy = new byte[copyLength];
         System.arraycopy(buf, off, copy, 0, copyLength);
         return copy;
+    }
+
+    public static int readMessageType(byte[] data) {
+        int msgType;
+        if (data[0] == 0x01) {
+            msgType = (data[3] & 0xFF);
+        } else {
+            msgType = (data[1] & 0xFF);
+        }
+        return msgType;
     }
 }

@@ -33,8 +33,10 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.spi.IMqttsnCodec;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.util.Arrays;
+import java.util.BitSet;
 
 public class Mqttsn1_2WireTests {
 
@@ -99,7 +101,7 @@ public class Mqttsn1_2WireTests {
     @Test
     public void testMqttsnDisconnectWithDuration() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_16);
+        IMqttsnMessage message = factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_16, false);
         testWireMessage(message);
     }
 
@@ -131,6 +133,7 @@ public class Mqttsn1_2WireTests {
         testWireMessage(message);
     }
 
+
     @Test
     public void testMqttsnPublishNormalTopic() throws MqttsnCodecException {
 
@@ -157,6 +160,38 @@ public class Mqttsn1_2WireTests {
     public void testMqttsnPublishLong() throws MqttsnCodecException {
 
         IMqttsnMessage message = factory.createPublish(_qos, true, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoS0() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS0, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoS1() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS1, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoS2() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS2, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+        testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnPublishQoSM1() throws MqttsnCodecException {
+
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoSM1, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
                 payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
         testWireMessage(message);
     }
@@ -353,7 +388,7 @@ public class Mqttsn1_2WireTests {
         IMqttsnMessage decoded = codec.decode(arr);
         String afterToString = decoded.toString();
 
-        System.out.println(String.format("after [%s] -> [%s]", afterToString, codec.print(message)));
+        System.out.println(String.format("after [%s] -> [%s]", afterToString, codec.print(decoded)));
 
         //-- first ensure the toStrings match since they contain the important data fields for each type
         Assert.assertEquals("message content should match", toString, afterToString);
@@ -361,9 +396,46 @@ public class Mqttsn1_2WireTests {
         //-- re-encode to ensure a full pass of all fields
         byte[] reencoded = codec.encode(decoded);
         Assert.assertArrayEquals("binary content should match", arr, reencoded);
+
+
     }
 
-    static byte[] payload(int size){
+
+    @Test
+    public void testFlags() throws MqttsnCodecException {
+
+        boolean b7 = true;
+        boolean b6 = true;
+        boolean b5 = true;
+        boolean b4 = true;
+        boolean b3 = false;
+        boolean b2 = true;
+        boolean b1 = true;
+        boolean b0 = false;
+
+        byte b = 0b00;
+
+        if(b7) b |= 0x80;
+        if(b6) b |= 0x40;
+        if(b5) b |= 0x20;
+        if(b4) b |= 0x10;
+        if(b3) b |= 0x08;
+        if(b2) b |= 0x04;
+        if(b1) b |= 0x02;
+        if(b0) b |= 0x01;
+
+        System.out.println(MqttsnWireUtils.toBinary(b));
+        Assert.assertSame(b7, BitSet.valueOf(new byte[]{b}).get(7));
+        Assert.assertSame(b6, BitSet.valueOf(new byte[]{b}).get(6));
+        Assert.assertSame(b5, BitSet.valueOf(new byte[]{b}).get(5));
+        Assert.assertSame(b4, BitSet.valueOf(new byte[]{b}).get(4));
+        Assert.assertSame(b3, BitSet.valueOf(new byte[]{b}).get(3));
+        Assert.assertSame(b2, BitSet.valueOf(new byte[]{b}).get(2));
+        Assert.assertSame(b1, BitSet.valueOf(new byte[]{b}).get(1));
+        Assert.assertSame(b0, BitSet.valueOf(new byte[]{b}).get(0));
+    }
+
+    protected static byte[] payload(int size){
 
         byte[] arr = new byte[size];
         Arrays.fill(arr, _payload);

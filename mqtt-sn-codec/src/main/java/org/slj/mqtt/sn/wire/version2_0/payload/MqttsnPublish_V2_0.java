@@ -42,6 +42,7 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
     protected int QoS;
     protected int topicIdType;
+    protected short protocolVersion = MqttsnConstants.PROTOCOL_VERSION_2_0;
     protected int topicLength;
     protected byte[] data;
     protected byte[] topicData;
@@ -149,18 +150,39 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PUBLISH;
+        return getQoS() == MqttsnConstants.QoSM1 ? MqttsnConstants.PUBLISH_M1 : MqttsnConstants.PUBLISH;
+    }
+
+    public short getProtocolVersion() {
+        return protocolVersion;
     }
 
     @Override
     public void decode(byte[] arr) throws MqttsnCodecException {
 
-        readFlags(readHeaderByteWithOffset(arr, 2));
+        boolean isPublishM1 = MqttsnWireUtils.readMessageType(arr) == MqttsnConstants.PUBLISH_M1;
+        readFlags(readHeaderByteWithOffset(arr, isPublishM1 ? 3 : 2));
+        int qos = getQoS();
+        if(isPublishM1 && qos != MqttsnConstants.QoSM1){
+            throw new MqttsnCodecException("invalid QoS detected ("+qos+") for PUBLISH_M1 packet type");
+        }
 
         //-- limited format
-        if(getQoS() <= 0){
+        if(qos == MqttsnConstants.QoSM1){
+            protocolVersion = readUInt8Adjusted(arr, 2);
             if(topicIdType == MqttsnConstants.TOPIC_FULL){
-
+                //first 2 bytes of payload are topic length
+                topicLength =  readUInt16Adjusted(arr, 4);
+                setTopicData(readBytesAdjusted(arr, 6, topicLength));
+                data = readRemainingBytesAdjusted(arr,  6 + topicLength);
+            } else {
+                topicLength = 2;
+                setTopicData(readBytesAdjusted(arr, 4, 2));
+                data = readRemainingBytesAdjusted(arr,  6);
+            }
+        }
+        else if(qos == MqttsnConstants.QoS0){
+            if(topicIdType == MqttsnConstants.TOPIC_FULL){
                 //first 2 bytes of payload are topic length
                 topicLength =  readUInt16Adjusted(arr, 3);
                 setTopicData(readBytesAdjusted(arr, 5, topicLength));
@@ -193,7 +215,18 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     public byte[] encode() throws MqttsnCodecException {
 
         byte[] msg;
-        int length = data.length + (topicLength - 2) + (getQoS() <= 0 ? 5 : 7);
+//        int length = data.length + (topicLength - 2) + (getQoS() <= 0 ? 5 : 7);
+
+        int qos = getQoS();
+        int length = data.length + topicLength - 2;
+        if(qos == MqttsnConstants.QoSM1){
+            length += 6;
+        } else if (qos == MqttsnConstants.QoS0) {
+            length += 5;
+        } else {
+            length += 7;
+        }
+
         int idx = 0;
 
         if ((length) > 0xFF) {
@@ -208,6 +241,12 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         }
 
         msg[idx++] = (byte) getMessageType();
+
+        if(qos == MqttsnConstants.QoSM1){
+            //write the protocolVersion
+            msg[idx++] = (byte) protocolVersion;
+        }
+
         msg[idx++] = writeFlags();
 
         //-- encode the packetid for varient 2 packet types
@@ -265,7 +304,9 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         //qos
         if (QoS == MqttsnConstants.QoS1) v |= 0x20;
         else if (QoS == MqttsnConstants.QoS2) v |= 0x40;
-        else if (QoS == MqttsnConstants.QoSM1) v |= 0x60;
+        else if (QoS == MqttsnConstants.QoSM1 || QoS == 3) v |= 0x60;
+        else if (QoS == MqttsnConstants.QoS0);
+        else throw new MqttsnCodecException("unable to write invalid QoS to flags");
 
         //retained publish
         if (retainedPublish) v |= 0x10;
@@ -281,12 +322,12 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     @Override
     public String toString() {
         return "MqttsnPublish_V2_0{" +
-                "id=" + id +
-                ", QoS=" + QoS +
+                "QoS=" + getQoS() +
                 ", topicIdType=" + topicIdType +
+                ", protocolVersion=" + protocolVersion +
                 ", topicLength=" + topicLength +
+                ", data=" + Arrays.toString(data) +
                 ", topicData=" + Arrays.toString(topicData) +
-                ", data.length=" + data.length +
                 ", dupRedelivery=" + dupRedelivery +
                 ", retainedPublish=" + retainedPublish +
                 '}';
@@ -300,6 +341,7 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
         MqttsnSpecificationValidator.validateQoS(getQoS());
         MqttsnSpecificationValidator.validatePublishData(data);
+        MqttsnSpecificationValidator.validateProtocolId(protocolVersion);
 
         //confirm that when the QoS is M1 we have the correct topicIdTypes sets
         if(getQoS() == MqttsnConstants.QoSM1){

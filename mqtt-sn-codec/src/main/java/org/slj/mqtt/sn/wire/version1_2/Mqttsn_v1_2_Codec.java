@@ -146,7 +146,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
         MqttsnSpecificationValidator.validatePacketLength(data);
 
         AbstractMqttsnMessage msg = null;
-        int msgType = readMessageType(data);
+        int msgType = MqttsnWireUtils.readMessageType(data);
 
         switch (msgType) {
             case MqttsnConstants.ADVERTISE:
@@ -279,15 +279,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
         return msg;
     }
 
-    public static int readMessageType(byte[] data) {
-        int msgType;
-        if (data[0] == 0x01) {
-            msgType = (data[3] & 0xFF);
-        } else {
-            msgType = (data[1] & 0xFF);
-        }
-        return msgType;
-    }
+
 
     @Override
     public IMqttsnMessageFactory createMessageFactory() {

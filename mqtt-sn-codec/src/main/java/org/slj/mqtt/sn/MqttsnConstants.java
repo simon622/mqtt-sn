@@ -32,6 +32,7 @@ public interface MqttsnConstants {
     //-- topic path separator regex with lookahead and lookbehind to maintain tokens
     String TOPIC_SEPARATOR_REGEX = "((?<=/)|(?=/))";
 
+
     //-- protocol versions
     int PROTOCOL_VERSION_UNKNOWN = 0x00;
     int PROTOCOL_VERSION_1_2 = 0x01;
@@ -118,6 +119,7 @@ public interface MqttsnConstants {
     byte REGISTER = 0x0A;
     byte REGACK = 0x0B;
     byte PUBLISH = 0x0C;
+    byte PUBLISH_M1 = 0x11;
     byte PUBACK = 0x0D;
     byte PUBCOMP = 0x0E;
     byte PUBREC = 0x0F;

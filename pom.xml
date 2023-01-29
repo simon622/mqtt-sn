@@ -57,7 +57,6 @@
     <modules>
         <module>mqtt-sn-client</module>
         <module>mqtt-sn-cloud-client</module>
-        <module>mqtt-sn-codec</module>
         <module>mqtt-sn-core</module>
         <module>mqtt-sn-gateway</module>
         <module>mqtt-sn-gateway-connector-aws-iotcore</module>

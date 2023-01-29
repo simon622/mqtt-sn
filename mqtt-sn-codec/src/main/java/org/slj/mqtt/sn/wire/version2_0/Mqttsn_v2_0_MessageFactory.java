@@ -77,8 +77,6 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     @Override
     public IMqttsnMessage createConnack(int returnCode) throws MqttsnCodecException {
 
-        //TODO
-
         MqttsnConnack_V2_0 msg = new MqttsnConnack_V2_0();
         msg.setReturnCode(returnCode);
         msg.setAssignedClientId(null);
@@ -268,10 +266,11 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createDisconnect(long sessionExpiry) throws MqttsnCodecException {
+    public IMqttsnMessage createDisconnect(long sessionExpiry, boolean retainRegistrations) throws MqttsnCodecException {
 
         MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
         msg.setSessionExpiryInterval(sessionExpiry);
+        msg.setRetainRegistrations(retainRegistrations);
         msg.setReasonString(null);
         msg.validate();
         return msg;

@@ -123,7 +123,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
         MqttsnSpecificationValidator.validatePacketLength(data);
 
         AbstractMqttsnMessage msg;
-        int msgType = readMessageType(data);
+        int msgType = MqttsnWireUtils.readMessageType(data);
 
         switch (msgType) {
             case MqttsnConstants.AUTH:
@@ -155,6 +155,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 msg = new MqttsnRegack_V2_0();
                 break;
             case MqttsnConstants.PUBLISH:
+            case MqttsnConstants.PUBLISH_M1:
                 validateLengthGreaterThanOrEquals(data, 6);
                 msg = new MqttsnPublish_V2_0();
                 msg.decode(data);

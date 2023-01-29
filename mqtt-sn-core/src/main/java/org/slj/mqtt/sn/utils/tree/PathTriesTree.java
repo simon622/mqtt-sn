@@ -146,7 +146,21 @@ public class PathTriesTree<T> {
     }
 
     public boolean hasMembers(final String path){
-        return !searchMembers(path).isEmpty();
+        TrieNode<T> node = getNodeIfExists(path);
+        return node == null ? false: node.hasMembers();
+    }
+
+    protected TrieNode<T> getNodeIfExists(final String path){
+
+        String[] segments = split(path);
+        PathTriesTree.TrieNode node = root;
+        for (int i=0; i < segments.length; i++){
+            node = node.getChild(segments[i]);
+            if(node == null) {
+                return null;
+            }
+        }
+        return node;
     }
 
     public boolean hasPath(String path){

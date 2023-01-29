@@ -51,6 +51,11 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
+    public IMqttsnMessage createAuth(String method, byte[] data) throws MqttsnCodecException {
+        throw new MqttsnCodecException("Version 1.2 does not support AUTH packets");
+    }
+
+    @Override
     public IMqttsnMessage createAdvertise(int gatewayId, int duration) throws MqttsnCodecException {
 
         MqttsnAdvertise msg = new MqttsnAdvertise();
@@ -80,7 +85,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     }
 
     @Override
-    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval) throws MqttsnCodecException {
+    public IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean auth, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval) throws MqttsnCodecException {
 
         MqttsnConnect msg = new MqttsnConnect();
         msg.setClientId(clientId);

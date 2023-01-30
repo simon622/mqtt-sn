@@ -85,8 +85,7 @@ public class MqttSubscriptionTreeTests {
 //    @Test
     public void testConcurrency() throws Exception {
 
-//        PathTriesTree<String> tree = createTreeDefaultConfig();
-        MqttSubscriptionTree<SubscriberWithQoS> tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
+        MqttSubscriptionTree<String> tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
         tree.addWildcard("#");
         tree.addWildpath("+");
         tree.setMaxMembersAtLevel(1000000);
@@ -104,11 +103,11 @@ public class MqttSubscriptionTreeTests {
                     try {
                         String subscriberId = ""+c.incrementAndGet();
                         if(i % 2 == 0){
-                            tree.addPath("some/topic/1",new SubscriberWithQoS(subscriberId, 1, (byte)1, null));
-                            tree.addPath("some/topic/2",new SubscriberWithQoS(subscriberId, 1, (byte)1, null));
-                            tree.addPath("some/topic/3",new SubscriberWithQoS(subscriberId, 1, (byte)1, null));
-                            tree.addPath("some/+/2",new SubscriberWithQoS(""+c.incrementAndGet(), 1, (byte)1, null));
-                            tree.addPath("#",new SubscriberWithQoS(""+c.incrementAndGet(), 1, (byte)1, null));
+                            tree.addPath("some/topic/1",subscriberId);
+                            tree.addPath("some/topic/2",subscriberId);
+                            tree.addPath("some/topic/3",subscriberId);
+                            tree.addPath("some/+/2",""+c.incrementAndGet());
+                            tree.addPath("#",""+c.incrementAndGet());
                             subCount.getAndAdd(5);
                         } else {
                             for(int r = 0; r < 1000; r++){
@@ -139,7 +138,7 @@ public class MqttSubscriptionTreeTests {
         System.err.println("write took " + (System.currentTimeMillis() - start) + "ms");
 
         long quickstart = System.currentTimeMillis();
-        Set<SubscriberWithQoS> s = tree.searchMembers("some/topic/2");
+        Set<String> s = tree.searchMembers("some/topic/2");
         System.err.println("path had " + s.size() + " subscribers in " + (System.currentTimeMillis() - quickstart));
         Assert.assertEquals("member output should match",7500, s.size());
     }
@@ -290,88 +289,5 @@ public class MqttSubscriptionTreeTests {
         tree.addWildpath("+");
         tree.setMaxMembersAtLevel(1000000);
         return tree;
-    }
-}
-
-class SubscriberWithQoS implements Comparable<SubscriberWithQoS> {
-
-    private final  String subscriber;
-    private final int qos;
-    private final byte flags;
-    private final  String sharedName;
-    private final  Integer subscriptionIdentifier;
-
-    // The topic filter is only present for shared subscription
-    private final  String topicFilter;
-
-    public SubscriberWithQoS(final  String subscriber, final int qos, final byte flags, final  Integer subscriptionIdentifier) {
-        this(subscriber, qos, flags, null, subscriptionIdentifier, null);
-    }
-
-    public SubscriberWithQoS(final  String subscriber, final int qos, final byte flags, final  String sharedName,
-                             final  Integer subscriptionIdentifier, final  String topicFilter) {
-
-
-        this.subscriber = subscriber;
-        this.qos = qos;
-        this.flags = flags;
-        this.sharedName = sharedName;
-        this.subscriptionIdentifier = subscriptionIdentifier;
-        this.topicFilter = topicFilter;
-    }
-
-    
-    public String getSubscriber() {
-        return subscriber;
-    }
-
-    public int getQos() {
-        return qos;
-    }
-
-    
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final SubscriberWithQoS that = (SubscriberWithQoS) o;
-        return qos == that.qos &&
-                flags == that.flags &&
-                Objects.equals(subscriber, that.subscriber) &&
-                Objects.equals(sharedName, that.sharedName) &&
-                Objects.equals(subscriptionIdentifier, that.subscriptionIdentifier) &&
-                Objects.equals(topicFilter, that.topicFilter);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(subscriber, qos, flags, sharedName, subscriptionIdentifier, topicFilter);
-    }
-
-    @Override
-    public int compareTo( final SubscriberWithQoS o) {
-        // Subscription are sorted by client id first and qos after.
-        // This allows us to determine the highest qos for each subscriber
-        if (o == null) {
-            return -1;
-        }
-        final int subscriberCompare = subscriber.compareTo(o.getSubscriber());
-        if (subscriberCompare == 0) {
-            final int qosCompare = Integer.compare(qos, o.getQos());
-            if (qosCompare == 0 && subscriptionIdentifier != null && o.subscriptionIdentifier != null) {
-                return Integer.compare(subscriptionIdentifier, o.subscriptionIdentifier);
-            }
-            return qosCompare;
-        }
-        return subscriberCompare;
-    }
-
-    
-    @Override
-    public String toString() {
-        return "SubscriberWithQoS{" +
-                "subscriber='" + subscriber + '\'' +
-                ", qos=" + qos +
-                '}';
     }
 }

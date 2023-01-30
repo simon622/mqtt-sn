@@ -39,7 +39,6 @@ import java.util.regex.Pattern;
 public class PathTriesTree<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    final static String[] EMPTY = new String[0];
     private final char split;
     private static final int DEFAULT_MAX_PATH_SIZE = 1024;
     private static final int DEFAULT_MAX_PATH_SEGMENTS = 1024;
@@ -313,40 +312,7 @@ public class PathTriesTree<T> {
     }
 
     protected String[] split(final String path){
-        return splitNative(path, split, true);
-    }
-
-    protected String[] splitNative(final String str, char separatorChar, boolean preserve){
-        if (str == null) {
-            return null;
-        }
-        final int len = str.length();
-        if (len == 0) {
-            return EMPTY;
-        }
-        final List<String> list = new ArrayList<>();
-        int i = 0;
-        int start = 0;
-        boolean match = false;
-        boolean lMat = false;
-        while (i < len) {
-            if (str.charAt(i) == separatorChar) {
-                if (match || preserve) {
-                    list.add(str.substring(start, i));
-                    match = false;
-                    lMat = true;
-                }
-                start = ++i;
-                continue;
-            }
-            lMat = false;
-            match = true;
-            i++;
-        }
-        if (match || preserve && lMat) {
-            list.add(str.substring(start, i));
-        }
-        return list.toArray(EMPTY);
+        return PathTreeUtils.splitPathWithoutRegex(path, split, true);
     }
 
     class TrieNode<T> {

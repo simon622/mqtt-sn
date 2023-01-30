@@ -68,14 +68,21 @@ public class OpenConnectionNoStateTestMain {
 
                 if(shouldSubscribe){
 
+                    String randomSub = "/some/random/" + localBindPort;
+
                     byte[] subscribeRandom = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
-                            createSubscribe(2, "/some/random/" + localBindPort));
+                            createSubscribe(2, randomSub));
                     packet = new DatagramPacket(subscribeRandom, subscribeRandom.length, address, port);
                     socket.send(packet);
 
                     byte[] subscribe = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
                             createSubscribe(2, MqttsnConstants.TOPIC_TYPE.PREDEFINED, 1));
                     packet = new DatagramPacket(subscribe, subscribe.length, address, port);
+                    socket.send(packet);
+
+                    byte[] unsubscribeRandom = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
+                            createUnsubscribe(randomSub));
+                    packet = new DatagramPacket(unsubscribeRandom, unsubscribeRandom.length, address, port);
                     socket.send(packet);
                 }
             } catch(Exception e){

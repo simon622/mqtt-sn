@@ -29,14 +29,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 /**
  * Simple TriesTree implementation designed to add members at each level of the tree and normalise the storage
  */
-public class PathTriesTree<T> {
+public class MqttSubscriptionTree<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final char split;
@@ -59,7 +57,7 @@ public class PathTriesTree<T> {
      * @param selfPruningTree - when removing members, when a leaf is determined to be empty subsequent to the removal operation, should the
      *                        tree at that level be pruned (where it is the last level of the tree)
      */
-    public PathTriesTree(final char splitChar, final boolean selfPruningTree){
+    public MqttSubscriptionTree(final char splitChar, final boolean selfPruningTree){
         this.split = splitChar;
         this.selfPruningTree = selfPruningTree;
         this.root = new TrieNode<T>( null, null);
@@ -99,20 +97,20 @@ public class PathTriesTree<T> {
         wildpaths.add(wildpath);
     }
 
-    public void addPath(final String path, final T... members) throws TriesTreeLimitExceededException {
+    public void addPath(final String path, final T... members) throws MqttSubscriptionTreeLimitExceededException {
 
         if(path == null) throw new NullPointerException("unable to add <null> path to tree");
 
         if(path.length() > maxPathSize)
-            throw new TriesTreeLimitExceededException("cannot add paths lengths exceeding the configured max '"+maxPathSize+"' - ("+path.length()+")");
+            throw new MqttSubscriptionTreeLimitExceededException("cannot add paths lengths exceeding the configured max '"+maxPathSize+"' - ("+path.length()+")");
 
         String[] segments = split(path);
 
         if(segments.length > maxPathSegments)
-            throw new TriesTreeLimitExceededException("cannot add paths exceeding the configured max segments '"+maxPathSegments+"' - ("+segments.length+")");
+            throw new MqttSubscriptionTreeLimitExceededException("cannot add paths exceeding the configured max segments '"+maxPathSegments+"' - ("+segments.length+")");
 
         if(members != null && members.length > maxMembersAtLevel)
-            throw new TriesTreeLimitExceededException("cannot add paths with the number of members exceeding max '"+maxMembersAtLevel+"'");
+            throw new MqttSubscriptionTreeLimitExceededException("cannot add paths with the number of members exceeding max '"+maxMembersAtLevel+"'");
 
         TrieNode<T> node = root;
         for (int i=0; i<segments.length; i++){
@@ -152,7 +150,7 @@ public class PathTriesTree<T> {
     protected TrieNode<T> getNodeIfExists(final String path){
 
         String[] segments = split(path);
-        PathTriesTree.TrieNode node = root;
+        MqttSubscriptionTree.TrieNode node = root;
         for (int i=0; i < segments.length; i++){
             node = node.getChild(segments[i]);
             if(node == null) {
@@ -164,7 +162,7 @@ public class PathTriesTree<T> {
 
     public boolean hasPath(String path){
         String[] segments = split(path);
-        PathTriesTree.TrieNode node = root;
+        MqttSubscriptionTree.TrieNode node = root;
         boolean pathExists = true;
         for (int i=0; i < segments.length; i++){
             node = node.getChild(segments[i]);
@@ -176,13 +174,13 @@ public class PathTriesTree<T> {
         return pathExists;
     }
 
-    public static void visitChildren(PathTriesTree.TrieNode node, Visitor visitor) {
+    public static void visitChildren(MqttSubscriptionTree.TrieNode node, Visitor visitor) {
         if (node != null) {
             Set<String> children = node.getChildPaths();
             Iterator<String> itr = children.iterator();
             while (itr.hasNext()) {
                 String path = itr.next();
-                PathTriesTree.TrieNode child = node.getChild(path);
+                MqttSubscriptionTree.TrieNode child = node.getChild(path);
                 if (child == null) {
                     throw new RuntimeException("encountered invalid tree state");
                 } else {
@@ -206,7 +204,11 @@ public class PathTriesTree<T> {
                 for (String wildcard: wildcards) {
                     TrieNode<T> wild = node.getChild(wildcard);
                     if(wild != null){
-                        wildcardMembers = wild.getMembers();
+                        Set<T> wildcardMembersAtLevel = wild.getMembers();
+                        if(wildcardMembersAtLevel != null && !wildcardMembersAtLevel.isEmpty()){
+                            if(wildcardMembers == null) wildcardMembers = new HashSet<>();
+                            wildcardMembers.addAll(wildcardMembersAtLevel);
+                        }
                     }
                 }
             }
@@ -218,7 +220,11 @@ public class PathTriesTree<T> {
                         String[] remainingSegments =
                                 Arrays.copyOfRange(segments, i + 1, segments.length);
                         //recurse point
-                        wildSegmentMembers = searchTreeForMembers(wild, remainingSegments);
+                        Set<T> wildSegmentMembersAtLevel = searchTreeForMembers(wild, remainingSegments);
+                        if(wildSegmentMembersAtLevel != null && !wildSegmentMembersAtLevel.isEmpty()){
+                            if(wildSegmentMembers == null) wildSegmentMembers = new HashSet<>();
+                            wildSegmentMembers.addAll(wildSegmentMembersAtLevel);
+                        }
                     }
                 }
             }
@@ -290,7 +296,7 @@ public class PathTriesTree<T> {
         return root.getChildPaths().size();
     }
 
-    protected Set<String> getDistinctPathsFromNode(PathTriesTree.TrieNode node, boolean considerMembership){
+    protected Set<String> getDistinctPathsFromNode(MqttSubscriptionTree.TrieNode node, boolean considerMembership){
         Set<String> paths = new HashSet<>();
         visitChildren(node, n -> {
             //-- either its a leaf node or a node with children but also members
@@ -301,7 +307,7 @@ public class PathTriesTree<T> {
         return paths;
     }
 
-    protected int countDistinctPathsFromNode(PathTriesTree.TrieNode node, boolean considerMembership){
+    protected int countDistinctPathsFromNode(MqttSubscriptionTree.TrieNode node, boolean considerMembership){
         final AtomicInteger i = new AtomicInteger();
         visitChildren(node, n -> {
             if(n.isLeaf() || (considerMembership && n.hasMembers())){
@@ -312,7 +318,7 @@ public class PathTriesTree<T> {
     }
 
     protected String[] split(final String path){
-        return PathTreeUtils.splitPathWithoutRegex(path, split, true);
+        return MqttSubscriptionTreeUtils.splitPathRetainingSplitChar(path, split);
     }
 
     class TrieNode<T> {
@@ -335,7 +341,7 @@ public class PathTriesTree<T> {
             }
         }
 
-        public TrieNode addChild(final String pathSegment, final T... membersIn) throws TriesTreeLimitExceededException {
+        public TrieNode addChild(final String pathSegment, final T... membersIn) throws MqttSubscriptionTreeLimitExceededException {
             if(pathSegment == null) throw new IllegalArgumentException("unable to mount <null> leaf to tree");
             TrieNode child;
             if(children == null) {
@@ -403,7 +409,7 @@ public class PathTriesTree<T> {
             }
         }
 
-        public  void  addMembers(T... membersIn) throws TriesTreeLimitExceededException {
+        public  void  addMembers(T... membersIn) throws MqttSubscriptionTreeLimitExceededException {
 
             if(members == null && membersIn != null && membersIn.length > 0) {
                 synchronized (memberMutex) {
@@ -414,8 +420,8 @@ public class PathTriesTree<T> {
             }
 
             if(membersIn != null && membersIn.length > 0){
-                if(members.size() + membersIn.length > PathTriesTree.this.getMaxMembersAtLevel()){
-                    throw new TriesTreeLimitExceededException("member limit exceeded at level");
+                if(members.size() + membersIn.length > MqttSubscriptionTree.this.getMaxMembersAtLevel()){
+                    throw new MqttSubscriptionTreeLimitExceededException("member limit exceeded at level");
                 }
                 for(T m : membersIn){
                     if(members.add(m)){
@@ -513,6 +519,6 @@ public class PathTriesTree<T> {
 
 interface Visitor {
 
-    void visit(PathTriesTree.TrieNode node);
+    void visit(MqttSubscriptionTree.TrieNode node);
 }
 

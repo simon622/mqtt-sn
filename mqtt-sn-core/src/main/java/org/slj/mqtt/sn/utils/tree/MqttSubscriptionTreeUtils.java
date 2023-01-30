@@ -1,7 +1,9 @@
 package org.slj.mqtt.sn.utils.tree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -16,11 +18,11 @@ import java.util.List;
  * the original authors for their work.
  *
  */
-public class PathTreeUtils {
+public class MqttSubscriptionTreeUtils {
 
     private final static String[] EMPTY = new String[0];
 
-    public static String[] splitPathWithoutRegex(final String str, char separatorChar, boolean preserve){
+    public static String[] splitPathRetainingSplitChar(final String str, char separatorChar){
         if (str == null) {
             return null;
         }
@@ -28,27 +30,30 @@ public class PathTreeUtils {
         if (len == 0) {
             return EMPTY;
         }
-        final List<String> tokens = new ArrayList<>();
-        int i = 0, start = 0;
-        boolean match = false, lMat = false;
+        final List<String> list = new ArrayList<>();
+        int i = 0;
+        int start = 0;
+        boolean match = false;
         while (i < len) {
-            if (str.charAt(i)
-                    == separatorChar) {
-                if (match || preserve) {
-                    tokens.add(str.substring(start, i));
+            if (str.charAt(i) == separatorChar) {
+                if (match) {
+                    list.add(str.substring(start, i));
                     match = false;
-                    lMat = true;
                 }
+                list.add(separatorChar + "");
                 start = ++i;
                 continue;
             }
-            lMat = false;
             match = true;
             i++;
         }
-        if (match || preserve && lMat) {
-            tokens.add(str.substring(start, i));
+        if (match) {
+            list.add(str.substring(start, i));
         }
-        return tokens.toArray(EMPTY);
+        return list.toArray(EMPTY);
+    }
+
+    public static void main(String[] args) {
+        System.err.println(Arrays.toString(splitPathRetainingSplitChar("/this/is/my/string//", '/')));
     }
 }

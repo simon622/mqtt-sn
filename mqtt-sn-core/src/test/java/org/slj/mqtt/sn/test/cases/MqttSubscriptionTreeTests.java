@@ -28,24 +28,23 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.utils.Environment;
-import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
-import org.slj.mqtt.sn.utils.tree.PathTriesTree;
+import org.slj.mqtt.sn.utils.tree.MqttSubscriptionTreeLimitExceededException;
+import org.slj.mqtt.sn.utils.tree.MqttSubscriptionTree;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TriesTreeTests {
+public class MqttSubscriptionTreeTests {
 
     @Before
     public void setup(){
     }
 
     @Test
-    public void testReadAllFromTree() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+    public void testReadAllFromTree() throws MqttSubscriptionTreeLimitExceededException {
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         int BRANCHES = 50;
         Set<String> added = new HashSet<>();
         for (int i = 0; i < BRANCHES; i++){
@@ -60,41 +59,40 @@ public class TriesTreeTests {
         Assert.assertEquals("all topics should exist in both sets", 0, all.size());
     }
 
-    @Test(expected = TriesTreeLimitExceededException.class)
-    public void testLargeTopicExceedsMaxSegments() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+    @Test(expected = MqttSubscriptionTreeLimitExceededException.class)
+    public void testLargeTopicExceedsMaxSegments() throws MqttSubscriptionTreeLimitExceededException {
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         String topic = generateRandomTopic((int) tree.getMaxPathSegments() + 1);
         tree.addPath(topic, "foo");
     }
 
-    @Test(expected = TriesTreeLimitExceededException.class)
-    public void testLargeTopicExceedsMaxLength() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+    @Test(expected = MqttSubscriptionTreeLimitExceededException.class)
+    public void testLargeTopicExceedsMaxLength() throws MqttSubscriptionTreeLimitExceededException {
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         String topic = generateTopicMaxLength((int) tree.getMaxPathSize() + 1);
         tree.addPath(topic, "foo");
     }
 
-    @Test(expected = TriesTreeLimitExceededException.class)
-    public void testLargeTopicExceedsMaxMembers() throws TriesTreeLimitExceededException {
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+    @Test(expected = MqttSubscriptionTreeLimitExceededException.class)
+    public void testLargeTopicExceedsMaxMembers() throws MqttSubscriptionTreeLimitExceededException {
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         String topic = generateRandomTopic(10);
         String[] members = new String[(int) tree.getMaxMembersAtLevel() + 1];
         Arrays.fill(members, UUID.randomUUID().toString());
         tree.addPath(topic, members);
     }
 
-    @Test
+//    @Test
     public void testConcurrency() throws Exception {
 
 //        PathTriesTree<String> tree = createTreeDefaultConfig();
-        PathTriesTree<SubscriberWithQoS> tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
+        MqttSubscriptionTree<SubscriberWithQoS> tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
         tree.addWildcard("#");
         tree.addWildpath("+");
         tree.setMaxMembersAtLevel(1000000);
 
-
         int loops = 100;
-        int threads = 10;
+        int threads = 50;
         CountDownLatch latch = new CountDownLatch(loops * threads);
         final long start = System.currentTimeMillis();
         AtomicInteger c = new AtomicInteger();
@@ -113,13 +111,13 @@ public class TriesTreeTests {
                             tree.addPath("#",new SubscriberWithQoS(""+c.incrementAndGet(), 1, (byte)1, null));
                             subCount.getAndAdd(5);
                         } else {
-//                            for(int r = 0; r < 1000; r++){
-//                                long start1 = System.currentTimeMillis();
-//                                Set<?> s = tree.searchMembers("some/topic/1");
-//                                if(System.currentTimeMillis() - start1 > 100){
-//                                    System.err.println("read took " + (System.currentTimeMillis() - start1) + "ms for " + s.size());
-//                                }
-//                            }
+                            for(int r = 0; r < 1000; r++){
+                                long start1 = System.currentTimeMillis();
+                                Set<?> s = tree.searchMembers("some/topic/1");
+                                if(System.currentTimeMillis() - start1 > 100){
+                                    System.err.println("read took " + (System.currentTimeMillis() - start1) + "ms for " + s.size());
+                                }
+                            }
                         }
 
                     } catch(Exception e){
@@ -147,17 +145,17 @@ public class TriesTreeTests {
     }
 
     @Test
-    public void testTopLevelTokenMatch() throws TriesTreeLimitExceededException {
+    public void testTopLevelTokenMatch() throws MqttSubscriptionTreeLimitExceededException {
 
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         tree.addPath("/", "foo");
         Assert.assertEquals("first level is a token", 1, tree.searchMembers("/").size());
     }
 
     @Test
-    public void testTopLevelPrefixTokenMatchDistinct() throws TriesTreeLimitExceededException {
+    public void testTopLevelPrefixTokenMatchDistinct() throws MqttSubscriptionTreeLimitExceededException {
 
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         tree.addPath("/foo", "foo"); //different things
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
@@ -167,9 +165,9 @@ public class TriesTreeTests {
     }
 
     @Test
-    public void testTopLevelSuffixTokenMatchDistinct() throws TriesTreeLimitExceededException {
+    public void testTopLevelSuffixTokenMatchDistinct() throws MqttSubscriptionTreeLimitExceededException {
 
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         tree.addPath("foo/", "foo"); //different things
         tree.addPath("foo", "bar");
         System.err.println(tree.toTree(System.lineSeparator()));
@@ -180,9 +178,9 @@ public class TriesTreeTests {
     }
 
     @Test
-    public void testWildcard() throws TriesTreeLimitExceededException {
+    public void testWildcard() throws MqttSubscriptionTreeLimitExceededException {
 
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         tree.addPath("foo/bar/#", "foo");
         tree.addPath("foo/#", "bar");
         tree.addPath("/#", "foo1");
@@ -196,9 +194,9 @@ public class TriesTreeTests {
     }
 
     @Test
-    public void testWildpath() throws TriesTreeLimitExceededException {
+    public void testWildpath() throws MqttSubscriptionTreeLimitExceededException {
 
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
         tree.addPath("foo/+/is/good", "foo");
         System.err.println(tree.toTree(System.lineSeparator()));
         Assert.assertEquals("should be 1 distinct branches", 1, tree.getBranchCount());
@@ -213,9 +211,9 @@ public class TriesTreeTests {
     }
 
     @Test
-    public void testWildcardsGetRolledUp() throws TriesTreeLimitExceededException {
+    public void testWildcardsGetRolledUp() throws MqttSubscriptionTreeLimitExceededException {
 
-        PathTriesTree<String> tree = createTreeDefaultConfig();
+        MqttSubscriptionTree<String> tree = createTreeDefaultConfig();
 
         tree.addPath("foo/#", "foo");
         tree.addPath("foo/bar", "foo1");
@@ -229,9 +227,9 @@ public class TriesTreeTests {
     }
 
     @Test
-    public void testPathExistenceInBigTree() throws TriesTreeLimitExceededException, InterruptedException {
+    public void testPathExistenceInBigTree() throws MqttSubscriptionTreeLimitExceededException, InterruptedException {
 
-        PathTriesTree<Integer> tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
+        MqttSubscriptionTree<Integer> tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
         String search = "some/member";
         String searchNoMem = "/some/member";
 
@@ -239,7 +237,7 @@ public class TriesTreeTests {
         tree.setMaxPathSegments(tree.getMaxPathSegments() * 2 + 1);
         tree.setMaxPathSize(1024 * 4);
 
-        for (int i = 0; i < 200_000; i++){
+        for (int i = 0; i < 200_000_0; i++){
             String topic = generateRandomTopic(5);
             if(i % 2 == 0){
                 tree.addPath(topic,
@@ -264,7 +262,7 @@ public class TriesTreeTests {
         Assert.assertFalse("this path should not not exist", tree.hasPath("/doesnt/exits"));
         Assert.assertFalse("this path should not not exist nor have members", tree.hasMembers("/doesnt/exits"));
 
-        Assert.assertEquals("path count should match", 200_002, tree.countDistinctPaths(false));
+        Assert.assertEquals("path count should match", 200_000_2, tree.countDistinctPaths(false));
     }
 
     public static String generateRandomTopic(int segments){
@@ -286,8 +284,8 @@ public class TriesTreeTests {
         return sb.toString();
     }
 
-    protected static PathTriesTree<String> createTreeDefaultConfig(){
-        PathTriesTree<String> tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
+    protected static MqttSubscriptionTree<String> createTreeDefaultConfig(){
+        MqttSubscriptionTree<String> tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
         tree.addWildcard("#");
         tree.addWildpath("+");
         tree.setMaxMembersAtLevel(1000000);

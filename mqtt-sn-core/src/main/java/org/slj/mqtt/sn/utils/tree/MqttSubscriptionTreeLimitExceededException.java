@@ -24,20 +24,20 @@
 
 package org.slj.mqtt.sn.utils.tree;
 
-public class TriesTreeLimitExceededException extends Exception {
+public class MqttSubscriptionTreeLimitExceededException extends Exception {
 
-    public TriesTreeLimitExceededException() {
+    public MqttSubscriptionTreeLimitExceededException() {
     }
 
-    public TriesTreeLimitExceededException(String message) {
+    public MqttSubscriptionTreeLimitExceededException(String message) {
         super(message);
     }
 
-    public TriesTreeLimitExceededException(String message, Throwable cause) {
+    public MqttSubscriptionTreeLimitExceededException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public TriesTreeLimitExceededException(Throwable cause) {
+    public MqttSubscriptionTreeLimitExceededException(Throwable cause) {
         super(cause);
     }
 }

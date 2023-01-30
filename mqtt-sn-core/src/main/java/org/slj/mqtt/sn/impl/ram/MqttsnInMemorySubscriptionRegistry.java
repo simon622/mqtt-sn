@@ -34,20 +34,20 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.utils.tree.PathTriesTree;
-import org.slj.mqtt.sn.utils.tree.TriesTreeLimitExceededException;
+import org.slj.mqtt.sn.utils.tree.MqttSubscriptionTree;
+import org.slj.mqtt.sn.utils.tree.MqttSubscriptionTreeLimitExceededException;
 
 import java.util.Set;
 
 public class MqttsnInMemorySubscriptionRegistry
         extends AbstractSubscriptionRegistry {
 
-    private PathTriesTree<IClientIdentifierContext> tree;
+    private MqttSubscriptionTree<IClientIdentifierContext> tree;
 
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        tree = new PathTriesTree<>(MqttsnConstants.PATH_SEP, true);
+        tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
         tree.setMaxMembersAtLevel(1024 * 1024);
         tree.addWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
         tree.addWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);
@@ -87,7 +87,7 @@ public class MqttsnInMemorySubscriptionRegistry
         if(!existed){
             try {
                 tree.addPath(subscription.getTopicPath().toString(), session.getContext());
-            } catch(TriesTreeLimitExceededException e){
+            } catch(MqttSubscriptionTreeLimitExceededException e){
                 throw new MqttsnRuntimeException(e);
             }
         }

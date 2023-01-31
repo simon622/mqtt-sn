@@ -33,24 +33,24 @@ import org.slj.mqtt.sn.model.session.ISubscription;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
-import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.utils.tree.MqttSubscriptionTree;
-import org.slj.mqtt.sn.utils.tree.MqttSubscriptionTreeLimitExceededException;
+import org.slj.mqtt.tree.MqttTree;
+import org.slj.mqtt.tree.MqttTreeException;
+import org.slj.mqtt.tree.MqttTreeLimitExceededException;
 
 import java.util.Set;
 
 public class MqttsnInMemorySubscriptionRegistry
         extends AbstractSubscriptionRegistry {
 
-    private MqttSubscriptionTree<IClientIdentifierContext> tree;
+    private MqttTree<IClientIdentifierContext> tree;
 
     @Override
     public synchronized void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        tree = new MqttSubscriptionTree<>(MqttsnConstants.PATH_SEP, true);
-        tree.setMaxMembersAtLevel(1024 * 1024);
-        tree.addWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
-        tree.addWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);
+        tree = new MqttTree<>(MqttsnConstants.PATH_SEP, true);
+        tree.withMaxMembersAtLevel(1024 * 1024);
+        tree.withWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
+        tree.withWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);
     }
 
     @Override
@@ -65,7 +65,11 @@ public class MqttsnInMemorySubscriptionRegistry
     }
 
     protected Set<IClientIdentifierContext> matchFromTree(String topicPath) throws MqttsnException {
-        return tree.searchMembers(topicPath);
+        try {
+            return tree.search(topicPath);
+        } catch (MqttTreeException e) {
+            throw new MqttsnException(e);
+        }
     }
 
     @Override
@@ -75,7 +79,7 @@ public class MqttsnInMemorySubscriptionRegistry
 
     @Override
     protected boolean addSubscription(ISession session, ISubscription subscription)
-            throws MqttsnIllegalFormatException {
+            throws MqttsnIllegalFormatException, MqttsnException {
 
         if(!MqttsnSpecificationValidator.isValidSubscriptionTopic(
                 subscription.getTopicPath().toString())){
@@ -86,19 +90,23 @@ public class MqttsnInMemorySubscriptionRegistry
         getSessionBean(session).addSubscription(subscription);
         if(!existed){
             try {
-                tree.addPath(subscription.getTopicPath().toString(), session.getContext());
-            } catch(MqttSubscriptionTreeLimitExceededException e){
-                throw new MqttsnRuntimeException(e);
+                tree.addSubscription(subscription.getTopicPath().toString(), session.getContext());
+            } catch (MqttTreeLimitExceededException | MqttTreeException e) {
+                throw new MqttsnException(e);
             }
         }
         return !existed;
     }
 
     @Override
-    protected boolean removeSubscription(ISession session, ISubscription subscription){
+    protected boolean removeSubscription(ISession session, ISubscription subscription) throws MqttsnException{
         boolean removed = getSessionBean(session).removeSubscription(subscription);
         if(removed){
-            tree.removeMemberFromPath(subscription.getTopicPath().toString(), session.getContext());
+            try {
+                tree.removeSubscriptionFromPath(subscription.getTopicPath().toString(), session.getContext());
+            } catch (MqttTreeException e) {
+                throw new MqttsnException(e);
+            }
         }
         return removed;
     }
@@ -115,7 +123,11 @@ public class MqttsnInMemorySubscriptionRegistry
         //need tp clear from index and lists
         Set<ISubscription> all = readSubscriptions(session);
         for(ISubscription s : all){
-            removeSubscription(session, s);
+            try {
+                removeSubscription(session, s);
+            } catch (MqttsnException e) {
+                logger.warn("error clearing subscription from session", e);
+            }
         }
     }
 

@@ -62,7 +62,7 @@ public class OpenConnectionNoStateTestMain {
             try {
                 socket = new DatagramSocket(++localBindPort, null);
                 byte[] connect = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.encode(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2.createMessageFactory().
-                        createConnect("" + localBindPort, 3600, false, true, 0, 0, 0));
+                        createConnect("" + localBindPort, 3600, false, false, true, 0, 0, 0));
                 DatagramPacket packet = new DatagramPacket(connect, connect.length, address, port);
                 socket.send(packet);
 

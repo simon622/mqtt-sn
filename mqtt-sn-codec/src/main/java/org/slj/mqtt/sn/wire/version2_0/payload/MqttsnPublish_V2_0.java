@@ -74,9 +74,9 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
     protected void setTopicType(byte topicType) {
         if (topicType != MqttsnConstants.TOPIC_PREDEFINED &&
-                topicType != MqttsnConstants.TOPIC_NORMAL &&
-                topicType != MqttsnConstants.TOPIC_SHORT &&
-                topicType != MqttsnConstants.TOPIC_FULL) {
+            topicType != MqttsnConstants.TOPIC_NORMAL &&
+            topicType != MqttsnConstants.TOPIC_SHORT &&
+            topicType != MqttsnConstants.TOPIC_FULL) {
             throw new IllegalArgumentException("unable to set invalid topicIdType value on message " + topicType);
         }
         this.topicIdType = topicType;
@@ -255,13 +255,15 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
             msg[idx++] = (byte) (id & 0xFF);
         }
 
-        topicLength = topicLength == 0 ? topicIdType == MqttsnConstants.TOPIC_FULL ? topicData.length : 2 : 2;
-
         if(topicIdType == MqttsnConstants.TOPIC_FULL){
+            topicLength = topicLength == 0 ? topicIdType == MqttsnConstants.TOPIC_FULL ? topicData.length : 2 : 2;
             msg[idx++] = (byte) ((topicLength >> 8) & 0xFF);
             msg[idx++] = (byte) (topicLength & 0xFF);
-        } else {
             System.arraycopy(topicData, 0, msg, idx, topicData.length);
+        }
+        else{
+            msg[idx++] = topicData[0];
+            msg[idx++] = topicData[1];
         }
 
 

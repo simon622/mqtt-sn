@@ -36,6 +36,16 @@ public class MqttsnAuth extends AbstractMqttsnMessage implements IMqttsnMessageV
     protected String authMethod;
     protected byte[] authData;
 
+    public MqttsnAuth(){
+
+    }
+
+    public MqttsnAuth(String authMethod, byte[] authData){
+        this.authMethod = authMethod;
+        authMethodLength = authMethod.length();
+        this.authData = authData;
+    }
+
     @Override
     public int getMessageType() {
         return MqttsnConstants.AUTH;

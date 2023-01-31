@@ -24,12 +24,15 @@
 
 package org.slj.mqtt.sn.impl;
 
+import java.io.IOException;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
+import org.slj.mqtt.sn.model.IAuthHandler;
 import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.model.TopicInfo;
 import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.model.session.IWillData;
@@ -172,6 +175,10 @@ public abstract class AbstractMqttsnMessageHandler
 
 
         switch (msgType) {
+            case MqttsnConstants.AUTH:
+                response = handleAuth(context, message);
+                break;
+
             case MqttsnConstants.CONNECT:
                 response = handleConnect(context, message);
                 if(!errord && !response.isErrorMessage()){
@@ -338,6 +345,28 @@ public abstract class AbstractMqttsnMessageHandler
                     registry.getOptions().getContextId(), context, response);
         ((IMqttsnTransport)context.getNetworkContext().getTransport()).writeToTransport(context.getNetworkContext(), response);
     }
+
+    protected IMqttsnMessage handleAuth(IMqttsnMessageContext context, IMqttsnMessage message) throws MqttsnException {
+        MqttsnSecurityOptions securityOptions = registry.getOptions().getSecurityOptions();
+        IAuthHandler authHandler = securityOptions.getAuthHandler();
+        MqttsnAuth authResponse = (MqttsnAuth) message;
+        try {
+            if(authResponse.getReturnCode() == 0x18 ||
+                authResponse.getReturnCode() == 0 && !authHandler.isComplete()
+            ){
+                byte[] response = authHandler.handleChallenge(authResponse.getAuthData());
+                if(response != null && response.length > 0) {
+                    MqttsnAuth authChallenge = new MqttsnAuth(authResponse.getAuthMethod(), response);
+                    authChallenge.setReturnCode(authResponse.getReturnCode());
+                    return authChallenge;
+                }
+            }
+        } catch (IOException e) {
+            throw new MqttsnException("Failed during AUTH handshake", e);
+        }
+        return null;
+    }
+
 
     protected IMqttsnMessage handleConnect(IMqttsnMessageContext messageContext, IMqttsnMessage connect) throws MqttsnException {
 

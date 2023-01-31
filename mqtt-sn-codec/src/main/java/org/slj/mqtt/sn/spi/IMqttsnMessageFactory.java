@@ -37,6 +37,8 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
  */
 public interface IMqttsnMessageFactory {
 
+    IMqttsnMessage createAuth(String method, byte[] data) throws MqttsnCodecException;
+
     /**
      * The ADVERTISE message is broadcasted periodically by a gateway to advertise its presence.
      * The time interval until the next broadcast time is indicated in the Duration field of this message.
@@ -82,7 +84,7 @@ public interface IMqttsnMessageFactory {
      * @param cleanSession: same meaning as with MQTT, however extended for Will topic and Will message.
      * @param defaultAwakeMessages: the default max number of messages transmitted per awake cycle.
      */
-    IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval)
+    IMqttsnMessage createConnect(String clientId, int keepAlive, boolean willPrompt, boolean auth, boolean cleanSession, int maxPacketSize, int defaultAwakeMessages, long sessionExpiryInterval)
             throws MqttsnCodecException;
 
     /**

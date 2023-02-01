@@ -14,7 +14,7 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
    1. [Gateway Console](#gateway-console)
    2. [Client CLI](#client-cli)
    3. [Gateway CLI](#gateway-cli)
-3. [Build](#build)
+3. [Quick Build](#quick-build)
    1. [Maven Modules](#modules)
    2. [Build](#build) 
 4. [Runtime](#runtime-gateway--client)
@@ -104,7 +104,8 @@ from a command line using;
 ```shell script
 java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar <listenPort> <gatewayId>
 ```
-You can then follow the on screen instructions to get a gateway up and running.
+
+When you have a running gateway, you can login to http://localhost:8080/ and use the admin console to administer your gateway.
 
 ## Runtime (Gateway & Client)
 

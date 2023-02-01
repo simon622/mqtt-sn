@@ -11,8 +11,9 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
    3. [Project Goals](#project-goals)
    4. [Gateway System Diagram](#gateway-system-diagram)
 2. [Quick Start](#quick-start-guide)
-   1. [Client CLI](#client-cli)
-   2. [Gateway CLI](#gateway-cli)
+   1. [Gateway Console](#gateway-console)
+   2. [Client CLI](#client-cli)
+   3[Gateway CLI](#gateway-cli)
 3. [Build](#build)
    1. [Maven Modules](#modules)
    2. [Gateway Build](#gateway-build)
@@ -49,6 +50,11 @@ The system was built to be pluggable, to allow implementations to provide their 
 ## Quick Start Guide
 I have created simple interactive command lines for both client and gateway components to allow simple testing and use. The interactive client and gateway both use preconfigured default runtimes which
 can be used to evaluate / test the software. For more complex use, please refer to the source build and configuration.
+
+### Gateway Console
+It is possible to entirely setup, monitor and maintain the gateway programmatically and via build configuration. It became obvious though that for getting up and running simply, it made sense to be able to install and monitor it via a web application. I have built a simple bootstrap console that allows you to monitor traffic and configure your connectors at runtime.
+![Dashboard](/images/dash.png)
+![Connectors](/images/connectors.png)
 
 #### Client CLI
 The latest interactive client build can be obtained from the releases section. The client will connect to any compliant version 1.2 or version 2.0 gateway. You will need to input the remote gateway details when requested by the wizard. [Download](https://github.com/simon622/mqtt-sn/releases/download/0.2.0-alpha/mqtt-sn-client-0.2.0.jar) the mqtt-sn-client-VERSION.jar and run locally using;

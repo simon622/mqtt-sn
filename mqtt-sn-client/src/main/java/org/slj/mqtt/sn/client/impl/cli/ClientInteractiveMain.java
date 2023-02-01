@@ -25,9 +25,13 @@
 package org.slj.mqtt.sn.client.impl.cli;
 
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
+import org.slj.mqtt.sn.client.spi.SaslAuthHandler;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.impl.MqttsnSecurityService;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
+import org.slj.mqtt.sn.spi.IMqttsnSecurityService;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 

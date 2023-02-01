@@ -13,7 +13,7 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
 2. [Quick Start](#quick-start-guide)
    1. [Gateway Console](#gateway-console)
    2. [Client CLI](#client-cli)
-   3[Gateway CLI](#gateway-cli)
+   3. [Gateway CLI](#gateway-cli)
 3. [Build](#build)
    1. [Maven Modules](#modules)
    2. [Gateway Build](#gateway-build)

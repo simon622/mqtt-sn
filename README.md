@@ -16,8 +16,7 @@ View the initial [MQTT-SN Version 1.2](http://www.mqtt.org/new/wp-content/upload
    3. [Gateway CLI](#gateway-cli)
 3. [Build](#build)
    1. [Maven Modules](#modules)
-   2. [Gateway Build](#gateway-build)
-   3. [Client Build](#client-build)
+   2. [Build](#build) 
 4. [Runtime](#runtime-gateway--client)
    1. [Listeners](#listeners)
    2. [Transport](#transport-implementations)
@@ -91,42 +90,21 @@ Module | Language & Build | Dependencies | Description
 [mqtt-sn-gateway-connector-paho](/mqtt-sn-gateway-connector-paho) | Java 1.8, Maven | Optional | Simple aggregating gateway using an out of the box PAHO connector to manage the TCP side
 [mqtt-sn-load-test](/mqtt-sn-load-test) | Java 1.8, Maven | Tools | Provides a runtime to spin up N clients and connect to a gateway instance and test concurrency and message throughput
 
-### Gateway Build
+### Build
 
-Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
+Git checkout the repository. For a simple standalone jar execution, run the following maven command in the parent pom - the build will cascade.
 
 ```shell script
-mvn -f mqtt-sn-codec clean install
-mvn -f mqtt-sn-core clean install
-mvn -f mqtt-sn-gateway clean package
-mvn -f mqtt-sn-client clean install
+mvn clean install
 ```
 
-This will yield a file in your mqtt-sn-gateway-connector-paho/target directory that will be called mqtt-sn-gateway-<version>.jar. You can then start a broker
+This will yield a file in your mqtt-sn-gateway-console/target directory that will be called mqtt-sn-gateway-console-<version>.jar. You can then start a broker
 from a command line using;
 
 ```shell script
-java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar
+java -jar <path-to>/mqtt-sn-gateway-console-VERSION.jar <listenPort> <gatewayId>
 ```
 You can then follow the on screen instructions to get a gateway up and running.
-
-### Client Build
-
-Git checkout the repository. For a simple standalone jar execution, run the following maven deps.
-
-```shell script
-mvn -f mqtt-sn-codec clean install
-mvn -f mqtt-sn-core clean install
-mvn -f mqtt-sn-client clean package
-```
-
-This will yield a file in your mqtt-sn-client/target directory that will be called mqtt-sn-gateway-<version>.jar. You can then start a broker
-from a command line using;
-
-```shell script
-java -jar <path-to>/mqtt-sn-client-VERSION.jar
-```
-You can then follow the on screen instructions to get a client up and running.
 
 ## Runtime (Gateway & Client)
 

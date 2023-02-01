@@ -54,6 +54,8 @@ can be used to evaluate / test the software. For more complex use, please refer 
 ### Gateway Console
 It is possible to entirely setup, monitor and maintain the gateway programmatically and via build configuration. It became obvious though that for getting up and running simply, it made sense to be able to install and monitor it via a web application. I have built a simple bootstrap console that allows you to monitor traffic and configure your connectors at runtime.
 
+In order to use this, simply download the latest artefact from the releases area, run the gateway and point your browser at <hostName>:8080 and you will be challenged by HTTPD auth. The default username and password is admin/password - please be sure to change these for installations. To change the admin point, you can use configuration or use -DconsolePort=<yourport> as a startup parameter.
+
 ![Dashboard](/images/dash.png)
 ![Connectors](/images/connector.png)
 

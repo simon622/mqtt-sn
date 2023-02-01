@@ -55,7 +55,7 @@ public class SubscriptionTests {
 
     @Before
     public void setup() throws MqttsnException {
-        MqttsnFilesystemStorageService storageService = new MqttsnFilesystemStorageService();
+        MqttsnFilesystemStorageService storageService = new MqttsnFilesystemStorageService("mqtt-sn-test");
         MqttsnTestRuntimeRegistry registry =
                 MqttsnTestRuntimeRegistry.defaultConfiguration(storageService, MqttsnTestRuntime.TEST_OPTIONS, false);
         runtime = new MqttsnTestRuntime();

@@ -60,7 +60,7 @@ public class PahoGatewayMain {
         String password = args[5].trim();
 
         MqttsnFilesystemStorageService filesystemStorageService =
-                new MqttsnFilesystemStorageService();
+                new MqttsnFilesystemStorageService("mqtt-sn-gateway-paho");
 
         MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions().
                 withHostName(host).

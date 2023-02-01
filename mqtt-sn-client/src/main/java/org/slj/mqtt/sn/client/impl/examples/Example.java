@@ -47,7 +47,7 @@ public class Example {
     public static void main(String[] args) throws Exception {
 
         MqttsnFilesystemStorageService filesystemStorageService =
-                new MqttsnFilesystemStorageService();
+                new MqttsnFilesystemStorageService("mqtt-sn-client-example");
 
         //-- use the client transport options, which will use random unallocated local ports
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();

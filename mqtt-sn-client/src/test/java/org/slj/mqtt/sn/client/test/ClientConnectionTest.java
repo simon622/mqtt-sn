@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.client.test;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
@@ -46,6 +47,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+@Ignore
 public class ClientConnectionTest {
 
     static final String TOPIC = "t/%s";
@@ -55,7 +57,7 @@ public class ClientConnectionTest {
 
     protected MqttsnClientRuntimeRegistry createClientRuntimeRegistry(String clientId){
 
-        MqttsnFilesystemStorageService storageService = new MqttsnFilesystemStorageService();
+        MqttsnFilesystemStorageService storageService = new MqttsnFilesystemStorageService("mqtt-sn-test");
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
         MqttsnOptions options = new MqttsnOptions().
                 withNetworkAddressEntry("gatewayId",

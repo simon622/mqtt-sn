@@ -71,15 +71,6 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
         init();
     }
 
-    public MqttsnFilesystemStorageService(IMqttsnObjectReaderWriter readerWriter) {
-        this.readerWriter = readerWriter;
-        init();
-    }
-
-    public MqttsnFilesystemStorageService() {
-        this(IMqttsnObjectReaderWriter.DEFAULT);
-    }
-
     private void init(){
         initRoot();
         initWorkspace();
@@ -92,10 +83,15 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
         if(!path.exists()){
             path.mkdirs();
         }
+        if(!path.exists()) throw new MqttsnRuntimeException("path could not be initialised");
         if(!path.isDirectory()) throw new MqttsnSecurityException("path location must be a directory");
     }
 
     private synchronized void initWorkspace(){
+        if(path == null){
+            initRoot();
+        }
+
         path = new File(path, workspace);
         if(!path.exists()){
             path.mkdirs();

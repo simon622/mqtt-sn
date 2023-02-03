@@ -49,8 +49,6 @@ public class MqttsnInMemorySubscriptionRegistry
         super.start(runtime);
         tree = new MqttTree<>(MqttsnConstants.PATH_SEP, true);
         tree.withMaxMembersAtLevel(1024 * 1024);
-        tree.withWildcard(MqttsnConstants.MULTI_LEVEL_WILDCARD);
-        tree.withWildpath(MqttsnConstants.SINGLE_LEVEL_WILDCARD);
     }
 
     @Override

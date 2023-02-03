@@ -88,7 +88,7 @@ public class MqttsnInMemorySubscriptionRegistry
         getSessionBean(session).addSubscription(subscription);
         if(!existed){
             try {
-                tree.addSubscription(subscription.getTopicPath().toString(), session.getContext());
+                tree.subscribe(subscription.getTopicPath().toString(), session.getContext());
             } catch (MqttTreeLimitExceededException | MqttTreeException e) {
                 throw new MqttsnException(e);
             }
@@ -101,7 +101,7 @@ public class MqttsnInMemorySubscriptionRegistry
         boolean removed = getSessionBean(session).removeSubscription(subscription);
         if(removed){
             try {
-                tree.removeSubscriptionFromPath(subscription.getTopicPath().toString(), session.getContext());
+                tree.unsubscribe(subscription.getTopicPath().toString(), session.getContext());
             } catch (MqttTreeException e) {
                 throw new MqttsnException(e);
             }

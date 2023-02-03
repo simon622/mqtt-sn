@@ -53,9 +53,9 @@
         <dependency>
             <groupId>org.slj</groupId>
             <artifactId>mqtt-tree</artifactId>
-            <version>0.5.2</version>
+            <version>0.5.3</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/mqtt-tree-0.5.2.jar</systemPath>
+            <systemPath>${basedir}/lib/mqtt-tree-0.5.3.jar</systemPath>
         </dependency>
     </dependencies>
 

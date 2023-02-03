@@ -34,8 +34,8 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnSessionRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.sn.utils.radix.RadixTree;
-import org.slj.mqtt.sn.utils.radix.RadixTreeImpl;
+import org.slj.mqtt.tree.radix.RadixTree;
+import org.slj.mqtt.tree.radix.RadixTreeImpl;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

@@ -30,15 +30,18 @@ import org.slj.mqtt.sn.model.session.IQueuedPublishMessage;
 import org.slj.mqtt.sn.model.session.ISubscription;
 import org.slj.mqtt.sn.model.session.ITopicRegistration;
 import org.slj.mqtt.sn.model.session.IWillData;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnExpectationFailedException;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 public class SessionBeanImpl extends SessionImpl {
 
     private static final int INITIAL_CAPACITY = 8;
-    private Set<ISubscription> subscriptionSet = new HashSet<>(INITIAL_CAPACITY);
-    private Map<String, ITopicRegistration> registrationMap = new HashMap<>(INITIAL_CAPACITY);
+    private Set<ISubscription> subscriptionSet = ConcurrentHashMap.newKeySet();
+    private Map<String, ITopicRegistration> registrationMap = new ConcurrentHashMap<>(INITIAL_CAPACITY);
     private Queue<IQueuedPublishMessage> messageQueue = new PriorityBlockingQueue<>(INITIAL_CAPACITY);
     private IWillData willData;
 
@@ -54,7 +57,19 @@ public class SessionBeanImpl extends SessionImpl {
         return subscriptionSet.remove(subscription);
     }
 
-    public boolean addTopicRegistration(ITopicRegistration registration){
+    public boolean addTopicRegistration(ITopicRegistration registration) throws MqttsnException {
+        if(registration.getTopicPath() == null){
+            throw new MqttsnException("unable to register <null> topicPath");
+        }
+
+        if(registration.getAliasId() <= 0){
+            throw new MqttsnException("unable to register topicAlias 0");
+        }
+
+        if(registrationMap.values().stream().anyMatch(p -> p.getAliasId() == registration.getAliasId() &&
+                !registration.equals(p.getTopicPath()))){
+            throw new MqttsnException("registration with topicId exists for different topicId");
+        }
         return registrationMap.put(registration.getTopicPath(), registration) == null;
     }
 

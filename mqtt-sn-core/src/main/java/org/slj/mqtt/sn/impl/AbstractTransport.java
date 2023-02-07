@@ -46,6 +46,10 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
 
     public final Future<IPacketTXRXJob> writeToTransportWithCallback(INetworkContext context, byte[] data, Runnable task) {
 
+        if(!running){
+            logger.warn("unable to write to {} bytes transport when not running", data.length);
+        }
+
         if(egressProtocolProcessor == null){
             throw new MqttsnRuntimeException("no processors available on transport");
         }

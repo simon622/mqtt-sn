@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets;
 public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
 
     protected final int messageType;
-    protected int id = 0;
+    protected int id;
     protected int returnCode;
 
     public AbstractMqttsnMessage() {

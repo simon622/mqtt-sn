@@ -36,6 +36,7 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnConnect_V2_0;
 
 public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
@@ -135,7 +136,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     @Override
     public int readMessageSize(byte[] data) throws MqttsnCodecException {
         MqttsnSpecificationValidator.validatePacketLength(data);
-        return AbstractMqttsnMessage.readMessageLength(data);
+        return MqttsnWireUtils.readMessageLength(data);
     }
 
 
@@ -164,12 +165,20 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
             case MqttsnConstants.CONNECT:
 
                 //-- check version - version 1.2 should allow 0 in as it seems most clients send 0
-                if(data[3] != MqttsnConstants.PROTOCOL_VERSION_1_2 && data[3] != 0){
-                    throw new MqttsnUnsupportedVersionException("codec cannot parse ["+data[3]+"] non 2.0 message");
+                int version = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
+                if(data[0] == 0x01){
+                    version = data[5];
+                } else {
+                    version = data[3];
+                }
+
+                if(version != MqttsnConstants.PROTOCOL_VERSION_1_2){
+                    throw new MqttsnUnsupportedVersionException("codec version mismatch ["+version+"] found non 1.2 message");
                 } else {
                     validateLengthGreaterThanOrEquals(data, 6);
                     msg = new MqttsnConnect();
                 }
+
                 break;
             case MqttsnConstants.CONNACK:
                 validateLengthEquals(data, 3);

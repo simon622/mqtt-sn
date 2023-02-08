@@ -29,7 +29,9 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 
-public class MqttsnSuback extends AbstractMqttsnMessageWithFlagsField implements IMqttsnMessageValidator {
+public class
+
+MqttsnSuback extends AbstractMqttsnMessageWithFlagsField implements IMqttsnMessageValidator {
 
     protected int topicId;
 

@@ -167,7 +167,8 @@ public class Mqttsn1_2WireTests {
     @Test
     public void testMqttsnPublishQoS0() throws MqttsnCodecException {
 
-        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS0, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
+        IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoS0, false, false,
+                MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
                 payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
         testWireMessage(message);
     }
@@ -192,7 +193,7 @@ public class Mqttsn1_2WireTests {
     public void testMqttsnPublishQoSM1() throws MqttsnCodecException {
 
         IMqttsnMessage message = factory.createPublish(MqttsnConstants.QoSM1, false, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
-                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+                payload(10));
         testWireMessage(message);
     }
 

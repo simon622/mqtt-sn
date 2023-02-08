@@ -76,4 +76,20 @@ public class MqttsnWireUtils {
         }
         return msgType;
     }
+
+    public static boolean isLargeMessage(byte[] data) {
+        return data[0] == 0x01;
+    }
+
+    public static int readMessageLength(byte[] data) {
+        int length = 0;
+        if (isLargeMessage(data)) {
+            //big payload
+            length = ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
+        } else {
+            //small payload
+            length = (data[0] & 0xFF);
+        }
+        return length;
+    }
 }

@@ -35,7 +35,7 @@ import java.util.Arrays;
 public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements IMqttsnMessageValidator, IMqttsnPublishPacket {
 
     public boolean needsId() {
-        return true;
+        return getQoS() > 0;
     }
 
     protected byte[] data;
@@ -60,6 +60,8 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
         id = readUInt16Adjusted(arr, 5);
         data = readRemainingBytesAdjusted(arr, 7);
     }
+
+
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
@@ -87,7 +89,7 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
         idx += topicData.length;
 
         msg[idx++] = (byte) ((id >> 8) & 0xFF);
-        msg[idx++] = (byte) (id & 0xFF);
+        msg[idx] = (byte) (id & 0xFF);
 
         System.arraycopy(data, 0, msg, msg.length - (data.length), data.length);
         return msg;
@@ -98,7 +100,7 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
         final StringBuilder sb = new StringBuilder("MqttsnPublish{");
         sb.append("topicData=").append(Arrays.toString(topicData));
         sb.append(", dup=").append(dupRedelivery);
-        sb.append(", QoS=").append(QoS);
+        sb.append(", QoS=").append(getQoS());
         sb.append(", retain=").append(retainedPublish);
         sb.append(", topicIdType=").append(topicType);
         sb.append(", msgId=").append(id);
@@ -122,7 +124,7 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
         if(getQoS() <= 0){
             //confirm the msgId is coded 0x0000
             if(id != 0){
-                throw new MqttsnCodecException("msgId should not be set for QoS -1 or 0 packets");
+                throw new MqttsnCodecException("msgId should not be set for QoS -1 or 0 packets (" + id +")");
             }
         }
     }

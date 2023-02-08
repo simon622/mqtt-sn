@@ -140,7 +140,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 }
 
                 if(version != MqttsnConstants.PROTOCOL_VERSION_2_0){
-                    throw new MqttsnUnsupportedVersionException("codec cannot parse ["+version+"] non 2.0 message");
+                    throw new MqttsnUnsupportedVersionException("codec version mismatch ["+version+"] found non 2.0 message");
                 } else {
                     validateLengthGreaterThanOrEquals(data, 12);
                     msg = new MqttsnConnect_V2_0();

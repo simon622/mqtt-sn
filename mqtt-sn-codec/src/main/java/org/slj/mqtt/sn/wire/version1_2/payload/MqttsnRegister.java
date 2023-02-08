@@ -29,6 +29,7 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
@@ -63,7 +64,7 @@ public class MqttsnRegister extends AbstractMqttsnMessage implements IMqttsnMess
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        if (isLargeMessage(data)) {
+        if (MqttsnWireUtils.isLargeMessage(data)) {
             topicId = readUInt16Adjusted(data, 4);
             id = readUInt16Adjusted(data, 6);
         } else {

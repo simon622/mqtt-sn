@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets;
 public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
 
     protected final int messageType;
-    protected int id;
+    protected int id = 0;
     protected int returnCode;
 
     public AbstractMqttsnMessage() {
@@ -66,7 +66,7 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
      * form for convenience but adjusted if the data is an extended type ie. > 255 bytes
      */
     protected byte[] readRemainingBytesAdjusted(byte[] data, int startIdx) {
-        int offset = (isLargeMessage(data) ? startIdx + 2 : startIdx);
+        int offset = (MqttsnWireUtils.isLargeMessage(data) ? startIdx + 2 : startIdx);
         return readBytesAdjusted(data, startIdx, data.length - offset);
     }
 
@@ -76,7 +76,7 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
      * form for convenience but adjusted if the data is an extended type ie. > 255 bytes
      */
     protected byte[] readBytesAdjusted(byte[] data, int startIdx, int length) {
-        int offset = (isLargeMessage(data) ? startIdx + 2 : startIdx);
+        int offset = (MqttsnWireUtils.isLargeMessage(data) ? startIdx + 2 : startIdx);
         byte[] body = new byte[length];
         System.arraycopy(data, offset, body, 0, length);
         return body;
@@ -184,28 +184,6 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
 
 
     public static byte readHeaderByteWithOffset(byte[] data, int index) {
-        return isLargeMessage(data) ? data[index + 2] : data[index];
-    }
-
-    public static boolean isLargeMessage(byte[] data) {
-        return data[0] == 0x01;
-    }
-
-    public static int readMessageLength(byte[] data) {
-        int length = 0;
-        if (isLargeMessage(data)) {
-            //big payload
-            length = ((data[1] & 0xFF) << 8) + (data[2] & 0xFF);
-        } else {
-            //small payload
-            length = (data[0] & 0xFF);
-        }
-        return length;
-    }
-
-    public static void main(String[] args) {
-        byte[] arr = new byte[7];
-        writeUTF8EncodedStringData(arr, 0, "simon");
-        System.out.println(MqttsnWireUtils.toBinary(arr));
+        return MqttsnWireUtils.isLargeMessage(data) ? data[index + 2] : data[index];
     }
 }

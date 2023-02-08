@@ -152,7 +152,7 @@ public abstract class AbstractMqttsnMessageWithFlagsField extends AbstractMqttsn
         //qos
         if (QoS == MqttsnConstants.QoS1) v |= 0x20;
         else if (QoS == MqttsnConstants.QoS2) v |= 0x40;
-        else if (QoS == MqttsnConstants.QoSM1) v |= 0x60;
+        else if (QoS == MqttsnConstants.QoSM1 || QoS == 3) v |= 0x60;
 
         //retained publish
         if (retainedPublish) v |= 0x10;

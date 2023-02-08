@@ -155,7 +155,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
             if(!executorService.isShutdown()){
                 executorService.shutdown();
             }
-            executorService.awaitTermination(30, TimeUnit.SECONDS);
+            executorService.awaitTermination(10, TimeUnit.SECONDS);
         } catch(InterruptedException e){
             Thread.currentThread().interrupt();
         } finally {

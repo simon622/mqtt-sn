@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.spi.IMqttsnIdentificationPacket;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.spi.IMqttsnProtocolVersionPacket;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
 
 public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
@@ -124,7 +125,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        if (isLargeMessage(data)) {
+        if (MqttsnWireUtils.isLargeMessage(data)) {
             readFlags(data[4]);
         } else {
             readFlags(data[2]);

@@ -29,6 +29,7 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.util.Arrays;
 
@@ -71,10 +72,10 @@ public class MqttsnEncapsmsg extends AbstractMqttsnMessage implements IMqttsnMes
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        int length = readMessageLength(data);
+        int length = MqttsnWireUtils.readMessageLength(data);
 
         int offset = 0;
-        if (isLargeMessage(data)) {
+        if (MqttsnWireUtils.isLargeMessage(data)) {
             offset = 2;
         }
         int idx = 2 + offset;

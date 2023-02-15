@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.client.impl.cli;
 import org.slj.mqtt.sn.cli.AbstractInteractiveCli;
 import org.slj.mqtt.sn.client.MqttsnClientConnectException;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
+import org.slj.mqtt.sn.client.spi.MqttsnClientOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntime;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;
@@ -436,11 +437,14 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
     @Override
     protected MqttsnOptions createOptions(IMqttsnStorageService storageService) {
         try {
-            MqttsnOptions options = new MqttsnOptions();
+            MqttsnClientOptions options = new MqttsnClientOptions();
+
             String clientId = storageService.getStringPreference(RuntimeConfig.CLIENTID, null);
             options.withNetworkAddressEntry(clientId,
                     NetworkAddress.from(storageService.getIntegerPreference(RuntimeConfig.PORT, null),
                             storageService.getStringPreference(RuntimeConfig.HOSTNAME, null)));
+            options.withSleepStopsTransport(false);
+            options.withDisconnectStopsTransport(true);
             options.withContextId(clientId);
             options.withMaxProtocolMessageSize(4096);
             return options;

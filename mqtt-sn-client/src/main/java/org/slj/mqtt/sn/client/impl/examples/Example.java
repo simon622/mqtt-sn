@@ -28,6 +28,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
+import org.slj.mqtt.sn.client.spi.MqttsnClientOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
@@ -53,7 +54,11 @@ public class Example {
         MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
 
         //-- runtimes options can be used to tune the behaviour of the client
-        MqttsnOptions options = new MqttsnOptions().
+        MqttsnOptions options = new MqttsnClientOptions().
+                //-- does a sleep stop the transport layer (unbind and stop listening to inbound socket)
+                withSleepStopsTransport(false).
+                //-- does a disconnect stop the transport layer (unbind and stop listening to inbound socket)
+                withDisconnectStopsTransport(true).
                 //-- specify the address of any static gateway nominating a context id for it
                 withNetworkAddressEntry("gatewayId", NetworkAddress.localhost(MqttsnUdpOptions.DEFAULT_LOCAL_PORT)).
                 //-- configure your clientId

@@ -70,7 +70,6 @@ public class MqttsnGatewayRuntimeRegistry extends AbstractMqttsnRuntimeRegistry 
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).
                 withAuthenticationService(new MqttsnGatewayAuthenticationService()).
                 withClientIdFactory(new MqttsnDefaultClientIdFactory()).
-
                 withMessageStateService(new MqttsnInMemoryMessageStateService(false));
 
         registry.withProtocolBridgeService(new ProtocolBridgeService());

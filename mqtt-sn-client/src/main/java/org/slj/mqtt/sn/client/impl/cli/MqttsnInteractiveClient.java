@@ -71,6 +71,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         STATUS("Obtain the status of the client", new String[0]),
         SESSION("Obtain the local session details", new String[0]),
         NETWORK("Get network details", new String[0]),
+        PING("Send a PINGREQ message to gateway", new String[0]),
         HELO("Send a HELO message to gateway", new String[0]),
         PREDEFINE("Add a predefined topic alias", new String[]{"String* topicName",  "int16 topicAlias"}),
         HELP("List this message", new String[0]),
@@ -135,6 +136,9 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
                     break;
                 case TD:
                     threadDump();
+                    break;
+                case PING:
+                    ping();
                     break;
                 case GC:
                     gc();
@@ -242,6 +246,17 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
             }
         } else {
             message("Client is already connected");
+        }
+    }
+
+    protected void ping()
+            throws IOException, MqttsnException {
+        MqttsnClient client = (MqttsnClient) getRuntime();
+        if(client != null && client.isConnected()){
+            client.ping();
+            message("Ping successfully issued");
+        } else {
+            message("Client must be connected to ping");
         }
     }
 

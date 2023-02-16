@@ -25,6 +25,7 @@
 package org.slj.mqtt.sn.utils;
 
 import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnSecurityException;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import javax.crypto.Mac;
@@ -97,31 +98,31 @@ public class Security {
         }
     }
 
-    public static byte[] hmac(HMAC algorithm, byte[] secretKey, byte[] data, boolean hex) throws MqttsnException {
+    public static byte[] hmac(HMAC algorithm, byte[] secretKey, byte[] data, boolean hex) throws MqttsnSecurityException {
 
-        if (algorithm == null) throw new MqttsnException("hmac algorithm must be provided <null>");
-        if (secretKey == null) throw new MqttsnException("hmac secret must be provided <null>");
-        if (secretKey.length < MINIMUM_SECRET_BYTES) throw new MqttsnException("hmac secret must be at least 128-bit");
-        if (data == null) throw new MqttsnException("hmac data must be provided <null>");
+        if (algorithm == null) throw new MqttsnSecurityException("hmac algorithm must be provided <null>");
+        if (secretKey == null) throw new MqttsnSecurityException("hmac secret must be provided <null>");
+        if (secretKey.length < MINIMUM_SECRET_BYTES) throw new MqttsnSecurityException("hmac secret must be at least 128-bit");
+        if (data == null) throw new MqttsnSecurityException("hmac data must be provided <null>");
 
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, algorithm.getAlgorithm());
         try {
             Mac mac = Mac.getInstance(algorithm.getAlgorithm());
             mac.init(secretKeySpec);
-            if(mac.getMacLength() != algorithm.getSize()) throw new MqttsnException("algorithm mac length does not match compiled length");
+            if(mac.getMacLength() != algorithm.getSize()) throw new MqttsnSecurityException("algorithm mac length does not match compiled length");
             byte[] hmac = mac.doFinal(data);
-            if(hmac.length != algorithm.getSize()) throw new MqttsnException("generated mac was unexpected length");
+            if(hmac.length != algorithm.getSize()) throw new MqttsnSecurityException("generated mac was unexpected length");
             return hex ? MqttsnWireUtils.toHex(hmac).
                     getBytes(StandardCharsets.UTF_8) : hmac;
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new MqttsnException("hmac failed;", e);
+            throw new MqttsnSecurityException("hmac failed;", e);
         }
     }
 
-    public static int checksum(CHECKSUM algorithm, byte[] data) throws MqttsnException {
+    public static int checksum(CHECKSUM algorithm, byte[] data) throws MqttsnSecurityException {
 
-        if (algorithm == null) throw new MqttsnException("checksum algorithm must be provided <null>");
-        if (data == null) throw new MqttsnException("checksum data must be provided <null>");
+        if (algorithm == null) throw new MqttsnSecurityException("checksum algorithm must be provided <null>");
+        if (data == null) throw new MqttsnSecurityException("checksum data must be provided <null>");
 
         long checksum = -1;
         switch (algorithm) {
@@ -141,7 +142,7 @@ public class Security {
         return (int) checksum;
     }
 
-    public static byte[] createChecksumdData(CHECKSUM algorithm, byte[] data) throws MqttsnException {
+    public static byte[] createChecksumdData(CHECKSUM algorithm, byte[] data) throws MqttsnSecurityException {
 
         byte[] arr = new byte[algorithm.getSize() + data.length];
         int checksum = checksum(algorithm, data);
@@ -153,7 +154,7 @@ public class Security {
         return arr;
     }
 
-    public static byte[] createHmacdData(HMAC algorithm, byte[] secretKey, byte[] data) throws MqttsnException {
+    public static byte[] createHmacdData(HMAC algorithm, byte[] secretKey, byte[] data) throws MqttsnSecurityException {
 
         byte[] arr = new byte[algorithm.getSize() + data.length];
         byte[] hmac = hmac(algorithm, secretKey, data, false);
@@ -182,7 +183,7 @@ public class Security {
         return readOriginalData(algorithm.getSize(), data);
     }
 
-    public static boolean verifyChecksum(CHECKSUM algorithm, byte[] data) throws MqttsnException {
+    public static boolean verifyChecksum(CHECKSUM algorithm, byte[] data) throws MqttsnSecurityException {
         byte[] checksum = readHeader(algorithm.getSize(), data);
         long value = ((checksum[0] & 0xFF) << 24) |
                 ((checksum[1] & 0xFF) << 16) |
@@ -192,7 +193,7 @@ public class Security {
         return value == check;
     }
 
-    public static boolean verifyHMac(HMAC algorithm, byte[] secretKey, byte[] data) throws MqttsnException {
+    public static boolean verifyHMac(HMAC algorithm, byte[] secretKey, byte[] data) throws MqttsnSecurityException {
         byte[] hmac = readHeader(algorithm.getSize(), data);
         return Arrays.equals(hmac, hmac(algorithm, secretKey,
                 readOriginalData(algorithm.getSize(), data), false));

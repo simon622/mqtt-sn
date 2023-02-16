@@ -194,7 +194,7 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
     public void testMqttsnIntegrity() throws MqttsnCodecException {
 
         MqttsnIntegrity message = (MqttsnIntegrity)
-                factory.createIntegrityMessage((byte) 23, 9989, "Simon".getBytes(), true, 65535, "CipherText".getBytes(), "bigmac".getBytes());
+                factory.createIntegrityMessage((byte) 23, 9989, "Simon".getBytes(), true, 65535, "CipherText".getBytes(), "111111111111111".getBytes());
         testWireMessage(message);
 
     }

@@ -60,28 +60,32 @@ public class MqttsnSecurityService
         int beforeSize = data.length;
         if(securityOptions != null) {
             MqttsnSecurityOptions.INTEGRITY_TYPE type = securityOptions.getIntegrityType();
-            if (type != MqttsnSecurityOptions.INTEGRITY_TYPE.none) {
-                int length;
-                boolean verified;
-                try {
-                    if(securityOptions.getIntegrityType() == MqttsnSecurityOptions.INTEGRITY_TYPE.hmac){
-                        verified = Security.verifyHMac(securityOptions.getIntegrityHmacAlgorithm(),
-                                securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
-                        length = securityOptions.getIntegrityHmacAlgorithm().getSize();
-                    } else {
-                        verified = Security.verifyChecksum(securityOptions.getIntegrityChecksumAlgorithm(), data);
-                        length = securityOptions.getIntegrityHmacAlgorithm().getSize();
-                    }
-                    if(verified){
-                        data = Security.readOriginalData(length, data);
-                        logger.info("integrity check verified {} bytes of data becomes {} bytes", beforeSize, data.length);
-                        return data;
-                    } else {
-                        throw new MqttsnSecurityException("message integrity check failed");
-                    }
-                } catch(MqttsnException e){
-                    throw new MqttsnSecurityException("security configuration error;", e);
-                }
+            int length;
+            boolean verified = false;
+            switch(type){
+                case hmac:
+                    verified = Security.verifyHMac(securityOptions.getIntegrityHmacAlgorithm(),
+                            securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
+                    length = securityOptions.getIntegrityHmacAlgorithm().getSize();
+                    data = Security.readOriginalData(length, data);
+                    break;
+                case checksum:
+                    verified = Security.verifyChecksum(securityOptions.getIntegrityChecksumAlgorithm(), data);
+                    length = securityOptions.getIntegrityHmacAlgorithm().getSize();
+                    data = Security.readOriginalData(length, data);
+                    break;
+                case message:
+                    //TODO integrate with integrity message type
+                case none:
+                default:
+
+            }
+
+            if(verified){
+                logger.info("integrity check verified {} bytes of data becomes {} bytes", beforeSize, data.length);
+                return data;
+            } else {
+                throw new MqttsnSecurityException("message integrity check failed");
             }
         }
         return data;
@@ -92,21 +96,20 @@ public class MqttsnSecurityService
         int beforeSize = data.length;
         if(securityOptions != null) {
             MqttsnSecurityOptions.INTEGRITY_TYPE type = securityOptions.getIntegrityType();
-            if (type != MqttsnSecurityOptions.INTEGRITY_TYPE.none) {
-                try {
-                    if(securityOptions.getIntegrityType() == MqttsnSecurityOptions.INTEGRITY_TYPE.hmac){
-                        data = Security.createHmacdData(securityOptions.getIntegrityHmacAlgorithm(),
-                                securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
-                    } else {
-                        data = Security.createChecksumdData(securityOptions.getIntegrityChecksumAlgorithm(), data);
-                    }
-
-                    logger.info("integrity process {} bytes of data becomes {} bytes", beforeSize, data.length);
-
-                } catch(MqttsnException e){
-                    throw new MqttsnSecurityException("security configuration error;", e);
-                }
+            switch(type){
+                case hmac:
+                    data = Security.createHmacdData(securityOptions.getIntegrityHmacAlgorithm(),
+                            securityOptions.getIntegrityKey().getBytes(StandardCharsets.UTF_8), data);
+                    break;
+                case checksum:
+                    data = Security.createChecksumdData(securityOptions.getIntegrityChecksumAlgorithm(), data);
+                    break;
+                case message:
+                    //TODO integrate with integrity message type
+                case none:
+                default:
             }
+            logger.info("integrity process {} bytes of data becomes {} bytes", beforeSize, data.length);
         }
         return data;
     }

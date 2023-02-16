@@ -31,6 +31,7 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.Mqttsn1_2WireTests;
 
 public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
@@ -180,7 +181,6 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
     @Test
     public void testMqttsnDisconnectWithRetainRegistrations() throws MqttsnCodecException {
 
-
         MqttsnDisconnect_V2_0 message = (MqttsnDisconnect_V2_0)
                 factory.createDisconnect(6006, false);
         testWireMessage(message);
@@ -188,5 +188,14 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
         message = (MqttsnDisconnect_V2_0)
                 factory.createDisconnect(MqttsnConstants.UNSIGNED_MAX_32 - 1, true);
         testWireMessage(message);
+    }
+
+    @Test
+    public void testMqttsnIntegrity() throws MqttsnCodecException {
+
+        MqttsnIntegrity message = (MqttsnIntegrity)
+                factory.createIntegrityMessage((byte) 23, 9989, "Simon".getBytes(), true, 65535, "CipherText".getBytes(), "bigmac".getBytes());
+        testWireMessage(message);
+
     }
 }

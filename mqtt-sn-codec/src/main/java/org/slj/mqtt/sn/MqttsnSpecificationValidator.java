@@ -207,6 +207,11 @@ public class MqttsnSpecificationValidator {
             throw new MqttsnCodecException("invalid auth reason code, must be one of 0x00, 0x18, 0x19");
     }
 
+    public static void validateByteArrayLength(byte[] arr, int length) throws MqttsnCodecException {
+        if(arr == null || arr.length != length)
+            throw new MqttsnCodecException("invalid byte array field length");
+    }
+
     public static void validatePacketIdentifier(int field) throws MqttsnCodecException {
         validateUInt16(field);
     }

@@ -136,7 +136,7 @@ public interface MqttsnConstants {
     byte WILLMSGUPD = 0x1C;
     byte WILLMSGRESP = 0x1D;
     byte HELO = 0x2D;
-
+    byte INTEGRITY = 0x1E;
 
     int ENCAPSMSG = 0xFE;
 

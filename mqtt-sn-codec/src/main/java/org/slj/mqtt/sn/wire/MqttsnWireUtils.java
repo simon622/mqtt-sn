@@ -24,9 +24,6 @@
 
 package org.slj.mqtt.sn.wire;
 
-import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.codec.MqttsnCodecException;
-
 public class MqttsnWireUtils {
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();

@@ -92,6 +92,10 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
                 readHeaderByteWithOffset(data, startIdx));
     }
 
+    protected byte readByteAdjusted(byte[] data, int startIdx) {
+        return readHeaderByteWithOffset(data, startIdx);
+    }
+
     protected int readUInt16Adjusted(byte[] data, int startIdx) {
         return MqttsnWireUtils.read16bit(
                 readHeaderByteWithOffset(data, startIdx),
@@ -155,6 +159,11 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
     protected void writeUInt32(byte[] data, int startIdx, long value){
         data[startIdx++] = (byte) (value >> 24);
         data[startIdx++] = (byte) (value >> 16);
+        data[startIdx++] = (byte) (value >> 8);
+        data[startIdx] = (byte) (value);
+    }
+
+    protected void writeUInt16(byte[] data, int startIdx, int value){
         data[startIdx++] = (byte) (value >> 8);
         data[startIdx] = (byte) (value);
     }

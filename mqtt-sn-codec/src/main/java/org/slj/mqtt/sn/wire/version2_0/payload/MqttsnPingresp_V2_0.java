@@ -66,7 +66,7 @@ public class MqttsnPingresp_V2_0 extends AbstractMqttsnMessage implements IMqtts
         byte[] msg = new byte[length];
         msg[idx++] = (byte) length;
         msg[idx++] = (byte) getMessageType();
-        msg[idx++] = (byte) getMessagesRemaining();
+        msg[idx] = (byte) getMessagesRemaining();
 
         return msg;
     }

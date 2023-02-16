@@ -285,4 +285,17 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.validate();
         return msg;
     }
+
+    @Override
+    public IMqttsnMessage createIntegrityMessage(byte protectionScheme, int sequence, byte[] publicUID, boolean authOnly, int keyMaterial, byte[] cipherText, byte[] mac) throws MqttsnCodecException {
+        MqttsnIntegrity msg = new MqttsnIntegrity();
+        msg.setAuthOnly(authOnly);
+        msg.setCipherText(cipherText);
+        msg.setMac(mac);
+        msg.setKeyMaterial(keyMaterial);
+        msg.setSequence(sequence);
+        msg.setPublicUID(publicUID);
+        msg.setProtectionSchema(protectionScheme);
+        return msg;
+    }
 }

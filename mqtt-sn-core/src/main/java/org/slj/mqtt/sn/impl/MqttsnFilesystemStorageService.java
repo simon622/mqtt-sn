@@ -59,6 +59,14 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
         init();
     }
 
+    public MqttsnFilesystemStorageService(File path, String workspace) {
+        this.workspace = workspace;
+        this.path = path;
+        this.readerWriter = IMqttsnObjectReaderWriter.DEFAULT;
+        init();
+    }
+
+
     public MqttsnFilesystemStorageService(IMqttsnObjectReaderWriter readerWriter, String workspace) {
         this.workspace = workspace;
         this.readerWriter = readerWriter;

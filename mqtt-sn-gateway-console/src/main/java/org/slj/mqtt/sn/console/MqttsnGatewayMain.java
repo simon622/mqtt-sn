@@ -33,6 +33,7 @@ import org.slj.mqtt.sn.gateway.impl.gateway.type.MqttsnAggregatingGateway;
 import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayOptions;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
+import org.slj.mqtt.sn.impl.MqttsnSearchableSessionRegistry;
 import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
@@ -67,6 +68,7 @@ public class MqttsnGatewayMain {
         AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(filesystemStorageService, gatewayOptions).
                 withConnector(new LoopbackMqttsnConnector(LoopbackMqttsnConnector.DESCRIPTOR, null)).
                 withBackendService(new MqttsnAggregatingGateway()).
+                withSessionRegistry(new MqttsnSearchableSessionRegistry()).
                 withService(new MqttsnConsoleService(console)).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);

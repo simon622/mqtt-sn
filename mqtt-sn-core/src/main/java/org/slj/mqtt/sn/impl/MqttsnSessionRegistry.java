@@ -34,8 +34,6 @@ import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnSessionRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnRuntimeException;
-import org.slj.mqtt.tree.radix.RadixTree;
-import org.slj.mqtt.tree.radix.RadixTreeImpl;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,16 +44,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry implements IMqttsnSessionRegistry {
 
     protected Map<IClientIdentifierContext, ISession> sessionLookup;
-    protected RadixTree<String> searchTree;
+
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
-        searchTree = new RadixTreeImpl<>();
         super.start(runtime);
         sessionLookup = new ConcurrentHashMap<>();
         registerMetrics(runtime);
-    }
-
-    public List<String> prefixSearch(String prefix){
-        return searchTree.searchPrefix(prefix, 100);
     }
 
     @Override
@@ -66,14 +59,6 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
         logger.info("creating new session for {}", context);
         ISession session = new SessionBeanImpl(context, ClientState.DISCONNECTED);
         sessionLookup.put(context, session);
-        try {
-            if(searchTree != null) {
-                String clientId = context.getId();
-                searchTree.insert(clientId, clientId);
-            }
-        } catch(Exception e){
-            throw new MqttsnRuntimeException(e);
-        }
         return session;
     }
 
@@ -142,11 +127,6 @@ public class MqttsnSessionRegistry extends AbstractMqttsnSessionBeanRegistry imp
             cleanSession(session.getContext(), true);
         } finally {
             sessionLookup.remove(session.getContext());
-            try {
-                if(searchTree != null) searchTree.delete(session.getContext().getId());
-            } catch(Exception e){
-                throw new MqttsnRuntimeException(e);
-            }
         }
     }
 

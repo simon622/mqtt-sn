@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.console.http.HttpBadRequestException;
 import org.slj.mqtt.sn.console.http.HttpConstants;
 import org.slj.mqtt.sn.console.http.IHttpRequestResponse;
+import org.slj.mqtt.sn.impl.MqttsnSearchableSessionRegistry;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class SearchHandler extends MqttsnConsoleAjaxRealmHandler {
     }
 
     protected Option[] generateData(String prefix){
-        List<String> clientIds = registry.getSessionRegistry().prefixSearch(prefix);
+        List<String> clientIds = ((MqttsnSearchableSessionRegistry)registry.getSessionRegistry()).prefixSearch(prefix);
         Option[] a = new Option[clientIds.size()];
         Iterator<String> itr = clientIds.iterator();
         int i = 0;

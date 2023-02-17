@@ -48,8 +48,6 @@ public interface IMqttsnSessionRegistry extends IMqttsnService {
     long countTotalSessions();
     boolean hasSession(IClientIdentifierContext context);
 
-    List<String> prefixSearch(String prefix);
-
     //-- attributes of the session setters
     void modifyClientState(ISession session, ClientState state);
     void modifyLastSeen(ISession session);

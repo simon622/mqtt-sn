@@ -344,7 +344,7 @@ public abstract class AbstractMqttsnMessageStateService
             IMqttsnMessage response = null;
 
             long start = System.currentTimeMillis();
-            long timeToWait = Math.max(waitTime, registry.getOptions().getMaxErrorRetryTime());
+            long timeToWait = Math.min(waitTime, registry.getOptions().getMaxErrorRetryTime());
             synchronized(token){
                 //-- code against spurious wake up
                 while(!token.isComplete() &&

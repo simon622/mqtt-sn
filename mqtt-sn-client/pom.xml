@@ -34,6 +34,8 @@
         <version>0.2.0</version>
     </parent>
 
+    <packaging>jar</packaging>
+
     <artifactId>mqtt-sn-client</artifactId>
 
     <properties>

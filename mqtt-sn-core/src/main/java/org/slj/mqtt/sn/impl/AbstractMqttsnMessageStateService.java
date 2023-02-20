@@ -256,7 +256,7 @@ public abstract class AbstractMqttsnMessageStateService
             Optional<InflightMessage> blockingMessage =
                     getInflightMessages(context, source).values().stream().findFirst();
             logger.warn("presently unable to send {},{} to {}, max inflight reached for direction {} {} -> {}",
-                    message, queuedPublishMessage, context, source, count, blockingMessage.get());
+                    message, queuedPublishMessage, context, source, count, blockingMessage.orElseGet(null));
             if(blockingMessage.isPresent() && clientMode){
                 //-- if we are in client mode, attempt to wait for the ongoing outbound
                 //-- message to complete before we issue next message
@@ -276,6 +276,7 @@ public abstract class AbstractMqttsnMessageStateService
                 if(clientMode){
                     //this is the calling thread (iew. the application thread in the context of client) so backoff and retry
                     try {
+                        logger.warn("backing off send of {} for  {}", message, context);
                         int c = 0;
                         while(!canSend(context) && ++c <
                                 registry.getOptions().getMaxErrorRetries()){

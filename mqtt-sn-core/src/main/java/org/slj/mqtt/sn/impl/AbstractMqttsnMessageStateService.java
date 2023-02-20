@@ -253,11 +253,10 @@ public abstract class AbstractMqttsnMessageStateService
 
         int count = countInflight(context, source);
         if(count >= registry.getOptions().getMaxMessagesInflight()){
-            logger.warn("presently unable to send {},{} to {}, max inflight reached for direction {} {}",
-                            message, queuedPublishMessage, context, source, count);
-
             Optional<InflightMessage> blockingMessage =
                     getInflightMessages(context, source).values().stream().findFirst();
+            logger.warn("presently unable to send {},{} to {}, max inflight reached for direction {} {} -> {}",
+                    message, queuedPublishMessage, context, source, count, blockingMessage.get());
             if(blockingMessage.isPresent() && clientMode){
                 //-- if we are in client mode, attempt to wait for the ongoing outbound
                 //-- message to complete before we issue next message

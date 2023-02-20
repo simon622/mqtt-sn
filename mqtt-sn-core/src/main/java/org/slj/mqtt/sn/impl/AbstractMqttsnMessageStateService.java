@@ -274,8 +274,29 @@ public abstract class AbstractMqttsnMessageStateService
                     }
                 }
             } else {
-                logger.warn("{} max inflight message number reached ({}), fail-fast for sending, allow for receiving {} - {}", context, count, source, message);
-                throw new MqttsnExpectationFailedException("max number of inflight messages reached for " + source);
+                if(clientMode){
+                    //this is the calling thread (iew. the application thread in the context of client) so backoff and retry
+                    try {
+                        int c = 0;
+                        while(!canSend(context) && ++c <
+                                registry.getOptions().getMaxErrorRetries()){
+                            Thread.sleep(
+                                    MqttsnUtils.getExponentialBackoff(c, true));
+                        }
+                        if(canSend(context)){
+                            sendMessageInternal(context, message, queuedPublishMessage);
+                        } else {
+                            logger.warn("blocked sending message after backoff by inflight state {}", message);
+                            throw new MqttsnExpectationFailedException("blocked sending message after backoff by inflight state");
+                        }
+                    } catch(InterruptedException e){
+                        throw new MqttsnException("blocked sending non-publish message, state issue");
+                    }
+                } else {
+                    logger.warn("{} max inflight message number reached ({}), fail-fast for sending, allow for receiving {} - {}", context, count, source, message);
+                    throw new MqttsnExpectationFailedException("max number of inflight messages reached for " + source);
+                }
+
             }
         }
 

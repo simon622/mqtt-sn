@@ -119,6 +119,10 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
             data = registry.getSecurityService().readVerified(context, data);
         }
 
+        if(!running){
+            logger.warn("transport is NOT RUNNING trying to receive {} byte Datagram to {}", context);
+            return;
+        }
         final byte[] d = data;
         getRegistry().getRuntime().submit(ingressProtocolProcessor,
                 () -> receiveFromTransportInternal(context, d), context);

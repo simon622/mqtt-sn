@@ -185,6 +185,8 @@ public class Files {
         }
         lockFile.createNewFile();
         lockFile.deleteOnExit();
+        Thread h = new Thread(lockFile::delete);
+        Runtime.getRuntime().addShutdownHook(h);
     }
 
     /**

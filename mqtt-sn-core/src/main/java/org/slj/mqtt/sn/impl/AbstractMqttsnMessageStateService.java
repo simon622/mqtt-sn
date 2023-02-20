@@ -252,51 +252,40 @@ public abstract class AbstractMqttsnMessageStateService
                 IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL;
 
         int count = countInflight(context, source);
-        if(count >= registry.getOptions().getMaxMessagesInflight()){
-            Optional<InflightMessage> blockingMessage =
-                    getInflightMessages(context, source).values().stream().findFirst();
-            logger.warn("presently unable to send {},{} to {}, max inflight reached for direction {} {} -> {}",
-                    message, queuedPublishMessage, context, source, count, blockingMessage.orElseGet(null));
-            if(blockingMessage.isPresent() && clientMode){
-                //-- if we are in client mode, attempt to wait for the ongoing outbound
-                //-- message to complete before we issue next message
-                MqttsnWaitToken token = blockingMessage.get().getToken();
-                if(token != null){
-                    waitForCompletion(context, token);
-                    if(!token.isError() && token.isComplete()){
-                        //-- recurse point
-                        return sendMessageInternal(context, message, queuedPublishMessage);
+        if(count >= registry.getOptions().getMaxMessagesInflight()) {
+            if (clientMode) {
+                int retry = 0;
+                while ((count = countInflight(context, source)) >=
+                        registry.getOptions().getMaxMessagesInflight()
+                        && ++retry <
+                        registry.getOptions().getMaxErrorRetries()) {
+                    try {
+                        long sleep = MqttsnUtils.getExponentialBackoff(retry, true);
+                        logger.debug("exp. backoff ({}) for client send {}, max inflight reached for direction {} ",
+                                sleep, message, source);
+                        Thread.sleep(sleep);
+                    } catch(Exception e){
                     }
-                    else {
-                        logger.warn("unable to send, partial send in progress with token {}", token);
-                        throw new MqttsnExpectationFailedException("unable to send message, partial send in progress");
+                }
+
+                Optional<InflightMessage> blockingMessage =
+                        getInflightMessages(context, source).values().stream().findFirst();
+                if (blockingMessage.isPresent()) {
+                    MqttsnWaitToken token = blockingMessage.get().getToken();
+                    if (token != null) {
+                        waitForCompletion(context, token);
+                        if (!token.isError() && token.isComplete()) {
+                            //-- recurse point
+                            return sendMessageInternal(context, message, queuedPublishMessage);
+                        } else {
+                            logger.warn("unable to send, partial send in progress with token {}", token);
+                            throw new MqttsnExpectationFailedException("unable to send message, partial send in progress");
+                        }
                     }
                 }
             } else {
-                if(clientMode){
-                    //this is the calling thread (iew. the application thread in the context of client) so backoff and retry
-                    try {
-                        logger.warn("backing off send of {} for  {}", message, context);
-                        int c = 0;
-                        while(!canSend(context) && ++c <
-                                registry.getOptions().getMaxErrorRetries()){
-                            Thread.sleep(
-                                    MqttsnUtils.getExponentialBackoff(c, true));
-                        }
-                        if(canSend(context)){
-                            sendMessageInternal(context, message, queuedPublishMessage);
-                        } else {
-                            logger.warn("blocked sending message after backoff by inflight state {}", message);
-                            throw new MqttsnExpectationFailedException("blocked sending message after backoff by inflight state");
-                        }
-                    } catch(InterruptedException e){
-                        throw new MqttsnException("blocked sending non-publish message, state issue");
-                    }
-                } else {
-                    logger.warn("{} max inflight message number reached ({}), fail-fast for sending, allow for receiving {} - {}", context, count, source, message);
-                    throw new MqttsnExpectationFailedException("max number of inflight messages reached for " + source);
-                }
-
+                logger.warn("{} max inflight message number reached ({}), fail-fast for sending {} - {}", context, count, source, message);
+                throw new MqttsnExpectationFailedException("max number of inflight messages reached for " + source);
             }
         }
 

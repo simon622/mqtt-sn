@@ -110,7 +110,7 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
         try {
             Files.createRuntimeLockFile(path);
         } catch(IOException e){
-            throw new MqttsnSecurityException("workspace in use, cannot start");
+            throw new MqttsnSecurityException("workspace in use, cannot start " + path.getAbsolutePath());
         }
     }
 

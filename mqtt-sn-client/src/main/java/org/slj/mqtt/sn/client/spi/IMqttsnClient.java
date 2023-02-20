@@ -151,6 +151,15 @@ public interface IMqttsnClient extends Closeable {
     void disconnect() throws MqttsnException;
 
     /**
+     * DISCONNECT from the gateway.
+     *
+     * @param interactive - Asserts that a distant DISCONNECT is received during the process.
+     * If no remote event is received, an expectation exception is thrown, but all state is tidied up
+     * in the same manner as if a remote event was not confirmed.
+     */
+    void disconnect(boolean interactive) throws MqttsnException;
+
+    /**
      * Registers a new Publish listener which will be notified when a PUBLISH message is successfully committed to the gateway
      * @param listener - The instance of the listener to notify
      */

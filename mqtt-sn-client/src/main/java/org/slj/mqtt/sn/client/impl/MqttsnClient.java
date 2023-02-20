@@ -40,7 +40,6 @@ import org.slj.mqtt.sn.spi.*;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnHelo;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -448,7 +447,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     //-- this means NOTHING was received after my sleep - gateway may have gone, so disconnect and
                     //-- force CONNECT to be next operation
                     disconnect(false, false,
-                            ((MqttsnClientOptions)registry.getOptions()).getDisconnectStopsTransport());
+                            ((MqttsnClientOptions)registry.getOptions()).getDisconnectStopsTransport(), false);
                     throw new MqttsnExpectationFailedException("gateway did not respond to AWAKE state; disconnected");
                 }
             } else {
@@ -492,11 +491,16 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      * @see {@link IMqttsnClient#disconnect()}
      */
     public void disconnect()  throws MqttsnException {
-        disconnect(true, false,
-                ((MqttsnClientOptions) registry.getOptions()).getDisconnectStopsTransport());
+        disconnect(false);
     }
 
-    private void disconnect(boolean sendRemoteDisconnect, boolean deepClean, boolean stopTransport)  throws MqttsnException {
+    public void disconnect(boolean interactive)  throws MqttsnException {
+        disconnect(true, false,
+                ((MqttsnClientOptions) registry.getOptions()).getDisconnectStopsTransport(), interactive);
+    }
+
+    private void disconnect(boolean sendRemoteDisconnect, boolean deepClean, boolean stopTransport, boolean interactive)
+            throws MqttsnException {
         try {
             ISession state = checkSession(false);
             synchronized (functionMutex) {
@@ -504,10 +508,13 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                     try {
                         if (MqttsnUtils.in(state.getClientState(),
                                 ClientState.ACTIVE, ClientState.ASLEEP, ClientState.AWAKE)) {
-                            logger.info("disconnecting client; deepClean ? [{}], sending remote disconnect ? {}", deepClean, sendRemoteDisconnect);
+                            logger.info("disconnecting client; interactive ? [{}], deepClean ? [{}], sending remote disconnect ? {}", interactive, deepClean, sendRemoteDisconnect);
                             if(sendRemoteDisconnect){
                                 IMqttsnMessage message = registry.getMessageFactory().createDisconnect();
-                                registry.getMessageStateService().sendMessage(state.getContext(), message);
+                                MqttsnWaitToken wait = registry.getMessageStateService().sendMessage(state.getContext(), message);
+                                if(interactive){
+                                    waitForCompletion(wait, 2000);
+                                }
                             }
                         }
                     } finally {
@@ -527,7 +534,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      */
     public void close() {
         try {
-            disconnect(true, false, true);
+            disconnect(true, false, true, false);
         } catch(MqttsnException e){
             throw new RuntimeException(e);
         } finally {
@@ -638,7 +645,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                             if(errorRetryCounter++ >= registry.getOptions().getMaxErrorRetries()){
                                 logger.error("error on connection manager thread, DISCONNECTING", e);
                                 resetErrorState();
-                                disconnect(false, true, true);
+                                disconnect(false, true, true, false);
                             } else {
                                 registry.getMessageStateService().clearInflight(getSessionState().getContext());
                                 logger.warn("error on connection manager thread, execute retransmission", e);
@@ -659,7 +666,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
     public void resetConnection(IClientIdentifierContext context, Throwable t, boolean attemptRestart) {
         try {
             logger.warn("connection lost at transport layer", t);
-            disconnect(false, true, true);
+            disconnect(false, true, true, false);
             //attempt to restart transport
             ITransport transport = getRegistry().getTransportLocator().
                     getTransport(
@@ -776,7 +783,7 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
         public void notifyRemoteDisconnect(IClientIdentifierContext context) {
             try {
                 disconnect(false, true,
-                        ((MqttsnClientOptions)registry.getOptions()).getDisconnectStopsTransport());
+                        ((MqttsnClientOptions)registry.getOptions()).getDisconnectStopsTransport(), false);
             } catch(Exception e){
                 logger.warn("error encountered handling remote disconnect", e);
             }

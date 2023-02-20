@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.spi.*;
 
 import java.io.Closeable;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An SN client allows you to talk to a DISCOVERED or PRECONFIGURED Sensor Network gateway.
@@ -79,7 +80,7 @@ public interface IMqttsnClient extends Closeable {
     /**
      * @see {@link IMqttsnMessageStateService#waitForCompletion}
      */
-    Optional<IMqttsnMessage> waitForCompletion(MqttsnWaitToken token, int customWaitTime) throws MqttsnExpectationFailedException;
+    Optional<IMqttsnMessage> waitForCompletion(MqttsnWaitToken token, long customWaitTime) throws MqttsnExpectationFailedException;
 
 
     /**
@@ -151,13 +152,13 @@ public interface IMqttsnClient extends Closeable {
     void disconnect() throws MqttsnException;
 
     /**
-     * DISCONNECT from the gateway.
-     *
-     * @param interactive - Asserts that a distant DISCONNECT is received during the process.
+     * DISCONNECT from the gateway.Asserts that a distant DISCONNECT is received during the process.
      * If no remote event is received, an expectation exception is thrown, but all state is tidied up
      * in the same manner as if a remote event was not confirmed.
+     * @param time - time to wait for Gateway ack
+     * @param unit - unit of time to wait for Gateway ack
      */
-    void disconnect(boolean interactive) throws MqttsnException;
+    void disconnect(long time, TimeUnit unit) throws MqttsnException;
 
     /**
      * Registers a new Publish listener which will be notified when a PUBLISH message is successfully committed to the gateway

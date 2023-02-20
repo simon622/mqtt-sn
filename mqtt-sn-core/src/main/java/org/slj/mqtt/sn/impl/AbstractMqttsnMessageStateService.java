@@ -259,7 +259,8 @@ public abstract class AbstractMqttsnMessageStateService
             Optional<InflightMessage> blockingMessage =
                     getInflightMessages(context, source).values().stream().findFirst();
             if(blockingMessage.isPresent() && clientMode){
-                //-- if we are in client mode, attempt to wait for the ongoing outbound message to complete before we issue next message
+                //-- if we are in client mode, attempt to wait for the ongoing outbound
+                //-- message to complete before we issue next message
                 MqttsnWaitToken token = blockingMessage.get().getToken();
                 if(token != null){
                     waitForCompletion(context, token);
@@ -273,7 +274,8 @@ public abstract class AbstractMqttsnMessageStateService
                     }
                 }
             } else {
-                throw new MqttsnExpectationFailedException("max number of inflight messages reached");
+                logger.warn("{} max inflight message number reached ({}), fail-fast for sending, allow for receiving {} - {}", context, count, source, message);
+                throw new MqttsnExpectationFailedException("max number of inflight messages reached for " + source);
             }
         }
 
@@ -574,11 +576,13 @@ public abstract class AbstractMqttsnMessageStateService
             throws MqttsnException {
 
         //may have old inbound messages kicking around depending on reap settings, to just allow these to come in
-        if(countInflight(context, source) >=
+        int count = 0;
+        if((count = countInflight(context, source)) >=
                 registry.getOptions().getMaxMessagesInflight()){
-            logger.warn("{} max inflight message number reached, fail-fast for sending, allow for receiving {} - {}", context, source, message);
+
             if(source == IMqttsnOriginatingMessageSource.LOCAL){
-                throw new MqttsnExpectationFailedException("max number of inflight messages reached");
+                logger.warn("{} max inflight message number reached ({}), fail-fast {} {}", context, count, source, message);
+                throw new MqttsnExpectationFailedException("max number of inflight messages reached for " + source);
             }
         }
 
@@ -605,7 +609,7 @@ public abstract class AbstractMqttsnMessageStateService
         }
 
         addInflightMessage(context, msgId, inflight);
-        logger.info("[{} - {}] marking {} message {} inflight id context {}",
+        logger.debug("[{} - {}] marking {} message {} inflight id context {}",
                     registry.getOptions().getContextId(), context, source, message, idContext);
         return inflight.getToken();
     }

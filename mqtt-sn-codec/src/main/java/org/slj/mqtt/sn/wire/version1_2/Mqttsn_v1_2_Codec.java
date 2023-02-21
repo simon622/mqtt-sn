@@ -42,6 +42,10 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
 
     protected volatile IMqttsnMessageFactory messageFactory;
 
+    public Mqttsn_v1_2_Codec(boolean strict) {
+        super(strict);
+    }
+
     @Override
     public PublishData getData(IMqttsnMessage message) {
         MqttsnPublish publish = (MqttsnPublish) message ;
@@ -294,7 +298,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     public IMqttsnMessageFactory createMessageFactory() {
         if (messageFactory == null) {
             synchronized (this) {
-                if (messageFactory == null) messageFactory = Mqttsn_v1_2_MessageFactory.getInstance();
+                if (messageFactory == null) messageFactory = Mqttsn_v1_2_MessageFactory.getInstance(strict);
             }
         }
         return messageFactory;

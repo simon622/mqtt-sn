@@ -37,25 +37,38 @@ import org.slj.mqtt.sn.wire.version2_0.payload.*;
 public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory implements IMqttsnMessageFactory {
 
     //singleton
-    private static volatile Mqttsn_v2_0_MessageFactory instance;
+    private static volatile Mqttsn_v2_0_MessageFactory instanceStrict;
+    private static volatile Mqttsn_v2_0_MessageFactory instanceRelaxed;
 
 
-    protected Mqttsn_v2_0_MessageFactory() {
+    protected Mqttsn_v2_0_MessageFactory(boolean strict) {
+        super(strict);
     }
 
-    public static IMqttsnMessageFactory getInstance() {
-        if (instance == null) {
-            synchronized (Mqttsn_v2_0_MessageFactory.class) {
-                if (instance == null) instance = new Mqttsn_v2_0_MessageFactory();
+    public static IMqttsnMessageFactory getInstance(boolean strict) {
+        if(strict){
+            if (instanceStrict == null){
+                synchronized (Mqttsn_v2_0_MessageFactory.class) {
+                    if (instanceStrict == null) instanceStrict = new Mqttsn_v2_0_MessageFactory(true);
+                }
             }
+            return instanceStrict;
+        } else {
+            if (instanceRelaxed == null){
+                synchronized (Mqttsn_v2_0_MessageFactory.class) {
+                    if (instanceRelaxed == null) instanceRelaxed = new Mqttsn_v2_0_MessageFactory(false);
+                }
+            }
+            return instanceRelaxed;
         }
-        return instance;
     }
 
 
     @Override
     public IMqttsnMessage createAuth(String method, byte[] data) throws MqttsnCodecException {
-        return new MqttsnAuth(method, data);
+        MqttsnAuth auth = new MqttsnAuth(method, data);
+        validate(auth);
+        return auth;
     }
 
     @Override
@@ -69,8 +82,8 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setMaxPacketSize(maxPacketSize);
         msg.setDefaultAwakeMessages(defaultAwakeMessages);
         msg.setSessionExpiryInterval(sessionExpiryInterval);
-        msg.validate();
         msg.setAuth(auth);
+        validate(msg);
         return msg;
     }
 
@@ -81,7 +94,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setReturnCode(returnCode);
         msg.setAssignedClientId(null);
         msg.setSessionExpiryInterval(0);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -94,7 +107,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setAssignedClientId(assignedClientId);
         msg.setSessionExpiryInterval(sessionExpiryInterval);
         msg.setSessionPresent(sessionExists);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -105,7 +118,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setTopicIdType(topicAliasId);
         msg.setTopicId(topicAlias);
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -133,7 +146,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
             default:
                 throw new MqttsnCodecException("publish method only supports predefined and normal topic id types");
         }
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -148,7 +161,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setRetainedPublish(retain);
         msg.setData(payload);
         msg.setTopicName(topicPath);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -156,7 +169,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     public IMqttsnMessage createPuback(int topicId, int returnCode) throws MqttsnCodecException {
         MqttsnPuback_V2_0 msg = new MqttsnPuback_V2_0();
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -180,7 +193,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
             default:
                 throw new MqttsnCodecException("subscribe method only supports predefined and normal topic id types");
         }
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -194,7 +207,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setRetainHandling(MqttsnConstants.RETAINED_SEND);
         msg.setNoLocal(false);
         msg.setRetainAsPublished(false);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -206,7 +219,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setTopicIdType(MqttsnConstants.TOPIC_NORMAL);
         msg.setTopicId(topicId);
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -224,6 +237,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
             default:
                 throw new MqttsnCodecException("subscribe method only supports predefined and normal topic id types");
         }
+        validate(msg);
         return msg;
     }
 
@@ -232,6 +246,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         MqttsnSpecificationValidator.validateSubscribePath(topicName);
         MqttsnUnsubscribe_V2_0 msg = new MqttsnUnsubscribe_V2_0();
         msg.setTopicName(topicName);
+        validate(msg);
         return msg;
     }
 
@@ -239,6 +254,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     public IMqttsnMessage createUnsuback(int reasonCode) throws MqttsnCodecException {
         MqttsnUnsuback_V2_0 msg = new MqttsnUnsuback_V2_0();
         msg.setReturnCode(reasonCode);
+        validate(msg);
         return msg;
     }
 
@@ -247,7 +263,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         MqttsnPingreq_V2_0 msg = new MqttsnPingreq_V2_0();
         msg.setClientId(clientId);
         msg.setMaxMessages(0);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -255,13 +271,14 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     public IMqttsnMessage createPingresp() throws MqttsnCodecException {
         MqttsnPingresp_V2_0 msg = new MqttsnPingresp_V2_0();
         msg.setMessagesRemaining(0);
+        validate(msg);
         return msg;
     }
 
     @Override
     public IMqttsnMessage createDisconnect() throws MqttsnCodecException {
         MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -272,7 +289,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setSessionExpiryInterval(sessionExpiry);
         msg.setRetainRegistrations(retainRegistrations);
         msg.setReasonString(null);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -282,7 +299,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
         msg.setReturnCode(returnCode);
         msg.setReasonString(reasonString);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -296,6 +313,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         msg.setSequence(sequence);
         msg.setPublicUID(publicUID);
         msg.setProtectionSchema(protectionScheme);
+        validate(msg);
         return msg;
     }
 }

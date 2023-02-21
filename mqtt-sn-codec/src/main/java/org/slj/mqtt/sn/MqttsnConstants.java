@@ -54,7 +54,9 @@ public interface MqttsnConstants {
     int UNSIGNED_MAX_16 = 65535;
     int UNSIGNED_MAX_8 = 255;
 
-    int MAX_CLIENT_ID_LENGTH = 23;
+    int MAX_CLIENT_ID_LENGTH_v12 = 23;
+    int MAX_CLIENT_ID_LENGTH_v2 = UNSIGNED_MAX_16 - 13;
+
     int MAX_TOPIC_LENGTH = UNSIGNED_MAX_16;
     int MAX_PUBLISH_LENGTH = UNSIGNED_MAX_16 - (9 + 2); //9 for the normal fields, + 2 for large message type
     int MAX_ENCAPSULATED_LENGTH = UNSIGNED_MAX_16 - 7;

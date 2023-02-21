@@ -793,6 +793,11 @@ public class MqttsnOptions extends AbstractOptions {
         return this;
     }
 
+    public MqttsnOptions withMaxClientIdentifierLength(int maxClientIdentifierLength) {
+        this.maxClientIdLength = maxClientIdentifierLength;
+        return this;
+    }
+
     public Map<String, NetworkAddress> getNetworkAddressEntries() {
         return networkAddressEntries;
     }

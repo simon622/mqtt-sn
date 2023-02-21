@@ -30,6 +30,18 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 
 public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFactory  {
 
+    private final boolean strict;
+
+    public AbstractMqttsnMessageFactory(boolean strict) {
+        this.strict = strict;
+    }
+
+    protected void validate(IMqttsnMessage message) throws MqttsnCodecException {
+        if(strict){
+            message.validate();
+        }
+    }
+
     @Override
     public IMqttsnMessage createIntegrityMessage(byte protectionScheme, int sequence, byte[] publicUID, boolean authOnly, int keyMaterial, byte[] cipherText, byte[] mac) throws MqttsnCodecException {
         throw new MqttsnCodecException("message not supported by codec");

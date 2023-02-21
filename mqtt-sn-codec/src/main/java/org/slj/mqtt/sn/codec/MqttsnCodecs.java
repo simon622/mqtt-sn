@@ -35,11 +35,15 @@ public interface MqttsnCodecs {
      *
      * See Mqttsn specification at http://www.mqtt.org/new/wp-content/uploads/2009/06/MQTT-SN_spec_v1.2.pdf
      */
-    IMqttsnCodec MQTTSN_CODEC_VERSION_1_2 = new Mqttsn_v1_2_Codec();
+    IMqttsnCodec MQTTSN_CODEC_VERSION_1_2 = new Mqttsn_v1_2_Codec(true);
+
+    IMqttsnCodec MQTTSN_CODEC_VERSION_1_2_RELAXED = new Mqttsn_v1_2_Codec(false);
 
     /**
      * Version 2.0 WD 14 support of the MQTT-SN specification
      */
-    IMqttsnCodec MQTTSN_CODEC_VERSION_2_0 = new Mqttsn_v2_0_Codec();
+    IMqttsnCodec MQTTSN_CODEC_VERSION_2_0 = new Mqttsn_v2_0_Codec(true);
+
+    IMqttsnCodec MQTTSN_CODEC_VERSION_2_0_RELAXED = new Mqttsn_v2_0_Codec(false);
 
 }

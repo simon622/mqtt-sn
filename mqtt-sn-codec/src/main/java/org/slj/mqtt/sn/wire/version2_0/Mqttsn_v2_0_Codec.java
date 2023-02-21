@@ -41,6 +41,10 @@ import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
 
+    public Mqttsn_v2_0_Codec(boolean strict) {
+        super(strict);
+    }
+
     @Override
     public boolean isDisconnect(IMqttsnMessage message) {
         return message instanceof MqttsnDisconnect_V2_0;
@@ -208,7 +212,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
     public IMqttsnMessageFactory createMessageFactory() {
         if (messageFactory == null) {
             synchronized (this) {
-                if (messageFactory == null) messageFactory = Mqttsn_v2_0_MessageFactory.getInstance();
+                if (messageFactory == null) messageFactory = Mqttsn_v2_0_MessageFactory.getInstance(strict);
             }
         }
         return messageFactory;

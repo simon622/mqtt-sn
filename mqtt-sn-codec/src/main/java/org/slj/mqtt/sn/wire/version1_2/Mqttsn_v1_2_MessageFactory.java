@@ -32,22 +32,34 @@ import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.*;
+import org.slj.mqtt.sn.wire.version2_0.Mqttsn_v2_0_MessageFactory;
 
 public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
     //singleton
-    private static volatile Mqttsn_v1_2_MessageFactory instance;
+    private static volatile Mqttsn_v1_2_MessageFactory instanceStrict;
+    private static volatile Mqttsn_v1_2_MessageFactory instanceRelaxed;
 
-    protected Mqttsn_v1_2_MessageFactory() {
+    protected Mqttsn_v1_2_MessageFactory(boolean strict) {
+        super(strict);
     }
 
-    public static IMqttsnMessageFactory getInstance() {
-        if (instance == null) {
-            synchronized (Mqttsn_v1_2_MessageFactory.class) {
-                if (instance == null) instance = new Mqttsn_v1_2_MessageFactory();
+    public static IMqttsnMessageFactory getInstance(boolean strict) {
+        if(strict){
+            if (instanceStrict == null){
+                synchronized (Mqttsn_v1_2_MessageFactory.class) {
+                    if (instanceStrict == null) instanceStrict = new Mqttsn_v1_2_MessageFactory(true);
+                }
             }
+            return instanceStrict;
+        } else {
+            if (instanceRelaxed == null){
+                synchronized (Mqttsn_v1_2_MessageFactory.class) {
+                    if (instanceRelaxed == null) instanceRelaxed = new Mqttsn_v1_2_MessageFactory(false);
+                }
+            }
+            return instanceRelaxed;
         }
-        return instance;
     }
 
     @Override

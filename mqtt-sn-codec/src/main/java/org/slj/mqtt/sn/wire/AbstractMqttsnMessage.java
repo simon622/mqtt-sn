@@ -195,4 +195,9 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
     public static byte readHeaderByteWithOffset(byte[] data, int index) {
         return MqttsnWireUtils.isLargeMessage(data) ? data[index + 2] : data[index];
     }
+
+    @Override
+    public void validate() throws MqttsnCodecException {
+        
+    }
 }

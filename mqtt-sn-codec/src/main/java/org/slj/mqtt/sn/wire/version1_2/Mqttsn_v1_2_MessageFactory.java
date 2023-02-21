@@ -73,7 +73,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnAdvertise msg = new MqttsnAdvertise();
         msg.setGatewayId(gatewayId);
         msg.setDuration(duration);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -82,7 +82,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
         MqttsnSearchGw msg = new MqttsnSearchGw();
         msg.setRadius(radius);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -92,7 +92,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnGwInfo msg = new MqttsnGwInfo();
         msg.setGatewayId(gatewayId);
         msg.setGatewayAddress(gatewayAddress);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -104,7 +104,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         msg.setDuration(keepAlive);
         msg.setCleanSession(cleanSession);
         msg.setWill(willPrompt);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -113,7 +113,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
         MqttsnConnack msg = new MqttsnConnack();
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -136,7 +136,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         msg.setQoS(QoS);
         msg.setRetainedPublish(retain);
         msg.setWillTopic(topicPath);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -145,7 +145,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
         MqttsnWilltopicresp msg = new MqttsnWilltopicresp();
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -156,7 +156,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         msg.setQoS(QoS);
         msg.setRetainedPublish(retain);
         msg.setWillTopic(topicPath);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -164,7 +164,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     public IMqttsnMessage createWillMsgupd(byte[] payload) throws MqttsnCodecException {
         MqttsnWillmsgupd msg = new MqttsnWillmsgupd();
         msg.setMsgData(payload);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -178,7 +178,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     public IMqttsnMessage createWillMsg(byte[] payload) throws MqttsnCodecException {
         MqttsnWillmsg msg = new MqttsnWillmsg();
         msg.setMsgData(payload);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -187,7 +187,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
         MqttsnWillmsgresp msg = new MqttsnWillmsgresp();
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -197,7 +197,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnRegister msg = new MqttsnRegister();
         msg.setTopicId(topicAlias);
         msg.setTopicName(topicPath);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -205,7 +205,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     public IMqttsnMessage createRegister(String topicPath) throws MqttsnCodecException {
         MqttsnRegister msg = new MqttsnRegister();
         msg.setTopicName(topicPath);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -215,7 +215,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnRegack msg = new MqttsnRegack();
         msg.setTopicId(topicAlias);
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -243,7 +243,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
             default:
                 throw new MqttsnCodecException("publish method only supports predefined and normal topic id types");
         }
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -259,7 +259,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         msg.setRetainedPublish(retain);
         msg.setData(payload);
         msg.setTopicName(topicPath);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -268,7 +268,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnPuback msg = new MqttsnPuback();
         msg.setTopicId(topicId);
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -309,7 +309,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
             default:
                 throw new MqttsnCodecException("subscribe method only supports predefined and normal topic id types");
         }
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -321,7 +321,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnSubscribe msg = new MqttsnSubscribe();
         msg.setQoS(QoS);
         msg.setTopicName(topicName);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -332,7 +332,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         msg.setQoS(grantedQoS);
         msg.setTopicId(topicId);
         msg.setReturnCode(returnCode);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -340,7 +340,6 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     public IMqttsnMessage createUnsubscribe(MqttsnConstants.TOPIC_TYPE type, int topicId) throws MqttsnCodecException {
 
         MqttsnSpecificationValidator.validateTopicAlias(topicId);
-
         MqttsnUnsubscribe msg = new MqttsnUnsubscribe();
         switch (type) {
             case NORMAL:
@@ -352,6 +351,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
             default:
                 throw new MqttsnCodecException("subscribe method only supports predefined and normal topic id types");
         }
+        validate(msg);
         return msg;
     }
 
@@ -361,6 +361,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         MqttsnSpecificationValidator.validateSubscribePath(topicName);
         MqttsnUnsubscribe msg = new MqttsnUnsubscribe();
         msg.setTopicName(topicName);
+        validate(msg);
         return msg;
     }
 
@@ -368,6 +369,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     public IMqttsnMessage createUnsuback(int reasonCode) throws MqttsnCodecException {
         MqttsnUnsuback msg = new MqttsnUnsuback();
         msg.setReturnCode(reasonCode);
+        validate(msg);
         return msg;
     }
 
@@ -376,20 +378,21 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
         MqttsnPingreq msg = new MqttsnPingreq();
         msg.setClientId(clientId);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
     @Override
     public IMqttsnMessage createPingresp() throws MqttsnCodecException {
         MqttsnPingresp msg = new MqttsnPingresp();
+        validate(msg);
         return msg;
     }
 
     @Override
     public IMqttsnMessage createDisconnect() throws MqttsnCodecException {
         MqttsnDisconnect msg = new MqttsnDisconnect();
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -401,7 +404,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         }
         MqttsnDisconnect msg = new MqttsnDisconnect();
         msg.setDuration((int) duration);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -410,6 +413,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
 
         MqttsnHelo msg = new MqttsnHelo();
         msg.setUserAgent(userAgent);
+        validate(msg);
         return msg;
     }
 
@@ -417,7 +421,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
     public IMqttsnMessage createDisconnect(int returnCode, String reasonString) throws MqttsnCodecException {
 
         MqttsnDisconnect msg = new MqttsnDisconnect();
-        msg.validate();
+        validate(msg);
         return msg;
     }
 
@@ -428,7 +432,7 @@ public class Mqttsn_v1_2_MessageFactory extends AbstractMqttsnMessageFactory {
         msg.setEncapsulatedMsg(messageData);
         msg.setRadius(radius);
         msg.setWirelessNodeId(wirelessNodeId);
-        msg.validate();
+        validate(msg);
         return msg;
     }
 }

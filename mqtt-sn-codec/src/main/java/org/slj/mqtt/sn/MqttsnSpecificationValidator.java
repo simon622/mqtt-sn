@@ -67,12 +67,12 @@ public class MqttsnSpecificationValidator {
 
     public static void validateSubscribePath(String topicPath) throws MqttsnCodecException {
         if(!isValidSubscriptionTopic(topicPath))
-            throw new MqttsnCodecException("invalid subscribe topic - " + topicPath);
+            throw new MqttsnCodecException("invalid subscribe topic");
     }
 
     public static void validatePublishPath(String topicPath) throws MqttsnCodecException {
         if(!isValidPublishTopic(topicPath))
-            throw new MqttsnCodecException("invalid publish topic - " + topicPath);
+            throw new MqttsnCodecException("invalid publish topic");
     }
 
     public static boolean isValidPublishTopic(String topicPath){
@@ -170,18 +170,18 @@ public class MqttsnSpecificationValidator {
 
     public static void validateStringData(String data, boolean allowNull) {
         if(!validStringData(data, allowNull))
-            throw new MqttsnCodecException("invalid string data - " + data);
+            throw new MqttsnCodecException("invalid string data");
     }
 
     public static void validateClientId(String clientId, int max) {
         if(!validClientId(clientId, true, max))
-            throw new MqttsnCodecException("invalid clientId - " + clientId);
+            throw new MqttsnCodecException("invalid clientId");
     }
 
     public static void validateProtocolId(int protocolId){
         if(protocolId != MqttsnConstants.PROTOCOL_VERSION_1_2 &&
                  protocolId != MqttsnConstants.PROTOCOL_VERSION_2_0 && protocolId != 0){
-            throw new MqttsnCodecException("invalid protocol version - " + protocolId);
+            throw new MqttsnCodecException("invalid protocol version");
         }
     }
 

@@ -78,7 +78,7 @@ public class Mqttsn1_2WireTests {
         testWireMessage(message);
     }
 
-    @Test
+    @Test(expected = MqttsnCodecException.class)
     public void testMqttsnConnectLongClientId() throws MqttsnCodecException {
 
         //-- test very long clientId

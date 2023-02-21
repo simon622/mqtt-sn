@@ -103,7 +103,7 @@ public class MqttsnPingreq_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     @Override
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateUInt8(maxMessages);
-        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
+        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId, MqttsnConstants.UNSIGNED_MAX_16);
     }
 
     @Override

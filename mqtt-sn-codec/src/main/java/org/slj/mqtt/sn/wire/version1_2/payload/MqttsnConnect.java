@@ -139,7 +139,8 @@ public class MqttsnConnect extends AbstractMqttsnMessageWithFlagsField
     @Override
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateProtocolId(protocolVersion);
-        MqttsnSpecificationValidator.validateClientId(clientId);
+        MqttsnSpecificationValidator.validateClientId(clientId,
+                MqttsnConstants.MAX_CLIENT_ID_LENGTH);
         MqttsnSpecificationValidator.validateKeepAlive(duration);
     }
 }

@@ -92,6 +92,7 @@ public class MqttsnPingreq extends AbstractMqttsnMessage
 
     @Override
     public void validate() throws MqttsnCodecException {
-        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
+        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId,
+                MqttsnConstants.MAX_CLIENT_ID_LENGTH);
     }
 }

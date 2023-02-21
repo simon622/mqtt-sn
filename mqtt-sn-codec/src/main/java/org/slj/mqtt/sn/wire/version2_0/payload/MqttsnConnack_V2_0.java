@@ -114,7 +114,9 @@ public class MqttsnConnack_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateReturnCode(returnCode);
         MqttsnSpecificationValidator.validateSessionExpiry(sessionExpiryInterval);
-        if(assignedClientId != null) MqttsnSpecificationValidator.validateClientId(assignedClientId);
+        if(assignedClientId != null)
+            MqttsnSpecificationValidator.validateClientId(assignedClientId,
+                    MqttsnConstants.UNSIGNED_MAX_16);
     }
 
     @Override

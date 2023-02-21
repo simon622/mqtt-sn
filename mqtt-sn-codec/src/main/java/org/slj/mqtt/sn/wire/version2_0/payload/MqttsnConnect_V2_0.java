@@ -233,7 +233,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
         MqttsnSpecificationValidator.validateKeepAlive(keepAlive);
         MqttsnSpecificationValidator.validateSessionExpiry(sessionExpiryInterval);
         MqttsnSpecificationValidator.validateMaxPacketSize(maxPacketSize);
-        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId);
+        if(clientId != null) MqttsnSpecificationValidator.validateClientId(clientId, MqttsnConstants.UNSIGNED_MAX_16);
     }
 
     @Override

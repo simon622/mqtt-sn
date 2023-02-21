@@ -166,8 +166,8 @@ public class MqttsnSpecificationValidator {
             throw new MqttsnCodecException("invalid string data - " + data);
     }
 
-    public static void validateClientId(String clientId) {
-        if(!validClientId(clientId, true, MqttsnConstants.MAX_CLIENT_ID_LENGTH))
+    public static void validateClientId(String clientId, int max) {
+        if(!validClientId(clientId, true, max))
             throw new MqttsnCodecException("invalid clientId - " + clientId);
     }
 
@@ -287,9 +287,5 @@ public class MqttsnSpecificationValidator {
                 retain != MqttsnConstants.RETAINED_SEND_NOT_EXISTS) {
             throw new MqttsnCodecException("invalid retain handling number - " + retain);
         }
-    }
-
-    public static void main(String[] args) {
-        validateClientId("simon");
     }
 }

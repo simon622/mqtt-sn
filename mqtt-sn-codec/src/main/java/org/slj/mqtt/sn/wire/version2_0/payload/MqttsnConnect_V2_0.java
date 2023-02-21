@@ -247,7 +247,7 @@ public class MqttsnConnect_V2_0 extends AbstractMqttsnMessage
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", maxPacketSize=" + maxPacketSize +
                 ", defaultAwakeMessages=" + defaultAwakeMessages +
-                ", clientId='" + (clientId == null ? "" : "") + '\'' +
+                ", clientId='" + (clientId == null ? "" : clientId) + '\'' +
                 '}';
     }
 }

@@ -34,13 +34,20 @@ public class MqttsnSpecificationValidator {
      *  include encodings of code points between U+D800 and U+DFFF
      *
      */
-    public static boolean validStringData(String data, boolean allowNull){
-        if(data == null && !allowNull){
+    public static boolean validStringData(String data, boolean allowNullOrEmpty){
+        if(data == null && !allowNullOrEmpty){
             return false;
         }
-        if(data == null && allowNull){
+        if(data == null && allowNullOrEmpty){
             return true;
         }
+        if("".equals(data) && allowNullOrEmpty){
+            return true;
+        }
+        if("".equals(data) && !allowNullOrEmpty){
+            return false;
+        }
+
         if(data.length() > MqttsnConstants.UNSIGNED_MAX_16){
             return false;
         }
@@ -124,12 +131,12 @@ public class MqttsnSpecificationValidator {
         return valid;
     }
 
-    public static boolean validClientId(String clientId, boolean allowNull, int maxLength) {
-        if(clientId == null){
-            if(!allowNull) return false;
+    public static boolean validClientId(String clientId, boolean allowNullOrEmpty, int maxLength) {
+        if(clientId == null || "".equals(clientId.trim())){
+            if(!allowNullOrEmpty) return false;
             else return true;
         }
-        return MqttsnSpecificationValidator.validStringData(clientId, allowNull) && (clientId.length() <= maxLength);
+        return MqttsnSpecificationValidator.validStringData(clientId, allowNullOrEmpty) && (clientId.length() <= maxLength);
     }
 
     public static boolean validUInt8(int field) {

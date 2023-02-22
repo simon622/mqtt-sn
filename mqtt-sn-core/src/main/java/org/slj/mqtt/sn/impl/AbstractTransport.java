@@ -86,8 +86,13 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
             }
         };
 
-        return getRegistry().getRuntime().submit(egressProtocolProcessor,
-                r, job);
+        if(running()){
+            return getRegistry().getRuntime().submit(egressProtocolProcessor,
+                    r, job);
+        } else {
+            logger.warn("unable to send to transport as no longer running");
+            return null;
+        }
     }
 
 

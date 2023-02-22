@@ -514,13 +514,15 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
             ISession state = checkSession(false);
             if (state != null && MqttsnUtils.in(state.getClientState(),
                     ClientState.ACTIVE, ClientState.ASLEEP, ClientState.AWAKE)) {
+                long start = System.currentTimeMillis();
                 synchronized (functionMutex) {
                     if(state != null){
-                        logger.info("disconnecting client; interactive ? [{}], deepClean ? [{}], sending remote disconnect ? {}", waitTime > 0, deepClean, sendRemoteDisconnect);
                         clearState(deepClean);
                         getRegistry().getSessionRegistry().modifyClientState(state, ClientState.DISCONNECTED);
                     }
                 }
+                logger.info("disconnecting client took [{}] interactive ? [{}], deepClean ? [{}], sending remote disconnect ? {}",
+                        System.currentTimeMillis() - start, waitTime > 0, deepClean, sendRemoteDisconnect);
                 if(sendRemoteDisconnect){
                     IMqttsnMessage message = registry.getMessageFactory().createDisconnect();
                     MqttsnWaitToken wait = registry.getMessageStateService().sendMessage(state.getContext(), message);

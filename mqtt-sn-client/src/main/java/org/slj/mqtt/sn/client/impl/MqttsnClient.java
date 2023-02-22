@@ -510,19 +510,11 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
 
     private void disconnect(boolean sendRemoteDisconnect, boolean deepClean, boolean stopTransport, long waitTime, TimeUnit unit)
             throws MqttsnException {
+        long start = System.currentTimeMillis();
         try {
             ISession state = checkSession(false);
             if (state != null && MqttsnUtils.in(state.getClientState(),
                     ClientState.ACTIVE, ClientState.ASLEEP, ClientState.AWAKE)) {
-                long start = System.currentTimeMillis();
-                synchronized (functionMutex) {
-                    if(state != null){
-                        clearState(deepClean);
-                        getRegistry().getSessionRegistry().modifyClientState(state, ClientState.DISCONNECTED);
-                    }
-                }
-                logger.info("disconnecting client took [{}] interactive ? [{}], deepClean ? [{}], sending remote disconnect ? {}",
-                        System.currentTimeMillis() - start, waitTime > 0, deepClean, sendRemoteDisconnect);
                 if(sendRemoteDisconnect){
                     IMqttsnMessage message = registry.getMessageFactory().createDisconnect();
                     MqttsnWaitToken wait = registry.getMessageStateService().sendMessage(state.getContext(), message);
@@ -530,9 +522,17 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
                         waitForCompletion(wait, unit.toMillis(waitTime));
                     }
                 }
+                synchronized (functionMutex) {
+                    if(state != null){
+                        clearState(deepClean);
+                        getRegistry().getSessionRegistry().modifyClientState(state, ClientState.DISCONNECTED);
+                    }
+                }
             }
         } finally {
             stopProcessing(stopTransport);
+            logger.info("disconnecting client took [{}] interactive ? [{}], deepClean ? [{}], sending remote disconnect ? {}",
+                    System.currentTimeMillis() - start, waitTime > 0, deepClean, sendRemoteDisconnect);
         }
     }
 

@@ -43,4 +43,12 @@ public class MqttsnClientMessageHandler
         }
         return super.handleRegister(context, message);
     }
+
+    @Override
+    protected IMqttsnMessage handleDisconnect(IMqttsnMessageContext context, IMqttsnMessage originatingMessage, IMqttsnMessage message) throws MqttsnException, MqttsnCodecException {
+
+        //Dont acknowledge the DISCONNECT in client mode
+        super.handleDisconnect(context, originatingMessage, message);
+        return null;
+    }
 }

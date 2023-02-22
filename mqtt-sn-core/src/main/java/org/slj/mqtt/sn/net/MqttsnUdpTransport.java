@@ -126,26 +126,33 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
         return thread;
     }
 
+    volatile boolean stopping = false;
     @Override
     public void stop() throws MqttsnException {
-        super.stop();
 
-        running = false;
-        long socketTime = System.currentTimeMillis();
-        if(socket != null &&
-                socket.isConnected()){
-            socket.close();
+        stopping = true;
+        if(running && !stopping){
+            stopping = true;
+            super.stop();
+
+            long socketTime = System.currentTimeMillis();
+            if(socket != null &&
+                    socket.isConnected()){
+                socket.close();
+            }
+            socket = null;
+
+            long interruptTime = System.currentTimeMillis();
+            if(receiverThread != null){
+                receiverThread.interrupt();
+            }
+
+            logger.info("stopped udp transport in socket.close={}ms, interrupt={}ms", System.currentTimeMillis() - socketTime,
+                    System.currentTimeMillis() - interruptTime);
+            broadcastThread = null;
         }
-        socket = null;
 
-        long interruptTime = System.currentTimeMillis();
-        if(receiverThread != null){
-            receiverThread.interrupt();
-        }
 
-        logger.info("stopped udp transport in socket.close={}ms, interrupt={}ms", System.currentTimeMillis() - socketTime,
-                System.currentTimeMillis() - interruptTime);
-        broadcastThread = null;
     }
 
     @Override

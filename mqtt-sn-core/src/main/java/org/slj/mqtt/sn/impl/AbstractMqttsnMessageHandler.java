@@ -99,6 +99,10 @@ public abstract class AbstractMqttsnMessageHandler
 
         try {
 
+            if(!running()){
+                return;
+            }
+
             if(!canHandle(context, message)){
                 logger.warn("mqtt-sn handler [{} <- {}] dropping message it could not handle {}",
                         context, message.getMessageName());

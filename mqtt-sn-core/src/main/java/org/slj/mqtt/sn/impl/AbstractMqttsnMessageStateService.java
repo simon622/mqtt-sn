@@ -38,10 +38,7 @@ import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnPublish_V2_0;
 
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public abstract class AbstractMqttsnMessageStateService
         extends AbstractMqttsnBackoffThreadService implements IMqttsnMessageStateService {
@@ -328,7 +325,10 @@ public abstract class AbstractMqttsnMessageStateService
                 };
             }
             INetworkContext networkContext = registry.getNetworkRegistry().getContext(context);
-            ((IMqttsnTransport)networkContext.getTransport()).writeToTransportWithCallback(networkContext, message, callback);
+            Future<IPacketTXRXJob> f = ((IMqttsnTransport)networkContext.getTransport()).writeToTransportWithCallback(networkContext, message, callback);
+            if(f == null){
+                token.markError("unable to send packet");
+            }
             return token;
 
         } catch(Exception e){

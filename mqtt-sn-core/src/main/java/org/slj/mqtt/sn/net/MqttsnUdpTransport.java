@@ -129,6 +129,7 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
     @Override
     public void stop() throws MqttsnException {
         super.stop();
+
         running = false;
         if(socket != null &&
                 socket.isConnected()){

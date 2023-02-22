@@ -132,6 +132,7 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
 
         stopping = true;
         if(running && !stopping){
+            long superTime = System.currentTimeMillis();
             super.stop();
 
             long socketTime = System.currentTimeMillis();
@@ -146,7 +147,9 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
                 receiverThread.interrupt();
             }
 
-            logger.info("stopped udp transport in socket.close={}ms, interrupt={}ms", System.currentTimeMillis() - socketTime,
+            logger.info("stopped udp transport in superTime={}ms, socket={}ms, interrupt={}ms",
+                    System.currentTimeMillis() - superTime,
+                    System.currentTimeMillis() - socketTime,
                     System.currentTimeMillis() - interruptTime);
             broadcastThread = null;
             stopping = false;

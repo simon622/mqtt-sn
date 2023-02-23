@@ -29,7 +29,7 @@
 
     <groupId>org.slj</groupId>
     <artifactId>mqtt-sn</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 
     <packaging>pom</packaging>
 
@@ -64,7 +64,7 @@
         <module>mqtt-sn-gateway-connector-paho</module>
         <module>mqtt-sn-load-test</module>
         <module>mqtt-sn-gateway-console</module>
-        <module>mqtt-sn-plc4j</module>
+<!--        <module>mqtt-sn-plc4j</module>-->
         <module>mqtt-sn-codec</module>
     </modules>
 
@@ -80,7 +80,7 @@
         <maven.build.shade.version>3.4.1</maven.build.shade.version>
         <jackson.version>2.10.2</jackson.version>
         <yaml.version>1.11</yaml.version>
-        <mqtt-sn.version>0.2.0</mqtt-sn.version>
+        <mqtt-sn.version>0.2.1</mqtt-sn.version>
     </properties>
 
     <dependencies>

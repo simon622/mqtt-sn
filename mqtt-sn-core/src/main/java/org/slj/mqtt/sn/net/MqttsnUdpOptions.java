@@ -59,7 +59,7 @@ public class MqttsnUdpOptions extends AbstractOptions {
     /**
      * Default multicast port is 2224
      */
-    public static int DEFAULT_BROADCAST_PORT = 2224;
+    public static int DEFAULT_BROADCAST_PORT = 0;
 
     /**
      * Default receive buffer size is 1024

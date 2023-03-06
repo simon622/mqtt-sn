@@ -31,6 +31,7 @@ import org.slj.mqtt.sn.model.IMqttsnMessageContext;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.IPacketTXRXJob;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnAdvertise;
 
 import java.util.List;
 import java.util.concurrent.Future;
@@ -62,6 +63,14 @@ public abstract class AbstractMqttsnTransport
                 if(!registry.getCodec().supportsVersion(protocolVersion)){
                     logger.warn("codec does not support presented protocol version {} for {}", protocolVersion, networkContext);
                     throw new MqttsnCodecException("unsupported codec version");
+                }
+            }
+
+            if(message.getMessageType() == MqttsnConstants.ADVERTISE){
+                if(registry.getOptions().isEnableDiscovery()){
+                    MqttsnAdvertise advertise = (MqttsnAdvertise) message;
+                    logger.debug("processing ADVERTISE message from {} -> {}", networkContext, advertise);
+                    authd = registry.getMessageHandler().authorizeContext(networkContext, advertise.getGatewayId() + "", protocolVersion, false);
                 }
             }
 

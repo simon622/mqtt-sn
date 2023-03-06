@@ -492,7 +492,8 @@ public class MqttsnClient extends AbstractMqttsnRuntime implements IMqttsnClient
      */
     public void disconnect()  throws MqttsnException {
         disconnect(true, false,
-                ((MqttsnClientOptions) registry.getOptions()).getDisconnectStopsTransport());
+                ((MqttsnClientOptions) registry.getOptions()).getDisconnectStopsTransport(),
+                registry.getOptions().getMaxWait(), TimeUnit.MILLISECONDS);
     }
 
     @Override

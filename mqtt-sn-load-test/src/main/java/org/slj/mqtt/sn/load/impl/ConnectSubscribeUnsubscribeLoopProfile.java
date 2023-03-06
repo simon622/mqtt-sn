@@ -29,10 +29,17 @@ import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.load.ExecutionInput;
 import org.slj.mqtt.sn.load.ExecutionProgress;
+import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnWaitToken;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnPublishReceivedListener;
+import org.slj.mqtt.sn.utils.TopicPath;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.Time;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class ConnectSubscribeUnsubscribeLoopProfile extends MqttsnClientProfile {
 
@@ -71,11 +78,16 @@ public class ConnectSubscribeUnsubscribeLoopProfile extends MqttsnClientProfile 
             for (int i = 0; i < getClientInput().messageCount; i++){
                 String path = topicPath + "/" + i;
                 client.subscribe(path, 2);
-
+                final CountDownLatch latch = new CountDownLatch(1);
+                client.registerPublishReceivedListener((context, topicPath1, qos, retained, data, message) -> {
+                    if(topicPath1.toString().equals(path)){
+                        latch.countDown();
+                    }
+                });
                 Thread.sleep(ThreadLocalRandom.current().nextInt(200));
                 MqttsnWaitToken token = client.publish(path, 1, false, path.getBytes(StandardCharsets.UTF_8));
-                client.waitForCompletion(token, 5000);
-                Thread.sleep(ThreadLocalRandom.current().nextInt(200));
+                client.waitForCompletion(token, 250);
+                latch.await(5, TimeUnit.SECONDS);
                 client.unsubscribe(path);
             }
 

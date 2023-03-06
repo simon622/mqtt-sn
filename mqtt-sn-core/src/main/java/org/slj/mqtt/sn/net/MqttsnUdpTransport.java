@@ -70,9 +70,13 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
         //-- by default we do not set SoTimeout (infinite) which will block until recieve
         receiverThread = createDatagramServer("mqtt-sn-udp-receiver", bufferSize, socket);
         if(options.getBindBroadcastListener() && registry.getOptions().isEnableDiscovery()) {
-            broadcastSocket = options.getBroadcastPort() > 0 ? new DatagramSocket(options.getBroadcastPort()) : new DatagramSocket();
-            broadcastSocket.setBroadcast(true);
-            broadcastThread = createDatagramServer("mqtt-sn-udp-broadcast", bufferSize, broadcastSocket);
+            broadcastSocket = options.getBroadcastPort() > 0 && options.getBroadcastPort() != options.getPort() ?
+                    new DatagramSocket(options.getBroadcastPort()) : null;
+            if(broadcastSocket != null){
+                //-- Only activate a dedicated broadcast listener if its on a different port
+                broadcastSocket.setBroadcast(true);
+                broadcastThread = createDatagramServer("mqtt-sn-udp-broadcast", bufferSize, broadcastSocket);
+            }
         }
     }
 
@@ -103,7 +107,9 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
 
                     if(socketIn != null){
                         context.setReceivePort(socketIn.getLocalPort());
-                        receiveDatagramInternal(context, p);
+                        if(running){
+                            receiveDatagramInternal(context, p);
+                        }
                     }
                 }
                 catch(SocketException e){
@@ -145,13 +151,19 @@ public class MqttsnUdpTransport extends AbstractMqttsnUdpTransport {
             long interruptTime = System.currentTimeMillis();
             if(receiverThread != null){
                 receiverThread.interrupt();
+                receiverThread = null;
+            }
+
+            if(broadcastThread != null){
+                broadcastThread.interrupt();
+                broadcastThread = null;
             }
 
             logger.info("stopped udp transport in superTime={}ms, socket={}ms, interrupt={}ms",
                     System.currentTimeMillis() - superTime,
                     System.currentTimeMillis() - socketTime,
                     System.currentTimeMillis() - interruptTime);
-            broadcastThread = null;
+
             stopping = false;
         }
     }

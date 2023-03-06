@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.load.impl;
 import org.slj.mqtt.sn.client.impl.MqttsnClient;
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.MqttsnClientUdpOptions;
+import org.slj.mqtt.sn.client.spi.MqttsnClientOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.load.*;
@@ -43,6 +44,7 @@ import org.slj.mqtt.sn.utils.TopicPath;
 import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
 
@@ -51,10 +53,11 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
     protected String host;
     protected int port;
     protected IMqttsnStorageService storageService;
+    protected static AtomicInteger count = new AtomicInteger();
 
 
     public MqttsnClientProfile() {
-        clientId = UUID.randomUUID().toString();
+        clientId = "client-" + count.incrementAndGet();
     }
 
     @Override
@@ -69,12 +72,13 @@ public abstract class MqttsnClientProfile extends AbstractExecutionProfile {
             synchronized (this){
                 if(client == null){
                     MqttsnUdpOptions udpOptions = new MqttsnClientUdpOptions();
-                    MqttsnOptions options = new MqttsnOptions().
+                    MqttsnOptions options = new MqttsnClientOptions().
                             withNetworkAddressEntry("gatewayId", NetworkAddress.from(port, host)).
                             withContextId(clientId).
                             withMaxMessagesInQueue(10000).
                             withMaxWait(20000).
                             withMinFlushTime(10).
+                            withDiscoveryEnabled(false).
                             withPredefinedTopic("my/predefined/example/topic/1", 1);
                     AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                             withTransport(new MqttsnUdpTransport(udpOptions)).

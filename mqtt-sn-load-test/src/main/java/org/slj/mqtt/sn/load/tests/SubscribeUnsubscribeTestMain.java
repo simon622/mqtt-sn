@@ -35,14 +35,16 @@ public class SubscribeUnsubscribeTestMain {
     public static void main(String[] args) {
         try {
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 400, 20);
+                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 140, 2);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(2400, TimeUnit.SECONDS);
 
+            input.storageService = TestHelper.getTestStorageService();
+
             input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 20;
+            input.messageCount = 1;
             input.topic = "test";
             input.qos = 2;
             runner.start(input);

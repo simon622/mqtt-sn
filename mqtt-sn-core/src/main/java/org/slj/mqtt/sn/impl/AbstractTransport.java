@@ -125,9 +125,10 @@ public abstract class AbstractTransport extends AbstractMqttsnService implements
         }
 
         if(!running){
-            logger.warn("transport is NOT RUNNING trying to receive {} byte Datagram to {}", context);
+            logger.warn("transport is NOT RUNNING trying to receive {} byte Datagram to {}", MqttsnWireUtils.toBinary(data), context);
             return;
         }
+
         final byte[] d = data;
         getRegistry().getRuntime().submit(ingressProtocolProcessor,
                 () -> receiveFromTransportInternal(context, d), context);

@@ -148,7 +148,7 @@ public class MqttsnOptions extends AbstractOptions {
     /**
      * By default, the time in seconds a client waits for a discovered gateway
      */
-    public static final int DEFAULT_DISCOVERY_TIME_SECONDS = 60 * 60;
+    public static final int DEFAULT_DISCOVERY_TIME_SECONDS = 10;
 
     /**
      * By default, the divisor is 4

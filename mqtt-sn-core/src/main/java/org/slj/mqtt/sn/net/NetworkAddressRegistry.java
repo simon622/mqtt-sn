@@ -145,6 +145,7 @@ public class NetworkAddressRegistry implements INetworkAddressRegistry {
         synchronized(mutex){
             try {
                 while(networkRegistry.isEmpty()){
+                    logger.warn("no gateway available, listening for ADVERTISEMENT for {} seconds...", time);
                     mutex.wait(TimeUnit.MILLISECONDS.convert(time, unit));
                 }
                 return first();

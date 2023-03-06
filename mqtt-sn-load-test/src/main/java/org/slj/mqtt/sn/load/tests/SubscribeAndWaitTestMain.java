@@ -35,14 +35,15 @@ public class SubscribeAndWaitTestMain {
     public static void main(String[] args) {
         try {
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeWaitProfile.class, 250, 20);
+                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeWaitProfile.class, 5, 20);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(2400, TimeUnit.SECONDS);
+            input.storageService = TestHelper.getTestStorageService();
 
             input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 100000;
+            input.messageCount = 1;
             input.topic = "test";
             input.qos = 2;
             runner.start(input);

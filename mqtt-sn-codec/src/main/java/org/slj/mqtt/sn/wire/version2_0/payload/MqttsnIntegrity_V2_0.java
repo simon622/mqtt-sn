@@ -35,7 +35,7 @@ import java.util.Arrays;
 public class MqttsnIntegrity_V2_0
         extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
-    public static final short HMAC_SHA256 = 0x00,
+    public static final byte HMAC_SHA256 = 0x00,
           HMAC_SHA3_256 = 0x01,
           CMAC_128 = 0x02,
           CMAC_192 = 0x03,
@@ -51,7 +51,7 @@ public class MqttsnIntegrity_V2_0
           AES_GCM_256_128 = 0x48,
           ChaCha20_Poly1305 = 0x49;
 
-    short [] ALLOWED_SCHEMES = new short[]{
+    byte [] ALLOWED_SCHEMES = new byte[]{
             HMAC_SHA3_256,
             CMAC_128,
             CMAC_192,
@@ -84,8 +84,8 @@ public class MqttsnIntegrity_V2_0
         return protectionSchema;
     }
 
-    public void setProtectionSchema(short protectionSchema) {
-        this.protectionSchema = (byte) protectionSchema;
+    public void setProtectionSchema(byte protectionSchema) {
+        this.protectionSchema =  protectionSchema;
     }
 
     public byte[] getSenderId() {
@@ -221,8 +221,6 @@ public class MqttsnIntegrity_V2_0
         length += encapsultedPacket.length; //packet
         length += authTagLength; //auth tag
 
-
-System.out.println("len = " + length);
         byte[] msg;
         int idx = 0;
         if ((length) > 0xFF) {

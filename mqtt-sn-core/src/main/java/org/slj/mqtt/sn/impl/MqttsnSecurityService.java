@@ -74,8 +74,7 @@ public class MqttsnSecurityService
                     length = securityOptions.getIntegrityHmacAlgorithm().getSize();
                     data = Security.readOriginalData(length, data);
                     break;
-                case message:
-                    //TODO integrate with integrity message type
+
                 case none:
                 default:
 
@@ -104,8 +103,6 @@ public class MqttsnSecurityService
                 case checksum:
                     data = Security.createChecksumdData(securityOptions.getIntegrityChecksumAlgorithm(), data);
                     break;
-                case message:
-                    //TODO integrate with integrity message type
                 case none:
                 default:
             }

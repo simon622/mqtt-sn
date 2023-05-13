@@ -302,7 +302,7 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createIntegrityMessage(short protectionScheme,
+    public IMqttsnMessage createIntegrityMessage(byte protectionScheme,
                                                  byte[] senderId,
                                                  long nonce,
                                                  int montonicCounter,

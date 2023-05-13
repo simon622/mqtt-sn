@@ -32,6 +32,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.zip.Adler32;
@@ -197,5 +198,11 @@ public class Security {
         byte[] hmac = readHeader(algorithm.getSize(), data);
         return Arrays.equals(hmac, hmac(algorithm, secretKey,
                 readOriginalData(algorithm.getSize(), data), false));
+    }
+
+    public static byte[] hash(byte[] data, String alg) throws NoSuchAlgorithmException {
+        //MD not thgread safe
+        MessageDigest digest = MessageDigest.getInstance(alg);
+        return digest.digest(data);
     }
 }

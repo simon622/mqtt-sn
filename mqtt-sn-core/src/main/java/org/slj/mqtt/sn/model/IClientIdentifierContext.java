@@ -24,7 +24,7 @@
 
 package org.slj.mqtt.sn.model;
 
-public interface IClientIdentifierContext {
+public interface IClientIdentifierContext extends IContextObject {
 
     int getProtocolVersion();
 

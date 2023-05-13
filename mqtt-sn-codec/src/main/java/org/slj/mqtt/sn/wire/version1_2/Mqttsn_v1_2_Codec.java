@@ -140,6 +140,7 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     @Override
     public int readMessageSize(byte[] data) throws MqttsnCodecException {
         MqttsnSpecificationValidator.validatePacketLength(data);
+
         return MqttsnWireUtils.readMessageLength(data);
     }
 

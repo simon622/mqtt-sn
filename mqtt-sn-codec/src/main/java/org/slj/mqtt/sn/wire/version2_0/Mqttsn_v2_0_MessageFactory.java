@@ -26,12 +26,10 @@ package org.slj.mqtt.sn.wire.version2_0;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
-import org.slj.mqtt.sn.codec.AbstractMqttsnMessageFactory;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_MessageFactory;
-import org.slj.mqtt.sn.wire.version1_2.payload.*;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory implements IMqttsnMessageFactory {
@@ -304,16 +302,19 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createIntegrityMessage(byte protectionScheme, int sequence, byte[] publicUID, boolean authOnly, int keyMaterial, byte[] cipherText, byte[] mac) throws MqttsnCodecException {
-        MqttsnIntegrity msg = new MqttsnIntegrity();
-        msg.setAuthOnly(authOnly);
-        msg.setCipherText(cipherText);
-        msg.setMac(mac);
-        msg.setKeyMaterial(keyMaterial);
-        msg.setSequence(sequence);
-        msg.setPublicUID(publicUID);
+    public IMqttsnMessage createIntegrityMessage(short protectionScheme,
+                                                 byte[] senderId,
+                                                 long nonce,
+                                                 int montonicCounter,
+                                                 long keyMaterial,
+                                                 byte[] encapsulatedMessage) throws MqttsnCodecException {
+        MqttsnIntegrity_V2_0 msg = new MqttsnIntegrity_V2_0();
         msg.setProtectionSchema(protectionScheme);
-        validate(msg);
+        msg.setSenderId(senderId);
+        msg.setNonce(nonce);
+        msg.setMontonicCounter(montonicCounter);
+        msg.setKeyMaterial(keyMaterial);
+        msg.setEncapsultedPacket(encapsulatedMessage);
         return msg;
     }
 }

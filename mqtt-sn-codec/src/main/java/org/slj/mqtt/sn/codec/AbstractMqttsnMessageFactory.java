@@ -43,7 +43,7 @@ public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFact
     }
 
     @Override
-    public IMqttsnMessage createIntegrityMessage(byte protectionScheme, int sequence, byte[] publicUID, boolean authOnly, int keyMaterial, byte[] cipherText, byte[] mac) throws MqttsnCodecException {
+    public IMqttsnMessage createIntegrityMessage(short protectionScheme, byte[] senderId, long nonce, int montonicCounter, long keyMaterial, byte[] encapsulatedMessage) throws MqttsnCodecException {
         throw new MqttsnCodecException("message not supported by codec");
     }
 

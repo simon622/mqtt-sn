@@ -75,7 +75,7 @@ public class MqttsnIntegrity
         return publicUID;
     }
 
-    public void setPublicUID(byte[] publicUID) {
+    public void setSenderUID(byte[] publicUID) {
         if(publicUID.length > 8){
             throw new MqttsnCodecException("publicUID cannot exceed 8 bytes");
         }

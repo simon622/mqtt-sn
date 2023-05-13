@@ -381,15 +381,19 @@ public class Mqttsn1_2WireTests {
             message.setId(_msgId);
         }
 
-        String toString = message.toString();
-        byte[] arr = codec.encode(message);
 
-        System.out.println(String.format("before [%s] -> [%s]", toString, codec.print(message)));
+        byte[] arr = codec.encode(message);
+        String toString = message.toString();
+
+        System.out.println(String.format("original [%s] -> [%s]", toString, codec.print(message)));
 
         IMqttsnMessage decoded = codec.decode(arr);
+
         String afterToString = decoded.toString();
 
         System.out.println(String.format("after [%s] -> [%s]", afterToString, codec.print(decoded)));
+
+
 
         //-- first ensure the toStrings match since they contain the important data fields for each type
         Assert.assertEquals("message content should match", toString, afterToString);

@@ -34,9 +34,7 @@ import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
-import org.slj.mqtt.sn.net.MqttsnUdpOptions;
-import org.slj.mqtt.sn.net.MqttsnUdpTransport;
-import org.slj.mqtt.sn.net.NetworkAddress;
+import org.slj.mqtt.sn.net.*;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -60,16 +58,19 @@ public class Example {
                 //-- does a disconnect stop the transport layer (unbind and stop listening to inbound socket)
                 withDisconnectStopsTransport(true).
                 //-- specify the address of any static gateway nominating a context id for it
-                withNetworkAddressEntry("gatewayId", NetworkAddress.localhost(MqttsnUdpOptions.DEFAULT_LOCAL_PORT)).
+//                withNetworkAddressEntry("gatewayId", NetworkAddress.localhost(MqttsnUdpOptions.DEFAULT_LOCAL_PORT)).
                 //-- configure your clientId
                 withContextId("clientId1").
+                withDiscoveryEnabled(true).
                 //-- specify and predefined topic Ids that the gateway will know about
                 withPredefinedTopic("my/predefined/example/topic/1", 1);
 
+//        MqttsnTcpOptions tcpOptions = new MqttsnTcpOptions();
         //-- using a default configuration for the controllers will just work out of the box, alternatively
         //-- you can supply your own implementations to change underlying storage or business logic as is required
         AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(filesystemStorageService, options).
                 withTransport(new MqttsnUdpTransport(udpOptions)).
+//                withTransport(new MqttsnTcpTransport(tcpOptions, true)).
                 //-- select the codec you wish to use, support for SN 1.2 is standard or you can nominate your own
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
 

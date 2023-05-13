@@ -198,7 +198,7 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 break;
             case MqttsnConstants.INTEGRITY:
                 validateLengthGreaterThanOrEquals(data, 18);
-                msg = new MqttsnIntegrity();
+                msg = new MqttsnIntegrity_V2_0();
                 break;
             default:
                 msg = super.createInstance(data);

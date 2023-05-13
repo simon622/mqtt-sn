@@ -33,6 +33,10 @@ import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.payload.Mqttsn1_2WireTests;
+import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
 
@@ -198,8 +202,15 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
     @Test
     public void testMqttsnIntegrity() throws MqttsnCodecException {
 
-        MqttsnIntegrity message = (MqttsnIntegrity)
-                factory.createIntegrityMessage((byte) 23, 9989, "Simon".getBytes(), true, 65535, "CipherText".getBytes(), "111111111111111".getBytes());
+        byte[] sender = new byte[]{0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
+        MqttsnIntegrity_V2_0 message = (MqttsnIntegrity_V2_0)
+                factory.createIntegrityMessage(
+                        MqttsnIntegrity_V2_0.AES_CCM_64_192,
+                        sender,9999L,5, 933L, new byte[]{0x02, MqttsnConstants.DISCONNECT});
+
+        //now need to set auth tag
+        message.setAuthTag(new byte[]{0x01} );
+
         testWireMessage(message);
 
     }

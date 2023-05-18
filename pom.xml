@@ -66,6 +66,7 @@
         <module>mqtt-sn-gateway-console</module>
         <module>mqtt-sn-codec</module>
         <module>mqtt-sn-protection</module>
+        <module>mqtt-sn-protection-runtimes</module>
     </modules>
 
     <properties>

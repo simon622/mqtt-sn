@@ -34,9 +34,6 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnConnect;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnDisconnect;
-import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
@@ -196,9 +193,9 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
                 validateLengthEquals(data, 5);
                 msg = new MqttsnUnsuback_V2_0();
                 break;
-            case MqttsnConstants.INTEGRITY:
+            case MqttsnConstants.PROTECTION:
                 validateLengthGreaterThanOrEquals(data, 18);
-                msg = new MqttsnIntegrity_V2_0();
+                msg = new MqttsnProtection();
                 break;
             default:
                 msg = super.createInstance(data);

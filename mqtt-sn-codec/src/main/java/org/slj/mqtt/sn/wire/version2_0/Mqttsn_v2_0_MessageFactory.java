@@ -302,13 +302,13 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createIntegrityMessage(byte protectionScheme,
-                                                 byte[] senderId,
-                                                 long nonce,
-                                                 int montonicCounter,
-                                                 long keyMaterial,
-                                                 byte[] encapsulatedMessage) throws MqttsnCodecException {
-        MqttsnIntegrity_V2_0 msg = new MqttsnIntegrity_V2_0();
+    public IMqttsnMessage createProtectionMessage(byte protectionScheme,
+                                                  byte[] senderId,
+                                                  long nonce,
+                                                  int montonicCounter,
+                                                  long keyMaterial,
+                                                  byte[] encapsulatedMessage) throws MqttsnCodecException {
+        MqttsnProtection msg = new MqttsnProtection();
         msg.setProtectionSchema(protectionScheme);
         msg.setSenderId(senderId);
         msg.setNonce(nonce);

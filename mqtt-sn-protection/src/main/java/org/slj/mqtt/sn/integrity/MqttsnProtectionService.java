@@ -10,7 +10,7 @@ import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnSecurityException;
 import org.slj.mqtt.sn.utils.Security;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
-import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnIntegrity_V2_0;
+import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnProtection;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Simon L Johnson
  * @author Davide Lenzarini
  */
-public class MqttsnIntegrityService extends MqttsnSecurityService  {
+public class MqttsnProtectionService extends MqttsnSecurityService  {
 
     private static final String COUNTER_CONTEXT_KEY = "monotonicCounter";
 
@@ -54,13 +54,13 @@ public class MqttsnIntegrityService extends MqttsnSecurityService  {
     public byte[] writeVerified(INetworkContext networkContext, byte[] data)
             throws MqttsnSecurityException {
 
-        byte scheme = MqttsnIntegrity_V2_0.AES_GCM_256_128;
+        byte scheme = MqttsnProtection.AES_GCM_256_128;
         byte[] senderId = deriveSenderId(networkContext);
         long nonce = generateNonce();
         int counter = counter(networkContext);
         long keymaterial = 0; //-- Speak to davide RE: this one
-        MqttsnIntegrity_V2_0 packet = (MqttsnIntegrity_V2_0) getRegistry().getCodec().createMessageFactory().
-                createIntegrityMessage(scheme, senderId, nonce, counter, keymaterial, data);
+        MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().createMessageFactory().
+                createProtectionMessage(scheme, senderId, nonce, counter, keymaterial, data);
 
         //-- TODO now its all done and dusted.. need to set the auth tag
         //-- I guess we need an encode phase.. then take the subset of the encoded data
@@ -72,7 +72,7 @@ public class MqttsnIntegrityService extends MqttsnSecurityService  {
     @Override
     public byte[] readVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException {
         if(isSecurityEnvelope(data)){
-            MqttsnIntegrity_V2_0 packet = (MqttsnIntegrity_V2_0)
+            MqttsnProtection packet = (MqttsnProtection)
                     getRegistry().getCodec().decode(data);
 
             //TODO This is where we need to verify the packet
@@ -87,7 +87,7 @@ public class MqttsnIntegrityService extends MqttsnSecurityService  {
     protected boolean isSecurityEnvelope(byte[] data){
         if(getRegistry().getCodec().supportsVersion(MqttsnConstants.PROTOCOL_VERSION_2_0)){
             int msgType = MqttsnWireUtils.readMessageType(data);
-            return MqttsnConstants.INTEGRITY == msgType;
+            return MqttsnConstants.PROTECTION == msgType;
         }
         return false;
     }

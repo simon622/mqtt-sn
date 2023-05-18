@@ -418,10 +418,11 @@ public interface IMqttsnMessageFactory {
     IMqttsnMessage createEncapsulatedMessage(String wirelessNodeId, int radius, byte[] messageData)
             throws MqttsnCodecException;
 
-    IMqttsnMessage createIntegrityMessage(byte protectionScheme,
-                                                 byte[] senderId,
-                                                 long nonce,
-                                                 int montonicCounter,
-                                                 long keyMaterial,
-                                                 byte[] encapsulatedMessage) throws MqttsnCodecException;
+
+    IMqttsnMessage createProtectionMessage(byte protectionScheme,
+                                           byte[] senderId,
+                                           long nonce,
+                                           int montonicCounter,
+                                           long keyMaterial,
+                                           byte[] encapsulatedMessage) throws MqttsnCodecException;
 }

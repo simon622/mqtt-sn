@@ -65,7 +65,7 @@
         <module>mqtt-sn-load-test</module>
         <module>mqtt-sn-gateway-console</module>
         <module>mqtt-sn-codec</module>
-        <module>mqtt-sn-integrity</module>
+        <module>mqtt-sn-protection</module>
     </modules>
 
     <properties>

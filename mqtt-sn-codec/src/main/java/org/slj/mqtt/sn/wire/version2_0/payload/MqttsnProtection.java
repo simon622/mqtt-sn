@@ -32,7 +32,7 @@ import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 import java.util.Arrays;
 
-public class MqttsnIntegrity_V2_0
+public class MqttsnProtection
         extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     public static final byte HMAC_SHA256 = 0x00,
@@ -75,8 +75,13 @@ public class MqttsnIntegrity_V2_0
     protected long montonicCounter; //bytes q-r
     protected byte[] encapsultedPacket; //bytes S-T
     protected byte[] authTag; //bytes U-N
+
+    //-- derived fields
+    private int authTagLength = 0;
+    private int keyMaterialLength = 0;
+    private int counterLength = 0;
     
-    public MqttsnIntegrity_V2_0(){
+    public MqttsnProtection(){
         Arrays.fill(this.senderId, (byte) 0x00);
     }
 
@@ -141,13 +146,10 @@ public class MqttsnIntegrity_V2_0
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.INTEGRITY;
+        return MqttsnConstants.PROTECTION;
     }
 
 
-    private int authTagLength = 0;
-    private int keyMaterialLength = 0;
-    private int counterLength = 0;
     protected void readFlags(byte b){
         /**
          Auth Tag Length X X X X
@@ -314,16 +316,6 @@ public class MqttsnIntegrity_V2_0
         sb.append(", montonicCounter=").append(montonicCounter);
         sb.append(", encapsultedPacket=").append(Arrays.toString(encapsultedPacket));
         sb.append(", authTag=").append(Arrays.toString(authTag));
-        sb.append(", authTagLength=").append(authTagLength);
-        sb.append(", keyMaterialLength=").append(keyMaterialLength);
-        sb.append(", counterLength=").append(counterLength);
-        sb.append('}');
-        return sb.toString();
-    }
-
-
-    public String toFlagsString() {
-        final StringBuilder sb = new StringBuilder("Flags{");
         sb.append(", authTagLength=").append(authTagLength);
         sb.append(", keyMaterialLength=").append(keyMaterialLength);
         sb.append(", counterLength=").append(counterLength);

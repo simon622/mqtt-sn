@@ -20,8 +20,7 @@ public class ProtectionExampleClientCli {
                 AbstractMqttsnRuntimeRegistry registry = MqttsnClientRuntimeRegistry.defaultConfiguration(storageService, options).
                         withTransport(transport).
                         //-- Davide this is the place to bootstrap the instance into the runtime
-                        withSecurityService(new MqttsnProtectionService()).
-                        withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0);
+                        withSecurityService(new MqttsnProtectionService());
                 return registry;
             }
         });

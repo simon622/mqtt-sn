@@ -60,6 +60,7 @@ public class MqttsnUdpBatchTransport extends MqttsnUdpTransport {
                     }
                     catch(InterruptedException e){
                         Thread.currentThread().interrupt();
+                        running = false;
                         logger.warn("batched sending interrupted");
                     }
                     catch(Exception e){

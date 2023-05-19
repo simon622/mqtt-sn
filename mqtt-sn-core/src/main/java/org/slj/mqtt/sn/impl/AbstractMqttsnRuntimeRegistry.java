@@ -158,7 +158,7 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return this;
     }
     public AbstractMqttsnRuntimeRegistry withSecurityService(IMqttsnSecurityService securityService){
-        withService(securityService);
+        withServiceReplaceIfExists(IMqttsnSecurityService.class, securityService);
         return this;
     }
     public AbstractMqttsnRuntimeRegistry withSessionRegistry(IMqttsnSessionRegistry sessionRegistry){
@@ -166,11 +166,11 @@ public abstract class AbstractMqttsnRuntimeRegistry implements IMqttsnRuntimeReg
         return this;
     }
     public AbstractMqttsnRuntimeRegistry withAuthenticationService(IMqttsnAuthenticationService authenticationService){
-        withService(authenticationService);
+        withServiceReplaceIfExists(IMqttsnAuthenticationService.class, authenticationService);
         return this;
     }
     public AbstractMqttsnRuntimeRegistry withAuthorizationService(IMqttsnAuthorizationService authorizationService){
-        withService(authorizationService);
+        withServiceReplaceIfExists(IMqttsnAuthorizationService.class, authorizationService);
         return this;
     }
     public AbstractMqttsnRuntimeRegistry withClientIdFactory(IMqttsnClientIdFactory clientIdFactory){

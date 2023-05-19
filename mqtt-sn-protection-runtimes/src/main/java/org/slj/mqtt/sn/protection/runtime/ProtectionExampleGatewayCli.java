@@ -15,6 +15,7 @@ import org.slj.mqtt.sn.gateway.spi.gateway.MqttsnGatewayPerformanceProfile;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.integrity.MqttsnProtectionService;
 import org.slj.mqtt.sn.model.MqttsnOptions;
+import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 

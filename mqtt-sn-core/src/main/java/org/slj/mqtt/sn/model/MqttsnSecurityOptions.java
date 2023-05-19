@@ -31,8 +31,8 @@ import org.slj.mqtt.sn.utils.Security;
  */
 public class MqttsnSecurityOptions {
 
-    public enum INTEGRITY_TYPE {none, checksum, hmac};
-    public enum INTEGRITY_POINT {protocol_messages, publish_data};
+    public enum INTEGRITY_TYPE {none, checksum, hmac}
+    public enum INTEGRITY_POINT {protocol_messages, publish_data}
 
     /**
      * The default integrity type none

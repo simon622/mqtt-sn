@@ -89,6 +89,11 @@ public abstract class AbstractInteractiveCli {
                 message(String.format("Integrity PSK: %s", new String(MqttsnUtils.arrayOf(options.getSecurityOptions().getIntegrityKey().length(), (byte) '*'))));
             }
         }
+        if(runtimeRegistry.getSecurityService() != null){
+            message(String.format("Using security service.. %s",
+                    runtimeRegistry.getSecurityService().getClass().getName()));
+        }
+
         message(String.format("Creating runtime .. DONE"));
         runtime = createRuntime(runtimeRegistry, options);
         runtime.registerPublishReceivedListener((IClientIdentifierContext context, TopicPath topic, int qos, boolean retained, byte[] data, IMqttsnMessage message) -> {

@@ -54,6 +54,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     public byte[] writeVerified(INetworkContext networkContext, byte[] data)
             throws MqttsnSecurityException {
 
+        logger.info("Protection service handling {} egress bytes for {}", data.length, networkContext);
+
         byte scheme = MqttsnProtection.AES_GCM_256_128;
         byte[] senderId = deriveSenderId(networkContext);
         long nonce = generateNonce();
@@ -62,15 +64,22 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().createMessageFactory().
                 createProtectionMessage(scheme, senderId, nonce, counter, keymaterial, data);
 
+
         //-- TODO now its all done and dusted.. need to set the auth tag
         //-- I guess we need an encode phase.. then take the subset of the encoded data
         //packet.setAuthTag();
+//        return getRegistry().getCodec().encode(packet);
 
-        return getRegistry().getCodec().encode(packet);
+        //-- Unit the impl id done just return the original data
+        return data;
+
     }
 
     @Override
     public byte[] readVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException {
+
+        logger.info("Protection service handling {} ingress bytes for {}", data.length, networkContext);
+
         if(isSecurityEnvelope(data)){
             MqttsnProtection packet = (MqttsnProtection)
                     getRegistry().getCodec().decode(data);
@@ -135,6 +144,11 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         } catch(Exception e){
             throw new MqttsnSecurityException(e);
         }
+    }
+
+    //-- Bootstrap into the runtime for protocol packets
+    public boolean protocolIntegrityEnabled(){
+        return true;
     }
 
     static class ClientInfo {

@@ -32,6 +32,7 @@ import org.slj.mqtt.sn.client.spi.MqttsnClientOptions;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.impl.MqttsnFilesystemStorageService;
+import org.slj.mqtt.sn.impl.MqttsnSecurityService;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.net.*;

@@ -1,4 +1,4 @@
-package org.slj.mqtt.sn.integrity;
+package org.slj.mqtt.sn.protection;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.impl.MqttsnSecurityService;
@@ -53,9 +53,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     @Override
     public byte[] writeVerified(INetworkContext networkContext, byte[] data)
             throws MqttsnSecurityException {
-
-        logger.info("Protection service handling {} egress bytes for {}", data.length, networkContext);
-
+        logger.info("Protection service handling {} egress bytes 0x{} for {}", data.length, MqttsnWireUtils.toHex(data), networkContext);
+        
         byte scheme = MqttsnProtection.AES_GCM_256_128;
         byte[] senderId = deriveSenderId(networkContext);
         long nonce = generateNonce();
@@ -78,8 +77,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     @Override
     public byte[] readVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException {
 
-        logger.info("Protection service handling {} ingress bytes for {}", data.length, networkContext);
-
+        logger.info("Protection service handling {} ingress bytes 0x{} for {}", data.length, MqttsnWireUtils.toHex(data), networkContext);
+        
         if(isSecurityEnvelope(data)){
             MqttsnProtection packet = (MqttsnProtection)
                     getRegistry().getCodec().decode(data);
@@ -102,11 +101,12 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     }
 
     private byte[] deriveSenderId(INetworkContext networkContext){
-        ClientInfo info = hashToClient.get(networkContext.getNetworkAddress());
+        return "".getBytes();
+    	/*ClientInfo info = hashToClient.get(networkContext.getNetworkAddress());
         if(info != null){
             return info.hash.getBytes(StandardCharsets.UTF_8);
         }
-        throw new SecurityException("sending address was not found in whitelist");
+        throw new SecurityException("sending address was not found in whitelist");*/
     }
 
     private Integer counter(INetworkContext networkContext){

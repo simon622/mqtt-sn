@@ -198,6 +198,7 @@ public abstract class AbstractMqttsnMessageHandler
                 }
                 break;
             case MqttsnConstants.PUBLISH:
+            case MqttsnConstants.PUBLISH_M1:
                 if(errord){
                     response = getRegistry().getMessageFactory().createPuback(0,
                             MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);

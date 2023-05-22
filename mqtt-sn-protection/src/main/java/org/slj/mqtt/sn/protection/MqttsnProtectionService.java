@@ -4,7 +4,6 @@ import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.impl.MqttsnSecurityService;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
-import org.slj.mqtt.sn.net.NetworkAddress;
 import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnSecurityException;
@@ -12,9 +11,11 @@ import org.slj.mqtt.sn.utils.Security;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnProtection;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,37 +33,59 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 
     private static final String COUNTER_CONTEXT_KEY = "monotonicCounter";
 
-    //-- The hash to use on the senderId
+    //-- The hash algo to use on the senderId
     private static final String HASH_ALG = "SHA-256";
 
     //-- The prefix size used for senderId lookups
     private static final int SENDER_PREFIX_LEN = 8;
+    
+    private Map<ByteBuffer, String> sendersWhitelist = new ConcurrentHashMap<>();
 
-    //-- Super simple and hacky way of storing the valid senderId and their respective
-    //-- hash lookups
-    protected Map<NetworkAddress, ClientInfo> hashToClient = new ConcurrentHashMap<>();
+    private SecureRandom secureRandom = null;
+    private byte authenticationTagLength = 0x00; //Reserved value by default to force a selection
+    private byte keyMaterialLength = 0x00; //no key material by default
+    private byte monotonicCounterLength = 0x00; //no monotonic counter by default
+    private byte protectionScheme = 0x3F; //Reserved value by default to force a selection 
 
+    
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        //add allowed client ids for testing - NOTE in reality this will be done using config
-        //and external lookups
-        addAllowedClientId("someClientId", NetworkAddress.localhost(25556));
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        }
+        catch(Exception e)
+        {
+        	throw new MqttsnException(e);
+        }
+
+        //*** TODO: to be retrieved from a configuration file ***//
+        //Client configuration
+        addAllowedClientId("protectionClient"); //Whitelist of client senders
+        authenticationTagLength = 0x03; //64 bits of authentication tag
+        keyMaterialLength = 0x00; //no key material
+        monotonicCounterLength = 0x01; //16 bits of monotonic counter
+        protectionScheme=MqttsnProtection.HMAC_SHA256;
+
+        //Server configuration
+        addAllowedClientId("protectionGateway"); //Whitelist of gateway senders
+        //*** END TODO ***//
     }
 
     @Override
     public byte[] writeVerified(INetworkContext networkContext, byte[] data)
             throws MqttsnSecurityException {
+    	//data is the message to be encapsulated
         logger.info("Protection service handling {} egress bytes 0x{} for {}", data.length, MqttsnWireUtils.toHex(data), networkContext);
         
-        byte scheme = MqttsnProtection.AES_GCM_256_128;
-        byte[] senderId = deriveSenderId(networkContext);
-        long nonce = generateNonce();
-        int counter = counter(networkContext);
-        long keymaterial = 0; //-- Speak to davide RE: this one
-        MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().createMessageFactory().
-                createProtectionMessage(scheme, senderId, nonce, counter, keymaterial, data);
+        ByteBuffer senderId = deriveSenderId(registry.getOptions().getContextId());
 
+        int random = secureRandom.nextInt();
+        int keymaterial = 0; //-- Speak to davide RE: this one
+        int monotonicCounter = nextMonotonicCounterValue(networkContext);
+        MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().createMessageFactory().
+                createProtectionMessage(protectionScheme, senderId.array(), random, keymaterial, monotonicCounter, data);
+        logger.info("Protection packet to be sent: "+getProtectionPacketAsLogString(packet));
 
         //-- TODO now its all done and dusted.. need to set the auth tag
         //-- I guess we need an encode phase.. then take the subset of the encoded data
@@ -76,13 +99,14 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 
     @Override
     public byte[] readVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException {
-
+    	//data is the message to be decapsulated
         logger.info("Protection service handling {} ingress bytes 0x{} for {}", data.length, MqttsnWireUtils.toHex(data), networkContext);
         
         if(isSecurityEnvelope(data)){
             MqttsnProtection packet = (MqttsnProtection)
                     getRegistry().getCodec().decode(data);
-
+            logger.info("Protection packet received: "+getProtectionPacketAsLogString(packet));
+            
             //TODO This is where we need to verify the packet
 
             return data;
@@ -92,7 +116,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         }
     }
 
-    protected boolean isSecurityEnvelope(byte[] data){
+    private boolean isSecurityEnvelope(byte[] data){
         if(getRegistry().getCodec().supportsVersion(MqttsnConstants.PROTOCOL_VERSION_2_0)){
             int msgType = MqttsnWireUtils.readMessageType(data);
             return MqttsnConstants.PROTECTION == msgType;
@@ -100,16 +124,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         return false;
     }
 
-    private byte[] deriveSenderId(INetworkContext networkContext){
-        return "".getBytes();
-    	/*ClientInfo info = hashToClient.get(networkContext.getNetworkAddress());
-        if(info != null){
-            return info.hash.getBytes(StandardCharsets.UTF_8);
-        }
-        throw new SecurityException("sending address was not found in whitelist");*/
-    }
-
-    private Integer counter(INetworkContext networkContext){
+    private Integer nextMonotonicCounterValue(INetworkContext networkContext) throws MqttsnSecurityException
+    {
         IClientIdentifierContext clientIdentifierContext =
                 getRegistry().getNetworkRegistry().getMqttsnContext(networkContext);
         if(clientIdentifierContext != null){
@@ -121,29 +137,16 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
             }
             return counter.incrementAndGet();
         }
-
-        //-- no counter
-        return 0;
+        throw new MqttsnSecurityException("Unable to create a monotonic counter!");
     }
 
-    private void addAllowedClientId(final String clientId, final NetworkAddress address) {
+    private void addAllowedClientId(final String clientId) {
         try {
-            byte[] hash = Security.hash(clientId.getBytes(), HASH_ALG);
-            String hashLookup = MqttsnWireUtils.toHex(hash).
-                    substring(0, SENDER_PREFIX_LEN - 1);
-            ClientInfo info = new ClientInfo(clientId, hashLookup, address);
-            hashToClient.put(address, info);
-        } catch(NoSuchAlgorithmException e){
-            throw new MqttsnSecurityException(e);
+            sendersWhitelist.put(deriveSenderId(clientId), clientId);
         }
-    }
-
-    protected int generateNonce(){
-        try {
-            return SecureRandom.getInstanceStrong().nextInt();
-        } catch(Exception e){
-            throw new MqttsnSecurityException(e);
-        }
+    	catch(Exception e){
+    		throw new MqttsnSecurityException(e);
+    	}
     }
 
     //-- Bootstrap into the runtime for protocol packets
@@ -151,16 +154,36 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         return true;
     }
 
-    static class ClientInfo {
-
-        public final String clientId;
-        public final String hash;
-        public final NetworkAddress address;
-
-        public ClientInfo(final String clientId, final String hash, final NetworkAddress address) {
-            this.clientId = clientId;
-            this.hash = hash;
-            this.address = address;
-        }
+    private ByteBuffer deriveSenderId(String clientId) throws MqttsnSecurityException
+    {
+    	try
+    	{
+	    	if(clientId!=null && clientId.length()>0)
+	    	{
+	    		return ByteBuffer.wrap(Arrays.copyOfRange(Security.hash(clientId.getBytes(), HASH_ALG), 0, SENDER_PREFIX_LEN));
+	    	}
+    	}
+    	catch(NoSuchAlgorithmException e)
+    	{
+        	throw new MqttsnSecurityException(e);
+    	}
+    	throw new MqttsnSecurityException("Unable to generate the SenderId: ClientId not available!");
+    }
+    
+    private String getProtectionPacketAsLogString(MqttsnProtection packet)
+    {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("protectionSchema=").append(packet.getProtectionSchema());
+        sb.append(", senderId=").append(HexFormat.of().formatHex(packet.getSenderId()));
+        sb.append(", random=").append(packet.getRandom());
+        sb.append(", keyMaterial=").append(packet.getKeyMaterial());
+        sb.append(", keyMaterialLength=").append(keyMaterialLength);
+        sb.append(", monotonicCounter=").append(packet.getMonotonicCounter());
+        sb.append(", monotonicCounterLength=").append(monotonicCounterLength);
+        sb.append(", encapsultedPacket=").append(HexFormat.of().formatHex(packet.getEncapsultedPacket()));
+        sb.append(", authTag=").append(Arrays.toString(packet.getAuthTag()));
+        sb.append(", authTagLength=").append(authenticationTagLength);
+        sb.append('}');
+        return sb.toString();
     }
 }

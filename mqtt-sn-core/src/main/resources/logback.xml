@@ -49,6 +49,7 @@
     <logger name="wire" level="INFO"/>
     <logger name="org.slj" level="WARN"/>
     <logger name="org.slj.mqtt.sn.load.runner" level="INFO"/>
+    <logger name="org.slj.mqtt.sn.protection" level="INFO"/>
     <logger name="ch.qos.logback" level="OFF"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="org.apache.plc4x" level="INFO"/>

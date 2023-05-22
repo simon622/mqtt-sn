@@ -201,7 +201,7 @@ public class Mqttsn2_0WireTests extends Mqttsn1_2WireTests {
         MqttsnProtection message = (MqttsnProtection)
                 factory.createProtectionMessage(
                         MqttsnProtection.AES_CCM_64_192,
-                        sender,9999L,5, 933L, new byte[]{0x02, MqttsnConstants.DISCONNECT});
+                        sender,9999,5,933, new byte[]{0x02, MqttsnConstants.DISCONNECT});
 
         //now need to set auth tag
         message.setAuthTag(new byte[]{0x01} );

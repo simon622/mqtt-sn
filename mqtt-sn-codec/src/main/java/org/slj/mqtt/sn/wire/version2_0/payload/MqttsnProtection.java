@@ -70,16 +70,16 @@ public class MqttsnProtection
 
     protected byte protectionSchema; //1 byte (byte 4)
     protected byte[] senderId = new byte[8]; //bytes 5-12
-    protected long nonce; //bytes 13-16
-    protected long keyMaterial; //bytes 17-P
-    protected long montonicCounter; //bytes q-r
+    protected int random; //bytes 13-16
+    protected int keyMaterial; //bytes 17-P
+    protected int monotonicCounter; //bytes q-r
     protected byte[] encapsultedPacket; //bytes S-T
     protected byte[] authTag; //bytes U-N
 
     //-- derived fields
     private int authTagLength = 0;
     private int keyMaterialLength = 0;
-    private int counterLength = 0;
+    private int monotonicCounterLength = 0;
     
     public MqttsnProtection(){
         Arrays.fill(this.senderId, (byte) 0x00);
@@ -104,28 +104,28 @@ public class MqttsnProtection
         System.arraycopy(senderId, 0, this.senderId, 0, senderId.length);
     }
 
-    public long getNonce() {
-        return nonce;
+    public int getRandom() {
+        return random;
     }
 
-    public void setNonce(long nonce) {
-        this.nonce = nonce;
+    public void setRandom(int random) {
+        this.random = random;
     }
 
     public long getKeyMaterial() {
         return keyMaterial;
     }
 
-    public void setKeyMaterial(long keyMaterial) {
+    public void setKeyMaterial(int keyMaterial) {
         this.keyMaterial = keyMaterial;
     }
 
-    public long getMontonicCounter() {
-        return montonicCounter;
+    public int getMonotonicCounter() {
+        return monotonicCounter;
     }
 
-    public void setMontonicCounter(long montonicCounter) {
-        this.montonicCounter = montonicCounter;
+    public void setMonotonicCounter(int monotonicCounter) {
+        this.monotonicCounter = monotonicCounter;
     }
 
     public byte[] getEncapsultedPacket() {
@@ -159,14 +159,14 @@ public class MqttsnProtection
 
         authTagLength = (b & 0xF0) >> 4;
         keyMaterialLength = (b & 0x0C) >> 2;
-        counterLength = (b & 0x03);
+        monotonicCounterLength = (b & 0x03);
     }
 
     protected byte writeFlags(){
         byte v = 0x00;
         v |= authTagLength << 4;
         v |= keyMaterialLength << 2;
-        v |= counterLength & 0x03;
+        v |= monotonicCounterLength & 0x03;
         return v;
     }
 
@@ -178,19 +178,19 @@ public class MqttsnProtection
         //-- now we have lengths to read
         protectionSchema = readByteAdjusted(data, 3);
         senderId = readBytesAdjusted(data, 4, 8);
-        nonce = readUInt32Adjusted(data, 12);
+        random = (int)readUInt32Adjusted(data, 12);
 
         //-- need a variable length marker now as the rest is offset against optional fields
         int idx = 16;
         if(keyMaterialLength > 0){
             keyMaterial =   keyMaterialLength == 2 ? readUInt16Adjusted(data, idx)  :
-                            keyMaterialLength == 4 ? readUInt32Adjusted(data, idx) : 0;
+                            keyMaterialLength == 4 ? (int)readUInt32Adjusted(data, idx) : 0;
             idx += keyMaterialLength;
         }
-        if(counterLength > 0){
-            montonicCounter =  counterLength == 2 ? readUInt16Adjusted(data, idx)  :
-                               counterLength == 4 ? readUInt32Adjusted(data, idx) : 0;
-            idx += counterLength;
+        if(monotonicCounterLength > 0){
+        	monotonicCounter =  monotonicCounterLength == 2 ? readUInt16Adjusted(data, idx)  :
+								monotonicCounterLength == 4 ? (int)readUInt32Adjusted(data, idx) : 0;
+            idx += monotonicCounterLength;
         }
 
         int encapSize = data.length - (idx + authTagLength);
@@ -210,7 +210,7 @@ public class MqttsnProtection
 
         //the field values must be set before encoding the data
         keyMaterialLength = determineNumberLengthInBytes(keyMaterial);
-        counterLength = determineNumberLengthInBytes(montonicCounter);
+        monotonicCounterLength = determineNumberLengthInBytes(monotonicCounter);
         authTagLength = authTag.length;
 
         int length = 2; //type + len
@@ -219,7 +219,7 @@ public class MqttsnProtection
         length += 8; //senderId
         length += 4; //nonce 4
         length += keyMaterialLength; //key material
-        length += counterLength; //mon. counter
+        length += monotonicCounterLength; //mon. counter
         length += encapsultedPacket.length; //packet
         length += authTagLength; //auth tag
 
@@ -243,7 +243,7 @@ public class MqttsnProtection
         System.arraycopy(senderId, 0, msg, idx, 8);
         idx += 8;
 
-        writeUInt32(msg, idx, nonce);
+        writeUInt32(msg, idx, random);
         idx += 4;
 
         if(keyMaterialLength == 2){
@@ -254,11 +254,11 @@ public class MqttsnProtection
             idx += 4;
         }
 
-        if(counterLength == 2){
-            writeUInt16(msg, idx, (int) montonicCounter);
+        if(monotonicCounterLength == 2){
+            writeUInt16(msg, idx, (int) monotonicCounter);
             idx += 2;
-        } else if(counterLength == 4){
-            writeUInt32(msg, idx, (int) montonicCounter);
+        } else if(monotonicCounterLength == 4){
+            writeUInt32(msg, idx, (int) monotonicCounter);
             idx += 4;
         }
 
@@ -276,7 +276,7 @@ public class MqttsnProtection
         if(Arrays.binarySearch(ALLOWED_SCHEMES, protectionSchema) == -1){
             throw new MqttsnCodecException("Invalid protection schema");
         }
-        MqttsnSpecificationValidator.validateUInt32(nonce);
+        MqttsnSpecificationValidator.validateUInt32(random);
         MqttsnSpecificationValidator.validateByteArrayLength(senderId, 8);
         if(encapsultedPacket == null || encapsultedPacket.length < 2){
             throw new MqttsnCodecException("Invalid encapsulated value");
@@ -287,11 +287,11 @@ public class MqttsnProtection
         else if(keyMaterialLength == 4){
             MqttsnSpecificationValidator.validateUInt32(keyMaterial);
         }
-        if(counterLength == 2){
-            MqttsnSpecificationValidator.validateUInt16((int) montonicCounter);
+        if(monotonicCounterLength == 2){
+            MqttsnSpecificationValidator.validateUInt16((int) monotonicCounter);
         }
-        else if(counterLength == 4){
-            MqttsnSpecificationValidator.validateUInt32(montonicCounter);
+        else if(monotonicCounterLength == 4){
+            MqttsnSpecificationValidator.validateUInt32(monotonicCounter);
         }
         MqttsnSpecificationValidator.validateByteArrayLength(authTag, authTagLength);
     }
@@ -311,14 +311,14 @@ public class MqttsnProtection
         final StringBuilder sb = new StringBuilder("MqttsnIntegrity_V2_0{");
         sb.append(", protectionSchema=").append(protectionSchema);
         sb.append(", senderId=").append(Arrays.toString(senderId));
-        sb.append(", nonce=").append(nonce);
+        sb.append(", random=").append(random);
         sb.append(", keyMaterial=").append(keyMaterial);
-        sb.append(", montonicCounter=").append(montonicCounter);
+        sb.append(", keyMaterialLength=").append(keyMaterialLength);
+        sb.append(", monotonicCounter=").append(monotonicCounter);
+        sb.append(", monotonicCounterLength=").append(monotonicCounterLength);
         sb.append(", encapsultedPacket=").append(Arrays.toString(encapsultedPacket));
         sb.append(", authTag=").append(Arrays.toString(authTag));
         sb.append(", authTagLength=").append(authTagLength);
-        sb.append(", keyMaterialLength=").append(keyMaterialLength);
-        sb.append(", counterLength=").append(counterLength);
         sb.append('}');
         return sb.toString();
     }

@@ -421,8 +421,8 @@ public interface IMqttsnMessageFactory {
 
     IMqttsnMessage createProtectionMessage(byte protectionScheme,
                                            byte[] senderId,
-                                           long nonce,
-                                           int montonicCounter,
-                                           long keyMaterial,
+                                           int random,
+                                           int keyMaterial,
+                                           int monotonicCounter,
                                            byte[] encapsulatedMessage) throws MqttsnCodecException;
 }

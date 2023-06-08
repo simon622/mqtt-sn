@@ -27,6 +27,8 @@ package org.slj.mqtt.sn.codec;
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
+import org.slj.mqtt.sn.spi.IProtectionScheme;
+import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
 
 public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFactory  {
 
@@ -43,7 +45,7 @@ public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFact
     }
 
     @Override
-    public IMqttsnMessage createProtectionMessage(byte protectionScheme, byte[] senderId, int random, int keyMaterial, int monotonicCounter, byte[] encapsulatedMessage) throws MqttsnCodecException {
+    public IMqttsnMessage createProtectionMessage(IProtectionScheme protectionSchema, ProtectionPacketFlags flags, byte[] senderId, int random, int cryptoMaterial, int monotonicCounter, byte[] encapsulatedMessage) throws MqttsnCodecException {
         throw new MqttsnCodecException("message not supported by codec");
     }
 

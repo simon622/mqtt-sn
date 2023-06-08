@@ -29,12 +29,13 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
+import org.slj.mqtt.sn.spi.IProtectionScheme;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_MessageFactory;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory implements IMqttsnMessageFactory {
 
-    //singleton
+	//singleton
     private static volatile Mqttsn_v2_0_MessageFactory instanceStrict;
     private static volatile Mqttsn_v2_0_MessageFactory instanceRelaxed;
 
@@ -302,18 +303,20 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     }
 
     @Override
-    public IMqttsnMessage createProtectionMessage(byte protectionScheme,
-                                                  byte[] senderId,
-                                                  int random,
-                                                  int keyMaterial,
-                                                  int monotonicCounter,
-                                                  byte[] encapsulatedMessage) throws MqttsnCodecException {
+    public IMqttsnMessage createProtectionMessage(IProtectionScheme protectionScheme,
+													ProtectionPacketFlags flags, 
+    												byte[] senderId,
+    												int random,
+    												int cryptoMaterial,
+    												int monotonicCounter,
+    												byte[] encapsulatedMessage) throws MqttsnCodecException {
         MqttsnProtection msg = new MqttsnProtection();
-        msg.setProtectionSchema(protectionScheme);
+        msg.setFlags(flags);
+        msg.setProtectionScheme(protectionScheme);
         msg.setSenderId(senderId);
         msg.setRandom(random);
         msg.setMonotonicCounter(monotonicCounter);
-        msg.setKeyMaterial(keyMaterial);
+        msg.setCryptoMaterial(cryptoMaterial);
         msg.setEncapsultedPacket(encapsulatedMessage);
         return msg;
     }

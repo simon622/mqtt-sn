@@ -36,10 +36,9 @@ public class ProtectionExampleGatewayCli {
                 		withConnector(new LoopbackMqttsnConnector(LoopbackMqttsnConnector.DESCRIPTOR, connectorOptions)).
                         withBackendService(new MqttsnAggregatingGateway()).
                         //-- Davide this is the place to bootstrap the instance into the runtime
-                        withSecurityService(new MqttsnProtectionService()).
+                        withSecurityService(new MqttsnProtectionService(true)).
                         withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0).
                         withTransport(createTransport(storageService));
-
             }
         }, false, "Welcome to the loopback gateway. This version does NOT use a backend broker, instead brokering MQTT messages itself as a loopback to connected devices.");
     }

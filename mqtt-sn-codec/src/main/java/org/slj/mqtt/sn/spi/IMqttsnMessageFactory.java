@@ -26,6 +26,7 @@ package org.slj.mqtt.sn.spi;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
 
 /**
  * Use to obtain instances of the codec messages for use in a client or gateway runtime.
@@ -419,10 +420,11 @@ public interface IMqttsnMessageFactory {
             throws MqttsnCodecException;
 
 
-    IMqttsnMessage createProtectionMessage(byte protectionScheme,
-                                           byte[] senderId,
-                                           int random,
-                                           int keyMaterial,
-                                           int monotonicCounter,
-                                           byte[] encapsulatedMessage) throws MqttsnCodecException;
+    IMqttsnMessage createProtectionMessage(IProtectionScheme protectionScheme,
+    										ProtectionPacketFlags flags, 
+    										byte[] senderId,
+    										int random,
+    										int cryptoMaterial,
+    										int monotonicCounter,
+    										byte[] encapsulatedMessage) throws MqttsnCodecException;
 }

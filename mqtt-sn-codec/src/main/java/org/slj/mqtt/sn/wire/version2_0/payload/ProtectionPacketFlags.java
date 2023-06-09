@@ -6,19 +6,24 @@ public class ProtectionPacketFlags {
 
 	private static final short AUTHENTICATION_TAG_LENGTH_MULTIPLIER = 2; //bytes
     
-	public static final short NO_CRYPTO_MATERIAL = 0; 
-    public static final short SHORT_CRYPTO_MATERIAL = 2; //bytes
-    public static final short LONG_CRYPTO_MATERIAL = 4; //bytes
-    public static final short VERYLONG_CRYPTO_MATERIAL = 10; //bytes
-    public static final short NO_MONOTONIC_COUNTER = 0; 
-    public static final short SHORT_MONOTONIC_COUNTER = 2; //bytes
-    public static final short LONG_MONOTONIC_COUNTER = 4; //bytes
+	public static final byte NO_CRYPTO_MATERIAL = 0; 
+    public static final byte SHORT_CRYPTO_MATERIAL = 2; //bytes
+    public static final byte LONG_CRYPTO_MATERIAL = 4; //bytes
+    public static final byte VERYLONG_CRYPTO_MATERIAL = 10; //bytes
+    public static final byte NO_MONOTONIC_COUNTER = 0; 
+    public static final byte SHORT_MONOTONIC_COUNTER = 2; //bytes
+    public static final byte LONG_MONOTONIC_COUNTER = 4; //bytes
     
 	private byte authenticationTagLength = 0x00; //Reserved value by default to force a selection
     private byte cryptoMaterialLength = 0x03; //Reserved value by default to force a selection
     private byte monotonicCounterLength = 0x03; //Reserved value by default to force a selection
     
     private byte flagsAsByte=0x00;
+    
+    public static ProtectionPacketFlags decodeProtectionPacketFlags(byte flags) throws MqttsnCodecException
+    {
+    	return new ProtectionPacketFlags((byte)(((byte)((flags & 0xF0))) >> 4), (byte)(((byte)(flags & 0x0C)) >> 2), (byte)((flags & 0x03)));
+    }
     
     public ProtectionPacketFlags(byte authenticationTagLength, byte cryptoMaterialLength, byte monotonicCounterLength) throws MqttsnCodecException
     {
@@ -62,7 +67,7 @@ public class ProtectionPacketFlags {
     	return (short) ((authenticationTagLength+1)*AUTHENTICATION_TAG_LENGTH_MULTIPLIER);
     }
     
-    public short getCryptoMaterialLengthDecoded() {
+    public byte getCryptoMaterialLengthDecoded() {
     	switch(cryptoMaterialLength)
     	{
 	    	case 0x01:
@@ -76,7 +81,7 @@ public class ProtectionPacketFlags {
     	}
     }
 
-    public short getMonotonicCounterLengthDecoded() {
+    public byte getMonotonicCounterLengthDecoded() {
     	switch(monotonicCounterLength)
     	{
 	    	case 0x01:
@@ -93,7 +98,7 @@ public class ProtectionPacketFlags {
     @Override
     public String toString()
 	{
-    	StringBuilder sb = new StringBuilder("Protection Flags: ");
+    	StringBuilder sb = new StringBuilder("Flags= ");
     	sb.append("0x").append(String.format("%02x", authenticationTagLength&0xff).toUpperCase()).
     		append(" (").append(getAuthenticationTagLengthDecoded()).append("bytes").append(")");
     	sb.append(", ").append("0x").append(String.format("%02x", cryptoMaterialLength&0xff).toUpperCase()).

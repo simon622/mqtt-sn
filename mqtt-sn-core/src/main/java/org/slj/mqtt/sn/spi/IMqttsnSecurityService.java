@@ -54,5 +54,12 @@ public interface IMqttsnSecurityService extends IMqttsnService {
      * @throws MqttsnSecurityException - Unable to apply integrity field to given payload
      */
     byte[] writeVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException;
+    
+	void setProtectionKey(byte[] protectionKey);
 
+	void setProtectionFlags(byte[] flags);
+
+	void setAllowedClients(String[] allowedClients);
+
+	void setProtectionScheme(byte protectionSchemeIndex);
 }

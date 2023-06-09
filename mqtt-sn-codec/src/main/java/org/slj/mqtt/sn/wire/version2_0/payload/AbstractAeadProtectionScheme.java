@@ -2,8 +2,9 @@ package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.codec.AbstractProtectionScheme;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IProtectionScheme;
 
-public abstract class AbstractAeadProtectionScheme extends AbstractProtectionScheme
+public abstract class AbstractAeadProtectionScheme extends AbstractProtectionScheme implements IProtectionScheme
 {
 	public AbstractAeadProtectionScheme()
 	{

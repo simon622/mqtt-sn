@@ -45,7 +45,7 @@ public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFact
     }
 
     @Override
-    public IMqttsnMessage createProtectionMessage(IProtectionScheme protectionSchema, ProtectionPacketFlags flags, byte[] senderId, int random, int cryptoMaterial, int monotonicCounter, byte[] encapsulatedMessage) throws MqttsnCodecException {
+    public IMqttsnMessage createProtectionMessage(IProtectionScheme protectionSchema, byte[] protectionKey, ProtectionPacketFlags flags, byte[] senderId, byte[] random, byte[] cryptoMaterial, int monotonicCounter, byte[] encapsulatedMessage) throws MqttsnCodecException {
         throw new MqttsnCodecException("message not supported by codec");
     }
 

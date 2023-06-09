@@ -7,10 +7,8 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.spi.IProtectionScheme;
-import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionSchemeCcm_64_128;
-import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionSchemeHmacSha256;
 
-public class AbstractProtectionScheme implements IProtectionScheme
+public abstract class AbstractProtectionScheme implements IProtectionScheme
 {
     private static final Logger logger = LoggerFactory.getLogger(AbstractProtectionScheme.class);
     
@@ -51,34 +49,18 @@ public class AbstractProtectionScheme implements IProtectionScheme
 		 ChaCha20_Poly1305
       };
 
-    private final static HashMap<Byte,Class<?>> protectionSchemeClasses = new HashMap<Byte,Class<?>>();
-    
-    static
-    {
-    	protectionSchemeClasses.put(Byte.valueOf(HMAC_SHA256), ProtectionSchemeHmacSha256.class);
-    	protectionSchemeClasses.put(Byte.valueOf(AES_CCM_64_128), ProtectionSchemeCcm_64_128.class);
-    	/*
-	    HMAC_SHA3_256 = 0x01,
-	    CMAC_128 = 0x02,
-	    CMAC_192 = 0x03,
-	    CMAC_256 = 0x04,
-	    AES_CCM_64_128 = 0x40,
-	    AES_CCM_64_192 = 0x41,
-	    AES_CCM_64_256 = 0x42,
-	    AES_CCM_128_128 = 0x43,
-	    AES_CCM_128_192 = 0x44,
-	    AES_CCM_128_256 = 0x45,
-	    AES_GCM_128_128 = 0x46,
-	    AES_GCM_192_128 = 0x47,
-	    AES_GCM_256_128 = 0x48,
-	    ChaCha20_Poly1305*/
-    }
-	
+    protected final static HashMap<Byte,Class<?>> protectionSchemeClasses = new HashMap<Byte,Class<?>>();
+     
     protected byte index=RESERVED;
 	protected String name=null;
 	protected short nominalTagLength;
 	protected short keyLength;
 	protected boolean authenticationOnly;
+
+	public String getName()
+	{
+		return name;
+	}
 
 	public byte getIndex()
 	{

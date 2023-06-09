@@ -14,5 +14,5 @@ public abstract class AbstractAuthenticationOnlyProtectionScheme extends Abstrac
 	abstract public byte[] unprotect(byte[] authenticatedPayload, byte[] tagToBeVerified, byte[] key) throws MqttsnCodecException;
 	
 	//It returns the tag of nominalTagLength
-	abstract public byte[] protect(byte[] authenticatedPayload, byte[] key); 
+	abstract public byte[] protect(byte[] payloadToBeAuthenticated, byte[] key); 
 }

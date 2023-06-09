@@ -304,20 +304,22 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
 
     @Override
     public IMqttsnMessage createProtectionMessage(IProtectionScheme protectionScheme,
+    												byte[] protectionKey, 
 													ProtectionPacketFlags flags, 
     												byte[] senderId,
-    												int random,
-    												int cryptoMaterial,
+    												byte[] random,
+    												byte[] cryptoMaterial,
     												int monotonicCounter,
     												byte[] encapsulatedMessage) throws MqttsnCodecException {
         MqttsnProtection msg = new MqttsnProtection();
+        msg.setProtectionKey(protectionKey);
         msg.setFlags(flags);
         msg.setProtectionScheme(protectionScheme);
         msg.setSenderId(senderId);
         msg.setRandom(random);
         msg.setMonotonicCounter(monotonicCounter);
         msg.setCryptoMaterial(cryptoMaterial);
-        msg.setEncapsultedPacket(encapsulatedMessage);
+        msg.setEncapsulatedPacket(encapsulatedMessage);
         return msg;
     }
 }

@@ -110,4 +110,12 @@ public class MqttsnSecurityService
         }
         return data;
     }
+    
+	public void setProtectionKey(byte[] protectionKey) {}
+
+	public void setProtectionFlags(byte[] flags) {}
+
+	public void setAllowedClients(String[] allowedClients) {}
+
+	public void setProtectionScheme(byte protectionSchemeIndex)	{}
 }

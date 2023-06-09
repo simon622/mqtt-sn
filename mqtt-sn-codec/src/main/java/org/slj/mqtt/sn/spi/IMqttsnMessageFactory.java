@@ -421,10 +421,11 @@ public interface IMqttsnMessageFactory {
 
 
     IMqttsnMessage createProtectionMessage(IProtectionScheme protectionScheme,
+    										byte[] protectionKey, 
     										ProtectionPacketFlags flags, 
     										byte[] senderId,
-    										int random,
-    										int cryptoMaterial,
+    										byte[] random,
+    										byte[] cryptoMaterial,
     										int monotonicCounter,
     										byte[] encapsulatedMessage) throws MqttsnCodecException;
 }

@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.client.impl.MqttsnClientRuntimeRegistry;
 import org.slj.mqtt.sn.client.impl.cli.MqttsnInteractiveClient;
 import org.slj.mqtt.sn.client.impl.cli.MqttsnInteractiveClientLauncher;
-import org.slj.mqtt.sn.codec.AbstractProtectionScheme;
 //import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.impl.AbstractMqttsnRuntimeRegistry;
 import org.slj.mqtt.sn.model.MqttsnOptions;

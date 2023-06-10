@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
- *
- * Find me on GitHub:
- * https://github.com/simon622
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slf4j.Logger;
@@ -35,12 +11,15 @@ import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(MqttsnProtection.class);
-
+    //The serial number is obtained from SHA-224 of "MqttsnProtection"
+    private static final long serialVersionUID = (new BigInteger("ca3875934ca453484558751e6e6da24d198c30f32b2e46933eebf774",16)).longValue();
+    
     static final short FLAGS_FIELD_BYTE_INDEX=2;
     static final short PROTECTIONSCHEME_FIELD_BYTE_INDEX=3;
     static final short SENDERID_FIELD_BYTE_INDEX=4;
@@ -62,11 +41,7 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
     private byte[] protectionKey=null;
     private byte[] protectionPacket=null; //bytes 1-N
     private short protectionPacketLength;
-    
-  /*  //-- derived fields
-    private int authenticationTagLength = 0;
-    private int cryptoMaterialLength = 0;
-    private int monotonicCounterLength = 0;*/
+    private short authenticatedPayloadLength;
     
     public MqttsnProtection(){
         Arrays.fill(this.senderId, (byte) 0x00);
@@ -175,23 +150,18 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
+    	protectionPacket=data;
     	protectionPacketLength = (short) data.length;
-        logger.debug("protectionPacketLength---->"+protectionPacketLength);
     	flags=ProtectionPacketFlags.decodeProtectionPacketFlags(readByteAdjusted(data,FLAGS_FIELD_BYTE_INDEX));
-        logger.debug("flags---->"+flags.toString());
         protectionScheme=AbstractProtectionScheme.getProtectionScheme(readByteAdjusted(data,PROTECTIONSCHEME_FIELD_BYTE_INDEX)); 		
-        logger.debug("protectionScheme---->"+protectionScheme.getName());
-        senderId=readBytesAdjusted(data,PROTECTIONSCHEME_FIELD_BYTE_INDEX,SENDERID_FIELD_SIZE);
-        logger.debug("senderID---->0x"+MqttsnWireUtils.toHex(senderId));
+        senderId=readBytesAdjusted(data,SENDERID_FIELD_BYTE_INDEX,SENDERID_FIELD_SIZE);
         random=readBytesAdjusted(data,RANDOM_FIELD_BYTE_INDEX,RANDOM_FIELD_SIZE);
-        logger.debug("random---->0x"+MqttsnWireUtils.toHex(random));
         int idx = PROTECTION_PACKET_FIXED_PART_LENGTH;
         byte cryptoMaterialLength=flags.getCryptoMaterialLengthDecoded();
         if(cryptoMaterialLength>0)
         {
             cryptoMaterial=readBytesAdjusted(data,PROTECTION_PACKET_FIXED_PART_LENGTH,cryptoMaterialLength);
             idx+=cryptoMaterialLength;
-            logger.debug("cryptoMaterial---->0x"+MqttsnWireUtils.toHex(cryptoMaterial));
         }
         byte monotonicCounterLength=flags.getMonotonicCounterLengthDecoded();
         if(monotonicCounterLength>0)
@@ -203,22 +173,39 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         		monotonicCounter=readInt32Adjusted(data, idx);
                 idx += monotonicCounterLength;
             }
-        	logger.debug("monotonicCounter---->"+monotonicCounter);
         }
         short authenticatedTagLength=flags.getAuthenticationTagLengthDecoded();
-        int encapsulatedPayloadLength = data.length - (idx + authenticatedTagLength);
-        
-        //byte a = readByteAdjusted(data, 3);
-        /*
-        
-        int encapSize = data.length - (idx + authTagLength);
-        encapsultedPacket = readBytesAdjusted(data, idx, encapSize);
-        idx += encapSize;
-
-        authTag = readRemainingBytesAdjusted(data, idx);
-        if(authTag.length != authTagLength){
-            throw new MqttsnCodecException("Invalid security data");
-        }*/
+        int encapsulatedPacketLength = data.length - (idx + authenticatedTagLength);
+        encapsulatedPacket = readBytesAdjusted(data, idx, encapsulatedPacketLength);
+        idx += encapsulatedPacketLength;
+        authenticationTag = readRemainingBytesAdjusted(data, idx);
+        authenticatedPayloadLength = (short)(data.length - authenticatedTagLength);
+        logger.debug(toString());
+        if(authenticationTag.length != authenticatedTagLength)
+        {
+            throw new MqttsnCodecException("Invalid security data: Authentication Tag is "+authenticationTag+" bytes");
+        }
+    }
+    
+    public boolean verifyAuthenticationTag(ArrayList<ProtectionKey> protectionKeys)
+    {
+        byte[] authenticatedPayload=new byte[authenticatedPayloadLength]; 
+        System.arraycopy(protectionPacket, 0, authenticatedPayload, 0, authenticatedPayloadLength);
+        int availableKeys = protectionKeys.size();
+        for(int i=0; i<availableKeys; i++)
+        {
+	        try
+	        {
+	        	((AbstractAuthenticationOnlyProtectionScheme)protectionScheme).unprotect(authenticatedPayload,authenticationTag,protectionKeys.get(i).getProtectionKey());
+	        }
+	        catch(Exception e)
+	        {
+	        	logger.debug("Authentication Tag invalid for key "+i);
+	        }
+	        return true;
+        }
+    	logger.error("Authentication Tag invalid!");
+        return false;
     }
 
     @Override
@@ -227,6 +214,7 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         protectionPacketLength += flags.getCryptoMaterialLengthDecoded(); //crypto material bytes
         protectionPacketLength += flags.getMonotonicCounterLengthDecoded(); //monotonic counter
         protectionPacketLength += encapsulatedPacket.length; //packet
+        authenticatedPayloadLength = protectionPacketLength;
         short authenticationTagLength=flags.getAuthenticationTagLengthDecoded(); //authentication tag length
         protectionPacketLength += authenticationTagLength;
 
@@ -279,14 +267,14 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
             short payloadToBeAuthenticatedLength=(short) (protectionPacketLength-authenticationTagLength);
             byte[] payloadToBeAuthenticated=new byte[payloadToBeAuthenticatedLength];
             System.arraycopy(protectionPacket, 0, payloadToBeAuthenticated, 0, payloadToBeAuthenticatedLength);
-        	authenticationTag = ((AbstractAuthenticationOnlyProtectionScheme)protectionScheme).protect(payloadToBeAuthenticated, protectionKey); 
+            authenticationTag = Arrays.copyOfRange(((AbstractAuthenticationOnlyProtectionScheme)protectionScheme).protect(payloadToBeAuthenticated, protectionKey), 0, authenticationTagLength);
         }
         else
         {
         	//TODO PP
         }
         
-        System.arraycopy(authenticationTag, 0, protectionPacket, idx, flags.getAuthenticationTagLengthDecoded());
+        System.arraycopy(authenticationTag, 0, protectionPacket, idx, authenticationTagLength);
         return protectionPacket;
     }
 
@@ -348,9 +336,10 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         	sb.append("\n\tMonotonic Counter=").append(monotonicCounter).append(" (0x").append(MqttsnWireUtils.toHex(BigInteger.valueOf(monotonicCounter).toByteArray())).append(")");
         else
             sb.append("\n\tMonotonic Counter Length=").append(monotonicCounterLength);
-        sb.append("\n\tEncapsulatedPacket=0x").append(MqttsnWireUtils.toHex(encapsulatedPacket));
-        sb.append("\n\tAuthenticationTagLength=").append(flags.getAuthenticationTagLengthDecoded());
-        sb.append("\n\tAuthenticationTag=0x").append(MqttsnWireUtils.toHex(authenticationTag));
+        sb.append("\n\tEncapsulated Packet=0x").append(MqttsnWireUtils.toHex(encapsulatedPacket));
+        sb.append("\n\tAuthenticated Payload Length=").append(authenticatedPayloadLength);
+        sb.append("\n\tAuthentication Tag Length=").append(flags.getAuthenticationTagLengthDecoded());
+        sb.append("\n\tAuthentication Tag=0x").append(MqttsnWireUtils.toHex(authenticationTag));
         return sb.toString();
     }
 }

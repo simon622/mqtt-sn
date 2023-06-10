@@ -11,7 +11,7 @@ public abstract class AbstractAeadProtectionScheme extends AbstractProtectionSch
 		authenticationOnly=false;
 	}
 	
-	//It returns the plaintext payload if the authenticity is verified, an exception otherwisee
+	//It returns the plaintext payload if the authenticity is verified, an exception otherwise
 	abstract public byte[] unprotect(byte[] associatedData, byte[] encryptedPayload, byte[] tagToBeVerified, byte[] key) throws MqttsnCodecException;
 	
 	//It returns the tag of nominalTagLength

@@ -27,7 +27,6 @@ package org.slj.mqtt.sn.impl;
 import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnSecurityOptions;
 import org.slj.mqtt.sn.spi.IMqttsnSecurityService;
-import org.slj.mqtt.sn.spi.MqttsnException;
 import org.slj.mqtt.sn.spi.MqttsnSecurityException;
 import org.slj.mqtt.sn.spi.AbstractMqttsnService;
 import org.slj.mqtt.sn.utils.Security;

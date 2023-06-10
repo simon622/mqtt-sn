@@ -13,12 +13,14 @@ import org.slj.mqtt.sn.utils.Security;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnProtection;
 import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
+import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionKey;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Map;
@@ -35,7 +37,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Davide Lenzarini
  */
 public class MqttsnProtectionService extends MqttsnSecurityService  {
-
     private static final String COUNTER_CONTEXT_KEY = "monotonicCounter";
 
     //-- The hash algo to use on the senderId
@@ -44,7 +45,28 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     //-- The prefix size used for senderId lookups
     private static final int SENDER_PREFIX_LEN = 8;
     
-    private Map<ByteBuffer, String> sendersWhitelist = new ConcurrentHashMap<>();
+	private class Sender
+	{
+		String clientId; 
+		private ArrayList<ProtectionKey> protectionKeys=new ArrayList<ProtectionKey>();
+		
+		Sender(String clientId, ArrayList<byte[]> protectionKeys)
+		{
+			this.clientId=clientId;
+			protectionKeys.forEach(protectionKey -> this.protectionKeys.add(new ProtectionKey(protectionKey)));
+		}
+		
+		public String toString()
+		{
+			StringBuilder sb=new StringBuilder("Sender: ");
+			sb.append(clientId).append(",[");
+			protectionKeys.forEach(protectionKey -> sb.append(protectionKey.protectionKeyHash));
+			sb.append("]");
+			return sb.toString();
+		}
+	}
+	
+    private Map<ByteBuffer, Sender> sendersWhitelist = new ConcurrentHashMap<>();
 
     private SecureRandom secureRandom = null;
     private ProtectionPacketFlags flags = null;
@@ -71,7 +93,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         this.flags = new ProtectionPacketFlags(flags[0],flags[1],flags[2]);
 	}
 
-	public void setAllowedClients(String[] allowedClients)
+	public void setAllowedClients(Sender[] allowedClients)
 	{
 		Arrays.stream(allowedClients).forEach(allowedClient -> addAllowedClientId(allowedClient)); //Whitelist of client senders (Client clientId)
 	}
@@ -97,21 +119,19 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         ProtectionSchemeCcm_64_128.register();
         
         //*** TODO PP: to be retrieved from a configuration file ***//
-        byte[] protectionKeyHmac = HexFormat.of().parseHex("8d8c0e211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e7a9c975316d427cc6e00dbe5c2e389127a9c975316d427cc6e00dbe5c2e38912");
-        	//256 bits Ox8d8c0e211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e
-        	//512 bits Ox8d8c0e211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e7a9c975316d427cc6e00dbe5c2e389127a9c975316d427cc6e00dbe5c2e38912
-    	
+        byte[] gatewayProtectionKeyHmac = HexFormat.of().parseHex("112233211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e7a9c975316d427cc6e00dbe5c2e389127a9c975316d427cc6e00dbe5c2e38912");
+        byte[] clientProtectionKeyHmac = HexFormat.of().parseHex("8d8c0e211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e7a9c975316d427cc6e00dbe5c2e389127a9c975316d427cc6e00dbe5c2e38912");
         if(isGateway)
         {
-        	setProtectionKey(protectionKeyHmac); //TODO PP to be removed as client dependent
-        	setAllowedClients(new String[] {"protectionClient"});
+			setProtectionKey(gatewayProtectionKeyHmac);
+        	setAllowedClients(new Sender[] {new Sender("protectionClient",new ArrayList<byte[]>(Arrays.asList(clientProtectionKeyHmac)))});
 	        //The protectionScheme to be used is defined by each client
 	        //The flags to be used are defined by each client
         }
         else
         {
-			setProtectionKey(protectionKeyHmac);
-        	setAllowedClients(new String[] {"protectionGateway"});
+			setProtectionKey(clientProtectionKeyHmac);
+        	setAllowedClients(new Sender[] {new Sender("protectionGateway",new ArrayList<byte[]>(Arrays.asList(gatewayProtectionKeyHmac)))});
         	setProtectionScheme(AbstractProtectionScheme.HMAC_SHA256);
 			//64 bits of authentication tag, no crypto material, no monotonic counter
         	setProtectionFlags(new byte[] {(byte)0x03,(byte)0x00,(byte)0x00});
@@ -121,10 +141,10 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     }
 
     @Override
-    public byte[] writeVerified(INetworkContext networkContext, byte[] data) throws MqttsnSecurityException {
+    public byte[] writeVerified(INetworkContext networkContext, byte[] encapsulatedPacket) throws MqttsnSecurityException {
     	//data is the message to be encapsulated
     	String clientId=registry.getOptions().getContextId();
-        logger.info("Protection service handling {} egress bytes 0x{} from {} for {}", data.length, MqttsnWireUtils.toHex(data), clientId, networkContext);
+        logger.info("Protection service handling {} egress bytes 0x{} from {} for {}", encapsulatedPacket.length, MqttsnWireUtils.toHex(encapsulatedPacket), clientId, networkContext);
         
         ByteBuffer senderId = deriveSenderId(clientId);
 
@@ -154,12 +174,11 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         	default:
         }
         MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().createMessageFactory().
-                createProtectionMessage(protectionScheme, protectionKey, flags, senderId.array(), random, cryptoMaterial, monotonicCounter, data);
+                createProtectionMessage(protectionScheme, protectionKey, flags, senderId.array(), random, cryptoMaterial, monotonicCounter, encapsulatedPacket);
 
         byte[] protectionPacket = packet.encode();
         logger.debug(packet.toString());
         return protectionPacket;
-        //return data; //to return the original data
     }
 
     @Override
@@ -167,18 +186,20 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     	//data is the message to be decapsulated
         logger.info("Protection service handling {} ingress bytes 0x{} for {}", data.length, MqttsnWireUtils.toHex(data), networkContext);
         
-        //TODO PP store in the context the flags and protection scheme of the client to be reused for all communications from now on
-        
         if(isSecurityEnvelope(data)){
-            logger.info("Protection packet identified");
+            logger.debug("Protection packet identified");
             MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().decode(data);
            
-            String senderClientId=sendersWhitelist.get(ByteBuffer.wrap(packet.getSenderId()));
-            if(senderClientId!=null)
+            Sender sender=sendersWhitelist.get(ByteBuffer.wrap(packet.getSenderId()));
+            if(sender!=null)
             {
-                //logger.info("Protection packet received from {}: {}",senderClientId,getProtectionPacketAsLogString(packet));
-                //TODO This is where we need to verify the packet
-                //return data;
+                //Authorized senderId
+            	if(packet.verifyAuthenticationTag(sender.protectionKeys))
+            	{
+            		logger.debug("The Authentication Tag is valid");
+            		return packet.getEncapsulatedPacket();
+            	}
+            	throw new MqttsnSecurityException("Invalid Authentication Tag!"); 
             }
             throw new MqttsnSecurityException("Unauthorized senderId: "+HexFormat.of().formatHex(packet.getSenderId()));
         }
@@ -214,18 +235,18 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         throw new MqttsnSecurityException("Unable to create a monotonic counter!");
     }
 
-    private void addAllowedClientId(final String clientId) {
+    private void addAllowedClientId(final Sender sender) {
         try {
-            sendersWhitelist.put(deriveSenderId(clientId), clientId);
+            sendersWhitelist.put(deriveSenderId(sender.clientId), sender);
         }
     	catch(Exception e){
     		throw new MqttsnSecurityException(e);
     	}
     }
 
-    private void removeAllowedClientId(final String clientId) {
+    private void removeAllowedClientId(final Sender sender) {
         try {
-            sendersWhitelist.remove(deriveSenderId(clientId));
+            sendersWhitelist.remove(deriveSenderId(sender.clientId));
         }
     	catch(Exception e){
     		throw new MqttsnSecurityException(e);
@@ -257,7 +278,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     {
         StringBuilder sb = new StringBuilder("Protection configuration:");
         sb.append("\n\tWhitelist:");
-        sendersWhitelist.forEach((key, value) -> sb.append("\n\t\t0x").append(HexFormat.of().formatHex(key.array())).append("-").append(value));
+        sendersWhitelist.forEach((key, value) -> sb.append("\n\t\t0x").append(HexFormat.of().formatHex(key.array())).append("-").append(value.toString()));
         sb.append("\n\tProtectionKey hash: 0x").append(protectionKeyHash);
         if(!isGateway)
         {

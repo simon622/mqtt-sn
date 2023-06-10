@@ -427,5 +427,5 @@ public interface IMqttsnMessageFactory {
     										byte[] random,
     										byte[] cryptoMaterial,
     										int monotonicCounter,
-    										byte[] encapsulatedMessage) throws MqttsnCodecException;
+    										byte[] encapsulatedPacket) throws MqttsnCodecException;
 }

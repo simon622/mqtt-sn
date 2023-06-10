@@ -101,7 +101,7 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
 			            }
 				    	sb.append("0x").append(String.format("%02x", protectionSchemeIndex&0xff).toUpperCase());
 						logger.info(sb.toString());
-						Class[] constructorParameters=new Class[2];
+						Class<?>[] constructorParameters=new Class<?>[2];
 						constructorParameters[0]=String.class;
 						constructorParameters[1]=byte.class;
 						return (IProtectionScheme) (protectionSchemeClasses.get(protectionSchemeIndex).getDeclaredConstructor(constructorParameters).newInstance(fieldName,protectionSchemeIndex));

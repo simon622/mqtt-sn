@@ -117,4 +117,9 @@ public class MqttsnSecurityService
 	public void setAllowedClients(String[] allowedClients) {}
 
 	public void setProtectionScheme(byte protectionSchemeIndex)	{}
+	
+	public String getProtectionConfiguration() 
+	{
+		return null;
+	}
 }

@@ -1,17 +1,19 @@
 package org.slj.mqtt.sn.codec;
 
 import java.lang.reflect.Field;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.spi.IProtectionScheme;
+import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
 
 public abstract class AbstractProtectionScheme implements IProtectionScheme
 {
     private static final Logger logger = LoggerFactory.getLogger(AbstractProtectionScheme.class);
-    
+
     protected static short BYTES_FOR_256_BITS = 32;
     
     public static final byte HMAC_SHA256 = 0x00,
@@ -50,13 +52,26 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
       };
 
     protected final static HashMap<Byte,Class<?>> protectionSchemeClasses = new HashMap<Byte,Class<?>>();
-     
+    
     protected byte index=RESERVED;
 	protected String name=null;
 	protected short nominalTagLength;
 	protected short keyLength;
 	protected boolean authenticationOnly;
+    protected SecureRandom secureRandom = null;
 
+    public AbstractProtectionScheme() throws MqttsnCodecException
+    {
+        try 
+        {
+            secureRandom = SecureRandom.getInstanceStrong();
+        }
+        catch(Exception e)
+        {
+        	throw new MqttsnCodecException(e);
+        }
+    }
+    
 	public String getName()
 	{
 		return name;
@@ -125,4 +140,30 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
     	append(String.format("%02x", index&0xff).toUpperCase()).append(")");
     	return sb.toString();
     }
+    
+	public byte[] getCryptoMaterial(byte cryptoMaterialLength)
+	{
+        byte[] cryptoMaterial=null; 
+        switch(cryptoMaterialLength)
+        {
+        	case ProtectionPacketFlags.SHORT_CRYPTO_MATERIAL:
+        		//Add here the required short crypto material
+                cryptoMaterial=new byte[ProtectionPacketFlags.SHORT_CRYPTO_MATERIAL]; //THIS IS ONLY AN EXAMPLE. IMPLEMENTATION DEPENDENT
+                secureRandom.nextBytes(cryptoMaterial);
+        		break;
+        	case ProtectionPacketFlags.LONG_CRYPTO_MATERIAL:
+        		//Add here the required long crypto material
+                cryptoMaterial=new byte[ProtectionPacketFlags.LONG_CRYPTO_MATERIAL]; //THIS IS ONLY AN EXAMPLE. IMPLEMENTATION DEPENDENT 
+                secureRandom.nextBytes(cryptoMaterial);
+            	break;
+        	case ProtectionPacketFlags.VERYLONG_CRYPTO_MATERIAL:
+        		//Add here the required long crypto material
+                cryptoMaterial=new byte[ProtectionPacketFlags.VERYLONG_CRYPTO_MATERIAL]; //THIS IS ONLY AN EXAMPLE. IMPLEMENTATION DEPENDENT 
+                secureRandom.nextBytes(cryptoMaterial);
+            	break;
+        	default:
+        		//No crypto material
+        }
+        return cryptoMaterial;
+	}
 }

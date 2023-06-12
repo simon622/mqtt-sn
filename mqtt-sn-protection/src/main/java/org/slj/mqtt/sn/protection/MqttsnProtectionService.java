@@ -15,11 +15,9 @@ import org.slj.mqtt.sn.wire.version2_0.payload.MqttsnProtection;
 import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
 import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionKey;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HexFormat;
@@ -45,7 +43,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     //-- The prefix size used for senderId lookups
     private static final int SENDER_PREFIX_LEN = 8;
     
-	private class Sender
+    private class Sender
 	{
 		String clientId; 
 		private ArrayList<ProtectionKey> protectionKeys=new ArrayList<ProtectionKey>();
@@ -68,7 +66,6 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 	
     private Map<ByteBuffer, Sender> sendersWhitelist = new ConcurrentHashMap<>();
 
-    private SecureRandom secureRandom = null;
     private ProtectionPacketFlags flags = null;
     private IProtectionScheme protectionScheme=null; 
     private byte[] protectionKey=null;
@@ -107,7 +104,6 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
         try {
-            secureRandom = SecureRandom.getInstanceStrong();
         	digest = MessageDigest.getInstance("SHA-256");
         }
         catch(Exception e)
@@ -148,20 +144,6 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         
         ByteBuffer senderId = deriveSenderId(clientId);
 
-        byte[] random = BigInteger.valueOf(secureRandom.nextInt()).toByteArray();
-        byte[] cryptoMaterial=null; 
-        switch(flags.getCryptoMaterialLengthDecoded())
-        {
-        	case ProtectionPacketFlags.SHORT_CRYPTO_MATERIAL:
-        		cryptoMaterial=BigInteger.valueOf(Short.MIN_VALUE).toByteArray();
-        		//Add here the required short crypto material
-        		break;
-        	case ProtectionPacketFlags.LONG_CRYPTO_MATERIAL:
-        		cryptoMaterial=BigInteger.valueOf(Integer.MIN_VALUE).toByteArray();
-            	//Add here the required long crypto material
-        		break;
-        	default:
-        }
         int monotonicCounter = 0;
         switch(flags.getMonotonicCounterLengthDecoded())
         {
@@ -172,9 +154,10 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
                 monotonicCounter = nextMonotonicCounterValue(networkContext,Integer.MIN_VALUE,false);
         		break;
         	default:
+        		//No monotonic counter
         }
         MqttsnProtection packet = (MqttsnProtection) getRegistry().getCodec().createMessageFactory().
-                createProtectionMessage(protectionScheme, protectionKey, flags, senderId.array(), random, cryptoMaterial, monotonicCounter, encapsulatedPacket);
+                createProtectionMessage(protectionScheme, protectionKey, flags, senderId.array(), monotonicCounter, encapsulatedPacket);
 
         byte[] protectionPacket = packet.encode();
         logger.debug(packet.toString());
@@ -228,7 +211,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
                 clientIdentifierContext.putContextObject(COUNTER_CONTEXT_KEY, counter);
             }
             int newValue=counter.incrementAndGet();
-            if(shortVersion && newValue==(Short.MAX_VALUE+1))
+            if(shortVersion && newValue>=(Short.MAX_VALUE+1))
             	newValue=Short.MIN_VALUE;
             return newValue;
         }
@@ -238,15 +221,6 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     private void addAllowedClientId(final Sender sender) {
         try {
             sendersWhitelist.put(deriveSenderId(sender.clientId), sender);
-        }
-    	catch(Exception e){
-    		throw new MqttsnSecurityException(e);
-    	}
-    }
-
-    private void removeAllowedClientId(final Sender sender) {
-        try {
-            sendersWhitelist.remove(deriveSenderId(sender.clientId));
         }
     	catch(Exception e){
     		throw new MqttsnSecurityException(e);
@@ -274,7 +248,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     	throw new MqttsnSecurityException("Unable to generate the SenderId: ClientId not available!");
     }
     
-    private String getProtectionConfiguration()
+    public String getProtectionConfiguration()
     {
         StringBuilder sb = new StringBuilder("Protection configuration:");
         sb.append("\n\tWhitelist:");

@@ -11,4 +11,6 @@ public interface IProtectionScheme {
 	short getKeyLength();
 	
 	boolean isAuthenticationOnly();
+	
+	byte[] getCryptoMaterial(byte cryptoMaterialLength);
 }

@@ -62,4 +62,6 @@ public interface IMqttsnSecurityService extends IMqttsnService {
 	void setAllowedClients(String[] allowedClients);
 
 	void setProtectionScheme(byte protectionSchemeIndex);
+	
+	String getProtectionConfiguration();
 }

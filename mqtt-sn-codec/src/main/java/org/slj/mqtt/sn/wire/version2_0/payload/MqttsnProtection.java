@@ -11,6 +11,7 @@ import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -30,6 +31,7 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
 															SENDERID_FIELD_SIZE + //bytes for the field "senderId"
 															RANDOM_FIELD_SIZE; //bytes for the field "random"
 
+    private ProtectionPacketFlags flags = null; //1 byte (byte 3)
     protected IProtectionScheme protectionScheme=null; //1 byte (byte 4)
     private byte[] senderId = new byte[SENDERID_FIELD_SIZE]; //bytes 5-12
     private byte[] random; //bytes 13-16
@@ -37,14 +39,22 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
     private int monotonicCounter; //bytes q-r
     private byte[] encapsulatedPacket=null; //bytes S-T
     private byte[] authenticationTag=null; //bytes U-N
-    private ProtectionPacketFlags flags = null;
     private byte[] protectionKey=null;
     private byte[] protectionPacket=null; //bytes 1-N
     private short protectionPacketLength;
     private short authenticatedPayloadLength;
-    
-    public MqttsnProtection(){
+    private SecureRandom secureRandom = null;
+
+    public MqttsnProtection()
+    {
         Arrays.fill(this.senderId, (byte) 0x00);
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        }
+        catch(Exception e)
+        {
+        	throw new MqttsnCodecException(e);
+        }
     }
 
     public IProtectionScheme getProtectionScheme() {
@@ -68,22 +78,6 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
             throw new MqttsnCodecException("senderId cannot exceed "+SENDERID_FIELD_SIZE+" bytes");
         }
         System.arraycopy(senderId, 0, this.senderId, 0, senderId.length);
-    }
-
-    public byte[] getRandom() {
-        return random;
-    }
-
-    public void setRandom(byte[] random) {
-        this.random = random;
-    }
-
-    public byte[] getCryptoMaterial() {
-        return cryptoMaterial;
-    }
-
-    public void setCryptoMaterial(byte[] cryptoMaterial) {
-    	this.cryptoMaterial = cryptoMaterial;
     }
 
     public int getMonotonicCounter() {
@@ -237,10 +231,14 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         System.arraycopy(senderId, 0, protectionPacket, idx, SENDERID_FIELD_SIZE);
         idx += SENDERID_FIELD_SIZE;
 
+        random = new byte[RANDOM_FIELD_SIZE]; 
+        secureRandom.nextBytes(random);
+        
         System.arraycopy(random, 0, protectionPacket, idx, RANDOM_FIELD_SIZE);
         idx += RANDOM_FIELD_SIZE;
 
-        short cryptoMaterialLengthDecoded=flags.getCryptoMaterialLengthDecoded();
+        byte cryptoMaterialLengthDecoded=flags.getCryptoMaterialLengthDecoded();
+        cryptoMaterial=protectionScheme.getCryptoMaterial(cryptoMaterialLengthDecoded);
         if(cryptoMaterialLengthDecoded!=0)
         {
         	System.arraycopy(cryptoMaterial, 0, protectionPacket, idx, cryptoMaterialLengthDecoded);
@@ -281,40 +279,31 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
 
     @Override
     public void validate() throws MqttsnCodecException {
+    	if(flags==null)
+    		throw new MqttsnCodecException("Flags not available");
+    	if(protectionScheme==null)
+    		throw new MqttsnCodecException("Protection scheme not available");
+		AbstractProtectionScheme.getProtectionScheme(protectionScheme.getIndex());
+		if(senderId==null || senderId.length!=SENDERID_FIELD_SIZE)
+    		throw new MqttsnCodecException("SenderId not available or invalid length");
+		if(random==null || random.length!=RANDOM_FIELD_SIZE)
+    		throw new MqttsnCodecException("Random not available or invalid length");
+		byte cryptoMaterialLength=flags.getCryptoMaterialLengthDecoded();
+		if(cryptoMaterial==null && cryptoMaterialLength>0)
+    		throw new MqttsnCodecException("CryptoMaterial not available");
+		if(cryptoMaterial!=null && cryptoMaterialLength!=cryptoMaterial.length)
+    		throw new MqttsnCodecException("CryptoMaterial invalid length");
+		byte monotonicCounterLength=flags.getMonotonicCounterLengthDecoded();
+		if(monotonicCounterLength==ProtectionPacketFlags.SHORT_MONOTONIC_COUNTER && (monotonicCounter<Short.MIN_VALUE || monotonicCounter>Short.MAX_VALUE))
+    		throw new MqttsnCodecException("Monotonic Counter is not represented over a short integer");
+		short authenticationTagLength=flags.getAuthenticationTagLengthDecoded();
+		if(authenticationTag==null)
+    		throw new MqttsnCodecException("Authentication Tag not available");
+		if(authenticationTag!=null && authenticationTagLength!=authenticationTag.length)
+    		throw new MqttsnCodecException("Authentication Tag invalid length");
 
-       /* protected IProtectionScheme protectionScheme=null; //1 byte (byte 4)
-        private byte[] senderId = new byte[SENDERID_FIELD_SIZE]; //bytes 5-12
-        private byte[] random; //bytes 13-16
-        private byte[] cryptoMaterial=null; //bytes 17-P
-        private int monotonicCounter; //bytes q-r
-        private byte[] encapsulatedPacket=null; //bytes S-T
-        private byte[] authenticationTag=null; //bytes U-N
-        private ProtectionPacketFlags flags = null;
-        private byte[] protectionKey=null;
-        private byte[] protectionPacket=null; //bytes 1-N
-        private short protectionPacketLength;
-*/
-        /*if(Arrays.binarySearch(ALLOWED_SCHEMES, protectionSchema) == -1){
-            throw new MqttsnCodecException("Invalid protection schema");
-        }*/
-        //MqttsnSpecificationValidator.validateUInt32(random);
-        /*MqttsnSpecificationValidator.validateByteArrayLength(senderId, SENDERID_FIELD_SIZE);
-        if(encapsulatedPacket == null || encapsulatedPacket.length < 2){
+        if(encapsulatedPacket == null || encapsulatedPacket.length < 2)
             throw new MqttsnCodecException("Invalid encapsulated value");
-        }*/
-        /*if(cryptoMaterialLength == 2){
-            MqttsnSpecificationValidator.validateUInt16((int) cryptoMaterial);
-        }
-        else if(cryptoMaterialLength == 4){
-            MqttsnSpecificationValidator.validateUInt32(cryptoMaterial);
-        }
-        if(monotonicCounterLength == 2){
-            MqttsnSpecificationValidator.validateUInt16((int) monotonicCounter);
-        }
-        else if(monotonicCounterLength == 4){
-            MqttsnSpecificationValidator.validateUInt32(monotonicCounter);
-        }*/
-        //MqttsnSpecificationValidator.validateByteArrayLength(authTag, authTagLength);
     }
 
     @Override
@@ -331,9 +320,18 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         	sb.append("\n\tCrypto Material=0x").append(MqttsnWireUtils.toHex(cryptoMaterial));
         else
             sb.append("\n\tCrypto Material Length=").append(cryptoMaterialLength);
-        byte monotonicCounterLength=flags.getMonotonicCounterLength();
+        byte monotonicCounterLength=flags.getMonotonicCounterLengthDecoded();
         if(monotonicCounterLength>0)
-        	sb.append("\n\tMonotonic Counter=").append(monotonicCounter).append(" (0x").append(MqttsnWireUtils.toHex(BigInteger.valueOf(monotonicCounter).toByteArray())).append(")");
+        {
+        	if(monotonicCounterLength == ProtectionPacketFlags.SHORT_MONOTONIC_COUNTER)
+        	{
+            	sb.append("\n\tMonotonic Counter=").append(monotonicCounter).append(" (0x").append(MqttsnWireUtils.toHex(BigInteger.valueOf((short)monotonicCounter).toByteArray())).append(")");
+            } 
+        	else if(monotonicCounterLength == ProtectionPacketFlags.LONG_MONOTONIC_COUNTER)
+        	{
+            	sb.append("\n\tMonotonic Counter=").append(monotonicCounter).append(" (0x").append(Integer.toHexString(monotonicCounter)).append(")");
+            }
+        }
         else
             sb.append("\n\tMonotonic Counter Length=").append(monotonicCounterLength);
         sb.append("\n\tEncapsulated Packet=0x").append(MqttsnWireUtils.toHex(encapsulatedPacket));

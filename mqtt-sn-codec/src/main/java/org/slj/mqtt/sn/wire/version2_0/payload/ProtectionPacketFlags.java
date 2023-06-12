@@ -9,7 +9,7 @@ public class ProtectionPacketFlags {
 	public static final byte NO_CRYPTO_MATERIAL = 0; 
     public static final byte SHORT_CRYPTO_MATERIAL = 2; //bytes
     public static final byte LONG_CRYPTO_MATERIAL = 4; //bytes
-    public static final byte VERYLONG_CRYPTO_MATERIAL = 10; //bytes
+    public static final byte VERYLONG_CRYPTO_MATERIAL = 12; //bytes
     public static final byte NO_MONOTONIC_COUNTER = 0; 
     public static final byte SHORT_MONOTONIC_COUNTER = 2; //bytes
     public static final byte LONG_MONOTONIC_COUNTER = 4; //bytes
@@ -22,7 +22,7 @@ public class ProtectionPacketFlags {
     
     public static ProtectionPacketFlags decodeProtectionPacketFlags(byte flags) throws MqttsnCodecException
     {
-    	return new ProtectionPacketFlags((byte)(((byte)((flags & 0xF0))) >> 4), (byte)(((byte)(flags & 0x0C)) >> 2), (byte)((flags & 0x03)));
+    	return new ProtectionPacketFlags((byte)((((byte)(flags & 0xF0)) >> 4) & 0x0F), (byte)(((byte)(flags & 0x0C)) >> 2), (byte)((flags & 0x03)));
     }
     
     public ProtectionPacketFlags(byte authenticationTagLength, byte cryptoMaterialLength, byte monotonicCounterLength) throws MqttsnCodecException

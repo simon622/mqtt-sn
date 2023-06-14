@@ -115,6 +115,9 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 
         ProtectionSchemeHmacSha256.register();
         ProtectionSchemeHmacSha3_256.register();
+        ProtectionSchemeCmac128.register();
+        ProtectionSchemeCmac192.register();
+        ProtectionSchemeCmac256.register();
         ProtectionSchemeCcm_64_128.register(); 
         ProtectionSchemeCcm_64_192.register();
         ProtectionSchemeCcm_64_256.register();
@@ -122,7 +125,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         ProtectionSchemeCcm_128_192.register();
         ProtectionSchemeCcm_128_256.register();
         
-        //*** TODO PP: to be retrieved from a configuration file ***//
+        //TODO PP: to be retrieved from a configuration file BEGIN
         byte[] gatewayProtectionKeyHmac =  new byte[] {
         		(byte)0x11,(byte)0x22,(byte)0x33,(byte)0x44,(byte)0x55,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
         		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e,
@@ -133,13 +136,13 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e,
         		(byte)0x7a,(byte)0x9c,(byte)0x97,(byte)0x53,(byte)0x16,(byte)0xd4,(byte)0x27,(byte)0xcc,(byte)0x6e,(byte)0x00,(byte)0xdb,(byte)0xe5,(byte)0xc2,(byte)0xe3,(byte)0x89,(byte)0x12,
         		(byte)0x7a,(byte)0x9c,(byte)0x97,(byte)0x53,(byte)0x16,(byte)0xd4,(byte)0x27,(byte)0xcc,(byte)0x6e,(byte)0x00,(byte)0xdb,(byte)0xe5,(byte)0xc2,(byte)0xe3,(byte)0x89,(byte)0x12};
-        byte[] clientProtectionKeyAesCcm256 = new byte[] {
+        byte[] clientProtectionKeyAes256 = new byte[] {
         		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
         		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e};
-        byte[] clientProtectionKeyAesCcm192 = new byte[] {
+        byte[] clientProtectionKeyAes192 = new byte[] {
         		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
         		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54};
-        byte[] clientProtectionKeyAesCcm128 = new byte[] {
+        byte[] clientProtectionKeyAes128 = new byte[] {
         		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b};
 
         if(isGateway)
@@ -147,9 +150,9 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 			setProtectionKey(gatewayProtectionKeyHmac);
         	setAllowedClients(new Sender[] {new Sender("protectionClient",new ArrayList<byte[]>(Arrays.asList(
         			clientProtectionKeyHmac,
-        			clientProtectionKeyAesCcm128,
-        			clientProtectionKeyAesCcm192,
-        			clientProtectionKeyAesCcm256)))});
+        			clientProtectionKeyAes128,
+        			clientProtectionKeyAes192,
+        			clientProtectionKeyAes256)))});
 	        //The protectionScheme to be used is defined by each client
 	        //The flags to be used are defined by each client
         }
@@ -162,7 +165,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         	setProtectionFlags(new byte[] {(byte)0x03,(byte)0x00,(byte)0x00});
         }
         logger.debug(getProtectionConfiguration());
-        //*** END TODO ***//
+        //TODO PP: to be retrieved from a configuration file END
     }
 
     @Override

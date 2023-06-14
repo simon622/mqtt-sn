@@ -191,12 +191,16 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
     	{
 	        byte[] authenticatedPayload=new byte[authenticatedPayloadLength]; 
 	        System.arraycopy(protectionPacket, 0, authenticatedPayload, 0, authenticatedPayloadLength);
-	        for(int i=0; i<availableKeys; i++)
+	        
+	        AbstractAuthenticationOnlyProtectionScheme abstractAuthenticationOnlyProtectionScheme=(AbstractAuthenticationOnlyProtectionScheme)protectionScheme;
+			for(int i=0; i<availableKeys; i++)
 	        {
 		        try
 		        {
 		        	ProtectionKey protectionKey=protectionKeys.get(i);
-		        	((AbstractAuthenticationOnlyProtectionScheme)protectionScheme).unprotect(authenticatedPayload,authenticationTag,protectionKey.getProtectionKey());
+		            if(abstractAuthenticationOnlyProtectionScheme.allowedKeyLength!=Byte.MIN_VALUE && abstractAuthenticationOnlyProtectionScheme.allowedKeyLength!=protectionKey.getProtectionKeyLength())
+		            	continue;
+		        	abstractAuthenticationOnlyProtectionScheme.unprotect(authenticatedPayload,authenticationTag,protectionKey.getProtectionKey());
 		        	logger.debug("Protection key used: 0x"+protectionKey.getProtectionKeyHash());
 		            logger.debug(toString());
 			        return authenticatedPayload;

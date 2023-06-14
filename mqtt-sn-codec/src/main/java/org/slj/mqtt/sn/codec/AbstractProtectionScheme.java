@@ -26,8 +26,8 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
 	    AES_CCM_128_192 = 0x44,
 	    AES_CCM_128_256 = 0x45,
 	    AES_GCM_128_128 = 0x46,
-	    AES_GCM_192_128 = 0x47,
-	    AES_GCM_256_128 = 0x48,
+	    AES_GCM_128_192 = 0x47,
+	    AES_GCM_128_256 = 0x48,
 	    ChaCha20_Poly1305 = 0x49,
 		RESERVED=(byte)0xFF;
 
@@ -44,8 +44,8 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
 		 AES_CCM_128_192,
 		 AES_CCM_128_256,
 		 AES_GCM_128_128,
-		 AES_GCM_192_128,
-		 AES_GCM_256_128,
+		 AES_GCM_128_192,
+		 AES_GCM_128_256,
 		 ChaCha20_Poly1305
       };
 

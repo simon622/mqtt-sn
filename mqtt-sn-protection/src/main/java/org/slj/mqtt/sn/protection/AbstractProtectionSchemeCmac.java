@@ -2,21 +2,13 @@ package org.slj.mqtt.sn.protection;
 
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.macs.CMac;
-import org.bouncycastle.crypto.modes.CCMBlockCipher;
-import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slj.mqtt.sn.spi.MqttsnSecurityException;
 import org.slj.mqtt.sn.wire.version2_0.payload.AbstractAuthenticationOnlyProtectionScheme;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
-import java.util.HexFormat;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-
-import javax.crypto.Mac;
 
 public class AbstractProtectionSchemeCmac extends AbstractAuthenticationOnlyProtectionScheme
 {

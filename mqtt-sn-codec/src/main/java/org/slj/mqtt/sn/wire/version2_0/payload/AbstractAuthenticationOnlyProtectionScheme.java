@@ -5,6 +5,8 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 
 public abstract class AbstractAuthenticationOnlyProtectionScheme extends AbstractProtectionScheme
 {
+	protected byte allowedKeyLength=Byte.MIN_VALUE;
+
 	public AbstractAuthenticationOnlyProtectionScheme()
 	{
 		authenticationOnly=true;

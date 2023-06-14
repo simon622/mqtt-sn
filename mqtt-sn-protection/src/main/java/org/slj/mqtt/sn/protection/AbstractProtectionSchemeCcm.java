@@ -39,22 +39,6 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		{
 			throw new MqttsnSecurityException(e);
 		}
-
-		/*//TODO PP to be removed
-		try 
-		{
-	      Provider p[] = Security.getProviders();
-	      for (int i = 0; i < p.length; i++) 
-	      {
-	          System.out.println(p[i]);
-	          for (Enumeration e = p[i].keys(); e.hasMoreElements();)
-	              System.out.println("\t" + e.nextElement());
-	      }
-	    } 
-		catch (Exception e) 
-		{
-	      System.out.println(e);
-	    }*/
 	}
 	
 	public byte[] unprotect(byte[] associatedData, byte[] encryptedPayload, byte[] tagToBeVerified, byte[] key) throws MqttsnSecurityException
@@ -143,32 +127,6 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		byte[] authenticationTag=Arrays.copyOfRange(outputBuffer, (outputSize-nominalTagLengthInBytes), outputSize);
         logger.debug("Mac in plain text: 0x"+HexFormat.of().formatHex(ccmBlockCipher.getMac()).toUpperCase());
         
-		/*//Decrypt
-		byte[] encryptedPayloadToBeDecrypted = new byte[encryptedPayload.length+authenticationTag.length];
-        System.arraycopy(encryptedPayload, 0, encryptedPayloadToBeDecrypted, 0, encryptedPayload.length);
-        System.arraycopy(authenticationTag, 0, encryptedPayloadToBeDecrypted, encryptedPayload.length, authenticationTag.length);
-		ccmBlockCipher.reset();
-		ccmBlockCipher.init(false,aeadParameters);
-		int expectedOutputSize1=encryptedPayload.length;
-		int outputSize1=ccmBlockCipher.getOutputSize(encryptedPayloadToBeDecrypted.length);
-		if(outputSize!=expectedOutputSize)
-			throw new MqttsnSecurityException("The size of the CCM input should be "+expectedOutputSize1+" and not "+outputSize1);
-
-		byte[] decryptionBuffer = new byte[outputSize1];
-
-		int bytesWritten1 = ccmBlockCipher.processBytes(encryptedPayloadToBeDecrypted, 0, encryptedPayloadToBeDecrypted.length, decryptionBuffer, 0);
-		try {
-			bytesWritten1 = ccmBlockCipher.doFinal(decryptionBuffer, bytesWritten1);
-		} catch (Exception e) {
-			throw new MqttsnSecurityException(e);
-		}
-		byte[] decryptedPayload=new byte[encryptedPayload.length];
-        System.arraycopy(decryptionBuffer, 0, decryptedPayload, 0, (outputSize1-nominalTagLengthInBytes));
-		System.out.println("decryptionBuffer--------------------->"+HexFormat.of().formatHex(decryptionBuffer).toUpperCase());
-
-        byte[] decryptedMac = ccmBlockCipher.getMac();
-		System.out.println("mac--------------------->"+HexFormat.of().formatHex(decryptedMac).toUpperCase());
-		*/
         return authenticationTag;
 	}
 }

@@ -82,15 +82,7 @@ public class ProtectionSchemeHmacSha256 extends AbstractAuthenticationOnlyProtec
 		//The authenticatedPayload is represented by the sequence of bytes from Byte 1 to Byte T
 		//It returns the tag of nominalTagLength
 		SecretKeySpec secretKeySpec = new SecretKeySpec(key, HMAC_SHA256_ALGORITHM); 
-		try 
-		{
-			mac.reset();
-			mac.init(secretKeySpec);
-		} 
-		catch (InvalidKeyException e) 
-		{
-			throw new MqttsnSecurityException(e);
-		}
+		macSetup(secretKeySpec);
 	    return mac.doFinal(payloadToBeAuthenticated);
 	}
 }

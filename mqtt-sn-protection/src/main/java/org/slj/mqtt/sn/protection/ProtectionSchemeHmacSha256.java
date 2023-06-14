@@ -21,7 +21,7 @@ public class ProtectionSchemeHmacSha256 extends AbstractAuthenticationOnlyProtec
 	{
 		protectionSchemeClasses.put(Byte.valueOf(HMAC_SHA256), ProtectionSchemeHmacSha256.class);
 	}
-
+	
 	public static void unregister()
 	{
 		protectionSchemeClasses.remove(Byte.valueOf(HMAC_SHA256));
@@ -31,8 +31,8 @@ public class ProtectionSchemeHmacSha256 extends AbstractAuthenticationOnlyProtec
 	{
 		this.name=name;
 		this.index=index;
-		nominalTagLength=BYTES_FOR_256_BITS;
-		keyLength=BYTES_FOR_256_BITS;
+		nominalTagLengthInBytes=32;
+		blockSizeInBytes=64;
 		authenticationOnly=true;
 		try 
 		{
@@ -65,7 +65,7 @@ public class ProtectionSchemeHmacSha256 extends AbstractAuthenticationOnlyProtec
 		SecretKeySpec secretKeySpec = new SecretKeySpec(key, HMAC_SHA256_ALGORITHM); 
 		macSetup(secretKeySpec);
 	    byte[] tag=mac.doFinal(authenticatedPayload);
-	    if(tagToBeVerified.length!=nominalTagLength)
+	    if(tagToBeVerified.length!=nominalTagLengthInBytes)
 	    {
 	    	//Truncated tag
 	    	tag = Arrays.copyOfRange(tag, 0, tagToBeVerified.length);

@@ -7,7 +7,7 @@ import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 public class ProtectionKey
 {
-	public String protectionKeyHash;
+	private String protectionKeyHash;
 	private byte[] protectionKey;
 	private MessageDigest digest;
 	
@@ -25,8 +25,13 @@ public class ProtectionKey
 		this.protectionKeyHash = MqttsnWireUtils.toHex(digest.digest(protectionKey));
 	}
 	
-	public byte[] getProtectionKey()
+	byte[] getProtectionKey()
 	{
 		return protectionKey;
+	}
+
+	public String getProtectionKeyHash()
+	{
+		return protectionKeyHash;
 	}
 }

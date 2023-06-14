@@ -22,11 +22,16 @@
             <artifactId>mqtt-sn-codec</artifactId>
             <version>${mqtt-sn.version}</version>
         </dependency>
+        <dependency>
+	        <groupId>org.bouncycastle</groupId>
+	    	<artifactId>bcprov-jdk18on</artifactId>
+	    	<version>1.73</version>
+        </dependency>
     </dependencies>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>18</maven.compiler.source>
+        <maven.compiler.target>18</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

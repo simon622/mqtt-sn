@@ -96,7 +96,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 	
 	public void setProtectionFlags(byte[] flags)
 	{
-        this.flags = new ProtectionPacketFlags(flags[0],flags[1],flags[2]);
+        this.flags = new ProtectionPacketFlags(flags[0],flags[1],flags[2],protectionScheme);
 	}
 
 	public void setAllowedClients(Sender[] allowedClients)
@@ -115,6 +115,11 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 
         ProtectionSchemeHmacSha256.register();
         ProtectionSchemeCcm_64_128.register();
+        ProtectionSchemeCcm_64_192.register();
+        ProtectionSchemeCcm_64_256.register();
+        ProtectionSchemeCcm_128_128.register();
+        ProtectionSchemeCcm_128_192.register();
+        ProtectionSchemeCcm_128_256.register();
         
         //*** TODO PP: to be retrieved from a configuration file ***//
         byte[] gatewayProtectionKeyHmac =  new byte[] {

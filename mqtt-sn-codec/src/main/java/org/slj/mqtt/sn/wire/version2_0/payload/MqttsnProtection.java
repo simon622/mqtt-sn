@@ -147,8 +147,8 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
     public void decode(byte[] data) throws MqttsnCodecException {
     	protectionPacket=data;
     	protectionPacketLength = (short) data.length;
-    	flags=ProtectionPacketFlags.decodeProtectionPacketFlags(readByteAdjusted(data,FLAGS_FIELD_BYTE_INDEX));
         protectionScheme=AbstractProtectionScheme.getProtectionScheme(readByteAdjusted(data,PROTECTIONSCHEME_FIELD_BYTE_INDEX)); 		
+    	flags=ProtectionPacketFlags.decodeProtectionPacketFlags(readByteAdjusted(data,FLAGS_FIELD_BYTE_INDEX),protectionScheme);
         senderId=readBytesAdjusted(data,SENDERID_FIELD_BYTE_INDEX,SENDERID_FIELD_SIZE);
         random=readBytesAdjusted(data,RANDOM_FIELD_BYTE_INDEX,RANDOM_FIELD_SIZE);
         int idx = PROTECTION_PACKET_FIXED_PART_LENGTH;
@@ -218,19 +218,22 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
             encryptedEncapsulatedPacket=new byte[encapsulatedPacket.length];
             System.arraycopy(encapsulatedPacket, 0, encryptedEncapsulatedPacket, 0, encapsulatedPacket.length);
 
+            AbstractAeadProtectionScheme abstractAeadProtectionScheme=(AbstractAeadProtectionScheme)protectionScheme;
 	        for(int i=0; i<availableKeys; i++)
 	        {
 		        try
 		        {
 		        	ProtectionKey protectionKey=protectionKeys.get(i);
-		        	encapsulatedPacket=((AbstractAeadProtectionScheme)protectionScheme).unprotect(associatedData,encapsulatedPacket,authenticationTag,protectionKey.getProtectionKey());
+		            if(abstractAeadProtectionScheme.allowedKeyLength!=protectionKey.getProtectionKeyLength())
+		            	continue;
+		        	encapsulatedPacket=abstractAeadProtectionScheme.unprotect(associatedData,encapsulatedPacket,authenticationTag,protectionKey.getProtectionKey());
 		        	logger.debug("Protection key used: 0x"+protectionKey.getProtectionKeyHash());
 		            logger.debug(toString());
 			        return encapsulatedPacket;
 		        }
 		        catch(Exception e)
 		        {
-		        	logger.debug("Authentication Tag invalid for key "+i);
+		        	logger.debug("Authentication Tag invalid for key "+i,e);
 		        }
 	        }
             logger.debug(toString());

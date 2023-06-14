@@ -21,13 +21,13 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
     //The serial number is obtained from SHA-224 of "MqttsnProtection"
     private static final long serialVersionUID = (new BigInteger("ca3875934ca453484558751e6e6da24d198c30f32b2e46933eebf774",16)).longValue();
     
-    static final short FLAGS_FIELD_BYTE_INDEX=2;
-    static final short PROTECTIONSCHEME_FIELD_BYTE_INDEX=3;
-    static final short SENDERID_FIELD_BYTE_INDEX=4;
-    static final short RANDOM_FIELD_BYTE_INDEX=12;
-    static final short SENDERID_FIELD_SIZE=8;
-	static final short RANDOM_FIELD_SIZE=4;
-    static final short PROTECTION_PACKET_FIXED_PART_LENGTH = 4 + //bytes for the fields "length", "packet type", "flags", "protection scheme"
+    private static final short FLAGS_FIELD_BYTE_INDEX=2;
+    private static final short PROTECTIONSCHEME_FIELD_BYTE_INDEX=3;
+    private static final short SENDERID_FIELD_BYTE_INDEX=4;
+    private static final short RANDOM_FIELD_BYTE_INDEX=12;
+    private static final short SENDERID_FIELD_SIZE=8;
+    private static final short RANDOM_FIELD_SIZE=4;
+    private static final short PROTECTION_PACKET_FIXED_PART_LENGTH = 4 + //bytes for the fields "length", "packet type", "flags", "protection scheme"
 															SENDERID_FIELD_SIZE + //bytes for the field "senderId"
 															RANDOM_FIELD_SIZE; //bytes for the field "random"
 
@@ -38,6 +38,7 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
     private byte[] cryptoMaterial=null; //bytes 17-P
     private int monotonicCounter; //bytes q-r
     private byte[] encapsulatedPacket=null; //bytes S-T
+    private byte[] encryptedEncapsulatedPacket=null;
     private byte[] authenticationTag=null; //bytes U-N
     private byte[] protectionKey=null;
     private byte[] protectionPacket=null; //bytes 1-N
@@ -174,32 +175,68 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         idx += encapsulatedPacketLength;
         authenticationTag = readRemainingBytesAdjusted(data, idx);
         authenticatedPayloadLength = (short)(data.length - authenticatedTagLength);
-        logger.debug(toString());
         if(authenticationTag.length != authenticatedTagLength)
         {
             throw new MqttsnCodecException("Invalid security data: Authentication Tag is "+authenticationTag+" bytes");
         }
     }
     
-    public boolean verifyAuthenticationTag(ArrayList<ProtectionKey> protectionKeys)
+    public byte[] unprotect(ArrayList<ProtectionKey> protectionKeys) throws MqttsnCodecException
     {
-        byte[] authenticatedPayload=new byte[authenticatedPayloadLength]; 
-        System.arraycopy(protectionPacket, 0, authenticatedPayload, 0, authenticatedPayloadLength);
+    	if(protectionScheme==null || flags==null)
+    		throw new MqttsnCodecException("unprotect not called after a decode");
+    	
         int availableKeys = protectionKeys.size();
-        for(int i=0; i<availableKeys; i++)
-        {
-	        try
+    	if(protectionScheme.isAuthenticationOnly())
+    	{
+	        byte[] authenticatedPayload=new byte[authenticatedPayloadLength]; 
+	        System.arraycopy(protectionPacket, 0, authenticatedPayload, 0, authenticatedPayloadLength);
+	        for(int i=0; i<availableKeys; i++)
 	        {
-	        	((AbstractAuthenticationOnlyProtectionScheme)protectionScheme).unprotect(authenticatedPayload,authenticationTag,protectionKeys.get(i).getProtectionKey());
+		        try
+		        {
+		        	ProtectionKey protectionKey=protectionKeys.get(i);
+		        	((AbstractAuthenticationOnlyProtectionScheme)protectionScheme).unprotect(authenticatedPayload,authenticationTag,protectionKey.getProtectionKey());
+		        	logger.debug("Protection key used: 0x"+protectionKey.getProtectionKeyHash());
+		            logger.debug(toString());
+			        return authenticatedPayload;
+		        }
+		        catch(Exception e)
+		        {
+		        	logger.debug("Authentication Tag invalid for key "+i);
+		        }
 	        }
-	        catch(Exception e)
+            logger.debug(toString());
+	        logger.error("Authentication Tag invalid!");
+	        return null;
+    	}
+    	else
+    	{
+            byte associatedDataLength=(byte) (protectionPacketLength-flags.getAuthenticationTagLengthDecoded()-encapsulatedPacket.length);
+            byte[] associatedData=new byte[associatedDataLength];
+            System.arraycopy(protectionPacket, 0, associatedData, 0, associatedDataLength);
+            encryptedEncapsulatedPacket=new byte[encapsulatedPacket.length];
+            System.arraycopy(encapsulatedPacket, 0, encryptedEncapsulatedPacket, 0, encapsulatedPacket.length);
+
+	        for(int i=0; i<availableKeys; i++)
 	        {
-	        	logger.debug("Authentication Tag invalid for key "+i);
+		        try
+		        {
+		        	ProtectionKey protectionKey=protectionKeys.get(i);
+		        	encapsulatedPacket=((AbstractAeadProtectionScheme)protectionScheme).unprotect(associatedData,encapsulatedPacket,authenticationTag,protectionKey.getProtectionKey());
+		        	logger.debug("Protection key used: 0x"+protectionKey.getProtectionKeyHash());
+		            logger.debug(toString());
+			        return encapsulatedPacket;
+		        }
+		        catch(Exception e)
+		        {
+		        	logger.debug("Authentication Tag invalid for key "+i);
+		        }
 	        }
-	        return true;
-        }
-    	logger.error("Authentication Tag invalid!");
-        return false;
+            logger.debug(toString());
+	        logger.error("Authentication Tag invalid!");
+	        return null;
+    	}
     }
 
     @Override
@@ -257,11 +294,11 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
             }
         }
 
-        System.arraycopy(encapsulatedPacket, 0, protectionPacket, idx, encapsulatedPacket.length);
-        idx += encapsulatedPacket.length;
-
         if(protectionScheme.isAuthenticationOnly())
         {
+            System.arraycopy(encapsulatedPacket, 0, protectionPacket, idx, encapsulatedPacket.length);
+            idx += encapsulatedPacket.length;
+
             short payloadToBeAuthenticatedLength=(short) (protectionPacketLength-authenticationTagLength);
             byte[] payloadToBeAuthenticated=new byte[payloadToBeAuthenticatedLength];
             System.arraycopy(protectionPacket, 0, payloadToBeAuthenticated, 0, payloadToBeAuthenticatedLength);
@@ -269,13 +306,18 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         }
         else
         {
-        	//TODO PP
+            byte associatedDataLength=(byte) (protectionPacketLength-authenticationTagLength-encapsulatedPacket.length);
+            byte[] associatedData=new byte[associatedDataLength];
+            System.arraycopy(protectionPacket, 0, associatedData, 0, associatedDataLength);
+            encryptedEncapsulatedPacket = new byte[encapsulatedPacket.length];
+            authenticationTag = Arrays.copyOfRange(((AbstractAeadProtectionScheme)protectionScheme).protect(associatedData, encapsulatedPacket, protectionKey, encryptedEncapsulatedPacket), 0, authenticationTagLength);
+            System.arraycopy(encryptedEncapsulatedPacket, 0, protectionPacket, idx, encapsulatedPacket.length);
+            idx += encapsulatedPacket.length;
         }
         
         System.arraycopy(authenticationTag, 0, protectionPacket, idx, authenticationTagLength);
         return protectionPacket;
     }
-
 
     @Override
     public void validate() throws MqttsnCodecException {
@@ -335,6 +377,8 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         else
             sb.append("\n\tMonotonic Counter Length=").append(monotonicCounterLength);
         sb.append("\n\tEncapsulated Packet=0x").append(MqttsnWireUtils.toHex(encapsulatedPacket));
+        if(!protectionScheme.isAuthenticationOnly() && encryptedEncapsulatedPacket!=null)
+            sb.append("\n\tEncrypted Encapsulated Packet=0x").append(MqttsnWireUtils.toHex(encryptedEncapsulatedPacket));
         sb.append("\n\tAuthenticated Payload Length=").append(authenticatedPayloadLength);
         sb.append("\n\tAuthentication Tag Length=").append(flags.getAuthenticationTagLengthDecoded());
         sb.append("\n\tAuthentication Tag=0x").append(MqttsnWireUtils.toHex(authenticationTag));

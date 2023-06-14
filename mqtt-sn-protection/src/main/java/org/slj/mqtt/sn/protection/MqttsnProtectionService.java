@@ -124,6 +124,9 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         ProtectionSchemeCcm_128_128.register();
         ProtectionSchemeCcm_128_192.register();
         ProtectionSchemeCcm_128_256.register();
+        ProtectionSchemeGcm_128_128.register();
+        ProtectionSchemeGcm_128_192.register();
+        ProtectionSchemeGcm_128_256.register();
         
         //TODO PP: to be retrieved from a configuration file BEGIN
         byte[] gatewayProtectionKeyHmac =  new byte[] {

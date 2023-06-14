@@ -11,6 +11,7 @@ public abstract class AbstractAeadProtectionScheme extends AbstractProtectionSch
 	private static final String IV_NONCE_HASH_ALGORITHM="SHA-256";
 
 	protected MessageDigest digest;
+	protected byte allowedKeyLength;
 
 	public AbstractAeadProtectionScheme()
 	{

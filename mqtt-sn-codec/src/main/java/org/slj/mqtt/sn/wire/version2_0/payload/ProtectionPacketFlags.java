@@ -1,6 +1,7 @@
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.spi.IProtectionScheme;
 
 public class ProtectionPacketFlags {
 
@@ -20,12 +21,12 @@ public class ProtectionPacketFlags {
     
     private byte flagsAsByte=0x00;
     
-    public static ProtectionPacketFlags decodeProtectionPacketFlags(byte flags) throws MqttsnCodecException
+    public static ProtectionPacketFlags decodeProtectionPacketFlags(byte flags, IProtectionScheme protectionScheme) throws MqttsnCodecException
     {
-    	return new ProtectionPacketFlags((byte)((((byte)(flags & 0xF0)) >> 4) & 0x0F), (byte)(((byte)(flags & 0x0C)) >> 2), (byte)((flags & 0x03)));
+    	return new ProtectionPacketFlags((byte)((((byte)(flags & 0xF0)) >> 4) & 0x0F), (byte)(((byte)(flags & 0x0C)) >> 2), (byte)((flags & 0x03)),protectionScheme);
     }
     
-    public ProtectionPacketFlags(byte authenticationTagLength, byte cryptoMaterialLength, byte monotonicCounterLength) throws MqttsnCodecException
+    public ProtectionPacketFlags(byte authenticationTagLength, byte cryptoMaterialLength, byte monotonicCounterLength, IProtectionScheme protectionScheme) throws MqttsnCodecException
     {
     	if(authenticationTagLength<0x03 || authenticationTagLength>0x0F)
     	{
@@ -40,7 +41,11 @@ public class ProtectionPacketFlags {
     		throw new MqttsnCodecException("Invalid Monotonic Counter Length flag! 0x"+ String.format("%02x", monotonicCounterLength&0xff).toUpperCase());
     	}
     	this.authenticationTagLength=authenticationTagLength;
-    	this.cryptoMaterialLength=cryptoMaterialLength;
+    	if(!protectionScheme.isAuthenticationOnly() && protectionScheme.getNominalTagLengthInBytes()>getAuthenticationTagLengthDecoded())
+    	{
+    		throw new MqttsnCodecException("Invalid Authentication Tag Length as shorter than the one defined by the protection scheme "+protectionScheme.getName()+" used! Flag=0x"+ String.format("%02x", authenticationTagLength&0xff).toUpperCase());
+    	}
+        this.cryptoMaterialLength=cryptoMaterialLength;
     	this.monotonicCounterLength=monotonicCounterLength;
     	this.flagsAsByte |= this.authenticationTagLength << 4;
     	this.flagsAsByte |= this.cryptoMaterialLength << 2;

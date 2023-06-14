@@ -2,6 +2,7 @@ package org.slj.mqtt.sn.protection;
 
 import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.codec.AbstractProtectionScheme;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.impl.MqttsnSecurityService;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
 import org.slj.mqtt.sn.model.INetworkContext;
@@ -57,8 +58,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 		public String toString()
 		{
 			StringBuilder sb=new StringBuilder("Sender: ");
-			sb.append(clientId).append(",[");
-			protectionKeys.forEach(protectionKey -> sb.append(protectionKey.protectionKeyHash));
+			sb.append(clientId).append(", [ ");
+			protectionKeys.forEach(protectionKey -> sb.append(protectionKey.getProtectionKeyHash()).append(" "));
 			sb.append("]");
 			return sb.toString();
 		}
@@ -70,13 +71,21 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     private IProtectionScheme protectionScheme=null; 
     private byte[] protectionKey=null;
     private String protectionKeyHash=null;
-	private MessageDigest digest=null;
 	private boolean isGateway=false;
+	private MessageDigest digest;
 
 	public MqttsnProtectionService(boolean isGateway)
 	{
 		super();
 		this.isGateway=isGateway;
+		try 
+		{
+			digest = MessageDigest.getInstance(HASH_ALG);
+        }
+        catch(Exception e)
+        {
+        	throw new MqttsnCodecException(e);
+        }
 	}
 	
 	public void setProtectionKey(byte[] protectionKey)
@@ -84,7 +93,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         this.protectionKey = protectionKey;
         protectionKeyHash = HexFormat.of().formatHex(digest.digest(protectionKey));
 	}
-
+	
 	public void setProtectionFlags(byte[] flags)
 	{
         this.flags = new ProtectionPacketFlags(flags[0],flags[1],flags[2]);
@@ -99,36 +108,50 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
 	{
 		this.protectionScheme=AbstractProtectionScheme.getProtectionScheme(protectionSchemeIndex);
 	}
-
+	
     @Override
     public void start(IMqttsnRuntimeRegistry runtime) throws MqttsnException {
         super.start(runtime);
-        try {
-        	digest = MessageDigest.getInstance("SHA-256");
-        }
-        catch(Exception e)
-        {
-        	throw new MqttsnException(e);
-        }
 
         ProtectionSchemeHmacSha256.register();
         ProtectionSchemeCcm_64_128.register();
         
         //*** TODO PP: to be retrieved from a configuration file ***//
-        byte[] gatewayProtectionKeyHmac = HexFormat.of().parseHex("112233211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e7a9c975316d427cc6e00dbe5c2e389127a9c975316d427cc6e00dbe5c2e38912");
-        byte[] clientProtectionKeyHmac = HexFormat.of().parseHex("8d8c0e211361005215e902cdfa4b1e0b9d25e497ea71d75439224e55804aea2e7a9c975316d427cc6e00dbe5c2e389127a9c975316d427cc6e00dbe5c2e38912");
+        byte[] gatewayProtectionKeyHmac =  new byte[] {
+        		(byte)0x11,(byte)0x22,(byte)0x33,(byte)0x44,(byte)0x55,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
+        		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e,
+        		(byte)0x7a,(byte)0x9c,(byte)0x97,(byte)0x53,(byte)0x16,(byte)0xd4,(byte)0x27,(byte)0xcc,(byte)0x6e,(byte)0x00,(byte)0xdb,(byte)0xe5,(byte)0xc2,(byte)0xe3,(byte)0x89,(byte)0x12,
+        		(byte)0x7a,(byte)0x9c,(byte)0x97,(byte)0x53,(byte)0x16,(byte)0xd4,(byte)0x27,(byte)0xcc,(byte)0x6e,(byte)0x00,(byte)0xdb,(byte)0xe5,(byte)0xc2,(byte)0xe3,(byte)0x89,(byte)0x12};
+        byte[] clientProtectionKeyHmac = new byte[] {
+        		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
+        		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e,
+        		(byte)0x7a,(byte)0x9c,(byte)0x97,(byte)0x53,(byte)0x16,(byte)0xd4,(byte)0x27,(byte)0xcc,(byte)0x6e,(byte)0x00,(byte)0xdb,(byte)0xe5,(byte)0xc2,(byte)0xe3,(byte)0x89,(byte)0x12,
+        		(byte)0x7a,(byte)0x9c,(byte)0x97,(byte)0x53,(byte)0x16,(byte)0xd4,(byte)0x27,(byte)0xcc,(byte)0x6e,(byte)0x00,(byte)0xdb,(byte)0xe5,(byte)0xc2,(byte)0xe3,(byte)0x89,(byte)0x12};
+        byte[] clientProtectionKeyAesCcm256 = new byte[] {
+        		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
+        		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e};
+        byte[] clientProtectionKeyAesCcm192 = new byte[] {
+        		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
+        		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54};
+        byte[] clientProtectionKeyAesCcm128 = new byte[] {
+        		(byte)0x8d,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b};
+
         if(isGateway)
         {
 			setProtectionKey(gatewayProtectionKeyHmac);
-        	setAllowedClients(new Sender[] {new Sender("protectionClient",new ArrayList<byte[]>(Arrays.asList(clientProtectionKeyHmac)))});
+        	setAllowedClients(new Sender[] {new Sender("protectionClient",new ArrayList<byte[]>(Arrays.asList(
+        			clientProtectionKeyHmac,
+        			clientProtectionKeyAesCcm128,
+        			clientProtectionKeyAesCcm192,
+        			clientProtectionKeyAesCcm256)))});
 	        //The protectionScheme to be used is defined by each client
 	        //The flags to be used are defined by each client
         }
         else
         {
+        	setProtectionScheme(AbstractProtectionScheme.HMAC_SHA256);
 			setProtectionKey(clientProtectionKeyHmac);
         	setAllowedClients(new Sender[] {new Sender("protectionGateway",new ArrayList<byte[]>(Arrays.asList(gatewayProtectionKeyHmac)))});
-        	setProtectionScheme(AbstractProtectionScheme.HMAC_SHA256);
 			//64 bits of authentication tag, no crypto material, no monotonic counter
         	setProtectionFlags(new byte[] {(byte)0x03,(byte)0x00,(byte)0x00});
         }
@@ -177,7 +200,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
             if(sender!=null)
             {
                 //Authorized senderId
-            	if(packet.verifyAuthenticationTag(sender.protectionKeys))
+            	byte[] authenticatedPayload=packet.unprotect(sender.protectionKeys);
+            	if(authenticatedPayload!=null)
             	{
             		logger.debug("The Authentication Tag is valid");
             		return packet.getEncapsulatedPacket();

@@ -14,8 +14,6 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
 {
     private static final Logger logger = LoggerFactory.getLogger(AbstractProtectionScheme.class);
 
-    protected static short BYTES_FOR_256_BITS = 32;
-    
     public static final byte HMAC_SHA256 = 0x00,
 	    HMAC_SHA3_256 = 0x01,
 	    CMAC_128 = 0x02,
@@ -55,8 +53,8 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
     
     protected byte index=RESERVED;
 	protected String name=null;
-	protected short nominalTagLength;
-	protected short keyLength;
+	protected short nominalTagLengthInBytes;
+	protected short blockSizeInBytes;
 	protected boolean authenticationOnly;
     protected SecureRandom secureRandom = null;
 
@@ -82,14 +80,14 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
 		return index;
 	}
 	
-	public short getNominalTagLength()
+	public short getNominalTagLengthInBytes()
 	{
-		return nominalTagLength;
+		return nominalTagLengthInBytes;
 	}
 	
-	public short getKeyLength()
+	public short getBlockSizeInBytes()
 	{
-		return keyLength;
+		return blockSizeInBytes;
 	}
 	
 	public boolean isAuthenticationOnly()

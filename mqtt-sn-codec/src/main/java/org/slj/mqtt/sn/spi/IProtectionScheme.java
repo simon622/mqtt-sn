@@ -6,9 +6,9 @@ public interface IProtectionScheme {
 	
 	byte getIndex();
 	
-	short getNominalTagLength();
+	short getNominalTagLengthInBytes();
 	
-	short getKeyLength();
+	short getBlockSizeInBytes();
 	
 	boolean isAuthenticationOnly();
 	

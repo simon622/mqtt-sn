@@ -114,7 +114,8 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
         super.start(runtime);
 
         ProtectionSchemeHmacSha256.register();
-        ProtectionSchemeCcm_64_128.register();
+        ProtectionSchemeHmacSha3_256.register();
+        ProtectionSchemeCcm_64_128.register(); 
         ProtectionSchemeCcm_64_192.register();
         ProtectionSchemeCcm_64_256.register();
         ProtectionSchemeCcm_128_128.register();

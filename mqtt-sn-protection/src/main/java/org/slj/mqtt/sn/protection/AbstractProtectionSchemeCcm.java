@@ -47,6 +47,7 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		//The encryptedPayload is represented by the sequence of bytes from Byte S to Byte T
 		//The required IV/nonce is calculated from the associatedData as SHA256 truncated to 104 bits
 		//It returns the plaintext payload if the authenticity is verified, an exception otherwise
+		
 		if(key.length!=allowedKeyLength)
 		{
 			throw new MqttsnSecurityException(this.getClass()+" can't be used with keys of size "+key.length);
@@ -66,7 +67,6 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
             System.arraycopy(encryptedPayload, 0, encryptedPayloadToBeDecrypted, 0, encryptedPayload.length);
             System.arraycopy(tagToBeVerified, 0, encryptedPayloadToBeDecrypted, encryptedPayload.length, tagToBeVerified.length);
         }
-		ccmBlockCipher.reset();
 		ccmBlockCipher.init(false,aeadParameters);
 		int expectedOutputSize=encryptedPayload.length;
 		int outputSize=ccmBlockCipher.getOutputSize(encryptedPayloadToBeDecrypted.length);
@@ -83,7 +83,7 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		}
 		byte[] decryptedPayload=new byte[encryptedPayload.length];
         System.arraycopy(decryptionBuffer, 0, decryptedPayload, 0, outputSize);
-		logger.debug("Mac in plain text: 0x"+HexFormat.of().formatHex(ccmBlockCipher.getMac()).toUpperCase());
+		logger.debug("Authentication tag before encryption (MAC-then-Encrypt): 0x"+HexFormat.of().formatHex(ccmBlockCipher.getMac()).toUpperCase());
 		return decryptedPayload;
 	}
 
@@ -101,7 +101,7 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		//The associatedData is represented by the sequence of bytes from Byte 1 to Byte R (so all packet fields until the “Encapsulated MQTT-SN Packet” field)
 		//The plaintextPayload is represented by the sequence of bytes in the encapsulated MQTT-SN packet
 		//The required IV/nonce is calculated from the associatedData as SHA256 truncated to 104 bits
-		//It returns the tag of nominalTagLength. The returned tag is encrypted (authenticate-then-encrypt scheme)
+		//It returns the tag of nominalTagLength. The returned tag is encrypted (MAC-then-Encrypt scheme)
 		
 		if(key.length!=allowedKeyLength)
 		{
@@ -109,7 +109,6 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		}
 
 		AEADParameters aeadParameters=getAEADParameters(associatedData,key);
-		ccmBlockCipher.reset();
 		ccmBlockCipher.init(true,aeadParameters);
 		int expectedOutputSize=plaintextPayload.length+nominalTagLengthInBytes;
 		int outputSize=ccmBlockCipher.getOutputSize(plaintextPayload.length);
@@ -125,7 +124,7 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		}
         System.arraycopy(outputBuffer, 0, encryptedPayload, 0, (outputSize-nominalTagLengthInBytes));
 		byte[] authenticationTag=Arrays.copyOfRange(outputBuffer, (outputSize-nominalTagLengthInBytes), outputSize);
-        logger.debug("Mac in plain text: 0x"+HexFormat.of().formatHex(ccmBlockCipher.getMac()).toUpperCase());
+        logger.debug("Authentication tag before encryption (MAC-then-Encrypt): 0x"+HexFormat.of().formatHex(ccmBlockCipher.getMac()).toUpperCase());
         
         return authenticationTag;
 	}

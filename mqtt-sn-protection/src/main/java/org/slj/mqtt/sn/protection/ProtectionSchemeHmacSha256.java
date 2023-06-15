@@ -44,27 +44,22 @@ public class ProtectionSchemeHmacSha256 extends AbstractAuthenticationOnlyProtec
 		}
 	}
 	
-	private void macSetup(SecretKeySpec secretKeySpec) throws MqttsnSecurityException
-	{
-		try 
-		{
-			mac.reset();
-			mac.init(secretKeySpec);
-		} 
-		catch (InvalidKeyException e) 
-		{
-			throw new MqttsnSecurityException(e);
-		}
-	}
-	
 	public byte[] unprotect(byte[] authenticatedPayload, byte[] tagToBeVerified, byte[] key) throws MqttsnSecurityException
 	{
 		//The authenticatedPayload is represented by the sequence of bytes from Byte 1 to Byte T
 		//If the tagToBeVerified is truncated, the comparison will be done after truncating the calculated tag at the same level (from the most significant bits first order)
 		//It returns the authenticatedPayload if the authenticity is verified, an exception otherwise
 		SecretKeySpec secretKeySpec = new SecretKeySpec(key, HMAC_SHA256_ALGORITHM); 
-		macSetup(secretKeySpec);
-	    byte[] tag=mac.doFinal(authenticatedPayload);
+		try 
+		{
+			mac.init(secretKeySpec);
+		} 
+		catch (InvalidKeyException e) 
+		{
+			throw new MqttsnSecurityException(e);
+		}
+
+		byte[] tag=mac.doFinal(authenticatedPayload);
 	    if(tagToBeVerified.length!=nominalTagLengthInBytes)
 	    {
 	    	//Truncated tag
@@ -82,7 +77,15 @@ public class ProtectionSchemeHmacSha256 extends AbstractAuthenticationOnlyProtec
 		//The authenticatedPayload is represented by the sequence of bytes from Byte 1 to Byte T
 		//It returns the tag of nominalTagLength
 		SecretKeySpec secretKeySpec = new SecretKeySpec(key, HMAC_SHA256_ALGORITHM); 
-		macSetup(secretKeySpec);
-	    return mac.doFinal(payloadToBeAuthenticated);
+		try 
+		{
+			mac.init(secretKeySpec);
+		} 
+		catch (InvalidKeyException e) 
+		{
+			throw new MqttsnSecurityException(e);
+		}
+
+		return mac.doFinal(payloadToBeAuthenticated);
 	}
 }

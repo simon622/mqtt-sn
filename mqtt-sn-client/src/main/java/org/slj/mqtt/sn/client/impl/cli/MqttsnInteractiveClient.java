@@ -496,10 +496,10 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         IMqttsnSecurityService mqttsnSecurityService = getRuntimeRegistry().getSecurityService();
         try
         {
-        	logger.debug("TS0: Publish QoS-1 with 0x00 protection and incorrect flags 0x02, 0x01, 0x01");
+        	logger.debug("TS1: Publish QoS-1 with 0x00 protection and incorrect flags 0x02, 0x01, 0x01");
             mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.HMAC_SHA256);
             mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x02,(byte)0x01,(byte)0x01});
-            throw new Exception("Regression testing client failed on TS0");
+            throw new Exception("Regression testing client failed on TS1");
         }
         catch(Exception ex)
         {
@@ -561,7 +561,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         publish("1", -1, false, "regressionTesting TS7");
         Thread.sleep(100);
 
-        logger.debug("TS8: Publish QoS-1 with 0x40 protection and flags 0x03, 0x00, 0x00 and wrong key");
+        logger.debug("TS8 (expected exception on gateway): Publish QoS-1 with 0x40 protection and flags 0x03, 0x00, 0x00 and wrong key");
         mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.AES_CCM_64_128);
         mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x03,(byte)0x00,(byte)0x00});
         byte[] clientProtectionKeyAes128Wrong = new byte[] {
@@ -666,7 +666,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         publish("1", -1, false, "regressionTesting TS18");
         Thread.sleep(100);
 
-        logger.debug("TS19: Publish QoS-1 with 0x01 protection and flags 0x03, 0x03, 0x02 and wrong key");
+        logger.debug("TS19 (expected exception on gateway): Publish QoS-1 with 0x01 protection and flags 0x03, 0x03, 0x02 and wrong key");
         mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.HMAC_SHA3_256);
         mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x03,(byte)0x03,(byte)0x02});
         byte[] clientProtectionKeyHmacWrong = new byte[] {
@@ -711,7 +711,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         publish("1", -1, false, "regressionTesting TS23");
         Thread.sleep(100);
 
-        logger.debug("TS24: Publish QoS-1 with 0x02 protection and flags 0x07, 0x03, 0x02 and wrong key");
+        logger.debug("TS24 (expected exception on gateway): Publish QoS-1 with 0x02 protection and flags 0x07, 0x03, 0x02 and wrong key");
         mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.CMAC_128);
         mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x07,(byte)0x03,(byte)0x02});
         mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes128Wrong);
@@ -786,7 +786,7 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
         publish("1", -1, false, "regressionTesting TS32");
         Thread.sleep(100);
 
-        logger.debug("TS33: Publish QoS-1 with 0x46 protection and incorrect flags 0x0F, 0x03, 0x02 and wrong key");
+        logger.debug("TS33 (expected exception on gateway): Publish QoS-1 with 0x46 protection and incorrect flags 0x0F, 0x03, 0x02 and wrong key");
         mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.AES_GCM_128_128);
         mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x0F,(byte)0x03,(byte)0x02});
         mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes128Wrong);
@@ -838,6 +838,63 @@ public abstract class MqttsnInteractiveClient extends AbstractInteractiveCli {
 	    mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes256);
         logger.debug(mqttsnSecurityService.getProtectionConfiguration());
         publish("1", -1, false, "regressionTesting TS37");
+        Thread.sleep(100);
+
+	    logger.debug("TS38: Publish QoS-1 with 0x49 protection and flags 0x07, 0x03, 0x02");
+	    mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.ChaCha20_Poly1305);
+	    mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x07,(byte)0x03,(byte)0x02});
+	    mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes256);
+        logger.debug(mqttsnSecurityService.getProtectionConfiguration());
+        publish("1", -1, false, "regressionTesting TS38");
+        Thread.sleep(100);
+
+        logger.debug("TS39 (expected exception on gateway): Publish QoS-1 with 0x49 protection and flags 0x07, 0x03, 0x02 and wrong key");
+        mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.ChaCha20_Poly1305);
+        mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x07,(byte)0x03,(byte)0x02});
+        byte[] clientProtectionKeyAes256Wrong = new byte[] {
+        		(byte)0x81,(byte)0x8c,(byte)0x0e,(byte)0x21,(byte)0x13,(byte)0x61,(byte)0x00,(byte)0x52,(byte)0x15,(byte)0xe9,(byte)0x02,(byte)0xcd,(byte)0xfa,(byte)0x4b,(byte)0x1e,(byte)0x0b,
+        		(byte)0x9d,(byte)0x25,(byte)0xe4,(byte)0x97,(byte)0xea,(byte)0x71,(byte)0xd7,(byte)0x54,(byte)0x39,(byte)0x22,(byte)0x4e,(byte)0x55,(byte)0x80,(byte)0x4a,(byte)0xea,(byte)0x2e};
+        mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes256Wrong);
+        logger.debug(mqttsnSecurityService.getProtectionConfiguration());
+        publish("1", -1, false, "regressionTesting TS39");
+        Thread.sleep(100);
+
+        try
+        {
+            logger.debug("TS40: Publish QoS-1 with 0x49 protection and flags 0x07, 0x03, 0x02 and wrong key");
+            mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.ChaCha20_Poly1305);
+            mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x07,(byte)0x03,(byte)0x02});
+            mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes128);
+            logger.debug(mqttsnSecurityService.getProtectionConfiguration());
+            publish("1", -1, false, "regressionTesting TS40");
+            Thread.sleep(100);
+        }
+    	catch(Exception ex)
+        {
+        	logger.debug("Expected exception:",ex);
+        }
+
+        try
+        {
+            logger.debug("TS41: Publish QoS-1 with 0x49 protection and incorrect flags 0x06, 0x03, 0x02");
+            mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.ChaCha20_Poly1305);
+            mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x06,(byte)0x03,(byte)0x02});
+            mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes256);
+            logger.debug(mqttsnSecurityService.getProtectionConfiguration());
+            publish("1", -1, false, "regressionTesting TS41");
+            Thread.sleep(100);
+        }
+    	catch(Exception ex)
+        {
+        	logger.debug("Expected exception:",ex);
+        }
+
+	    logger.debug("TS42: Publish QoS-1 with 0x49 protection and flags 0x0F, 0x00, 0x02");
+	    mqttsnSecurityService.setProtectionScheme(AbstractProtectionScheme.ChaCha20_Poly1305);
+	    mqttsnSecurityService.setProtectionFlags(new byte[] {(byte)0x0F,(byte)0x00,(byte)0x02});
+	    mqttsnSecurityService.setProtectionKey(clientProtectionKeyAes256);
+        logger.debug(mqttsnSecurityService.getProtectionConfiguration());
+        publish("1", -1, false, "regressionTesting TS42");
         Thread.sleep(100);
 
         logger.debug("------------REGRESSION TESTING OK ------------");

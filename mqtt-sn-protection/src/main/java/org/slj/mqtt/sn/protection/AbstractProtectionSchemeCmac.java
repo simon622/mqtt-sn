@@ -37,12 +37,6 @@ public class AbstractProtectionSchemeCmac extends AbstractAuthenticationOnlyProt
 			throw new MqttsnSecurityException("CMAC tag length different from nominal! "+cmacMacSize+" instead of "+nominalTagLengthInBytes);
 	}
 	
-	private void cmacSetup(KeyParameter keyParameter) throws MqttsnSecurityException
-	{
-		cmac.reset();
-		cmac.init(keyParameter);
-	}
-
 	public byte[] unprotect(byte[] authenticatedPayload, byte[] tagToBeVerified, byte[] key) throws MqttsnSecurityException
 	{
 		//The authenticatedPayload is represented by the sequence of bytes from Byte 1 to Byte T
@@ -54,7 +48,7 @@ public class AbstractProtectionSchemeCmac extends AbstractAuthenticationOnlyProt
 			throw new MqttsnSecurityException(this.getClass()+" can't be used with keys of size "+key.length);
 		}
 
-		cmacSetup(new KeyParameter(key));
+		cmac.init(new KeyParameter(key));
 		cmac.update(authenticatedPayload, 0, authenticatedPayload.length);
 		byte[] tag = new byte[nominalTagLengthInBytes];
 		Arrays.fill(tag, (byte) 0x00);
@@ -82,7 +76,7 @@ public class AbstractProtectionSchemeCmac extends AbstractAuthenticationOnlyProt
 			throw new MqttsnSecurityException(this.getClass()+" can't be used with keys of size "+key.length);
 		}
 
-		cmacSetup(new KeyParameter(key));
+		cmac.init(new KeyParameter(key));
 		cmac.update(payloadToBeAuthenticated, 0, payloadToBeAuthenticated.length);
 		byte[] tag = new byte[nominalTagLengthInBytes];
 		Arrays.fill(tag, (byte) 0x00);

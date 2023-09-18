@@ -1,18 +1,14 @@
 package org.slj.mqtt.sn.codec;
 
+import org.slj.mqtt.sn.spi.IProtectionScheme;
+import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
+
 import java.lang.reflect.Field;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slj.mqtt.sn.spi.IProtectionScheme;
-import org.slj.mqtt.sn.wire.version2_0.payload.ProtectionPacketFlags;
-
-public abstract class AbstractProtectionScheme implements IProtectionScheme
-{
-    private static final Logger logger = LoggerFactory.getLogger(AbstractProtectionScheme.class);
+public abstract class AbstractProtectionScheme implements IProtectionScheme {
 
     public static final byte HMAC_SHA256 = 0x00,
 	    HMAC_SHA3_256 = 0x01,
@@ -113,7 +109,6 @@ public abstract class AbstractProtectionScheme implements IProtectionScheme
 					    	throw new MqttsnCodecException("Invalid "+sb.toString());
 			            }
 				    	sb.append("0x").append(String.format("%02x", protectionSchemeIndex&0xff).toUpperCase());
-						logger.info(sb.toString());
 						Class<?>[] constructorParameters=new Class<?>[2];
 						constructorParameters[0]=String.class;
 						constructorParameters[1]=byte.class;

@@ -24,6 +24,8 @@
 
 package org.slj.mqtt.sn.console;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
 import org.slj.mqtt.sn.console.impl.MqttsnConsoleService;
 import org.slj.mqtt.sn.gateway.impl.MqttsnGateway;
@@ -37,9 +39,14 @@ import org.slj.mqtt.sn.impl.MqttsnSearchableSessionRegistry;
 import org.slj.mqtt.sn.impl.MqttsnVMObjectReaderWriter;
 import org.slj.mqtt.sn.net.MqttsnUdpOptions;
 import org.slj.mqtt.sn.net.MqttsnUdpTransport;
+import org.slj.mqtt.sn.spi.IMqttsnCodec;
 import org.slj.mqtt.sn.spi.IMqttsnSessionRegistry;
 
 public class MqttsnGatewayMain {
+
+    protected static final Logger logger =
+            LoggerFactory.getLogger(MqttsnGatewayMain.class);
+
     public static void main(String[] args) throws Exception {
         if(args.length < 2)
             throw new IllegalArgumentException("you must specify 2 arguments; <localPort>, <gatewayId>");
@@ -63,7 +70,22 @@ public class MqttsnGatewayMain {
 
         MqttsnConsoleOptions console = new MqttsnConsoleOptions().
                 withConsoleEnabled(true);
-        console.withConsolePort(8080);
+
+        if(System.getProperty("consolePort") != null){
+            try {
+                console.withConsolePort(Integer.valueOf(System.getProperty("consolePort")));
+            } catch (NumberFormatException e){}
+        }
+
+        logger.info("Starting gateway with console port {}", console.getConsolePort());
+
+        IMqttsnCodec codec = MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2;
+        if(System.getProperty("protocolVersion") != null){
+            if(System.getProperty("protocolVersion").equals("2")){
+                codec = MqttsnCodecs.MQTTSN_CODEC_VERSION_2_0;
+            }
+        }
+        logger.info("Starting gateway with protocol version {} from {}", codec.getProtocolDescriptor().getName(), System.getProperty("protocolVersion"));
 
         //-- construct the registry of controllers and config
         AbstractMqttsnRuntimeRegistry registry = MqttsnGatewayRuntimeRegistry.defaultConfiguration(filesystemStorageService, gatewayOptions).
@@ -72,7 +94,7 @@ public class MqttsnGatewayMain {
                 withServiceReplaceIfExists(IMqttsnSessionRegistry.class, new MqttsnSearchableSessionRegistry()).
                 withService(new MqttsnConsoleService(console)).
                 withTransport(new MqttsnUdpTransport(new MqttsnUdpOptions().withPort(localPort))).
-                withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2);
+                withCodec(codec);
 
         MqttsnGateway gateway = new MqttsnGateway();
 

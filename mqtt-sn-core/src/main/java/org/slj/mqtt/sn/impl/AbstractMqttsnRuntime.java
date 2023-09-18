@@ -36,10 +36,13 @@ import org.slj.mqtt.sn.model.INetworkContext;
 import org.slj.mqtt.sn.model.MqttsnOptions;
 import org.slj.mqtt.sn.model.session.ISession;
 import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.utils.Files;
 import org.slj.mqtt.sn.utils.TopicPath;
 import org.slj.mqtt.sn.utils.Environment;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -109,6 +112,11 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
             }
             startupLatch.countDown();
             logger.info("mqttsn-environment started successfully in {}", java.lang.System.currentTimeMillis() - startedAt);
+            try {
+                logger.info("\n\n{}\n\n", new String(Files.read(loadResource("ascii.txt"), 1024)));
+            } catch(Exception e){
+                throw new MqttsnException(e);
+            }
             if(join){
                 while(running){
                     synchronized (monitor){
@@ -178,7 +186,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     protected final void callStartup(IMqttsnService service) throws MqttsnException {
         if(service == null) throw new MqttsnRuntimeException("unable to start <null> service");
         if(!service.running()){
-            logger.info("starting {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
+            logger.trace("starting {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
             service.start(registry);
             activeServices.add(service);
         }
@@ -187,7 +195,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     protected final void callShutdown(IMqttsnService service) throws MqttsnException {
         if(service == null) throw new MqttsnRuntimeException("unable to start <null> service");
         if(service.running()){
-            logger.info("stopping {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
+            logger.trace("stopping {} for runtime {}", service.getClass().getName(), java.lang.System.identityHashCode(this));
             service.stop();
             activeServices.remove(service);
         }
@@ -201,30 +209,6 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
     }
 
     public static void setupEnvironment(MqttsnOptions options) throws IOException {
-        initializeLogging(options);
-    }
-
-    public static void initializeLogging(MqttsnOptions options) throws IOException {
-
-//        if (java.lang.System.getProperty("java.util.logging.config.file") == null) {
-//            LogManager.getLogManager().reset();
-//            boolean applied = false;
-//            try (InputStream stream = AbstractMqttsnRuntime.class.getResourceAsStream("/logging.properties")) {
-//                if (null != stream) {
-//                    Logger.getAnonymousLogger().log(Level.INFO, "applying logging from config found on classpath");
-//                    LogManager.getLogManager().readConfiguration(stream);
-//                    applied = true;
-//                } else {
-//                    throw new IOException("unable to read logging properties");
-//                }
-//            }
-//            if(!applied){
-//                Logger.getAnonymousLogger().log(Level.SEVERE, "unable to initialise logging, applying fallback");
-//                String pattern = options.getLogPattern();
-//                pattern = pattern == null ? "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n" : pattern;
-//                java.lang.System.setProperty("java.util.logging.SimpleFormatter.format", pattern);
-//            }
-//        }
     }
 
     protected final void messageReceived(IClientIdentifierContext context, TopicPath topicPath, int qos, boolean retained, byte[] data, IMqttsnMessage message){
@@ -477,7 +461,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         });
     }
 
-    private final synchronized void startupServices()
+    private synchronized void startupServices()
             throws MqttsnException {
 
         Iterator<IMqttsnService> services =
@@ -493,7 +477,7 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
         }
     }
 
-    private final synchronized void stopServices()
+    private synchronized void stopServices()
             throws MqttsnException {
 
         Iterator<IMqttsnService> services =
@@ -507,6 +491,11 @@ public abstract class AbstractMqttsnRuntime implements Thread.UncaughtExceptionH
                 throw new MqttsnException(e);
             }
         }
+    }
+
+    protected InputStream loadResource(String resourcePath) {
+        resourcePath = resourcePath.startsWith("/") ? resourcePath : "/" + resourcePath;
+        return getClass().getResourceAsStream(resourcePath);
     }
 
 

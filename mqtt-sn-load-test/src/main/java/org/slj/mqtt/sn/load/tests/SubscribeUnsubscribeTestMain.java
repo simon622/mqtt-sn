@@ -35,7 +35,7 @@ public class SubscribeUnsubscribeTestMain {
     public static void main(String[] args) {
         try {
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 140, 2);
+                    new ThreadPerProfileLoadTestRunner(ConnectSubscribeUnsubscribeLoopProfile.class, 150, 2);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(2400, TimeUnit.SECONDS);

@@ -60,6 +60,89 @@ public class StringTableWriters {
         return htmlTable.write(st);
     }
 
+    public static String writeStringTableAsBasicHTML(StringTable st, String id, String className){
+        BasicHtmlWriter htmlTable = new BasicHtmlWriter(id, className);
+        return htmlTable.write(st);
+    }
+
+    private static class BasicHtmlWriter {
+
+        private final String id;
+        private final String className;
+        public BasicHtmlWriter(final String id, final String className) {
+            this.id = id;
+            this.className = className;
+        }
+
+        public String write(StringTable table) {
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(String.format("<table id=\"%s\" class=\"%s\">", id == null ? "" : id, className == null ? "" : className));
+            sb.append("<thead>");
+
+            if(table.getTableName() != null){
+                sb.append(String.format("<tr><th class=\"table-name\" id=\"%s-name\" colspan=\"%s\">%s</th></tr>", id == null ? "" : id, table.getHeadings().size(), table.getTableName()));
+            }
+
+            if(table.getTableDescription() != null){
+                sb.append(String.format("<tr><th class=\"table-description\" id=\"%s-description\" colspan=\"%s\">%s</th></tr>", id == null ? "" : id, table.getHeadings().size(), table.getTableDescription()));
+            }
+
+            sb.append("<tr>");
+
+            //-- headings
+            List<String> headings = table.getHeadings();
+            Iterator<String> itr = headings.iterator();
+            while(itr.hasNext()){
+                String heading = itr.next();
+                sb.append("<th>");
+                sb.append(heading.trim());
+                sb.append("</th>");
+            }
+
+            sb.append("</tr>");
+            sb.append("</thead>");
+            sb.append("<tbody>");
+
+            //-- data
+            List<String[]> data = table.getRows();
+            if(data != null && !data.isEmpty()) {
+
+                Iterator<String[]> dataItr = data.iterator();
+                while(dataItr.hasNext()){
+                    sb.append("<tr>");
+                    String[] row = dataItr.next();
+                    for (int i = 0; i < row.length; i++) {
+                        sb.append("<td>");
+                        sb.append(row[i].trim());
+                        sb.append("</td>");
+                    }
+
+                    sb.append("</tr>");
+                }
+            }
+
+            //-- rollup
+            List<String> footers = table.getFooter();
+            if(footers != null && !footers.isEmpty()) {
+                Iterator<String> footerItr = footers.iterator();
+                sb.append("<tr>");
+                while(footerItr.hasNext()){
+                    sb.append("<td>");
+                    String footer = footerItr.next();
+                    sb.append(footer.trim());
+                    sb.append("</td>");
+                }
+                sb.append("</tr>");
+            }
+
+            sb.append("</tbody>");
+            sb.append("</table>");
+            return sb.toString();
+        }
+    }
+
     private static class HTMLTextWriter {
 
         boolean borders = false;

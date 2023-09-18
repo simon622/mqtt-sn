@@ -27,6 +27,7 @@ package org.slj.mqtt.sn.spi;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.codec.MqttsnUnsupportedVersionException;
+import org.slj.mqtt.sn.descriptor.ProtocolDescriptor;
 import org.slj.mqtt.sn.wire.version1_2.payload.MqttsnPublish;
 
 /**
@@ -167,4 +168,6 @@ public interface IMqttsnCodec {
      * Returns the protocolVersion that this codec supports. Where is supports multiple, the highest should be chosen
      */
     int getProtocolVersion() throws MqttsnCodecException;
+
+    ProtocolDescriptor getProtocolDescriptor();
 }

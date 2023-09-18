@@ -60,11 +60,17 @@ import java.util.function.Function;
  * 2017 - rollup and row index support
  * 2019 - table sort added
  *      matt h - fixed double numerical sort
+ *
+ *
+ *
+ *      rose
  */
 public class StringTable {
 
     private boolean rowIndexAdded = false;
+    private String id;
     private String tableName;
+    private String tableDescription;
     private List<String> headings;
     private List<String> footer;
     private List<String[]> rows = new ArrayList<String[]>();
@@ -100,6 +106,14 @@ public class StringTable {
         this.tableName = tableName;
         this.headings = new ArrayList<String>(headings.length);
         this.headings.addAll(Arrays.asList(headings));
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(final String id) {
+        this.id = id;
     }
 
     public List<String> getHeadings() {
@@ -284,6 +298,14 @@ public class StringTable {
         if (null != collection && null != mapper) {
             collection.stream().forEach(r -> addRow(mapper.apply(r)));
         }
+    }
+
+    public String getTableDescription() {
+        return tableDescription;
+    }
+
+    public void setTableDescription(final String tableDescription) {
+        this.tableDescription = tableDescription;
     }
 
     public static StringTable fromBean(Object o){

@@ -60,6 +60,7 @@ public class ConfigHandler extends MqttsnConsoleAjaxRealmHandler {
     protected PropertiesBean populateBean() throws MqttsnException {
         PropertiesBean bean = new PropertiesBean();
         MqttsnOptions options = registry.getOptions();
+        bean.add("Protocol Version", registry.getCodec().getProtocolDescriptor().getName(), "The version of the protocol in use");
         bean.add("Context Id", options.getContextId(), "");
         bean.add("Transport Protocol Handoff Thread Count", options.getTransportIngressThreadCount(), "");
         bean.add("Transport Publish Handoff Thread Count", options.getTransportEgressThreadCount(), "");

@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
@@ -181,7 +182,7 @@ public class MqttsnProtection extends AbstractMqttsnMessage implements IMqttsnMe
         }
     }
     
-    public byte[] unprotect(ArrayList<ProtectionKey> protectionKeys) throws MqttsnCodecException
+    public byte[] unprotect(List<ProtectionKey> protectionKeys) throws MqttsnCodecException
     {
     	if(protectionScheme==null || flags==null)
     		throw new MqttsnCodecException("unprotect not called after a decode");

@@ -61,14 +61,8 @@ public class SessionBeanImpl extends SessionImpl {
         if(registration.getTopicPath() == null){
             throw new MqttsnException("unable to register <null> topicPath");
         }
-
         if(registration.getAliasId() <= 0){
             throw new MqttsnException("unable to register topicAlias 0");
-        }
-
-        if(registrationMap.values().stream().anyMatch(p -> p.getAliasId() == registration.getAliasId() &&
-                !registration.equals(p.getTopicPath()))){
-            throw new MqttsnException("registration with topicId exists for different topicId");
         }
         return registrationMap.put(registration.getTopicPath(), registration) == null;
     }

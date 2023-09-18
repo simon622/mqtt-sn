@@ -35,6 +35,11 @@
         </dependency>
         <dependency>
             <groupId>org.slj</groupId>
+            <artifactId>mqtt-sn-gateway-console</artifactId>
+            <version>${mqtt-sn.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slj</groupId>
             <artifactId>mqtt-sn-gateway</artifactId>
             <version>${mqtt-sn.version}</version>
         </dependency>

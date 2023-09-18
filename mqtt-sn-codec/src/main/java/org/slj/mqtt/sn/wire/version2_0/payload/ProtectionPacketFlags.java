@@ -4,7 +4,6 @@ import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IProtectionScheme;
 
 public class ProtectionPacketFlags {
-
 	private static final short AUTHENTICATION_TAG_LENGTH_MULTIPLIER = 2; //bytes
     
 	public static final byte NO_CRYPTO_MATERIAL = 0; 
@@ -20,6 +19,7 @@ public class ProtectionPacketFlags {
     private byte monotonicCounterLength = 0x03; //Reserved value by default to force a selection
     
     private byte flagsAsByte=0x00;
+	protected final IProtectionScheme scheme;
     
     public static ProtectionPacketFlags decodeProtectionPacketFlags(byte flags, IProtectionScheme protectionScheme) throws MqttsnCodecException
     {
@@ -50,6 +50,7 @@ public class ProtectionPacketFlags {
     	this.flagsAsByte |= this.authenticationTagLength << 4;
     	this.flagsAsByte |= this.cryptoMaterialLength << 2;
     	this.flagsAsByte |= this.monotonicCounterLength & 0x03;
+		this.scheme = protectionScheme;
     }
     
     protected byte getFlagsAsByte(){
@@ -100,7 +101,11 @@ public class ProtectionPacketFlags {
     	}
     }
 
-    @Override
+	public IProtectionScheme getProtectionScheme() {
+		return scheme;
+	}
+
+	@Override
     public String toString()
 	{
     	StringBuilder sb = new StringBuilder("Flags= ");

@@ -29,11 +29,13 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.codec.MqttsnUnsupportedVersionException;
+import org.slj.mqtt.sn.descriptor.ProtocolDescriptor;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_Codec;
+import org.slj.mqtt.sn.wire.version1_2.Mqttsn_v1_2_ProtocolDescriptor;
 import org.slj.mqtt.sn.wire.version2_0.payload.*;
 
 public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
@@ -223,5 +225,9 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
     @Override
     public int getProtocolVersion() throws MqttsnCodecException {
         return MqttsnConstants.PROTOCOL_VERSION_2_0;
+    }
+
+    public ProtocolDescriptor getProtocolDescriptor(){
+        return Mqttsn_v2_0_ProtocolDescriptor.INSTANCE;
     }
 }

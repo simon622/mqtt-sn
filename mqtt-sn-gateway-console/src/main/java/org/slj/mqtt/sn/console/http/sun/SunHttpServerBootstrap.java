@@ -48,12 +48,13 @@ public class SunHttpServerBootstrap {
 
     public SunHttpServerBootstrap(InetSocketAddress bindAddress, int tcpBacklog, ExecutorService httpExecutor) throws IOException {
         this.bindAddress = bindAddress;
-        init(httpExecutor, tcpBacklog);
+        this.threadPoolExecutor = httpExecutor;
+        init(tcpBacklog);
     }
 
-    public synchronized void init(ExecutorService executor, int tcpBacklog) throws IOException {
+    public synchronized void init(int tcpBacklog) throws IOException {
         if(!running && server == null){
-            logger.info("bootstrapping sun-http-server to [%s], tcpBacklog=%s", bindAddress, tcpBacklog);
+            logger.info("bootstrapping sun-http-server to [{}], tcpBacklog={}}", bindAddress, tcpBacklog);
             server = HttpServer.create(bindAddress, tcpBacklog);
             server.setExecutor(threadPoolExecutor);
         }

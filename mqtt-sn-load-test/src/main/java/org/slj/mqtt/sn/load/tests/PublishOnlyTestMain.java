@@ -35,7 +35,7 @@ public class PublishOnlyTestMain {
     public static void main(String[] args) {
         try {
             ThreadPerProfileLoadTestRunner runner =
-                    new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class, 10, 20);
+                    new ThreadPerProfileLoadTestRunner(ConnectPublishProfile.class,    350, 5);
 
             MqttsnClientProfile.ClientInput input =
                     new MqttsnClientProfile.ClientInput(60, TimeUnit.SECONDS);
@@ -45,7 +45,7 @@ public class PublishOnlyTestMain {
 //            input.host = "34.248.60.25";
                         input.host = "localhost";
             input.port = 2442;
-            input.messageCount = 50;
+            input.messageCount = 250;
             input.qos = 1;
             input.topic = "foo";
 

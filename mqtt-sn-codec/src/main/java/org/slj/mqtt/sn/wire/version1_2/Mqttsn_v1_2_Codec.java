@@ -30,6 +30,7 @@ import org.slj.mqtt.sn.PublishData;
 import org.slj.mqtt.sn.codec.AbstractMqttsnCodec;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.codec.MqttsnUnsupportedVersionException;
+import org.slj.mqtt.sn.descriptor.ProtocolDescriptor;
 import org.slj.mqtt.sn.spi.IMqttsnMessage;
 import org.slj.mqtt.sn.spi.IMqttsnMessageFactory;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
@@ -321,5 +322,9 @@ public class Mqttsn_v1_2_Codec extends AbstractMqttsnCodec {
     @Override
     public int getProtocolVersion() throws MqttsnCodecException {
         return MqttsnConstants.PROTOCOL_VERSION_1_2;
+    }
+
+    public ProtocolDescriptor getProtocolDescriptor(){
+        return Mqttsn_v1_2_ProtocolDescriptor.INSTANCE;
     }
 }

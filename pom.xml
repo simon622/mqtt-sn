@@ -29,7 +29,7 @@
 
     <groupId>org.slj</groupId>
     <artifactId>mqtt-sn</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
 
     <packaging>pom</packaging>
 
@@ -60,7 +60,6 @@
         <module>mqtt-sn-core</module>
         <module>mqtt-sn-gateway</module>
         <module>mqtt-sn-gateway-connector-aws-iotcore</module>
-        <module>mqtt-sn-gateway-connector-google-iotcore</module>
         <module>mqtt-sn-gateway-connector-paho</module>
         <module>mqtt-sn-load-test</module>
         <module>mqtt-sn-gateway-console</module>
@@ -81,7 +80,7 @@
         <maven.build.shade.version>3.4.1</maven.build.shade.version>
         <jackson.version>2.10.2</jackson.version>
         <yaml.version>1.11</yaml.version>
-        <mqtt-sn.version>0.2.1</mqtt-sn.version>
+        <mqtt-sn.version>0.2.2</mqtt-sn.version>
     </properties>
 
     <dependencies>

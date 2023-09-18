@@ -24,7 +24,6 @@
 
 package org.slj.mqtt.sn.gateway.impl.gateway.type;
 
-import com.google.common.util.concurrent.RateLimiter;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendConnection;
 import org.slj.mqtt.sn.gateway.impl.backend.AbstractMqttsnBackendService;
@@ -37,7 +36,10 @@ import org.slj.mqtt.sn.impl.metrics.IMqttsnMetrics;
 import org.slj.mqtt.sn.impl.metrics.MqttsnCountingMetric;
 import org.slj.mqtt.sn.impl.metrics.MqttsnSnapshotMetric;
 import org.slj.mqtt.sn.model.IClientIdentifierContext;
-import org.slj.mqtt.sn.spi.*;
+import org.slj.mqtt.sn.spi.IMqttsnMessage;
+import org.slj.mqtt.sn.spi.IMqttsnRuntimeRegistry;
+import org.slj.mqtt.sn.spi.MqttsnException;
+import org.slj.mqtt.sn.spi.MqttsnIllegalFormatException;
 import org.slj.mqtt.sn.utils.MqttsnUtils;
 import org.slj.mqtt.sn.utils.TopicPath;
 
@@ -56,7 +58,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     private Thread publishingThread = null;
     private final Object monitor = new Object();
     private final Queue<BrokerPublishOperation> queue = new LinkedBlockingQueue<>();
-    private volatile RateLimiter rateLimiter = null;
+//    private volatile RateLimiter rateLimiter = null;
     private static final long PUBLISH_THREAD_MAX_WAIT = 10000;
     private static final long MANAGED_CONNECTION_VALIDATION_TIME = 10000;
     private static final long MAX_ERROR_RETRIES = 5;
@@ -71,7 +73,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
             super.start(runtime);
             double limiter = ((MqttsnGatewayOptions)runtime.getOptions()).
                     getMaxBrokerPublishesPerSecond();
-            rateLimiter = limiter == 0d ? null : RateLimiter.create(limiter);
+//            rateLimiter = limiter == 0d ? null : RateLimiter.create(limiter);
             stopped = false;
             connectOnStartup();
             initPublisher();
@@ -82,10 +84,10 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
     public synchronized boolean initializeConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) throws MqttsnException {
         int qps = descriptor.getRateLimit();
         if(qps > 0){
-            rateLimiter = RateLimiter.create(qps);
+//            rateLimiter = RateLimiter.create(qps);
             logger.warn("re-initialising connector rate-limiter with {} permits", qps);
         } else {
-            rateLimiter = null;
+//            rateLimiter = null;
         }
         return super.initializeConnector(descriptor, options);
     }
@@ -222,7 +224,7 @@ public class MqttsnAggregatingGateway extends AbstractMqttsnBackendService {
                         BrokerPublishOperation op = queue.poll();
                         if(op != null){
                             if(connection.canAccept(op.context, op.topicPath, op.payload, op.initialMessage)){
-                                if(rateLimiter != null) rateLimiter.acquire();
+//                                if(rateLimiter != null) rateLimiter.acquire();
                                 logger.debug("de-queuing message to broker from queue, {} remaining", queue.size());
                                 PublishResult res = super.publish(op.context, op.topicPath, op.qos, op.retained, op.payload, op.initialMessage);
                                 if(res.isError()){

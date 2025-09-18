@@ -673,8 +673,12 @@ public abstract class AbstractMqttsnMessageStateService
         clearInternal(context, getInflightMessages(context, IMqttsnOriginatingMessageSource.LOCAL), evictionTime);
     }
 
-    private final void clearInternal(IClientIdentifierContext context, Map<Integer, InflightMessage> messages, long evictionTime) throws MqttsnException {
+
+    //-- deadlock fixed by PCC see
+    //-- https://github.com/simon622/mqtt-sn/issues/69
+    private void clearInternal(IClientIdentifierContext context, Map<Integer, InflightMessage> messages, long evictionTime) throws MqttsnException {
         if(messages != null && !messages.isEmpty()){
+            List<InflightMessage> evicted = new ArrayList<InflightMessage>();
             synchronized (messages){
                 Iterator<Integer> messageItr = messages.keySet().iterator();
                 while(messageItr.hasNext()){
@@ -684,13 +688,18 @@ public abstract class AbstractMqttsnMessageStateService
                         if(evictionTime == 0 ||
                                 f.getTime() + registry.getOptions().getMaxTimeInflight() < evictionTime){
                             messageItr.remove();
-                            reapInflight(context, f);
+                            evicted.add(f);
                         }
                     }
                 }
             }
+            for (InflightMessage inflightMessage : evicted) {
+                reapInflight(context, inflightMessage);
+            }
         }
     }
+
+
 
     protected void reapInflight(IClientIdentifierContext context, InflightMessage inflight) throws MqttsnException {
 

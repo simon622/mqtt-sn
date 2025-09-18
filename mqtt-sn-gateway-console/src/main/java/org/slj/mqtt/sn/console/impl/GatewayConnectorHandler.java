@@ -46,7 +46,7 @@ import org.slj.mqtt.sn.utils.MqttsnUtils;
 import java.io.IOException;
 import java.util.*;
 
-public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
+public class GatewayConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
 
     static final String ACTION = "action";
     static final String CONNECTOR = "connector";
@@ -56,7 +56,7 @@ public class ConnectorHandler extends MqttsnConsoleAjaxRealmHandler {
 
     protected IMqttsnCloudService cloudService;
 
-    public ConnectorHandler(IMqttsnCloudService cloudService, ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
+    public GatewayConnectorHandler(IMqttsnCloudService cloudService, ObjectMapper mapper, IMqttsnRuntimeRegistry registry) {
         super(mapper, registry);
         this.cloudService = cloudService;
     }

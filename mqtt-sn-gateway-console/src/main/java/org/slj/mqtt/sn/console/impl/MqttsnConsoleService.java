@@ -29,9 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slj.mqtt.sn.cloud.IMqttsnCloudService;
 import org.slj.mqtt.sn.cloud.MqttsnCloudServiceException;
 import org.slj.mqtt.sn.cloud.MqttsnCloudToken;
-import org.slj.mqtt.sn.cloud.client.impl.HttpCloudServiceImpl;
 import org.slj.mqtt.sn.console.IMqttsnConsole;
 import org.slj.mqtt.sn.console.MqttsnConsoleOptions;
+import org.slj.mqtt.sn.console.NoCloudServiceImpl;
 import org.slj.mqtt.sn.console.http.impl.handlers.AsyncContentHandler;
 import org.slj.mqtt.sn.console.http.impl.handlers.HelloWorldHandler;
 import org.slj.mqtt.sn.console.http.impl.handlers.RedirectHandler;
@@ -69,8 +69,10 @@ public class MqttsnConsoleService extends AbstractMqttsnService
             jsonMapper = new ObjectMapper();
             jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             logger.info("starting console service with - {}", options);
-            cloudService = new HttpCloudServiceImpl(jsonMapper,
-                    "http://mqtt-sn.cloud/api/services.json", 5000, 5000, 30000);
+//            cloudService = new HttpCloudServiceImpl(jsonMapper,
+//                    "http://mqtt-sn.cloud/api/services.json", 5000, 5000, 30000);
+
+            cloudService = new NoCloudServiceImpl();
             startWebServer(options);
             authorizeCloud();
             traffic = new RollingList<>(options.getMaxTrafficLogs());
@@ -119,7 +121,7 @@ public class MqttsnConsoleService extends AbstractMqttsnService
             server.registerContext("/console/dlq", new DLQHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/command", new CommandHandler(getJsonMapper(), getRegistry()));
             server.registerContext("/console/client/access", new ClientAccessHandler(getJsonMapper(), getRegistry()));
-            server.registerContext("/console/connectors", new ConnectorHandler(cloudService, getJsonMapper(), getRegistry()));
+            server.registerContext("/console/connectors", new GatewayConnectorHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/bridges", new BridgeHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/connector/status", new ConnectorStatusHandler(cloudService, getJsonMapper(), getRegistry()));
             server.registerContext("/console/cloud/status", new CloudStatusHandler(cloudService, getJsonMapper(), getRegistry()));

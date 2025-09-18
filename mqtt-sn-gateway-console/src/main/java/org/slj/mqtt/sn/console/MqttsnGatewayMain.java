@@ -63,8 +63,8 @@ public class MqttsnGatewayMain {
         //-- configure your gateway runtime
         MqttsnGatewayOptions gatewayOptions = new MqttsnGatewayOptions();
         gatewayOptions.withGatewayId(1).
-                withMaxClientSessions(25).
-                withMaxMessagesInQueue(10).
+                withMaxClientSessions(25_000).
+                withMaxMessagesInQueue(1000).
                 withContextId(gatewayId);
         gatewayOptions.withPredefinedTopic("/my/example/topic/1", 1);
 

@@ -42,7 +42,7 @@ public class SubscribeAndWaitTestMain {
             input.storageService = TestHelper.getTestStorageService();
 
             input.host = "localhost";
-            input.port = 2442;
+            input.port = 3003;
             input.messageCount = 1;
             input.topic = "test";
             input.qos = 2;

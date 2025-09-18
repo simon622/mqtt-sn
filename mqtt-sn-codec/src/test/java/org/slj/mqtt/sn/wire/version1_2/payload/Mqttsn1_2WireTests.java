@@ -159,9 +159,20 @@ public class Mqttsn1_2WireTests {
     @Test
     public void testMqttsnPublishLong() throws MqttsnCodecException {
 
+        byte[] payload = payload(255);
         IMqttsnMessage message = factory.createPublish(_qos, true, false, MqttsnConstants.TOPIC_TYPE.PREDEFINED, _alias,
-                payload(MqttsnConstants.MAX_PUBLISH_LENGTH));
+                payload);
         testWireMessage(message);
+
+        byte[] arr = codec.encode(message);
+        String toString = message.toString();
+
+        System.out.println(String.format("original [%s] -> [%s]", toString, codec.print(message)));
+
+        IMqttsnMessage decoded = codec.decode(arr);
+
+        String afterToString = decoded.toString();
+
     }
 
     @Test

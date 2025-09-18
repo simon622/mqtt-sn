@@ -34,7 +34,7 @@ mqtt-sn-client-sec/
 /mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-client-credentials
 /mqtt-sn-runtimes/mqtt-sn-load-test/mqtt-sn-client-credentials
 /mqtt-sn-runtimes/mqtt-sn-client/mqtt-sn-settings.xml
-/mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-settings.xml
+/mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-settings-old.xml
 /mqtt-sn-runtimes/mqtt-sn-load-test/mqtt-sn-settings.xml
 /mqtt-sn-runtimes/mqtt-sn-gateway/mqtt-sn-settings-old.xml
 /mqtt-sn-gateway-connector-google-iotcore/dependency-reduced-pom.xml

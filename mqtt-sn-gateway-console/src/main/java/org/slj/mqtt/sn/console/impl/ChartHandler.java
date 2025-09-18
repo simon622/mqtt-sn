@@ -288,10 +288,10 @@ public class ChartHandler extends MqttsnConsoleAjaxRealmHandler {
         LineOptions options = new LineOptions();
         lineChart.setOptions(options);
         lineChart.setData(new LineData()
-                .addDataset(ChartJSUtils.createLineDataset("Connector Out", ChartJSUtils.getColorForIndex(0), publish))
-                .addDataset(ChartJSUtils.createLineDataset("Connector In", ChartJSUtils.getColorForIndex(1), recieve))
-                .addDataset(ChartJSUtils.createLineDataset("Connector Queue", ChartJSUtils.getColorForIndex(2), queuesize))
-                .addDataset(ChartJSUtils.createLineDataset("Connector Expansion", ChartJSUtils.getColorForIndex(3), expansion))
+                .addDataset(ChartJSUtils.createLineDataset("Backhaul Out", ChartJSUtils.getColorForIndex(0), publish))
+                .addDataset(ChartJSUtils.createLineDataset("Backhaul In", ChartJSUtils.getColorForIndex(1), recieve))
+                .addDataset(ChartJSUtils.createLineDataset("Backhaul Queue", ChartJSUtils.getColorForIndex(2), queuesize))
+                .addDataset(ChartJSUtils.createLineDataset("Backhaul Expansion", ChartJSUtils.getColorForIndex(3), expansion))
                 .addLabels(ChartJSUtils.timestampsToStr(arr)));
         writeJSONResponse(request, HttpConstants.SC_OK,
                 ChartJSUtils.upgradeToV3AxisOptions(lineChart.toJson()).getBytes(StandardCharsets.UTF_8));

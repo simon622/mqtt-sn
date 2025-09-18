@@ -24,12 +24,17 @@
 
 package org.slj.mqtt.sn.gateway.connector.custom;
 
+import org.slj.mqtt.sn.cloud.DescriptorProperty;
 import org.slj.mqtt.sn.cloud.MqttsnConnectorDescriptor;
 import org.slj.mqtt.sn.gateway.connector.paho.PahoMqttsnBrokerConnection;
 import org.slj.mqtt.sn.gateway.impl.connector.AbstractMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.IMqttsnConnector;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorException;
 import org.slj.mqtt.sn.gateway.spi.connector.MqttsnConnectorOptions;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class CustomMqttBrokerConnector extends AbstractMqttsnConnector<PahoMqttsnBrokerConnection>
         implements IMqttsnConnector<PahoMqttsnBrokerConnection> {
@@ -40,8 +45,45 @@ public class CustomMqttBrokerConnector extends AbstractMqttsnConnector<PahoMqtts
         DESCRIPTOR.setCompanyName("Eclipse");
         DESCRIPTOR.setProtocol("MQTT");
         DESCRIPTOR.setDescription("Connect your MQTT-SN devices and gateway to a custom MQTT installation.");
-        DESCRIPTOR.setName("Custom MQTT Connector");
+        DESCRIPTOR.setName("Aggregating Gateway MQTT Connector");
         DESCRIPTOR.setDeveloper("PAHO");
+        DESCRIPTOR.setImageUrl("https://mqtt.org/assets/downloads/mqtt-ver.png");
+
+        List<DescriptorProperty> properties = new ArrayList<>();
+
+        DescriptorProperty hostName = new DescriptorProperty();
+        hostName.setName("hostName");
+        hostName.setType("text");
+        hostName.setRequired(false);
+        properties.add(hostName);
+
+        DescriptorProperty clientId = new DescriptorProperty();
+        clientId.setName("clientId");
+        clientId.setType("text");
+        clientId.setRequired(true);
+        clientId.setDefaultValue("client-" + ThreadLocalRandom.current().nextInt(1000000));
+        properties.add(clientId);
+
+        DescriptorProperty username = new DescriptorProperty();
+        username.setName("username");
+        username.setType("text");
+        username.setRequired(false);
+        properties.add(username);
+
+        DescriptorProperty password = new DescriptorProperty();
+        password.setName("password");
+        password.setType("password");
+        password.setRequired(false);
+        properties.add(password);
+
+        DescriptorProperty port = new DescriptorProperty();
+        port.setName("port");
+        port.setType("int");
+        port.setRequired(true);
+        port.setDefaultValue("3306");
+        properties.add(port);
+
+        DESCRIPTOR.setProperties(properties);
     }
 
     public CustomMqttBrokerConnector(MqttsnConnectorDescriptor descriptor, MqttsnConnectorOptions options) {

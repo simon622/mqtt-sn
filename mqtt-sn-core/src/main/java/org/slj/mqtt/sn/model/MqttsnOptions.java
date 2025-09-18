@@ -156,9 +156,9 @@ public class MqttsnOptions extends AbstractOptions {
     public static final int DEFAULT_PING_DIVISOR = 4;
 
     /**
-     * The default max protocol message size (including header and data) is 1024 bytes
+     * The default max protocol message size (including header and data) is 1500 bytes
      */
-    public static final int DEFAULT_MAX_PROTOCOL_SIZE = 1024;
+    public static final int DEFAULT_MAX_PROTOCOL_SIZE = 1500;
 
     /**
      * The default T-WAIT for congestion (in seconds)

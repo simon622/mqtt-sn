@@ -62,9 +62,9 @@ public class MqttsnUdpOptions extends AbstractOptions {
     public static int DEFAULT_BROADCAST_PORT = 0;
 
     /**
-     * Default receive buffer size is 1024
+     * Default receive buffer size is 1500 - aligned with standard MTU frames on ethernet
      */
-    public static int DEFAULT_RECEIVE_BUFFER_SIZE = 1024;
+    public static int DEFAULT_RECEIVE_BUFFER_SIZE = 1500;
 
     /**
      * Default receive buffer size is 1024

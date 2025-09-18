@@ -102,6 +102,7 @@ public class MqttsnPublish extends AbstractMqttsnMessageWithTopicData implements
         sb.append(", dup=").append(dupRedelivery);
         sb.append(", QoS=").append(getQoS());
         sb.append(", retain=").append(retainedPublish);
+        sb.append(", payloadSize=").append(data.length);
         sb.append(", topicIdType=").append(topicType);
         sb.append(", msgId=").append(id);
         sb.append('}');

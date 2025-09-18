@@ -185,6 +185,7 @@ public abstract class AbstractMqttsnMessage implements IMqttsnMessage {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder(getMessageName());
+
         if (needsId()) {
             sb.append('{').append(getId()).append("}");
         }

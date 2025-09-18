@@ -103,8 +103,7 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		//The required IV/nonce is calculated from the associatedData as SHA256 truncated to 104 bits
 		//It returns the tag of nominalTagLength. The returned tag is encrypted (MAC-then-Encrypt scheme)
 		
-		if(key.length!=allowedKeyLength)
-		{
+		if(key.length != allowedKeyLength){
 			throw new MqttsnSecurityException(this.getClass()+" can't be used with keys of size "+key.length);
 		}
 
@@ -118,7 +117,7 @@ public abstract class AbstractProtectionSchemeCcm extends AbstractAeadProtection
 		
 		int bytesWritten = ccmBlockCipher.processBytes(plaintextPayload, 0, plaintextPayload.length, outputBuffer, 0);
 		try {
-			bytesWritten = ccmBlockCipher.doFinal(outputBuffer, bytesWritten);
+			ccmBlockCipher.doFinal(outputBuffer, bytesWritten);
 		} catch (Exception e) {
 			throw new MqttsnSecurityException(e);
 		}

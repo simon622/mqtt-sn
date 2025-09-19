@@ -215,7 +215,7 @@ public class MqttsnOptions extends AbstractOptions {
     /**
      * By default, specify 0 (unlimited)
      */
-    public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 60 * 60 * 24 * 365;
+    public static final long DEFAULT_SESSION_EXPIRY_INTERVAL = 60 * 60 * 12;
 
     /**
      * By default, set to the 1.2 specification maximum 23 bytes

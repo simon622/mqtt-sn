@@ -52,6 +52,11 @@ public final class MqttsnGatewayOptions extends MqttsnOptions {
     public static final double DEFAULT_MAX_BROKER_PUBLISHES_PER_SECOND = 0d;
 
     /**
+     * Maximum amount of time (in seconds) that a gateway will allow a client to set as a session expiry interval.
+     */
+    public static final long GATEWAY_MAX_SESSION_EXPIRY_INTERNAL = 60 * 60;
+
+    /**
      * The maximum number of publish operations queued up to send to backend
      */
     public static final int DEFAULT_MAX_BACKEND_QUEUE_SIZE = 10000;

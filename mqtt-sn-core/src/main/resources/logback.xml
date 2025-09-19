@@ -47,7 +47,7 @@
     </root>
 
     <logger name="wire" level="INFO"/>
-    <logger name="org.slj" level="WARN"/>
+    <logger name="org.slj" level="DEBUG"/>
     <logger name="org.slj.mqtt.sn.load.runner" level="OFF"/>
     <logger name="org.slj.mqtt.sn.protection" level="OFF"/>
     <logger name="ch.qos.logback" level="OFF"/>

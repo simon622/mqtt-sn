@@ -92,18 +92,26 @@ public class MqttsnGatewaySessionService extends AbstractMqttsnBackoffThreadServ
                 else if(MqttsnUtils.in(session.getClientState(), ClientState.DISCONNECTED, ClientState.LOST)){
                     // check last seen time
                     long time = System.currentTimeMillis();
-                    if(session.getSessionExpiryInterval() > 0 && //-- it may have literally just been initialised so if 0 ignore
-                            session.getSessionExpiryInterval() < MqttsnConstants.UNSIGNED_MAX_32){
-                        Date lastSeen = getLastSeen(session);
-                        //TODO allow the % grace per the spec
-                        long expires = lastSeen.getTime() + (session.getSessionExpiryInterval() * 1000);
+                    Date lastSeen = getLastSeen(session);
+
+                    long expires;
+                    long expiresConfig;
+
+                    if(MqttsnGatewayOptions.GATEWAY_MAX_SESSION_EXPIRY_INTERNAL > 0){
+                        expiresConfig = session.getSessionExpiryInterval() > 0 ? Math.min(MqttsnGatewayOptions.GATEWAY_MAX_SESSION_EXPIRY_INTERNAL, session.getSessionExpiryInterval()) :
+                                MqttsnGatewayOptions.GATEWAY_MAX_SESSION_EXPIRY_INTERNAL;
+                    } else {
+                        expiresConfig = session.getSessionExpiryInterval();
+                    }
+
+                    if(expiresConfig > 0){
+                        expires = lastSeen.getTime() + (expiresConfig * 1000L);
+
                         //only expire sessions set to less than the max which means forever
                         if(expires < time){
-                            logger.warn("removing session {} state last seen {} > allowed {} seconds ago", session.getContext(), lastSeen, session.getSessionExpiryInterval());
+                            logger.warn("removing session {} state last seen {} > allowed {} seconds ago", session.getContext(), lastSeen, expiresConfig);
                             getRegistry().getSessionRegistry().clear(session);
                         }
-                    } else if(session.getSessionExpiryInterval() == 0){
-                        // delete the session on terminal event
                     }
                 }
             }

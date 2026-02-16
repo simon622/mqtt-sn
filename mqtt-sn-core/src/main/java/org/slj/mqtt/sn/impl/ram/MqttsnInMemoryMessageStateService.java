@@ -58,12 +58,6 @@ public class MqttsnInMemoryMessageStateService
                 try {
                     IClientIdentifierContext context = itr.next();
                     clearInflightInternal(context, System.currentTimeMillis());
-                    Pair<Map<Integer, InflightMessage>, Map<Integer, InflightMessage>> pair =
-                            inflightMessages.get(context);
-                    if(pair != null && pair.getLeft().size() == 0 && pair.getRight().size() == 0){
-                        logger.debug("removing inflight key for context {}", context);
-                        itr.remove();
-                    }
                 } catch(MqttsnException e){
                     logger.warn("error occurred during inflight eviction run;", e);
                 }

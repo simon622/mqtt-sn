@@ -36,6 +36,16 @@ public class InMemoryProtectedSenderRegistry extends AbstractMqttsnService imple
         sendersWhitelist.put(deriveSenderId(sender.getClientId()), sender);
     }
 
+    /**
+     * Registers a sender under an explicit wire-level Sender ID, bypassing the hash-of-clientId
+     * derivation {@link #deriveSenderId(String)} otherwise applies. Needed to interoperate with
+     * peers (e.g. third-party clients/gateways) that populate the PROTECTION envelope's Sender ID
+     * field with a pre-agreed raw value rather than one derived from a clientId string.
+     */
+    public void addAllowedRawSenderId(final byte[] rawSenderId, final ProtectedSender sender) {
+        sendersWhitelist.put(ByteBuffer.wrap(rawSenderId), sender);
+    }
+
     @Override
     public ByteBuffer deriveSenderId(final String clientId) {
         if(clientId == null || clientId.length() == 0){

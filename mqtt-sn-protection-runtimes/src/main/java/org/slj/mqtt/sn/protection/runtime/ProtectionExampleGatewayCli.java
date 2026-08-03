@@ -42,6 +42,7 @@ import org.slj.mqtt.sn.protection.spi.ProtectedSender;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
+import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -68,8 +69,17 @@ public class ProtectionExampleGatewayCli {
                                 ProtectionUtils.loadKey("client1", "aes128"),
                                 ProtectionUtils.loadKey("client1", "aes192"),
                                 ProtectionUtils.loadKey("client1", "aes256")));
-                IProtectedSenderRegistry protectedSenderProvider =
+                InMemoryProtectedSenderRegistry protectedSenderProvider =
                         new InMemoryProtectedSenderRegistry(List.of(sender), protectionOptions);
+
+                //-- also trust the MQTTSN2Packet test3/test23 suite, which (like the C++
+                //-- MQTTSN2Gateway's test-gateway.conf) presents a pre-agreed raw Sender ID
+                //-- rather than one derived from a clientId string - register it alongside
+                //-- client1 so this same instance answers both.
+                protectedSenderProvider.addAllowedRawSenderId(
+                        HexFormat.of().parseHex("DEADBEEFCAFEBABE"),
+                        new ProtectedSender("mqttsn2-test3", List.of(
+                                HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"))));
 
                 MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
                 IMqttsnStorageService namespacePreferences = storageService.getPreferenceNamespace(LoopbackMqttsnConnector.DESCRIPTOR);

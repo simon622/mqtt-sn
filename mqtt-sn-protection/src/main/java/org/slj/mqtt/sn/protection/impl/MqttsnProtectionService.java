@@ -187,7 +187,7 @@ public class MqttsnProtectionService extends MqttsnSecurityService  {
     private boolean isSecurityEnvelope(byte[] data){
         if(getRegistry().getCodec().supportsVersion(MqttsnConstants.PROTOCOL_VERSION_2_0)){
             int msgType = MqttsnWireUtils.readMessageType(data);
-            return MqttsnConstants.PROTECTION == msgType;
+            return MqttsnConstants.PROTECTION_ENCAPSULATION_V2_0 == msgType;
         }
         return false;
     }

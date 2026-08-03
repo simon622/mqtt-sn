@@ -250,8 +250,11 @@ public interface MqttsnConstants {
     byte SEARCHGW_V2_0 = 0x17;
     byte GWINFO_V2_0 = 0x18;
     //-- 0x19-0xFC reserved
-    byte FORWARDER_ENCAPSULATION_V2_0 = (byte) 0xFD;
-    byte SESSION_ENCAPSULATION_V2_0 = (byte) 0xFE;
-    byte PROTECTION_ENCAPSULATION_V2_0 = (byte) 0xFF;
+    //-- declared as int (not byte, unlike the message type constants above): these values are
+    //-- >= 0x80 and a byte case label sign-extends to a negative int, which would never match
+    //-- the unsigned 0-255 value produced by MqttsnWireUtils.readMessageType() in a switch(int).
+    int FORWARDER_ENCAPSULATION_V2_0 = 0xFD;
+    int SESSION_ENCAPSULATION_V2_0 = 0xFE;
+    int PROTECTION_ENCAPSULATION_V2_0 = 0xFF;
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -56,6 +56,7 @@ public class MqttsnTestRuntimeRegistry extends AbstractMqttsnRuntimeRegistry {
                 withTopicRegistry(new MqttsnInMemoryTopicRegistry()).
                 withQueueProcessor(new MqttsnMessageQueueProcessor(clientMode)).
                 withSubscriptionRegistry(new MqttsnInMemorySubscriptionRegistry()).
+                withTransport(new NoopTestTransport()).
                 withCodec(MqttsnCodecs.MQTTSN_CODEC_VERSION_1_2).
                 withMessageStateService(new MqttsnInMemoryMessageStateService(clientMode));
         return registry;

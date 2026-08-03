@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
+ * Copyright (c) 2026 Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -25,14 +25,36 @@
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
+import org.slj.mqtt.sn.codec.MqttsnCodecException;
+import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 /**
- * UNSUBACK - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.10, Figure 21.
+ * WAKEUP - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.14, Figure 25.
+ * Header-only: Server-to-Client signal that the Client should wake up. No response expected.
  */
-public class MqttsnUnsuback_V2_0 extends AbstractMqttsnIdWithOptionalReasonCode_V2_0 {
+public class MqttsnWakeup_V2_0 extends AbstractMqttsnMessage {
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.UNSUBACK_V2_0;
+        return MqttsnConstants.WAKEUP_V2_0;
+    }
+
+    @Override
+    public boolean needsId() {
+        return false;
+    }
+
+    @Override
+    public void decode(byte[] data) throws MqttsnCodecException {
+    }
+
+    @Override
+    public byte[] encode() throws MqttsnCodecException {
+        return new byte[]{2, (byte) getMessageType()};
+    }
+
+    @Override
+    public String toString() {
+        return "MqttsnWakeup_V2_0{}";
     }
 }

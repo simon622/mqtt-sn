@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -245,7 +245,7 @@ public abstract class AbstractMqttsnMessageStateService
         }
 
         //if I send a message that is an ACK it is in response to something received to the remote space
-        IMqttsnOriginatingMessageSource source = MqttsnMessageRules.isAck(message, true) ?
+        IMqttsnOriginatingMessageSource source = MqttsnMessageRules.isAck(getRegistry().getCodec(), message, true) ?
                 IMqttsnOriginatingMessageSource.REMOTE : IMqttsnOriginatingMessageSource.LOCAL;
 
         int count = countInflight(context, source);
@@ -405,7 +405,7 @@ public abstract class AbstractMqttsnMessageStateService
         lastMessageReceived.put(context, System.currentTimeMillis());
 
         //if I receive a message that is an ACK it is in response to something sent in the local space
-        IMqttsnOriginatingMessageSource source = MqttsnMessageRules.isAck(message, false) ?
+        IMqttsnOriginatingMessageSource source = MqttsnMessageRules.isAck(getRegistry().getCodec(), message, false) ?
                 IMqttsnOriginatingMessageSource.LOCAL : IMqttsnOriginatingMessageSource.REMOTE;
 
         Integer msgId = message.needsId() ? message.getId() : WEAK_ATTACH_ID;

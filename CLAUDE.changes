@@ -1,0 +1,93 @@
+# Session changes
+
+Summary of fixes made while debugging the Maven build, then the MQTT-SN 2.0 gateway against
+the `paho.mqtt-sn.embedded-c` `test22`/`test23` network test suites.
+
+## mqtt-sn-core
+
+- **`impl/AbstractTopicRegistry.java`** — `topicPath()` had `case FULL: break;` falling through
+  without extracting the topic string, even though `FULL`-type `TopicInfo` carries it exactly
+  like `SHORT` does. This made any MQTT-SN 2.0 client publish using a full topic name directly in
+  `PUBLISH` (without a prior `REGISTER`) throw `MqttsnExpectationFailedException`, which the
+  message handler swallowed into a generic `SERVER_UNAVAILABLE`/malformed ack — breaking QoS 1/2
+  PUBACK/PUBREC and subscribe-then-echo tests. Fixed by adding `topicPath = topicInfo.getTopicPath();`
+  for the `FULL` case.
+- **`utils/Files.java`** — `createRuntimeLockFile()` only ever released its `.lck` marker via a
+  JVM shutdown hook, never on an explicit service `stop()`. Added `releaseRuntimeLockFile()`.
+- **`impl/MqttsnFilesystemStorageService.java`** — added a `stop()` override calling
+  `Files.releaseRuntimeLockFile(path)`, so a runtime can be stopped and a new one started against
+  the same workspace within the same JVM (this is exactly what `SubscriptionTests` does per
+  `@Test` method) without hitting `workspace in use`.
+- **`tree/MqttTree.java`** — single-level wildcard (`+`) subscriptions never matched when the `+`
+  was the *last* segment of the filter (e.g. `sport/tennis/+` didn't match `sport/tennis/player1`,
+  though `sport/+/player1` worked). `searchChildren()` recursed into nested wildcard subtrees but
+  never checked whether the wildcard node itself was the terminal match. Fixed by copying the
+  wildcard node's own members when there are no path segments left to consume.
+- **`test/NoopTestTransport.java`** (new) — minimal no-op `IMqttsnTransport` so in-VM test
+  runtimes have a registered transport (required to construct network contexts).
+- **`test/MqttsnTestRuntimeRegistry.java`** — wired `NoopTestTransport` into
+  `defaultConfiguration(...)`, since it never registered a transport before, causing
+  `getDefaultTransport()` to throw `no transports available on runtime` for any test creating a
+  session.
+
+## mqtt-sn-protection-runtimes
+
+- **`test/TestKeyWrite.java` → `test/KeyFileGenerator.java`** (renamed) — this was a one-off
+  key-generation utility disguised as a JUnit `@Test`, with the original author's own machine's
+  absolute path hardcoded (`/Users/simonjohnson/IdeaProjects/...`), so it failed
+  `FileNotFoundException` on any other machine via `mvn test`. Renamed (removes it from Surefire's
+  default `Test*.java` discovery pattern), dropped `@Test`/JUnit dependency, changed to a
+  `public static void main`, and made the output path relative (`src/main/resources`) so it's
+  still runnable manually if the key material needs regenerating.
+- **`runtime/ProtectionExampleGatewayCli.java`** — registered an additional trusted sender using
+  the exact raw Sender ID (`DEADBEEFCAFEBABE`) and HMAC-SHA256 key that `paho.mqtt-sn.embedded-c`'s
+  `test3.c`/`test23` suite (and the C++ `MQTTSN2Gateway`'s `test-gateway.conf`) expect, alongside
+  the existing `client1` demo sender — so one running instance now answers both.
+
+## mqtt-sn-protection
+
+- **`impl/InMemoryProtectedSenderRegistry.java`** — added `addAllowedRawSenderId(byte[], ProtectedSender)`.
+  The existing `addAllowedClientId(...)` always derives the wire Sender ID via
+  `hash(clientId)[0:N]`; there was no way to register a sender under a literal, pre-agreed raw
+  byte sequence (needed for interop with peers that don't derive their ID from a clientId
+  string, e.g. `test3.c`).
+- **`impl/MqttsnProtectionService.java`** — `isSecurityEnvelope()` compared the incoming wire
+  message type against `MqttsnConstants.PROTECTION` (`0x1E`), but the actual PROTECTION wire type
+  used by `MqttsnProtection.getMessageType()` is `PROTECTION_ENCAPSULATION_V2_0` (`0xFF`). Since
+  those never matched, every incoming PROTECTION-wrapped packet fell through to the plain
+  (non-protection) integrity check and failed with "message integrity check failed", so the
+  gateway never even attempted to unwrap protected traffic. Fixed the comparison to use the
+  correct constant.
+
+## mqtt-sn-codec
+
+- **`MqttsnConstants.java`** — `FORWARDER_ENCAPSULATION_V2_0`, `SESSION_ENCAPSULATION_V2_0`, and
+  `PROTECTION_ENCAPSULATION_V2_0` were declared as `byte` with value `0xFF`/`0xFE`/`0xFD`. Java
+  sign-extends a `byte` to `int` on widening, so `(byte) 0xFF` becomes `-1`, not `255` — meaning
+  `case MqttsnConstants.PROTECTION_ENCAPSULATION_V2_0:` in `Mqttsn_v2_0_Codec`'s `switch(int)`
+  dispatch could never match the unsigned `255` produced by `MqttsnWireUtils.readMessageType()`.
+  Every PROTECTION packet fell through to the `default` case, which delegates to the v1.2
+  dispatcher, throwing `MqttsnCodecException: unknown message type [255]`. Changed all three
+  constants to `int`, matching the convention already used for the `RETURN_CODE_*_V2_0` block
+  (which is `int`-typed for exactly this reason).
+  - Note: this required a `mvn clean install` (not just `install`) to take effect, since javac
+    inlines `static final` constants at compile time — files that only *reference* the constant
+    (like `Mqttsn_v2_0_Codec.java`) aren't recompiled by Maven's incremental compiler just because
+    the constant's own source file changed.
+
+## paho.mqtt-sn.embedded-c
+
+- **`MQTTSN2Packet/test/test3.c`** — `TEST_TOPIC_LEN` was `18` for `"test/mqttsn2-prot"`, which is
+  17 characters; the extra byte put a trailing NUL into the wire-encoded topic, which the gateway
+  correctly rejected as an invalid topic (`RETURN_CODE_INVALID_TOPIC_ID`), failing the SUBSCRIBE
+  sub-test. Fixed `TEST_TOPIC_LEN` to `17`.
+
+## Result
+
+- `mvn clean install` passes for every module in `mqtt-sn` except `mqtt-sn-cloud-client`, whose
+  tests require live internet access to an external discovery service unavailable in this
+  sandbox (unrelated to any of the above).
+- `test22` (plain MQTT-SN 2.0 network suite) passes all 10 sub-tests against
+  `mqtt-sn-gateway-console` (run with `-DprotocolVersion=2`).
+- `test23` (MQTT-SN 2.0 PROTECTION suite) passes all 9 sub-tests against
+  `ProtectionExampleGatewayCli`.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -68,6 +68,36 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         MqttsnAuth auth = new MqttsnAuth(method, data);
         validate(auth);
         return auth;
+    }
+
+    @Override
+    public IMqttsnMessage createAdvertise(int gatewayId, int duration) throws MqttsnCodecException {
+        MqttsnAdvertise_V2_0 msg = new MqttsnAdvertise_V2_0();
+        msg.setGatewayId(gatewayId);
+        msg.setDuration(duration);
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createSearchGw(int radius) throws MqttsnCodecException {
+        MqttsnSearchGw_V2_0 msg = new MqttsnSearchGw_V2_0();
+        //-- v2.0's SEARCHGW has no dedicated radius field; per the spec's own example (a ZigBee
+        //-- 1-byte broadcast radius), map it onto the optional Additional Network Information.
+        if (radius > 0) {
+            msg.setAdditionalNetworkInformation(new byte[]{(byte) radius});
+        }
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createGwinfo(int gatewayId, String gatewayAddress) throws MqttsnCodecException {
+        MqttsnGwInfo_V2_0 msg = new MqttsnGwInfo_V2_0();
+        msg.setGatewayId(gatewayId);
+        msg.setGatewayAddress(gatewayAddress);
+        validate(msg);
+        return msg;
     }
 
     @Override
@@ -172,6 +202,27 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         return msg;
     }
 
+    @Override
+    public IMqttsnMessage createPubrec() throws MqttsnCodecException {
+        MqttsnPubrec_V2_0 msg = new MqttsnPubrec_V2_0();
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createPubrel() throws MqttsnCodecException {
+        MqttsnPubrel_V2_0 msg = new MqttsnPubrel_V2_0();
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createPubcomp() throws MqttsnCodecException {
+        MqttsnPubcomp_V2_0 msg = new MqttsnPubcomp_V2_0();
+        validate(msg);
+        return msg;
+    }
+
 
     @Override
     public IMqttsnMessage createSubscribe(int QoS, MqttsnConstants.TOPIC_TYPE type, int topicId) throws MqttsnCodecException {
@@ -214,10 +265,12 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     public IMqttsnMessage createSuback(int grantedQoS, int topicId, int returnCode) throws MqttsnCodecException {
 
         MqttsnSuback_V2_0 msg = new MqttsnSuback_V2_0();
-        msg.setQoS(grantedQoS);
         msg.setTopicIdType(MqttsnConstants.TOPIC_NORMAL);
         msg.setTopicId(topicId);
-        msg.setReturnCode(returnCode);
+        //-- MQTT-SN 2.0 (CSD01) folds "granted QoS" into the Reason Code itself (Table 4:
+        //-- Granted QoS 0/1/2 ARE the success reason codes for SUBACK) - only substitute
+        //-- grantedQoS when the caller hasn't already supplied a more specific reason code.
+        msg.setReturnCode(returnCode == MqttsnConstants.RETURN_CODE_ACCEPTED ? grantedQoS : returnCode);
         validate(msg);
         return msg;
     }
@@ -259,9 +312,9 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
 
     @Override
     public IMqttsnMessage createPingreq(String clientId) throws MqttsnCodecException {
+        //-- NB: clientId is intentionally ignored - MQTT-SN 2.0 (CSD01) PINGREQ has no Client
+        //-- Identifier field (Figure 22), only a Packet Identifier.
         MqttsnPingreq_V2_0 msg = new MqttsnPingreq_V2_0();
-        msg.setClientId(clientId);
-        msg.setMaxMessages(0);
         validate(msg);
         return msg;
     }
@@ -269,7 +322,6 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     @Override
     public IMqttsnMessage createPingresp() throws MqttsnCodecException {
         MqttsnPingresp_V2_0 msg = new MqttsnPingresp_V2_0();
-        msg.setMessagesRemaining(0);
         validate(msg);
         return msg;
     }
@@ -284,9 +336,11 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
     @Override
     public IMqttsnMessage createDisconnect(long sessionExpiry, boolean retainRegistrations) throws MqttsnCodecException {
 
+        //-- NB: retainRegistrations has no home on DISCONNECT in MQTT-SN 2.0 CSD01 - that
+        //-- concept moved to SLEEPREQ's "Retain Topic Aliases" flag (not yet implemented, see
+        //-- mqtt-sn-v2.0-gap-analysis.md), so it is intentionally ignored here.
         MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
         msg.setSessionExpiryInterval(sessionExpiry);
-        msg.setRetainRegistrations(retainRegistrations);
         msg.setReasonString(null);
         validate(msg);
         return msg;
@@ -298,6 +352,69 @@ public class Mqttsn_v2_0_MessageFactory extends Mqttsn_v1_2_MessageFactory imple
         MqttsnDisconnect_V2_0 msg = new MqttsnDisconnect_V2_0();
         msg.setReturnCode(returnCode);
         msg.setReasonString(reasonString);
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createPubwos(boolean retain, MqttsnConstants.TOPIC_TYPE type, int topicId, byte[] payload) throws MqttsnCodecException {
+
+        MqttsnPubwos_V2_0 msg = new MqttsnPubwos_V2_0();
+        msg.setRetainedPublish(retain);
+        msg.setData(payload);
+        switch (type) {
+            case PREDEFINED:
+                msg.setPredefinedTopicAlias(topicId);
+                break;
+            default:
+                throw new MqttsnCodecException("pubwos method only supports the predefined topic id type");
+        }
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createPubwos(boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException {
+
+        MqttsnSpecificationValidator.validatePublishPath(topicPath);
+
+        MqttsnPubwos_V2_0 msg = new MqttsnPubwos_V2_0();
+        msg.setRetainedPublish(retain);
+        msg.setData(payload);
+        msg.setTopicName(topicPath);
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createWakeup() throws MqttsnCodecException {
+        MqttsnWakeup_V2_0 msg = new MqttsnWakeup_V2_0();
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createSleepReq(boolean retainTopicAliases, long sleepDuration) throws MqttsnCodecException {
+        MqttsnSleepreq_V2_0 msg = new MqttsnSleepreq_V2_0();
+        msg.setRetainTopicAliases(retainTopicAliases);
+        msg.setSleepDuration(sleepDuration);
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createSleepResp(int returnCode) throws MqttsnCodecException {
+        MqttsnSleepresp_V2_0 msg = new MqttsnSleepresp_V2_0();
+        msg.setReturnCode(returnCode);
+        validate(msg);
+        return msg;
+    }
+
+    @Override
+    public IMqttsnMessage createSleepResp(int returnCode, long sleepDuration) throws MqttsnCodecException {
+        MqttsnSleepresp_V2_0 msg = new MqttsnSleepresp_V2_0();
+        msg.setReturnCode(returnCode);
+        msg.setSleepDuration(sleepDuration);
         validate(msg);
         return msg;
     }

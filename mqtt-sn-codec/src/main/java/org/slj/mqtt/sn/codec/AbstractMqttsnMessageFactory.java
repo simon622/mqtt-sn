@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -231,6 +231,36 @@ public abstract class AbstractMqttsnMessageFactory implements IMqttsnMessageFact
 
     @Override
     public IMqttsnMessage createEncapsulatedMessage(String wirelessNodeId, int radius, byte[] messageData) throws MqttsnCodecException {
+       throw new MqttsnCodecException("message not supported by codec");
+    }
+
+    @Override
+    public IMqttsnMessage createPubwos(boolean retain, MqttsnConstants.TOPIC_TYPE type, int topicId, byte[] payload) throws MqttsnCodecException {
+       throw new MqttsnCodecException("message not supported by codec");
+    }
+
+    @Override
+    public IMqttsnMessage createPubwos(boolean retain, String topicPath, byte[] payload) throws MqttsnCodecException {
+       throw new MqttsnCodecException("message not supported by codec");
+    }
+
+    @Override
+    public IMqttsnMessage createWakeup() throws MqttsnCodecException {
+       throw new MqttsnCodecException("message not supported by codec");
+    }
+
+    @Override
+    public IMqttsnMessage createSleepReq(boolean retainTopicAliases, long sleepDuration) throws MqttsnCodecException {
+       throw new MqttsnCodecException("message not supported by codec");
+    }
+
+    @Override
+    public IMqttsnMessage createSleepResp(int returnCode) throws MqttsnCodecException {
+       throw new MqttsnCodecException("message not supported by codec");
+    }
+
+    @Override
+    public IMqttsnMessage createSleepResp(int returnCode, long sleepDuration) throws MqttsnCodecException {
        throw new MqttsnCodecException("message not supported by codec");
     }
 }

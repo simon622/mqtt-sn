@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -129,77 +129,120 @@ public class Mqttsn_v2_0_Codec extends Mqttsn_v1_2_Codec {
         int msgType = MqttsnWireUtils.readMessageType(data);
 
         switch (msgType) {
-            case MqttsnConstants.AUTH:
+            case MqttsnConstants.AUTH_V2_0:
                 validateLengthGreaterThanOrEquals(data, 5);
                 msg = new MqttsnAuth();
                 break;
-            case MqttsnConstants.CONNECT:
-                //-- check version
-                int version = MqttsnConstants.PROTOCOL_VERSION_UNKNOWN;
-                if(data[0] == 0x01){
-                    version = data[5];
-                } else {
-                    version = data[3];
-                }
+            case MqttsnConstants.CONNECT_V2_0:
+                //-- check version; NB: unlike v1.2, the Protocol Version field's position is
+                //-- not fixed - Connect Flags is followed by an optional 1-byte Will Flags
+                //-- field (present iff Connect Flags bit 1 / Will is set) and then the 2-byte
+                //-- Packet Identifier, before Protocol Version - see spec Figure 6.
+                boolean isLargeConnect = data[0] == 0x01;
+                int connectFlagsIdx = isLargeConnect ? 4 : 2;
+                boolean connectHasWill = (data[connectFlagsIdx] & 0x02) != 0;
+                int version = data[connectFlagsIdx + 3 + (connectHasWill ? 1 : 0)];
 
                 if(version != MqttsnConstants.PROTOCOL_VERSION_2_0){
                     throw new MqttsnUnsupportedVersionException("codec version mismatch ["+version+"] found non 2.0 message");
                 } else {
-                    validateLengthGreaterThanOrEquals(data, 12);
+                    validateLengthGreaterThanOrEquals(data, 10);
                     msg = new MqttsnConnect_V2_0();
                 }
                 break;
-            case MqttsnConstants.CONNACK:
-                validateLengthGreaterThanOrEquals(data, 7);
+            case MqttsnConstants.CONNACK_V2_0:
+                validateLengthGreaterThanOrEquals(data, 6);
                 msg = new MqttsnConnack_V2_0();
                 break;
-            case MqttsnConstants.REGACK:
+            case MqttsnConstants.REGACK_V2_0:
                 validateLengthEquals(data, 8);
                 msg = new MqttsnRegack_V2_0();
                 break;
-            case MqttsnConstants.PUBLISH:
-            case MqttsnConstants.PUBLISH_M1:
+            case MqttsnConstants.PUBLISH_V2_0:
                 validateLengthGreaterThanOrEquals(data, 6);
                 msg = new MqttsnPublish_V2_0();
                 msg.decode(data);
                 break;
-            case MqttsnConstants.PUBACK:
-                validateLengthEquals(data, 5);
+            case MqttsnConstants.PUBACK_V2_0:
+                validateLengthGreaterThanOrEquals(data, 4);
                 msg = new MqttsnPuback_V2_0();
                 break;
-            case MqttsnConstants.PINGREQ:
+            case MqttsnConstants.PUBREC_V2_0:
+                validateLengthGreaterThanOrEquals(data, 4);
+                msg = new MqttsnPubrec_V2_0();
+                break;
+            case MqttsnConstants.PUBREL_V2_0:
+                validateLengthGreaterThanOrEquals(data, 4);
+                msg = new MqttsnPubrel_V2_0();
+                break;
+            case MqttsnConstants.PUBCOMP_V2_0:
+                validateLengthGreaterThanOrEquals(data, 4);
+                msg = new MqttsnPubcomp_V2_0();
+                break;
+            case MqttsnConstants.PUBWOS_V2_0:
+                validateLengthGreaterThanOrEquals(data, 5);
+                msg = new MqttsnPubwos_V2_0();
+                break;
+            case MqttsnConstants.WAKEUP_V2_0:
                 validateLengthGreaterThanOrEquals(data, 2);
+                msg = new MqttsnWakeup_V2_0();
+                break;
+            case MqttsnConstants.SLEEPREQ_V2_0:
+                validateLengthEquals(data, 9);
+                msg = new MqttsnSleepreq_V2_0();
+                break;
+            case MqttsnConstants.SLEEPRESP_V2_0:
+                validateLengthGreaterThanOrEquals(data, 5);
+                msg = new MqttsnSleepresp_V2_0();
+                break;
+            case MqttsnConstants.ADVERTISE_V2_0:
+                validateLengthEquals(data, 5);
+                msg = new MqttsnAdvertise_V2_0();
+                break;
+            case MqttsnConstants.SEARCHGW_V2_0:
+                validateLengthGreaterThanOrEquals(data, 2);
+                msg = new MqttsnSearchGw_V2_0();
+                break;
+            case MqttsnConstants.GWINFO_V2_0:
+                validateLengthGreaterThanOrEquals(data, 3);
+                msg = new MqttsnGwInfo_V2_0();
+                break;
+            case MqttsnConstants.PINGREQ_V2_0:
+                validateLengthEquals(data, 4);
                 msg = new MqttsnPingreq_V2_0();
                 break;
-            case MqttsnConstants.PINGRESP:
-                validateLengthGreaterThanOrEquals(data, 2);
+            case MqttsnConstants.PINGRESP_V2_0:
+                validateLengthGreaterThanOrEquals(data, 4);
                 msg = new MqttsnPingresp_V2_0();
                 break;
-            case MqttsnConstants.DISCONNECT:
+            case MqttsnConstants.DISCONNECT_V2_0:
                 validateLengthGreaterThanOrEquals(data, 2);
                 msg = new MqttsnDisconnect_V2_0();
                 break;
-            case MqttsnConstants.SUBSCRIBE:
-                validateLengthGreaterThanOrEquals(data, 7);
+            case MqttsnConstants.SUBSCRIBE_V2_0:
+                validateLengthGreaterThanOrEquals(data, 6);
                 msg = new MqttsnSubscribe_V2_0();
                 break;
-            case MqttsnConstants.SUBACK:
-                validateLengthEquals(data, 8);
+            case MqttsnConstants.SUBACK_V2_0:
+                validateLengthGreaterThanOrEquals(data, 5);
                 msg = new MqttsnSuback_V2_0();
                 break;
-            case MqttsnConstants.UNSUBSCRIBE:
-                validateLengthGreaterThanOrEquals(data, 7);
+            case MqttsnConstants.UNSUBSCRIBE_V2_0:
+                validateLengthGreaterThanOrEquals(data, 5);
                 msg = new MqttsnUnsubscribe_V2_0();
                 break;
-            case MqttsnConstants.UNSUBACK:
-                validateLengthEquals(data, 5);
+            case MqttsnConstants.UNSUBACK_V2_0:
+                validateLengthGreaterThanOrEquals(data, 4);
                 msg = new MqttsnUnsuback_V2_0();
                 break;
-            case MqttsnConstants.PROTECTION:
+            case MqttsnConstants.PROTECTION_ENCAPSULATION_V2_0:
                 validateLengthGreaterThanOrEquals(data, 18);
                 msg = new MqttsnProtection();
                 break;
             default:
+                //-- NB: Forwarder/Session Encapsulation (0xFD/0xFE) are not yet implemented for
+                //-- v2.0 and fall through to the v1.2 dispatch table here, which uses a
+                //-- different, colliding byte-value scheme - see mqtt-sn-v2.0-gap-analysis.md.
                 msg = super.createInstance(data);
                 break;
         }

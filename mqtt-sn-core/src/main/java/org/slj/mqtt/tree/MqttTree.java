@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -276,7 +276,10 @@ public class MqttTree<T> implements IMqttTree<T> {
                     if(from.length > 0){
                         searchChildren(wildpath, from, members);
                     } else {
-                        //weve run out of path segments BUT we have a wildpath so we need to ensure we dont have a sub forward
+                        //weve run out of path segments - the wildpath itself is the exact match for
+                        //the final segment of the search path, so its members are a match
+                        copyMembersNullSafe(members, wildpath);
+                        //...but we also need to ensure we dont have a sub forward
                         readWildpathAtNextLevel(wildpath, members, true);
                     }
                 }

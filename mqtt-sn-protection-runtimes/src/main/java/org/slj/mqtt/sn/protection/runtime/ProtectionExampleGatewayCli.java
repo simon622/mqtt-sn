@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 Ian Craggs
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.slj.mqtt.sn.protection.runtime;
 
 import org.slj.mqtt.sn.codec.MqttsnCodecs;
@@ -21,6 +42,7 @@ import org.slj.mqtt.sn.protection.spi.ProtectedSender;
 import org.slj.mqtt.sn.spi.IMqttsnStorageService;
 import org.slj.mqtt.sn.spi.IMqttsnTransport;
 
+import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -34,7 +56,10 @@ public class ProtectionExampleGatewayCli {
                 //-- configure my protection details
                 MqttsnProtectionOptions protectionOptions =
                         new MqttsnProtectionOptions().
-                                withProtectionPacketFlags(new byte[] {(byte)0x03,(byte)0x00,(byte)0x00}).
+                                //-- default scheme (HMAC_SHA256, Authentication Only); Authentication
+                                //-- Tag Length 0x1 = use the scheme's own nominal tag size
+                                //-- (MQTT-SN 2.0 CSD01 3.17.2.3); 0x3 is reserved.
+                                withProtectionPacketFlags(new byte[] {(byte)0x01,(byte)0x00,(byte)0x00}).
                                 withProtectionKey(
                                     ProtectionUtils.loadKey("gateway1", "hmac"));
 
@@ -44,8 +69,17 @@ public class ProtectionExampleGatewayCli {
                                 ProtectionUtils.loadKey("client1", "aes128"),
                                 ProtectionUtils.loadKey("client1", "aes192"),
                                 ProtectionUtils.loadKey("client1", "aes256")));
-                IProtectedSenderRegistry protectedSenderProvider =
+                InMemoryProtectedSenderRegistry protectedSenderProvider =
                         new InMemoryProtectedSenderRegistry(List.of(sender), protectionOptions);
+
+                //-- also trust the MQTTSN2Packet test3/test23 suite, which (like the C++
+                //-- MQTTSN2Gateway's test-gateway.conf) presents a pre-agreed raw Sender ID
+                //-- rather than one derived from a clientId string - register it alongside
+                //-- client1 so this same instance answers both.
+                protectedSenderProvider.addAllowedRawSenderId(
+                        HexFormat.of().parseHex("DEADBEEFCAFEBABE"),
+                        new ProtectedSender("mqttsn2-test3", List.of(
+                                HexFormat.of().parseHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"))));
 
                 MqttsnConnectorOptions connectorOptions = new MqttsnConnectorOptions();
                 IMqttsnStorageService namespacePreferences = storageService.getPreferenceNamespace(LoopbackMqttsnConnector.DESCRIPTOR);

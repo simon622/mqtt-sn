@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
+ * Copyright (c) 2026 Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -24,63 +24,76 @@
 
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
-import org.slj.mqtt.sn.MqttsnConstants;
 import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
 /**
- * PINGREQ - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.11, Figure 22.
- *
- * NB: unlike earlier drafts, this carries only a mandatory Packet Identifier - there is no
- * Max Messages or Client Identifier field on the wire.
+ * Shared shape of PUBACK / PUBREC / PUBREL / PUBCOMP / UNSUBACK in MQTT-SN 2.0 (CSD01),
+ * sections 3.6.4-3.6.7 and 3.10 (Figures 14-17, 21) - all five are: Length, Packet Type,
+ * Packet Identifier, and an optional Reason Code whose presence is inferred from the packet
+ * length (absent == 0x00 Success). None of them have a flags byte.
  */
-public class MqttsnPingreq_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public abstract class AbstractMqttsnIdWithOptionalReasonCode_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
-    @Override
-    public int getMessageType() {
-        return MqttsnConstants.PINGREQ_V2_0;
-    }
+    protected boolean reasonCodeSet;
 
     @Override
     public boolean needsId() {
         return true;
     }
 
-    /**
-     * MQTT-SN 2.0 (CSD01) PINGREQ has no Client Identifier field (Figure 22) - always null.
-     * Kept only for API compatibility with callers that opportunistically check it (e.g.
-     * {@code MqttsnGatewayMessageHandler.handlePingreq}), which already tolerate a null value.
-     */
-    public String getClientId() {
-        return null;
+    @Override
+    public void setReturnCode(int returnCode) {
+        reasonCodeSet = true;
+        super.setReturnCode(returnCode);
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
+
         id = readUInt16Adjusted(data, 2);
+
+        int consumedLength = MqttsnWireUtils.isLargeMessage(data) ? 6 : 4;
+        if (data.length > consumedLength) {
+            returnCode = readUInt8Adjusted(data, 4);
+            reasonCodeSet = true;
+        }
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
-        byte[] data = new byte[4];
-        data[0] = (byte) data.length;
+
+        int length = 4 + (reasonCodeSet ? 1 : 0);
+        byte[] data = new byte[length];
+        data[0] = (byte) length;
         data[1] = (byte) getMessageType();
         data[2] = (byte) ((id >> 8) & 0xFF);
         data[3] = (byte) (id & 0xFF);
+        if (reasonCodeSet) {
+            data[4] = (byte) getReturnCode();
+        }
         return data;
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validatePacketIdentifier(id);
+        if (reasonCodeSet) {
+            MqttsnSpecificationValidator.validateReturnCode(returnCode);
+        }
     }
 
     @Override
     public String toString() {
-        return "MqttsnPingreq_V2_0{" +
-                "id=" + id +
-                '}';
+        final StringBuilder sb = new StringBuilder(getMessageName()).append('{');
+        sb.append("id=").append(id);
+        if (reasonCodeSet) {
+            sb.append(", returnCode=").append(returnCode);
+        }
+        sb.append('}');
+        return sb.toString();
     }
 }

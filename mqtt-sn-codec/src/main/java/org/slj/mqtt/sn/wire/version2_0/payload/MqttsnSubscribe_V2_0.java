@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -45,7 +45,7 @@ public class MqttsnSubscribe_V2_0 extends AbstractMqttsnMessage implements IMqtt
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.SUBSCRIBE;
+        return MqttsnConstants.SUBSCRIBE_V2_0;
     }
 
     public boolean needsId() {
@@ -64,13 +64,10 @@ public class MqttsnSubscribe_V2_0 extends AbstractMqttsnMessage implements IMqtt
     }
 
     public void setTopicName(String topicName) {
-        setTopicType(topicName != null && topicName.length() <= 2 ?
-                MqttsnConstants.TOPIC_SHORT : MqttsnConstants.TOPIC_FULL);
-        if(topicName.length() == 1){
-            topicData = new byte[]{topicName.getBytes(MqttsnConstants.CHARSET)[0], 0x00};
-        } else {
-            topicData = topicName.getBytes(MqttsnConstants.CHARSET);
-        }
+        //-- MQTT-SN 2.0 (CSD01) has no Short Topic Name type - any topic name/filter uses
+        //-- Topic Type "Topic Name or Filter" (TOPIC_FULL), regardless of its length.
+        setTopicType(MqttsnConstants.TOPIC_FULL);
+        topicData = topicName.getBytes(MqttsnConstants.CHARSET);
     }
 
     public void setPredefinedTopicAlias(int topicAlias) {
@@ -251,6 +248,14 @@ public class MqttsnSubscribe_V2_0 extends AbstractMqttsnMessage implements IMqtt
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateRetainHandling(retainHandling);
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
+        if(topicIdType == MqttsnConstants.TOPIC_SHORT){
+            throw new MqttsnCodecException("topic type SHORT is Reserved in MQTT-SN 2.0 (no Short Topic Name support)");
+        }
+        //-- MQTT-SN 2.0 (CSD01) 3.7.5: a SUBSCRIBE with a zero length Topic Filter is a
+        //-- Protocol Error.
+        if(topicIdType == MqttsnConstants.TOPIC_FULL && (topicData == null || topicData.length == 0)){
+            throw new MqttsnCodecException("zero length topic filter is a protocol error");
+        }
         MqttsnSpecificationValidator.validateQoS(QoS);
     }
 

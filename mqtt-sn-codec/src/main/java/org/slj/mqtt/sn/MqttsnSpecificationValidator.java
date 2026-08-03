@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -186,9 +186,8 @@ public class MqttsnSpecificationValidator {
     }
 
     public static void validateDefaultAwakeMessages(int defaultAwakeMessages){
-        if(defaultAwakeMessages < 0 || defaultAwakeMessages > 15){
-            throw new MqttsnCodecException("invalid default awake messages value - " + defaultAwakeMessages);
-        }
+        //-- MQTT-SN 2.0 (CSD01) 3.1.8: an optional single (unsigned) byte value, ie. 0-255.
+        validateUInt8(defaultAwakeMessages);
     }
 
     public static void validatePublishData(byte[] data) {
@@ -210,7 +209,9 @@ public class MqttsnSpecificationValidator {
 
     public static void validateAuthReasonCode(int field) throws MqttsnCodecException {
         validateUInt8(field);
-        if(field != 0x00 && field != 0x18 && field != 0x19)
+        if(field != MqttsnConstants.RETURN_CODE_SUCCESS_V2_0 &&
+                field != MqttsnConstants.RETURN_CODE_CONTINUE_AUTHENTICATION_V2_0 &&
+                field != MqttsnConstants.RETURN_CODE_RE_AUTHENTICATE_V2_0)
             throw new MqttsnCodecException("invalid auth reason code, must be one of 0x00, 0x18, 0x19");
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -29,57 +29,80 @@ import org.slj.mqtt.sn.MqttsnSpecificationValidator;
 import org.slj.mqtt.sn.codec.MqttsnCodecException;
 import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
+import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
+/**
+ * PINGRESP - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.12, Figure 23.
+ *
+ * NB: unlike earlier drafts, this carries a mandatory Packet Identifier (matching the PINGREQ
+ * being acknowledged) followed by an optional Application Messages Remaining byte - not a
+ * Messages Remaining byte immediately after the type with no Packet Identifier at all.
+ */
 public class MqttsnPingresp_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
 
-    protected int messagesRemaining = 0;
+    protected boolean applicationMessagesRemainingSet;
+    protected int applicationMessagesRemaining;
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PINGRESP;
+        return MqttsnConstants.PINGRESP_V2_0;
     }
 
+    @Override
     public boolean needsId() {
-        return false;
+        return true;
+    }
+
+    public int getApplicationMessagesRemaining() {
+        return applicationMessagesRemaining;
+    }
+
+    public void setApplicationMessagesRemaining(int applicationMessagesRemaining) {
+        this.applicationMessagesRemaining = applicationMessagesRemaining;
+        this.applicationMessagesRemainingSet = true;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        if(data.length > 2){
-            messagesRemaining = readUInt8Adjusted(data, 2);
+
+        id = readUInt16Adjusted(data, 2);
+
+        int consumedLength = MqttsnWireUtils.isLargeMessage(data) ? 6 : 4;
+        if (data.length > consumedLength) {
+            applicationMessagesRemaining = readUInt8Adjusted(data, 4);
+            applicationMessagesRemainingSet = true;
         }
-    }
-
-    public int getMessagesRemaining() {
-        return messagesRemaining;
-    }
-
-    public void setMessagesRemaining(int messagesRemaining) {
-        this.messagesRemaining = messagesRemaining;
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
-        int length = 3;
-        int idx = 0;
-        byte[] msg = new byte[length];
-        msg[idx++] = (byte) length;
-        msg[idx++] = (byte) getMessageType();
-        msg[idx] = (byte) getMessagesRemaining();
-
-        return msg;
+        int length = 4 + (applicationMessagesRemainingSet ? 1 : 0);
+        byte[] data = new byte[length];
+        data[0] = (byte) length;
+        data[1] = (byte) getMessageType();
+        data[2] = (byte) ((id >> 8) & 0xFF);
+        data[3] = (byte) (id & 0xFF);
+        if (applicationMessagesRemainingSet) {
+            data[4] = (byte) applicationMessagesRemaining;
+        }
+        return data;
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validateUInt8(messagesRemaining);
+        MqttsnSpecificationValidator.validatePacketIdentifier(id);
+        if (applicationMessagesRemainingSet) {
+            MqttsnSpecificationValidator.validateUInt8(applicationMessagesRemaining);
+        }
     }
 
     @Override
     public String toString() {
         return "MqttsnPingresp_V2_0{" +
-                "messagesRemaining=" + messagesRemaining +
+                "id=" + id +
+                ", applicationMessagesRemaining=" + applicationMessagesRemaining +
+                ", applicationMessagesRemainingSet=" + applicationMessagesRemainingSet +
                 '}';
     }
 }

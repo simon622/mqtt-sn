@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -49,7 +49,7 @@ public class MqttsnRegack_V2_0 extends AbstractMqttsnMessage implements IMqttsnM
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.REGACK;
+        return MqttsnConstants.REGACK_V2_0;
     }
 
     public int getTopicIdType() {
@@ -134,6 +134,12 @@ public class MqttsnRegack_V2_0 extends AbstractMqttsnMessage implements IMqttsnM
     @Override
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
+        //-- MQTT-SN 2.0 (CSD01) 3.5 REGACK: Topic Type MUST be Predefined or Session Topic
+        //-- Alias only - any other value (Reserved/SHORT or Topic Name-or-Filter/FULL) is a
+        //-- Protocol Error.
+        if(topicIdType != MqttsnConstants.TOPIC_PREDEFINED && topicIdType != MqttsnConstants.TOPIC_NORMAL){
+            throw new MqttsnCodecException("REGACK topic type must be Predefined or Session Topic Alias");
+        }
         MqttsnSpecificationValidator.validateTopicAlias(topicId);
         MqttsnSpecificationValidator.validateReturnCode(returnCode);
     }

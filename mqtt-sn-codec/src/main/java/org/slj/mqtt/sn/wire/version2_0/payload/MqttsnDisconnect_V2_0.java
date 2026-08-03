@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -32,24 +32,42 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 import org.slj.mqtt.sn.wire.MqttsnWireUtils;
 
-import java.nio.charset.StandardCharsets;
-
+/**
+ * DISCONNECT - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.13, Figure 24.
+ *
+ * NB: unlike earlier drafts, DISCONNECT no longer carries the "going to sleep" duration or a
+ * retain-registrations flag - that responsibility moved to the (not yet implemented) SLEEPREQ /
+ * SLEEPRESP packets, see mqtt-sn-v2.0-gap-analysis.md.
+ */
 public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator, IMqttsnDisconnectPacket {
+
+    //-- Disconnect Flags (byte 3)
+    protected boolean packetIdSet;
+    protected boolean sessionExpirySet;
+    protected boolean reasonCodeSet;
 
     protected long sessionExpiryInterval;
     protected String reasonString;
-    protected boolean retainRegistrations;
-    protected boolean reasonStringExists;
-    protected boolean sessionExpiryIntervalSet;
-    protected boolean reasonCodeExists;
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.DISCONNECT;
+        return MqttsnConstants.DISCONNECT_V2_0;
     }
 
+    @Override
     public boolean needsId() {
+        //-- the Packet Identifier is OPTIONAL on DISCONNECT (Table 3) and is not used to drive
+        //-- inflight/confirmation state tracking - see getPacketIdentifier/setPacketIdentifier.
         return false;
+    }
+
+    public int getPacketIdentifier() {
+        return id;
+    }
+
+    public void setPacketIdentifier(int packetIdentifier) {
+        this.id = packetIdentifier;
+        this.packetIdSet = true;
     }
 
     public long getSessionExpiryInterval() {
@@ -57,95 +75,90 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
     }
 
     public void setSessionExpiryInterval(long sessionExpiryInterval) {
-        sessionExpiryIntervalSet = true;
         this.sessionExpiryInterval = sessionExpiryInterval;
+        this.sessionExpirySet = sessionExpiryInterval > 0;
     }
 
     public String getReasonString() {
         return reasonString;
     }
 
-    public boolean isRetainRegistrations() {
-        return retainRegistrations;
-    }
-
-    public void setRetainRegistrations(boolean retainRegistrations) {
-        this.retainRegistrations = retainRegistrations;
-    }
-
     public void setReasonString(String reasonString) {
-        if(reasonString !=null ) reasonStringExists = true;
         this.reasonString = reasonString;
     }
 
     @Override
     public void setReturnCode(int returnCode) {
-        reasonCodeExists = true;
+        reasonCodeSet = true;
         super.setReturnCode(returnCode);
     }
 
     protected void readFlags(byte v) {
         /**
-         Reserved       ReasonCodePresent       Session Exp Present     ReasonString Present RetainRegistrations
-         (7,6,5,4)     (3)                          (2)                     (1)                     (0)
+         Reserved       Reason C     Sess Exp     PacketId
+         (7,6,5,4,3)    (2)          (1)          (0)
          **/
 
-        reasonCodeExists = (v & 0x08) != 0;
-        sessionExpiryIntervalSet = (v & 0x04) != 0;
-        reasonStringExists = (v & 0x02) != 0;
-        retainRegistrations = (v & 0x01) != 0;
+        if ((v & 0xF8) != 0) {
+            throw new MqttsnCodecException("reserved disconnect flags must be set to 0");
+        }
+
+        reasonCodeSet = (v & 0x04) != 0;
+        sessionExpirySet = (v & 0x02) != 0;
+        packetIdSet = (v & 0x01) != 0;
     }
 
     protected byte writeFlags() {
-        /**
-         Reserved       ReasonCodePresent       Session Exp Present     ReasonString Present RetainRegistrations
-         (7,6,5,4)     (3)                          (2)                     (1)                     (0)
-         **/
-
         byte v = 0x00;
-        if(getReturnCode() > 0) v |= 0x08;
-        if(sessionExpiryInterval > 0)  v |= 0x04;
-        if(reasonString != null)  v |= 0x02;
-        if(retainRegistrations)  v |= 0x01;
+        if (reasonCodeSet) v |= 0x04;
+        if (sessionExpirySet) v |= 0x02;
+        if (packetIdSet) v |= 0x01;
         return v;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
 
-        if(data.length > 2){
-            readFlags(readHeaderByteWithOffset(data, 2));
-            int idx = 3;
-            if(reasonCodeExists){
-                returnCode = readUInt8Adjusted(data, idx++);
+        if (data.length > 2) {
+            int idx = 2;
+            readFlags(readHeaderByteWithOffset(data, idx++));
+
+            if (packetIdSet) {
+                id = readUInt16Adjusted(data, idx);
+                idx += 2;
             }
-            if(sessionExpiryIntervalSet){
+
+            if (sessionExpirySet) {
                 sessionExpiryInterval = readUInt32Adjusted(data, idx);
                 idx += 4;
             }
-            if(reasonStringExists){
+
+            if (reasonCodeSet) {
+                returnCode = readUInt8Adjusted(data, idx++);
+            }
+
+            //-- reasonString is optional, its presence is inferred from any remaining bytes
+            int consumedLength = MqttsnWireUtils.isLargeMessage(data) ? idx + 2 : idx;
+            if (data.length > consumedLength) {
                 reasonString = readRemainingUTF8EncodedAdjustedNoLength(data, idx);
             }
         }
     }
-
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
 
         byte[] msg;
 
+        byte[] reasonStringBytes = reasonString == null ? null : reasonString.getBytes(MqttsnConstants.CHARSET);
+
+        //-- length(1) + type(1) + flags(1)
         int length = 3;
 
-        if(returnCode > 0){
-            length += 1;
-        }
-        if(sessionExpiryInterval > 0){
-            length += 4;
-        }
-        if(reasonString != null){
-            length += reasonString.length();
-        }
+        if (packetIdSet) length += 2;
+        if (sessionExpirySet) length += 4;
+        if (reasonCodeSet) length += 1;
+        if (reasonStringBytes != null) length += reasonStringBytes.length;
 
         int idx = 0;
 
@@ -163,16 +176,21 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
         msg[idx++] = (byte) getMessageType();
         msg[idx++] = writeFlags();
 
-        if(returnCode > 0){
-            msg[idx++] = (byte) getReturnCode();
+        if (packetIdSet) {
+            msg[idx++] = (byte) ((id >> 8) & 0xFF);
+            msg[idx++] = (byte) (id & 0xFF);
         }
 
-        if(sessionExpiryInterval > 0){
+        if (sessionExpirySet) {
             writeUInt32(msg, idx, sessionExpiryInterval);
             idx += 4;
         }
 
-        if(reasonString != null){
+        if (reasonCodeSet) {
+            msg[idx++] = (byte) getReturnCode();
+        }
+
+        if (reasonStringBytes != null) {
             writeUTF8EncodedStringDataNoLength(msg, idx, reasonString);
         }
 
@@ -182,20 +200,23 @@ public class MqttsnDisconnect_V2_0 extends AbstractMqttsnMessage implements IMqt
     @Override
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validateReturnCode(returnCode);
-        if(sessionExpiryInterval > 0) MqttsnSpecificationValidator.validateUInt32(sessionExpiryInterval);
-        MqttsnSpecificationValidator.validStringData(reasonString, true);
+        if (packetIdSet) {
+            MqttsnSpecificationValidator.validatePacketIdentifier(id);
+        }
+        if (sessionExpirySet) {
+            MqttsnSpecificationValidator.validateUInt32(sessionExpiryInterval);
+        }
+        MqttsnSpecificationValidator.validateStringData(reasonString, true);
     }
 
     @Override
     public String toString() {
         return "MqttsnDisconnect_V2_0{" +
                 "reasonCode=" + returnCode +
+                ", packetIdSet=" + packetIdSet +
+                ", id=" + id +
                 ", sessionExpiryInterval=" + sessionExpiryInterval +
                 ", reasonString='" + reasonString + '\'' +
-                ", retainRegistrations=" + retainRegistrations +
-                ", reasonStringExists=" + reasonStringExists +
-                ", sessionExpiryIntervalSet=" + sessionExpiryIntervalSet +
-                ", reasonCodeExists=" + reasonCodeExists +
                 '}';
     }
 }

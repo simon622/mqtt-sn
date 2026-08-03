@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -50,13 +50,10 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     protected boolean retainedPublish;
 
     public void setTopicName(String topicName) {
-        setTopicType(topicName != null && topicName.length() <= 2 ? MqttsnConstants.TOPIC_SHORT : MqttsnConstants.TOPIC_NORMAL);
-        if(topicName.length() == 1){
-            topicData = new byte[]{topicName.getBytes(MqttsnConstants.CHARSET)[0], 0x00};
-        } else {
-            topicData = topicName.getBytes(MqttsnConstants.CHARSET);
-        }
-
+        //-- MQTT-SN 2.0 (CSD01) has no Short Topic Name type - any topic name uses
+        //-- Topic Type "Topic Name or Filter" (TOPIC_FULL), regardless of its length.
+        setTopicType(MqttsnConstants.TOPIC_FULL);
+        topicData = topicName.getBytes(MqttsnConstants.CHARSET);
         topicLength = topicData.length;
     }
 
@@ -150,7 +147,9 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
     @Override
     public int getMessageType() {
-        return getQoS() == MqttsnConstants.QoSM1 ? MqttsnConstants.PUBLISH_M1 : MqttsnConstants.PUBLISH;
+        //-- NB: CSD01 has no distinct type byte for QoS -1 PUBLISH; that case is replaced by
+        //-- the (not yet implemented) PUBWOS packet type - see mqtt-sn-v2.0-gap-analysis.md.
+        return MqttsnConstants.PUBLISH_V2_0;
     }
 
     public short getProtocolVersion() {
@@ -160,28 +159,15 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
     @Override
     public void decode(byte[] arr) throws MqttsnCodecException {
 
-        boolean isPublishM1 = MqttsnWireUtils.readMessageType(arr) == MqttsnConstants.PUBLISH_M1;
-        readFlags(readHeaderByteWithOffset(arr, isPublishM1 ? 3 : 2));
+        //-- NB: CSD01 has no distinct wire sub-format for QoS -1 PUBLISH (no dedicated type
+        //-- byte, no embedded protocolVersion field) - a QoS -1 publish without a session is
+        //-- now the separate PUBWOS packet type (not yet implemented, see
+        //-- mqtt-sn-v2.0-gap-analysis.md). QoS bits '11' are parsed using the same (Packet
+        //-- Identifier-less) shape as QoS 0 here, and rejected by validate().
+        readFlags(readHeaderByteWithOffset(arr, 2));
         int qos = getQoS();
-        if(isPublishM1 && qos != MqttsnConstants.QoSM1){
-            throw new MqttsnCodecException("invalid QoS detected ("+qos+") for PUBLISH_M1 packet type");
-        }
 
-        //-- limited format
-        if(qos == MqttsnConstants.QoSM1){
-            protocolVersion = readUInt8Adjusted(arr, 2);
-            if(topicIdType == MqttsnConstants.TOPIC_FULL){
-                //first 2 bytes of payload are topic length
-                topicLength =  readUInt16Adjusted(arr, 4);
-                setTopicData(readBytesAdjusted(arr, 6, topicLength));
-                data = readRemainingBytesAdjusted(arr,  6 + topicLength);
-            } else {
-                topicLength = 2;
-                setTopicData(readBytesAdjusted(arr, 4, 2));
-                data = readRemainingBytesAdjusted(arr,  6);
-            }
-        }
-        else if(qos == MqttsnConstants.QoS0){
+        if(qos == MqttsnConstants.QoSM1 || qos == MqttsnConstants.QoS0){
             if(topicIdType == MqttsnConstants.TOPIC_FULL){
                 //first 2 bytes of payload are topic length
                 topicLength =  readUInt16Adjusted(arr, 3);
@@ -219,9 +205,7 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
 
         int qos = getQoS();
         int length = data.length + topicLength - 2;
-        if(qos == MqttsnConstants.QoSM1){
-            length += 6;
-        } else if (qos == MqttsnConstants.QoS0) {
+        if(qos == MqttsnConstants.QoSM1 || qos == MqttsnConstants.QoS0) {
             length += 5;
         } else {
             length += 7;
@@ -241,12 +225,6 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         }
 
         msg[idx++] = (byte) getMessageType();
-
-        if(qos == MqttsnConstants.QoSM1){
-            //write the protocolVersion
-            msg[idx++] = (byte) protocolVersion;
-        }
-
         msg[idx++] = writeFlags();
 
         //-- encode the packetid for varient 2 packet types
@@ -339,15 +317,17 @@ public class MqttsnPublish_V2_0 extends AbstractMqttsnMessage implements IMqttsn
         MqttsnSpecificationValidator.validatePacketIdentifier(id);
         MqttsnSpecificationValidator.validateUInt16(topicLength);
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
+        if(topicIdType == MqttsnConstants.TOPIC_SHORT){
+            throw new MqttsnCodecException("topic type SHORT is Reserved in MQTT-SN 2.0 (no Short Topic Name support)");
+        }
         MqttsnSpecificationValidator.validateQoS(getQoS());
         MqttsnSpecificationValidator.validatePublishData(data);
         MqttsnSpecificationValidator.validateProtocolId(protocolVersion);
 
-        //confirm that when the QoS is M1 we have the correct topicIdTypes sets
+        //-- MQTT-SN 2.0 (CSD01) Table 8: PUBLISH QoS bits '11' (QoS -1) are Reserved - a
+        //-- session-less publish is now the separate PUBWOS packet type (not yet implemented).
         if(getQoS() == MqttsnConstants.QoSM1){
-            if(topicIdType == MqttsnConstants.TOPIC_NORMAL) {
-                throw new MqttsnCodecException("invalid topic type defined for QoS -1, must be short, pre or full");
-            }
+            throw new MqttsnCodecException("QoS -1 is not valid on PUBLISH in MQTT-SN 2.0 - use PUBWOS (not yet implemented)");
         }
 
         if(getQoS() <= 0){

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -37,7 +37,7 @@ public class MqttsnUnsubscribe_V2_0 extends MqttsnSubscribe_V2_0 implements IMqt
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.UNSUBSCRIBE;
+        return MqttsnConstants.UNSUBSCRIBE_V2_0;
     }
 
     @Override
@@ -80,6 +80,10 @@ public class MqttsnUnsubscribe_V2_0 extends MqttsnSubscribe_V2_0 implements IMqt
 
     protected void readFlags(byte v) {
 
+        if ((v & 0xFC) != 0) {
+            throw new MqttsnCodecException("reserved unsubscribe flags must be set to 0");
+        }
+
         //topic type
         topicIdType = (v & 0x03);
     }
@@ -100,6 +104,9 @@ public class MqttsnUnsubscribe_V2_0 extends MqttsnSubscribe_V2_0 implements IMqt
     public void validate() throws MqttsnCodecException {
         MqttsnSpecificationValidator.validatePacketIdentifier(id);
         MqttsnSpecificationValidator.validateTopicIdType(topicIdType);
+        if(topicIdType == MqttsnConstants.TOPIC_SHORT){
+            throw new MqttsnCodecException("topic type SHORT is Reserved in MQTT-SN 2.0 (no Short Topic Name support)");
+        }
     }
 
     @Override

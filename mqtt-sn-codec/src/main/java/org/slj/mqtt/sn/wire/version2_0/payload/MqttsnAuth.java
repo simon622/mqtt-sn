@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -48,7 +48,7 @@ public class MqttsnAuth extends AbstractMqttsnMessage implements IMqttsnMessageV
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.AUTH;
+        return MqttsnConstants.AUTH_V2_0;
     }
 
     @Override

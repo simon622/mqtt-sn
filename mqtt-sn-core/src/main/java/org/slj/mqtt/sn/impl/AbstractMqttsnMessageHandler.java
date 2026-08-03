@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -177,19 +177,26 @@ public abstract class AbstractMqttsnMessageHandler
         IMqttsnMessage response = null;
         int msgType = message.getMessageType();
 
+        //-- v1.2 and v2.0 packet type bytes are independently namespaced (0x00-0x18 in both), so they
+        //-- collide as raw values; fold in the protocol version to disambiguate a single switch below.
+        boolean isV2 = context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0;
+        int dispatchKey = isV2 ? (0x100 | (msgType & 0xFF)) : (msgType & 0xFF);
 
-        switch (msgType) {
+        switch (dispatchKey) {
             case MqttsnConstants.AUTH:
+            case 0x100 | MqttsnConstants.AUTH_V2_0:
                 response = handleAuth(context, message);
                 break;
 
             case MqttsnConstants.CONNECT:
+            case 0x100 | MqttsnConstants.CONNECT_V2_0:
                 response = handleConnect(context, message);
                 if(!errord && !response.isErrorMessage()){
                     registry.getRuntime().handleConnected(context.getClientContext());
                 }
                 break;
             case MqttsnConstants.CONNACK:
+            case 0x100 | MqttsnConstants.CONNACK_V2_0:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     handleConnack(context, originatingMessage, message);
                     if(!errord && !message.isErrorMessage()){
@@ -199,6 +206,7 @@ public abstract class AbstractMqttsnMessageHandler
                 break;
             case MqttsnConstants.PUBLISH:
             case MqttsnConstants.PUBLISH_M1:
+            case 0x100 | MqttsnConstants.PUBLISH_V2_0:
                 if(errord){
                     response = getRegistry().getMessageFactory().createPuback(0,
                             MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
@@ -207,22 +215,27 @@ public abstract class AbstractMqttsnMessageHandler
                 }
                 break;
             case MqttsnConstants.PUBREC:
+            case 0x100 | MqttsnConstants.PUBREC_V2_0:
                 response = handlePubrec(context, message);
                 break;
             case MqttsnConstants.PUBREL:
+            case 0x100 | MqttsnConstants.PUBREL_V2_0:
                 response = handlePubrel(context, message);
                 break;
             case MqttsnConstants.PUBACK:
+            case 0x100 | MqttsnConstants.PUBACK_V2_0:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     handlePuback(context, originatingMessage, message);
                 }
                 break;
             case MqttsnConstants.PUBCOMP:
+            case 0x100 | MqttsnConstants.PUBCOMP_V2_0:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     handlePubcomp(context, originatingMessage, message);
                 }
                 break;
             case MqttsnConstants.SUBSCRIBE:
+            case 0x100 | MqttsnConstants.SUBSCRIBE_V2_0:
                 if(errord){
                     response = getRegistry().getMessageFactory().createSuback(0, 0,
                             MqttsnConstants.RETURN_CODE_SERVER_UNAVAILABLE);
@@ -231,9 +244,11 @@ public abstract class AbstractMqttsnMessageHandler
                 }
                 break;
             case MqttsnConstants.UNSUBSCRIBE:
+            case 0x100 | MqttsnConstants.UNSUBSCRIBE_V2_0:
                 response = handleUnsubscribe(context, message);
                 break;
             case MqttsnConstants.UNSUBACK:
+            case 0x100 | MqttsnConstants.UNSUBACK_V2_0:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     if(!errord){
                         handleUnsuback(context, originatingMessage, message);
@@ -241,6 +256,7 @@ public abstract class AbstractMqttsnMessageHandler
                 }
                 break;
             case MqttsnConstants.SUBACK:
+            case 0x100 | MqttsnConstants.SUBACK_V2_0:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     if(!errord){
                         handleSuback(context, originatingMessage, message);
@@ -263,29 +279,35 @@ public abstract class AbstractMqttsnMessageHandler
                 }
                 break;
             case MqttsnConstants.PINGREQ:
+            case 0x100 | MqttsnConstants.PINGREQ_V2_0:
                 response = handlePingreq(context, message);
                 break;
             case MqttsnConstants.PINGRESP:
+            case 0x100 | MqttsnConstants.PINGRESP_V2_0:
                 if(validateOriginatingMessage(context, originatingMessage, message)){
                     handlePingresp(context, originatingMessage, message);
                 }
                 break;
             case MqttsnConstants.DISCONNECT:
+            case 0x100 | MqttsnConstants.DISCONNECT_V2_0:
                 response = handleDisconnect(context, originatingMessage, message);
                 break;
             case MqttsnConstants.ADVERTISE:
+            case 0x100 | MqttsnConstants.ADVERTISE_V2_0:
                 handleAdvertise(context, message);
                 break;
             case MqttsnConstants.ENCAPSMSG:
                 handleEncapsmsg(context, message);
                 break;
             case MqttsnConstants.GWINFO:
+            case 0x100 | MqttsnConstants.GWINFO_V2_0:
                 handleGwinfo(context, message);
                 break;
             case MqttsnConstants.HELO:
                 response = handleHelo(context, message);
                 break;
             case MqttsnConstants.SEARCHGW:
+            case 0x100 | MqttsnConstants.SEARCHGW_V2_0:
                 response = handleSearchGw(context, message);
                 break;
             case MqttsnConstants.WILLMSGREQ:
@@ -493,7 +515,12 @@ public abstract class AbstractMqttsnMessageHandler
     }
 
     protected void handleUnsuback(IMqttsnMessageContext context, IMqttsnMessage unsubscribe, IMqttsnMessage unsuback) throws MqttsnException {
-        String topicPath = ((MqttsnUnsubscribe)unsubscribe).getTopicName();
+        String topicPath;
+        if(context.getProtocolVersion() == MqttsnConstants.PROTOCOL_VERSION_2_0){
+            topicPath = ((MqttsnUnsubscribe_V2_0)unsubscribe).getTopicName();
+        } else {
+            topicPath = ((MqttsnUnsubscribe)unsubscribe).getTopicName();
+        }
         registry.getSubscriptionRegistry().unsubscribe(context.getSession(), topicPath);
     }
 

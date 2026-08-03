@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
+ * Copyright (c) 2026 Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -27,12 +27,12 @@ package org.slj.mqtt.sn.wire.version2_0.payload;
 import org.slj.mqtt.sn.MqttsnConstants;
 
 /**
- * UNSUBACK - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.10, Figure 21.
+ * PUBCOMP - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.6.7, Figure 17.
  */
-public class MqttsnUnsuback_V2_0 extends AbstractMqttsnIdWithOptionalReasonCode_V2_0 {
+public class MqttsnPubcomp_V2_0 extends AbstractMqttsnIdWithOptionalReasonCode_V2_0 {
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.UNSUBACK_V2_0;
+        return MqttsnConstants.PUBCOMP_V2_0;
     }
 }

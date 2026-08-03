@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
+ * Copyright (c) 2026 Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -31,56 +31,68 @@ import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
 import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
 /**
- * PINGREQ - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.11, Figure 22.
- *
- * NB: unlike earlier drafts, this carries only a mandatory Packet Identifier - there is no
- * Max Messages or Client Identifier field on the wire.
+ * ADVERTISE - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.20.1, Figure 31.
+ * Same fixed shape as v1.2's ADVERTISE, just a different packet type byte (0x16 vs 0x00).
  */
-public class MqttsnPingreq_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+public class MqttsnAdvertise_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
+
+    protected int gatewayId;
+    protected int duration;
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PINGREQ_V2_0;
+        return MqttsnConstants.ADVERTISE_V2_0;
     }
 
     @Override
     public boolean needsId() {
-        return true;
+        return false;
     }
 
-    /**
-     * MQTT-SN 2.0 (CSD01) PINGREQ has no Client Identifier field (Figure 22) - always null.
-     * Kept only for API compatibility with callers that opportunistically check it (e.g.
-     * {@code MqttsnGatewayMessageHandler.handlePingreq}), which already tolerate a null value.
-     */
-    public String getClientId() {
-        return null;
+    public int getGatewayId() {
+        return gatewayId;
+    }
+
+    public void setGatewayId(int gatewayId) {
+        this.gatewayId = gatewayId;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 
     @Override
     public void decode(byte[] data) throws MqttsnCodecException {
-        id = readUInt16Adjusted(data, 2);
+        gatewayId = readUInt8Adjusted(data, 2);
+        duration = readUInt16Adjusted(data, 3);
     }
 
     @Override
     public byte[] encode() throws MqttsnCodecException {
-        byte[] data = new byte[4];
+        byte[] data = new byte[5];
         data[0] = (byte) data.length;
         data[1] = (byte) getMessageType();
-        data[2] = (byte) ((id >> 8) & 0xFF);
-        data[3] = (byte) (id & 0xFF);
+        data[2] = (byte) gatewayId;
+        data[3] = (byte) ((duration >> 8) & 0xFF);
+        data[4] = (byte) (duration & 0xFF);
         return data;
     }
 
     @Override
     public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validatePacketIdentifier(id);
+        MqttsnSpecificationValidator.validateUInt8(gatewayId);
+        MqttsnSpecificationValidator.validateUInt16(duration);
     }
 
     @Override
     public String toString() {
-        return "MqttsnPingreq_V2_0{" +
-                "id=" + id +
+        return "MqttsnAdvertise_V2_0{" +
+                "gatewayId=" + gatewayId +
+                ", duration=" + duration +
                 '}';
     }
 }

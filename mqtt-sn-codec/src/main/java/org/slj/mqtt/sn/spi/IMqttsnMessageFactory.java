@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -421,9 +421,63 @@ public interface IMqttsnMessageFactory {
 
 
     IMqttsnMessage createProtectionMessage(IProtectionScheme protectionScheme,
-    										byte[] protectionKey, 
-    										ProtectionPacketFlags flags, 
+    										byte[] protectionKey,
+    										ProtectionPacketFlags flags,
     										byte[] senderId,
     										int monotonicCounter,
     										byte[] encapsulatedPacket) throws MqttsnCodecException;
+
+    /**
+     * PUBWOS (Publish Without Session) - MQTT-SN 2.0 only. Publishes an Application Message
+     * without requiring a Session/Virtual Connection to exist. Always treated as QoS 0.
+     *
+     * @param retain  whether the message should be published as a retained message.
+     * @param type    topic id type - MUST be PREDEFINED (Session Topic Alias makes no sense
+     *                without a Session).
+     * @param topicId the predefined topic alias.
+     * @param payload the application message payload.
+     */
+    IMqttsnMessage createPubwos(boolean retain, MqttsnConstants.TOPIC_TYPE type, int topicId, byte[] payload)
+            throws MqttsnCodecException;
+
+    /**
+     * PUBWOS (Publish Without Session) - MQTT-SN 2.0 only, using a full Topic Name rather than
+     * a predefined alias. See {@link #createPubwos(boolean, MqttsnConstants.TOPIC_TYPE, int, byte[])}.
+     */
+    IMqttsnMessage createPubwos(boolean retain, String topicPath, byte[] payload)
+            throws MqttsnCodecException;
+
+    /**
+     * WAKEUP - MQTT-SN 2.0 only. Header-only signal sent by a Server to indicate that a
+     * sleeping Client should wake up. No response is expected.
+     */
+    IMqttsnMessage createWakeup()
+            throws MqttsnCodecException;
+
+    /**
+     * SLEEPREQ - MQTT-SN 2.0 only. Sent by a Client to request moving to the Asleep state.
+     *
+     * @param retainTopicAliases whether Session Topic Aliases should be retained by the Server
+     *                           during the Asleep period.
+     * @param sleepDuration      the maximum time (seconds) the Client may stay asleep without
+     *                           being disconnected by the Server. MUST be greater than 0.
+     */
+    IMqttsnMessage createSleepReq(boolean retainTopicAliases, long sleepDuration)
+            throws MqttsnCodecException;
+
+    /**
+     * SLEEPRESP - MQTT-SN 2.0 only. Server's response to a SLEEPREQ.
+     *
+     * @param returnCode the Reason Code for the request.
+     */
+    IMqttsnMessage createSleepResp(int returnCode)
+            throws MqttsnCodecException;
+
+    /**
+     * SLEEPRESP - MQTT-SN 2.0 only, with a Server-suggested Sleep Duration overriding the value
+     * requested by the Client (only sent when the CONNECT's Allow Server Suggested Values flag
+     * permitted it).
+     */
+    IMqttsnMessage createSleepResp(int returnCode, long sleepDuration)
+            throws MqttsnCodecException;
 }

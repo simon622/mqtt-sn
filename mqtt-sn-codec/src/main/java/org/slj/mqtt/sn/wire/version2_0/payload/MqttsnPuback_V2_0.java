@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -25,55 +25,14 @@
 package org.slj.mqtt.sn.wire.version2_0.payload;
 
 import org.slj.mqtt.sn.MqttsnConstants;
-import org.slj.mqtt.sn.MqttsnSpecificationValidator;
-import org.slj.mqtt.sn.codec.MqttsnCodecException;
-import org.slj.mqtt.sn.spi.IMqttsnMessageValidator;
-import org.slj.mqtt.sn.wire.AbstractMqttsnMessage;
 
-public class MqttsnPuback_V2_0 extends AbstractMqttsnMessage implements IMqttsnMessageValidator {
-
-    public boolean needsId() {
-        return true;
-    }
+/**
+ * PUBACK - wire format per OASIS mqtt-sn-v2.0 CSD01 (05 Feb 2026), section 3.6.4, Figure 14.
+ */
+public class MqttsnPuback_V2_0 extends AbstractMqttsnIdWithOptionalReasonCode_V2_0 {
 
     @Override
     public int getMessageType() {
-        return MqttsnConstants.PUBACK;
-    }
-
-    @Override
-    public void decode(byte[] data) throws MqttsnCodecException {
-
-        id = readUInt16Adjusted(data, 2);
-        returnCode = (data[4] & 0xFF);
-    }
-
-    @Override
-    public byte[] encode() throws MqttsnCodecException {
-
-        byte[] data = new byte[5];
-        data[0] = (byte) data.length;
-        data[1] = (byte) getMessageType();
-        data[2] = (byte) ((id >> 8) & 0xFF);
-        data[3] = (byte) (id & 0xFF);
-        data[4] = (byte) returnCode;
-        return data;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("MqttsnPuback{");
-        sb.append(", msgId=").append(id);
-        if(returnCode != 0){
-            sb.append(", errorReturnCode=").append(returnCode);
-        }
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @Override
-    public void validate() throws MqttsnCodecException {
-        MqttsnSpecificationValidator.validatePacketIdentifier(id);
-        MqttsnSpecificationValidator.validateReturnCode(returnCode);
+        return MqttsnConstants.PUBACK_V2_0;
     }
 }

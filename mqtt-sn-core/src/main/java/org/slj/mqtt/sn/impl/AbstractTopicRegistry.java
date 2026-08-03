@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -105,8 +105,10 @@ public abstract class AbstractTopicRegistry
                     topicPath = lookupRegistered(session, topicInfo.getTopicId());
                 }
                 break;
-            default:
             case FULL:
+                topicPath = topicInfo.getTopicPath();
+                break;
+            default:
                 break;
         }
 

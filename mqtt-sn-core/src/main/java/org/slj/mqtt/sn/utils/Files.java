@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -187,6 +187,18 @@ public class Files {
         lockFile.deleteOnExit();
         Thread h = new Thread(lockFile::delete);
         Runtime.getRuntime().addShutdownHook(h);
+    }
+
+    /**
+     * Releases a lock previously taken with {@link #createRuntimeLockFile(File)}, allowing the
+     * workspace to be reused within the same JVM (the lock file otherwise only disappears via the
+     * shutdown-hook / deleteOnExit registered above, i.e. on JVM exit).
+     */
+    public static synchronized void releaseRuntimeLockFile(File dir) throws IOException {
+        File lockFile = new File(dir, ".lck");
+        if(lockFile.exists() && !lockFile.delete()){
+            throw new IOException("unable to release lock file " + lockFile.getAbsolutePath());
+        }
     }
 
     /**

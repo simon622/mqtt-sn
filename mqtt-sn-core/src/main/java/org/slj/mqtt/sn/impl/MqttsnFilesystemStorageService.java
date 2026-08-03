@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Simon Johnson <simon622 AT gmail DOT com>
+ * Copyright (c) 2021-2026 Simon Johnson <simon622 AT gmail DOT com>, Ian Craggs
  *
  * Find me on GitHub:
  * https://github.com/simon622
@@ -410,6 +410,16 @@ public class MqttsnFilesystemStorageService extends AbstractMqttsnService implem
 
     public void writeFieldsToStorage(Object configurableBean) throws MqttsnRuntimeException {
         writeFieldsToStorageInternal(null, configurableBean);
+    }
+
+    @Override
+    public void stop() throws MqttsnException {
+        super.stop();
+        try {
+            Files.releaseRuntimeLockFile(path);
+        } catch(IOException e){
+            throw new MqttsnException(e);
+        }
     }
 
     @Override
